@@ -59,20 +59,20 @@ impl Parser {
 
     fn parse_expression_1(&mut self, mut lhs: Node, min_prec: u8) -> Node {
         let mut lookahead = self.lexer.current_token();
-        while lookahead.is_bin_op() && lookahead.precedence().number() >= min_prec {
+        while lookahead.is_bin_op() && lookahead.precedence() >= min_prec {
             let op = lookahead;
             self.lexer.get_next_token();
             let mut rhs = self.parse_primary();
             lookahead = self.lexer.current_token();
             while lookahead.is_bin_op()
-                && (lookahead.precedence().number() > op.precedence().number()
-                    || (matches!(lookahead.precedence(), OpPrecedence::Right(_))
-                        && lookahead.precedence().number() == op.precedence().number()))
+                && (lookahead.precedence() > op.precedence()
+                    || (lookahead.precedence().is_right_associative()
+                        && lookahead.precedence() == op.precedence()))
             {
                 rhs = self.parse_expression_1(
                     rhs,
-                    op.precedence().number()
-                        + if lookahead.precedence().number() > op.precedence().number() {
+                    op.precedence().as_number()
+                        + if lookahead.precedence() > op.precedence() {
                             1
                         } else {
                             0
