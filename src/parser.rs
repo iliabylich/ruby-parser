@@ -25,14 +25,19 @@ impl Parser {
         // Initiate tokenizer
         self.lexer.get_next_token();
 
-        self.parse_expression(1)
+        self.parse_expression()
     }
 
-    pub fn parse_expression(&mut self, min_prec: u8) -> Node {
-        let mut lhs = match self.lexer.current_token() {
+    pub fn parse_expression(&mut self) -> Node {
+        let lhs = self.parse_primary();
+        self.parse_expression_1(lhs, 0)
+    }
+
+    fn parse_primary(&mut self) -> Node {
+        match self.lexer.current_token() {
             Token::Lparen => {
                 self.lexer.get_next_token();
-                let inner = self.parse_expression(1);
+                let inner = self.parse_expression();
                 if self.lexer.current_token() != Token::Rparen {
                     panic!("parse error: expected )")
                 }
@@ -48,42 +53,41 @@ impl Parser {
                 Node::Number(n)
             }
 
-            other => panic!("Expected Number or Lparen, got {:?}", other),
-        };
+            other => panic!("parse_primary: expected Number or Lparen, got {:?}", other),
+        }
+    }
 
-        loop {
-            let token = self.lexer.current_token();
-            match token {
-                Token::EOF => break,
-                Token::Error(c) => panic!("Tokenizer error during bino RHS parsing: {}", c),
-
-                invalid if !invalid.is_bin_op() || invalid.precedence().number() < min_prec => {
-                    break;
-                }
-
-                next_bin_op if next_bin_op.is_bin_op() => {
-                    debug_assert!(next_bin_op.is_bin_op());
-
-                    let next_min_prec = match next_bin_op.precedence() {
-                        OpPrecedence::Left(prec) => prec + 1,
-                        OpPrecedence::Right(prec) => prec,
-                        OpPrecedence::Unknown => unreachable!(),
-                    };
-                    self.lexer.get_next_token();
-                    let rhs = self.parse_expression(next_min_prec);
-
-                    lhs = match next_bin_op {
-                        Token::Plus => Node::Plus(Box::new(lhs), Box::new(rhs)),
-                        Token::Minus => Node::Minus(Box::new(lhs), Box::new(rhs)),
-                        Token::Mult => Node::Mult(Box::new(lhs), Box::new(rhs)),
-                        Token::Div => Node::Minus(Box::new(lhs), Box::new(rhs)),
-                        Token::Pow => Node::Pow(Box::new(lhs), Box::new(rhs)),
-                        other => unreachable!("expected bin op, got {:?}", other),
-                    };
-                }
-
-                unsupported => panic!("Unsupported token {:?}", unsupported),
+    fn parse_expression_1(&mut self, mut lhs: Node, min_prec: u8) -> Node {
+        let mut lookahead = self.lexer.current_token();
+        while lookahead.is_bin_op() && lookahead.precedence().number() >= min_prec {
+            let op = lookahead;
+            self.lexer.get_next_token();
+            let mut rhs = self.parse_primary();
+            lookahead = self.lexer.current_token();
+            while lookahead.is_bin_op()
+                && (lookahead.precedence().number() > op.precedence().number()
+                    || (matches!(lookahead.precedence(), OpPrecedence::Right(_))
+                        && lookahead.precedence().number() == op.precedence().number()))
+            {
+                rhs = self.parse_expression_1(
+                    rhs,
+                    op.precedence().number()
+                        + if lookahead.precedence().number() > op.precedence().number() {
+                            1
+                        } else {
+                            0
+                        },
+                );
+                lookahead = self.lexer.current_token();
             }
+            lhs = match op {
+                Token::Plus => Node::Plus(Box::new(lhs), Box::new(rhs)),
+                Token::Minus => Node::Minus(Box::new(lhs), Box::new(rhs)),
+                Token::Mult => Node::Mult(Box::new(lhs), Box::new(rhs)),
+                Token::Div => Node::Minus(Box::new(lhs), Box::new(rhs)),
+                Token::Pow => Node::Pow(Box::new(lhs), Box::new(rhs)),
+                other => unreachable!("expected bin op, got {:?}", other),
+            };
         }
 
         lhs
