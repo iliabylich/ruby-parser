@@ -1,57 +1,12 @@
+mod token;
+use token::OpPrecedence;
+pub use token::Token;
+
 pub struct Parser {
     input: Vec<u8>,
     pos: usize,
     current_token: Token,
     debug: bool,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq)]
-enum Token {
-    Number(u32),
-    Plus,
-    Minus,
-    Mult,
-    Div,
-    Pow,
-    Lparen,
-    Rparen,
-    EOF,
-    Error(char),
-    None,
-}
-
-enum OpPrecedence {
-    Left(u8),
-    Right(u8),
-    None,
-}
-
-impl OpPrecedence {
-    fn number(&self) -> u8 {
-        match self {
-            OpPrecedence::Left(n) => *n,
-            OpPrecedence::Right(n) => *n,
-            OpPrecedence::None => 0,
-        }
-    }
-}
-
-impl Token {
-    fn precedence(&self) -> OpPrecedence {
-        match self {
-            Token::Plus | Token::Minus => OpPrecedence::Left(1),
-            Token::Mult | Token::Div => OpPrecedence::Left(2),
-            Token::Pow => OpPrecedence::Right(3),
-            _ => OpPrecedence::None,
-        }
-    }
-
-    fn is_bin_op(&self) -> bool {
-        matches!(
-            self,
-            Token::Plus | Token::Minus | Token::Mult | Token::Div | Token::Pow
-        )
-    }
 }
 
 #[derive(PartialEq, Debug)]
@@ -140,7 +95,7 @@ impl Parser {
                     let next_min_prec = match next_bin_op.precedence() {
                         OpPrecedence::Left(prec) => prec + 1,
                         OpPrecedence::Right(prec) => prec,
-                        OpPrecedence::None => unreachable!(),
+                        OpPrecedence::Unknown => unreachable!(),
                     };
                     self.get_next_token();
                     let rhs = self.parse_expression(next_min_prec);
@@ -256,6 +211,4 @@ fn test_parse() {
         )
     );
     assert_eq!(ast.eval(), 345);
-
-    panic!("foo");
 }
