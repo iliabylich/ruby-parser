@@ -5,44 +5,44 @@ pub use token::Token;
 mod node;
 pub use node::Node;
 
+mod lexer;
+pub use lexer::Lexer;
+
 pub struct Parser {
-    input: Vec<u8>,
-    pos: usize,
-    current_token: Token,
+    lexer: Lexer,
     debug: bool,
 }
 
 impl Parser {
     pub fn new(s: &str) -> Self {
         Self {
-            input: s.as_bytes().to_vec(),
-            pos: 0,
-            current_token: Token::None,
+            lexer: Lexer::new(s),
             debug: false,
         }
     }
 
     pub fn debug(mut self) -> Self {
         self.debug = true;
+        self.lexer = self.lexer.debug();
         self
     }
 
     pub fn parse(&mut self) -> Node {
         // Initiate tokenizer
-        self.get_next_token();
+        self.lexer.get_next_token();
 
         self.parse_expression(1)
     }
 
     pub fn parse_expression(&mut self, min_prec: u8) -> Node {
-        let mut lhs = match self.current_token {
+        let mut lhs = match self.lexer.current_token() {
             Token::Lparen => {
-                self.get_next_token();
+                self.lexer.get_next_token();
                 let inner = self.parse_expression(1);
-                if self.current_token != Token::Rparen {
+                if self.lexer.current_token() != Token::Rparen {
                     panic!("parse error: expected )")
                 }
-                self.get_next_token();
+                self.lexer.get_next_token();
                 Node::Parenthesized(Box::new(inner))
             }
 
@@ -50,7 +50,7 @@ impl Parser {
             Token::Error(c) => panic!("Tokenizer error: {}", c),
 
             Token::Number(n) => {
-                self.get_next_token();
+                self.lexer.get_next_token();
                 Node::Number(n)
             }
 
@@ -58,7 +58,7 @@ impl Parser {
         };
 
         loop {
-            let token = self.current_token;
+            let token = self.lexer.current_token();
             match token {
                 Token::EOF => break,
                 Token::Error(c) => panic!("Tokenizer error during bino RHS parsing: {}", c),
@@ -75,7 +75,7 @@ impl Parser {
                         OpPrecedence::Right(prec) => prec,
                         OpPrecedence::Unknown => unreachable!(),
                     };
-                    self.get_next_token();
+                    self.lexer.get_next_token();
                     let rhs = self.parse_expression(next_min_prec);
 
                     lhs = match next_bin_op {
@@ -93,76 +93,6 @@ impl Parser {
         }
 
         lhs
-    }
-
-    fn get_next_token(&mut self) {
-        // skip whitespaces
-        while self.current_byte() == Some(b' ') {
-            self.pos += 1;
-        }
-
-        let token = match self.current_byte() {
-            None => Token::EOF,
-            Some(b'+') => {
-                self.pos += 1;
-                Token::Plus
-            }
-            Some(b'-') => {
-                self.pos += 1;
-                Token::Minus
-            }
-            Some(b'*') => {
-                self.pos += 1;
-                match self.current_byte() {
-                    Some(b'*') => {
-                        self.pos += 1;
-                        Token::Pow
-                    }
-                    _ => Token::Mult,
-                }
-            }
-            Some(b'/') => {
-                self.pos += 1;
-                Token::Div
-            }
-            Some(b'(') => {
-                self.pos += 1;
-                Token::Lparen
-            }
-            Some(b')') => {
-                self.pos += 1;
-                Token::Rparen
-            }
-            Some(byte) if byte.is_ascii_digit() => {
-                let start = self.pos;
-                self.pos += 1;
-                while let Some(byte) = self.current_byte() {
-                    if !byte.is_ascii_digit() {
-                        break;
-                    }
-                    self.pos += 1;
-                }
-                let num = &self.input[start..self.pos];
-                let num = unsafe { std::str::from_utf8_unchecked(num) }
-                    .parse::<u32>()
-                    .unwrap();
-                Token::Number(num)
-            }
-            Some(byte) => Token::Error(byte as char),
-        };
-
-        if self.debug {
-            println!("Reading token {:?}", token);
-        }
-        self.current_token = token
-    }
-
-    fn current_byte(&mut self) -> Option<u8> {
-        if self.pos < self.input.len() {
-            Some(self.input[self.pos])
-        } else {
-            None
-        }
     }
 }
 
