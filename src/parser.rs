@@ -21,19 +21,19 @@ impl<'a> Parser<'a> {
         self
     }
 
-    pub fn parse(&mut self) -> Node<'a> {
+    pub fn parse(&mut self) -> Box<Node<'a>> {
         // Initiate tokenizer
         self.lexer.get_next_token();
 
         self.parse_expression()
     }
 
-    pub fn parse_expression(&mut self) -> Node<'a> {
+    pub fn parse_expression(&mut self) -> Box<Node<'a>> {
         let lhs = self.parse_primary();
         self.parse_expression_1(lhs, 0)
     }
 
-    fn parse_primary(&mut self) -> Node<'a> {
+    fn parse_primary(&mut self) -> Box<Node<'a>> {
         match self.lexer.current_token().value() {
             TokenValue::tLPAREN => {
                 self.lexer.get_next_token();
@@ -42,7 +42,7 @@ impl<'a> Parser<'a> {
                     panic!("parse error: expected )")
                 }
                 self.lexer.get_next_token();
-                Node::Parenthesized(Box::new(inner))
+                Box::new(Node::Parenthesized(inner))
             }
 
             TokenValue::tEOF => panic!("EOF"),
@@ -50,14 +50,14 @@ impl<'a> Parser<'a> {
 
             TokenValue::tINTEGER(n) => {
                 self.lexer.get_next_token();
-                Node::Number(n)
+                Box::new(Node::Number(n))
             }
 
             other => panic!("parse_primary: expected Number or Lparen, got {:?}", other),
         }
     }
 
-    fn parse_expression_1(&mut self, mut lhs: Node<'a>, min_prec: u8) -> Node<'a> {
+    fn parse_expression_1(&mut self, mut lhs: Box<Node<'a>>, min_prec: u8) -> Box<Node<'a>> {
         let mut lookahead = self.lexer.current_token();
         while let TokenValue::BinOp(bin_op) = lookahead.value() {
             if bin_op.precedence() < min_prec {
@@ -85,11 +85,11 @@ impl<'a> Parser<'a> {
                 lookahead = self.lexer.current_token();
             }
             lhs = match bin_op {
-                BinOp::tPLUS => Node::Plus(Box::new(lhs), Box::new(rhs)),
-                BinOp::tMINUS => Node::Minus(Box::new(lhs), Box::new(rhs)),
-                BinOp::tSTAR => Node::Mult(Box::new(lhs), Box::new(rhs)),
-                BinOp::tDIVIDE => Node::Minus(Box::new(lhs), Box::new(rhs)),
-                BinOp::tPOW => Node::Pow(Box::new(lhs), Box::new(rhs)),
+                BinOp::tPLUS => Box::new(Node::Plus(lhs, rhs)),
+                BinOp::tMINUS => Box::new(Node::Minus(lhs, rhs)),
+                BinOp::tSTAR => Box::new(Node::Mult(lhs, rhs)),
+                BinOp::tDIVIDE => Box::new(Node::Minus(lhs, rhs)),
+                BinOp::tPOW => Box::new(Node::Pow(lhs, rhs)),
             };
         }
 
@@ -102,7 +102,7 @@ fn test_parse() {
     let ast = Parser::new("22 + 3 ** 4 * (2 + 2) - 1").debug().parse();
     assert_eq!(
         ast,
-        Node::Minus(
+        Box::new(Node::Minus(
             Box::new(Node::Plus(
                 Box::new(Node::Number("22")),
                 Box::new(Node::Mult(
@@ -117,8 +117,7 @@ fn test_parse() {
                 ))
             )),
             Box::new(Node::Number("1"))
-        )
+        ))
     );
     assert_eq!(ast.eval(), 345);
-    panic!("foo")
 }
