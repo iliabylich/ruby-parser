@@ -1,6 +1,6 @@
 use crate::Lexer;
 use crate::Node;
-use crate::{token::OpPrecedence, Token};
+use crate::Token;
 
 pub struct Parser {
     lexer: Lexer,
