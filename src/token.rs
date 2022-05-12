@@ -99,10 +99,7 @@ pub enum TokenValue<'a> {
     tVTAB(&'a str),         // "escaped vertical tab"
     tUPLUS(&'a str),        // "unary+"
     tUMINUS(&'a str),       // "unary-"
-    tPOW(&'a str),          // "**"
     tCMP(&'a str),          // "<=>"
-    tEQ(&'a str),           // "=="
-    tEQQ(&'a str),          // "==="
     tNEQ(&'a str),          // "!="
     tGEQ(&'a str),          // ">="
     tLEQ(&'a str),          // "<="
@@ -129,7 +126,6 @@ pub enum TokenValue<'a> {
     tLBRACK(&'a str),       // "["
     tLBRACE(&'a str),       // "{"
     tLBRACE_ARG(&'a str),   // "{ arg"
-    tSTAR(&'a str),         // "*"
     tDSTAR(&'a str),        // "**arg"
     tAMPER(&'a str),        // "&"
     tLAMBDA(&'a str),       // "->"
@@ -152,7 +148,6 @@ pub enum TokenValue<'a> {
     tLCURLY(&'a str),    // "{ (tLCURLY)"
     tRCURLY(&'a str),    // "}"
     tLBRACK2(&'a str),   // "[ (tLBRACK2)"
-    tEQL(&'a str),       // "="
     tPIPE(&'a str),      // "|"
     tAMPER2(&'a str),    // "& (tAMPER2)"
     tGT(&'a str),        // ">"
@@ -164,10 +159,6 @@ pub enum TokenValue<'a> {
     tSEMI(&'a str),      // ";"
     tSPACE(&'a str),     // " "
     tNL(&'a str),        // "\n"
-    tPLUS(&'a str),      // "+"
-    tMINUS(&'a str),     // "-"
-    tSTAR2(&'a str),     // "* (tSTAR2)"
-    tDIVIDE(&'a str),    // "/"
     tPERCENT(&'a str),   // "%"
     tTILDE(&'a str),     // "~"
     tBANG(&'a str),      // "!"
@@ -193,19 +184,118 @@ pub struct Loc(pub usize, pub usize);
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum BinOp {
+    // %nonassoc, 1
+    kIF_MOD,
+    kUNLESS_MOD,
+    kWHILE_MOD,
+    kUNTIL_MOD,
+    kIN,
+
+    // %left, 2
+    kOR,
+    kAND,
+
+    // %right, 3
+    kNOT,
+
+    // %nonassoc, 4
+    kDEFINED,
+
+    // %right, 5
+    tEQL,
+    tOP_ASGN,
+
+    // %left, 6
+    kRESCUE_MOD,
+
+    // %right, 7
+    tEH,
+    tCOLON,
+
+    // %nonassoc, 8
+    tDOT2,
+    tDOT3,
+    tBDOT2,
+    tBDOT3,
+
+    // %left, 9
+    tOROP,
+
+    // %left, 10
+    tANDOP,
+
+    // %nonassoc, 11
+    tCMP,
+    tEQ,
+    tEQQ,
+    tNEQ,
+    tMATCH,
+    tNMATCH,
+
+    // %left, 12
+    tGT,
+    tGEQ,
+    tLT,
+    tLEQ,
+
+    // %left, 13
+    tPIPE,
+    tCARET,
+
+    // %left, 14
+    tAMPER,
+
+    // %left, 15
+    tLSHFT,
+    tRSHFT,
+
+    // %left, 16
     tPLUS,
     tMINUS,
+
+    // %left, 17
     tSTAR,
     tDIVIDE,
+    tPERCENT,
+
+    // %right, 18
+    tUMINUS_NUM,
+    tUMINUS,
+
+    // %right, 19
     tPOW,
+
+    // %right, 20
+    tBANG,
+    tTILDE,
+    tUPLUS,
 }
 
 impl BinOp {
     pub(crate) fn precedence(&self) -> OpPrecedence {
+        use BinOp::*;
+
         match self {
-            BinOp::tPLUS | BinOp::tMINUS => OpPrecedence::Left(1),
-            BinOp::tSTAR | BinOp::tDIVIDE => OpPrecedence::Left(2),
-            BinOp::tPOW => OpPrecedence::Right(3),
+            kIF_MOD | kUNLESS_MOD | kWHILE_MOD | kUNTIL_MOD | kIN => OpPrecedence::None(1),
+            kOR | kAND => OpPrecedence::Left(1),
+            kNOT => OpPrecedence::Right(3),
+            kDEFINED => OpPrecedence::None(4),
+            tEQL | tOP_ASGN => OpPrecedence::Right(5),
+            kRESCUE_MOD => OpPrecedence::Left(6),
+            tEH | tCOLON => OpPrecedence::Right(7),
+            tDOT2 | tDOT3 | tBDOT2 | tBDOT3 => OpPrecedence::None(8),
+            tOROP => OpPrecedence::Left(9),
+            tANDOP => OpPrecedence::Left(10),
+            tCMP | tEQ | tEQQ | tNEQ | tMATCH | tNMATCH => OpPrecedence::None(11),
+            tGT | tGEQ | tLT | tLEQ => OpPrecedence::Left(12),
+            tPIPE | tCARET => OpPrecedence::Left(13),
+            tAMPER => OpPrecedence::Left(14),
+            tLSHFT | tRSHFT => OpPrecedence::Left(15),
+            tPLUS | tMINUS => OpPrecedence::Left(16),
+            tSTAR | tDIVIDE | tPERCENT => OpPrecedence::Left(17),
+            tUMINUS_NUM | tUMINUS => OpPrecedence::Right(18),
+            tPOW => OpPrecedence::Right(19),
+            tBANG | tTILDE | tUPLUS => OpPrecedence::Right(20),
         }
     }
 }

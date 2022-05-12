@@ -90,6 +90,7 @@ impl<'a> Parser<'a> {
                 BinOp::tSTAR => Box::new(Node::Mult(lhs, rhs)),
                 BinOp::tDIVIDE => Box::new(Node::Minus(lhs, rhs)),
                 BinOp::tPOW => Box::new(Node::Pow(lhs, rhs)),
+                _ => unimplemented!("bin_op {:?}", bin_op),
             };
         }
 

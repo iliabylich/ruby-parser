@@ -2,6 +2,7 @@
 pub(crate) enum OpPrecedence {
     Left(u8),
     Right(u8),
+    None(u8),
 }
 
 impl PartialOrd for OpPrecedence {
@@ -27,6 +28,7 @@ impl OpPrecedence {
         match self {
             OpPrecedence::Left(n) => *n,
             OpPrecedence::Right(n) => *n,
+            OpPrecedence::None(n) => *n,
         }
     }
 
