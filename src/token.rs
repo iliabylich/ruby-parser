@@ -1,6 +1,6 @@
 use crate::op_precedence::OpPrecedence;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
 
 impl<'a> Token<'a> {
@@ -28,7 +28,13 @@ pub enum TokenValue<'a> {
     None,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+impl Default for TokenValue<'_> {
+    fn default() -> Self {
+        Self::None
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Loc(pub usize, pub usize);
 
 #[allow(non_camel_case_types)]

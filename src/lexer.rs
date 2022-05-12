@@ -12,7 +12,7 @@ impl<'a> Lexer<'a> {
         Self {
             input: s.as_bytes(),
             pos: 0,
-            current_token: Token(TokenValue::None, Loc(0, 0)),
+            current_token: Token::default(),
             debug: false,
         }
     }
