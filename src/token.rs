@@ -2,8 +2,8 @@ use crate::op_precedence::OpPrecedence;
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Token {
-    tINTEGER(u32),
+pub enum Token<'a> {
+    tINTEGER(&'a str),
     BinOp(BinOp),
     tLPAREN,
     tRPAREN,

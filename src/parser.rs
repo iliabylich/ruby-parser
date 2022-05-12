@@ -2,13 +2,13 @@ use crate::lexer::Lexer;
 use crate::node::Node;
 use crate::token::{BinOp, Token};
 
-pub struct Parser {
-    lexer: Lexer,
+pub struct Parser<'a> {
+    lexer: Lexer<'a>,
     debug: bool,
 }
 
-impl Parser {
-    pub fn new(s: &str) -> Self {
+impl<'a> Parser<'a> {
+    pub fn new(s: &'a str) -> Self {
         Self {
             lexer: Lexer::new(s),
             debug: false,
@@ -21,19 +21,19 @@ impl Parser {
         self
     }
 
-    pub fn parse(&mut self) -> Node {
+    pub fn parse(&mut self) -> Node<'a> {
         // Initiate tokenizer
         self.lexer.get_next_token();
 
         self.parse_expression()
     }
 
-    pub fn parse_expression(&mut self) -> Node {
+    pub fn parse_expression(&mut self) -> Node<'a> {
         let lhs = self.parse_primary();
         self.parse_expression_1(lhs, 0)
     }
 
-    fn parse_primary(&mut self) -> Node {
+    fn parse_primary(&mut self) -> Node<'a> {
         match self.lexer.current_token() {
             Token::tLPAREN => {
                 self.lexer.get_next_token();
@@ -57,7 +57,7 @@ impl Parser {
         }
     }
 
-    fn parse_expression_1(&mut self, mut lhs: Node, min_prec: u8) -> Node {
+    fn parse_expression_1(&mut self, mut lhs: Node<'a>, min_prec: u8) -> Node<'a> {
         let mut lookahead = self.lexer.current_token();
         while let Token::BinOp(bin_op) = lookahead {
             if bin_op.precedence() < min_prec {
@@ -104,19 +104,19 @@ fn test_parse() {
         ast,
         Node::Minus(
             Box::new(Node::Plus(
-                Box::new(Node::Number(22)),
+                Box::new(Node::Number("22")),
                 Box::new(Node::Mult(
                     Box::new(Node::Pow(
-                        Box::new(Node::Number(3)),
-                        Box::new(Node::Number(4))
+                        Box::new(Node::Number("3")),
+                        Box::new(Node::Number("4"))
                     )),
                     Box::new(Node::Parenthesized(Box::new(Node::Plus(
-                        Box::new(Node::Number(2)),
-                        Box::new(Node::Number(2))
+                        Box::new(Node::Number("2")),
+                        Box::new(Node::Number("2"))
                     ))))
                 ))
             )),
-            Box::new(Node::Number(1))
+            Box::new(Node::Number("1"))
         )
     );
     assert_eq!(ast.eval(), 345);

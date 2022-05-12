@@ -1,16 +1,16 @@
 use crate::token::{BinOp, Token};
 
-pub struct Lexer {
-    input: Vec<u8>,
+pub struct Lexer<'a> {
+    input: &'a [u8],
     pos: usize,
-    current_token: Token,
+    current_token: Token<'a>,
     debug: bool,
 }
 
-impl Lexer {
-    pub fn new(s: &str) -> Self {
+impl<'a> Lexer<'a> {
+    pub fn new(s: &'a str) -> Self {
         Self {
-            input: s.as_bytes().to_vec(),
+            input: s.as_bytes(),
             pos: 0,
             current_token: Token::None,
             debug: false,
@@ -22,7 +22,7 @@ impl Lexer {
         self
     }
 
-    pub fn current_token(&self) -> Token {
+    pub fn current_token(&self) -> Token<'a> {
         self.current_token
     }
 
@@ -74,9 +74,8 @@ impl Lexer {
                     self.pos += 1;
                 }
                 let num = &self.input[start..self.pos];
-                let num = unsafe { std::str::from_utf8_unchecked(num) }
-                    .parse::<u32>()
-                    .unwrap();
+                // SAFETY: all bytes in num are ASCII digits
+                let num = unsafe { std::str::from_utf8_unchecked(num) };
                 Token::tINTEGER(num)
             }
             Some(byte) => Token::Error(byte as char),
