@@ -1,6 +1,6 @@
-use crate::Lexer;
-use crate::Node;
-use crate::Token;
+use crate::lexer::Lexer;
+use crate::node::Node;
+use crate::token::{BinOp, Token};
 
 pub struct Parser {
     lexer: Lexer,
@@ -35,20 +35,20 @@ impl Parser {
 
     fn parse_primary(&mut self) -> Node {
         match self.lexer.current_token() {
-            Token::Lparen => {
+            Token::tLPAREN => {
                 self.lexer.get_next_token();
                 let inner = self.parse_expression();
-                if self.lexer.current_token() != Token::Rparen {
+                if self.lexer.current_token() != Token::tRPAREN {
                     panic!("parse error: expected )")
                 }
                 self.lexer.get_next_token();
                 Node::Parenthesized(Box::new(inner))
             }
 
-            Token::EOF => panic!("EOF"),
+            Token::tEOF => panic!("EOF"),
             Token::Error(c) => panic!("Tokenizer error: {}", c),
 
-            Token::Number(n) => {
+            Token::tINTEGER(n) => {
                 self.lexer.get_next_token();
                 Node::Number(n)
             }
@@ -59,20 +59,24 @@ impl Parser {
 
     fn parse_expression_1(&mut self, mut lhs: Node, min_prec: u8) -> Node {
         let mut lookahead = self.lexer.current_token();
-        while lookahead.is_bin_op() && lookahead.precedence() >= min_prec {
-            let op = lookahead;
+        while let Token::BinOp(bin_op) = lookahead {
+            if bin_op.precedence() < min_prec {
+                break;
+            }
             self.lexer.get_next_token();
             let mut rhs = self.parse_primary();
             lookahead = self.lexer.current_token();
-            while lookahead.is_bin_op()
-                && (lookahead.precedence() > op.precedence()
-                    || (lookahead.precedence().is_right_associative()
-                        && lookahead.precedence() == op.precedence()))
-            {
+            while let Token::BinOp(lookahead_bin_op) = lookahead {
+                if !(lookahead_bin_op.precedence() > bin_op.precedence()
+                    || (lookahead_bin_op.precedence().is_right_associative()
+                        && lookahead_bin_op.precedence() == bin_op.precedence()))
+                {
+                    break;
+                }
                 rhs = self.parse_expression_1(
                     rhs,
-                    op.precedence().as_number()
-                        + if lookahead.precedence() > op.precedence() {
+                    bin_op.precedence().as_number()
+                        + if lookahead_bin_op.precedence() > bin_op.precedence() {
                             1
                         } else {
                             0
@@ -80,13 +84,12 @@ impl Parser {
                 );
                 lookahead = self.lexer.current_token();
             }
-            lhs = match op {
-                Token::Plus => Node::Plus(Box::new(lhs), Box::new(rhs)),
-                Token::Minus => Node::Minus(Box::new(lhs), Box::new(rhs)),
-                Token::Mult => Node::Mult(Box::new(lhs), Box::new(rhs)),
-                Token::Div => Node::Minus(Box::new(lhs), Box::new(rhs)),
-                Token::Pow => Node::Pow(Box::new(lhs), Box::new(rhs)),
-                other => unreachable!("expected bin op, got {:?}", other),
+            lhs = match bin_op {
+                BinOp::tPLUS => Node::Plus(Box::new(lhs), Box::new(rhs)),
+                BinOp::tMINUS => Node::Minus(Box::new(lhs), Box::new(rhs)),
+                BinOp::tSTAR => Node::Mult(Box::new(lhs), Box::new(rhs)),
+                BinOp::tDIVIDE => Node::Minus(Box::new(lhs), Box::new(rhs)),
+                BinOp::tPOW => Node::Pow(Box::new(lhs), Box::new(rhs)),
             };
         }
 

@@ -1,4 +1,4 @@
-use crate::Token;
+use crate::token::{BinOp, Token};
 
 pub struct Lexer {
     input: Vec<u8>,
@@ -33,36 +33,36 @@ impl Lexer {
         }
 
         let token = match self.current_byte() {
-            None => Token::EOF,
+            None => Token::tEOF,
             Some(b'+') => {
                 self.pos += 1;
-                Token::Plus
+                Token::BinOp(BinOp::tPLUS)
             }
             Some(b'-') => {
                 self.pos += 1;
-                Token::Minus
+                Token::BinOp(BinOp::tMINUS)
             }
             Some(b'*') => {
                 self.pos += 1;
                 match self.current_byte() {
                     Some(b'*') => {
                         self.pos += 1;
-                        Token::Pow
+                        Token::BinOp(BinOp::tPOW)
                     }
-                    _ => Token::Mult,
+                    _ => Token::BinOp(BinOp::tSTAR),
                 }
             }
             Some(b'/') => {
                 self.pos += 1;
-                Token::Div
+                Token::BinOp(BinOp::tDIVIDE)
             }
             Some(b'(') => {
                 self.pos += 1;
-                Token::Lparen
+                Token::tLPAREN
             }
             Some(b')') => {
                 self.pos += 1;
-                Token::Rparen
+                Token::tRPAREN
             }
             Some(byte) if byte.is_ascii_digit() => {
                 let start = self.pos;
@@ -77,7 +77,7 @@ impl Lexer {
                 let num = unsafe { std::str::from_utf8_unchecked(num) }
                     .parse::<u32>()
                     .unwrap();
-                Token::Number(num)
+                Token::tINTEGER(num)
             }
             Some(byte) => Token::Error(byte as char),
         };

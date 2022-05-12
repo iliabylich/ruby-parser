@@ -1,13 +1,10 @@
-mod token;
-pub use token::Token;
-
-mod op_precedence;
-
-mod node;
-pub use node::Node;
-
 mod lexer;
-pub use lexer::Lexer;
-
+mod node;
+mod op_precedence;
 mod parser;
+mod token;
+
+pub use lexer::Lexer;
+pub use node::Node;
 pub use parser::Parser;
+pub use token::Token;

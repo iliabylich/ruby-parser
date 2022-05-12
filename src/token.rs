@@ -1,34 +1,36 @@
 use crate::op_precedence::OpPrecedence;
 
+#[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Token {
-    Number(u32),
-    Plus,
-    Minus,
-    Mult,
-    Div,
-    Pow,
-    Lparen,
-    Rparen,
-    EOF,
+    tINTEGER(u32),
+    BinOp(BinOp),
+    tLPAREN,
+    tRPAREN,
+    tEOF,
+
+    // TODO: replace with diagnostics
     Error(char),
+
     None,
 }
 
-impl Token {
+#[allow(non_camel_case_types)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum BinOp {
+    tPLUS,
+    tMINUS,
+    tSTAR,
+    tDIVIDE,
+    tPOW,
+}
+
+impl BinOp {
     pub(crate) fn precedence(&self) -> OpPrecedence {
         match self {
-            Token::Plus | Token::Minus => OpPrecedence::Left(1),
-            Token::Mult | Token::Div => OpPrecedence::Left(2),
-            Token::Pow => OpPrecedence::Right(3),
-            _ => OpPrecedence::Unknown,
+            BinOp::tPLUS | BinOp::tMINUS => OpPrecedence::Left(1),
+            BinOp::tSTAR | BinOp::tDIVIDE => OpPrecedence::Left(2),
+            BinOp::tPOW => OpPrecedence::Right(3),
         }
-    }
-
-    pub(crate) fn is_bin_op(&self) -> bool {
-        matches!(
-            self,
-            Token::Plus | Token::Minus | Token::Mult | Token::Div | Token::Pow
-        )
     }
 }
