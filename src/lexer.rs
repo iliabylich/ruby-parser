@@ -1,4 +1,4 @@
-use crate::token::{BinOp, Token};
+use crate::token::{BinOp, Loc, Token, TokenValue};
 
 pub struct Lexer<'a> {
     input: &'a [u8],
@@ -12,7 +12,7 @@ impl<'a> Lexer<'a> {
         Self {
             input: s.as_bytes(),
             pos: 0,
-            current_token: Token::None,
+            current_token: Token(TokenValue::None, Loc(0, 0)),
             debug: false,
         }
     }
@@ -33,36 +33,42 @@ impl<'a> Lexer<'a> {
         }
 
         let token = match self.current_byte() {
-            None => Token::tEOF,
+            None => Token(TokenValue::tEOF, Loc(self.pos, self.pos)),
             Some(b'+') => {
                 self.pos += 1;
-                Token::BinOp(BinOp::tPLUS)
+                Token(TokenValue::BinOp(BinOp::tPLUS), Loc(self.pos - 1, self.pos))
             }
             Some(b'-') => {
                 self.pos += 1;
-                Token::BinOp(BinOp::tMINUS)
+                Token(
+                    TokenValue::BinOp(BinOp::tMINUS),
+                    Loc(self.pos - 1, self.pos),
+                )
             }
             Some(b'*') => {
                 self.pos += 1;
                 match self.current_byte() {
                     Some(b'*') => {
                         self.pos += 1;
-                        Token::BinOp(BinOp::tPOW)
+                        Token(TokenValue::BinOp(BinOp::tPOW), Loc(self.pos - 2, self.pos))
                     }
-                    _ => Token::BinOp(BinOp::tSTAR),
+                    _ => Token(TokenValue::BinOp(BinOp::tSTAR), Loc(self.pos - 1, self.pos)),
                 }
             }
             Some(b'/') => {
                 self.pos += 1;
-                Token::BinOp(BinOp::tDIVIDE)
+                Token(
+                    TokenValue::BinOp(BinOp::tDIVIDE),
+                    Loc(self.pos - 1, self.pos),
+                )
             }
             Some(b'(') => {
                 self.pos += 1;
-                Token::tLPAREN
+                Token(TokenValue::tLPAREN, Loc(self.pos - 1, self.pos))
             }
             Some(b')') => {
                 self.pos += 1;
-                Token::tRPAREN
+                Token(TokenValue::tRPAREN, Loc(self.pos - 1, self.pos))
             }
             Some(byte) if byte.is_ascii_digit() => {
                 let start = self.pos;
@@ -76,9 +82,12 @@ impl<'a> Lexer<'a> {
                 let num = &self.input[start..self.pos];
                 // SAFETY: all bytes in num are ASCII digits
                 let num = unsafe { std::str::from_utf8_unchecked(num) };
-                Token::tINTEGER(num)
+                Token(TokenValue::tINTEGER(num), Loc(start, self.pos))
             }
-            Some(byte) => Token::Error(byte as char),
+            Some(byte) => {
+                self.pos += 1;
+                Token(TokenValue::Error(byte as char), Loc(self.pos - 1, self.pos))
+            }
         };
 
         if self.debug {

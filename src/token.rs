@@ -1,8 +1,21 @@
 use crate::op_precedence::OpPrecedence;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
+
+impl<'a> Token<'a> {
+    pub fn value(&self) -> TokenValue<'a> {
+        self.0
+    }
+
+    pub fn loc(&self) -> Loc {
+        self.1
+    }
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub enum Token<'a> {
+pub enum TokenValue<'a> {
     tINTEGER(&'a str),
     BinOp(BinOp),
     tLPAREN,
@@ -14,6 +27,9 @@ pub enum Token<'a> {
 
     None,
 }
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Loc(pub usize, pub usize);
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]

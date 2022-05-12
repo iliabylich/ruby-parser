@@ -7,4 +7,4 @@ mod token;
 pub use lexer::Lexer;
 pub use node::Node;
 pub use parser::Parser;
-pub use token::Token;
+pub use token::{Loc, Token, TokenValue};
