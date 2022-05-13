@@ -1,15 +1,23 @@
 mod buffer;
+mod string_literals;
 
 use crate::token::{BinOp, Loc, Token, TokenValue};
 use buffer::Buffer;
+use string_literals::{StringLiteralAction, StringLiterals};
 
 pub struct Lexer<'a> {
     buffer: Buffer<'a>,
-    current_token: Token<'a>,
     debug: bool,
+
+    string_literals: StringLiterals<'a>,
+
+    tokens: Vec<Token<'a>>,
+    token_idx: usize,
+
+    curly_braces: usize,
 }
 
-// buffer delegators
+// buffer shortcut delegators
 impl<'a> Lexer<'a> {
     pub(crate) fn skip_byte(&mut self) {
         self.buffer.skip_byte()
@@ -33,8 +41,14 @@ impl<'a> Lexer<'a> {
     pub fn new(s: &'a str) -> Self {
         Self {
             buffer: Buffer::new(s.as_bytes()),
-            current_token: Token::default(),
             debug: false,
+
+            string_literals: StringLiterals::new(),
+
+            tokens: vec![],
+            token_idx: 0,
+
+            curly_braces: 0,
         }
     }
 
@@ -43,20 +57,100 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    pub fn current_token(&self) -> Token<'a> {
-        self.current_token
+    pub fn tokenize(&mut self) {
+        loop {
+            let got_some_tokens = self.get_next_token();
+            if got_some_tokens.is_err() {
+                break;
+            }
+        }
     }
 
-    pub fn get_next_token(&mut self) {
-        // skip whitespaces
-        while self.current_byte() == Some(b' ') {
-            self.skip_byte();
+    pub fn current_token(&self) -> Token<'a> {
+        self.tokens[self.token_idx]
+    }
+
+    pub fn next_token(&mut self) {
+        if self.token_idx < self.tokens.len() {
+            self.token_idx += 1;
+        }
+    }
+
+    pub(crate) fn add_token(&mut self, token: Token<'a>) {
+        if self.debug {
+            println!("Reading token {:?}", token);
         }
 
+        self.tokens.push(token);
+    }
+
+    fn get_next_token(&mut self) -> Result<(), ()> {
+        // Handle current string literal (if any)
+        if let Some(string_literal) = self.string_literals.last() {
+            match string_literal.lex(&mut self.buffer) {
+                StringLiteralAction::InInterpolation {
+                    interpolation_started_with_curly_level,
+                } => {
+                    if self.current_byte() == Some(b'}')
+                        && interpolation_started_with_curly_level == self.curly_braces
+                    {
+                        self.add_token(Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1)));
+                        self.skip_byte();
+                    }
+                    // we are after `#{` and should read an interpolated value
+                    self.get_next_value_token()?;
+                }
+                StringLiteralAction::EmitStringContent {
+                    content,
+                    start,
+                    end,
+                } => {
+                    self.add_token(Token(TokenValue::tSTRING_CONTENT(content), Loc(start, end)));
+                    self.buffer.set_pos(end);
+                }
+                StringLiteralAction::CloseLiteral {
+                    content,
+                    start,
+                    end,
+                    jump_to,
+                } => {
+                    self.add_token(Token(TokenValue::tSTRING_END(content), Loc(start, end)));
+                    self.buffer.set_pos(jump_to);
+                    self.string_literals.pop();
+                }
+            }
+        } else {
+            self.get_next_value_token()?
+        }
+
+        Ok(())
+    }
+
+    pub fn get_next_value_token(&mut self) -> Result<(), ()> {
         let start = self.pos();
 
         let token = match self.current_byte() {
-            None => Token(TokenValue::tEOF, Loc(self.pos(), self.pos())),
+            // EOF | NULL      | ^D         | ^Z
+            None | Some(b'\0' | 0x04 | 0x1a) => {
+                let t_eof = Token(TokenValue::tEOF, Loc(self.pos(), self.pos()));
+                self.add_token(t_eof);
+                return Err(());
+            }
+
+            // whitespaces
+            Some(b'\r') => {
+                // TODO: warn about \r at middle of the line
+                return Ok(());
+            }
+
+            // SPACE  | TAB   | LF   | VTAB
+            Some(b' ' | b'\t' | 0x0c | 0x0b) => {
+                while let Some(b' ' | b'\t' | 0x0c | 0x0b) = self.current_byte() {
+                    self.skip_byte()
+                }
+                return Ok(());
+            }
+
             Some(b'+') => {
                 self.skip_byte();
                 Token(TokenValue::BinOp(BinOp::tPLUS), Loc(start, self.pos()))
@@ -113,8 +207,6 @@ impl<'a> Lexer<'a> {
                     self.skip_byte();
                 }
                 let num = self.slice(start, self.pos());
-                // SAFETY: all bytes in num are ASCII digits
-                let num = unsafe { std::str::from_utf8_unchecked(num) };
                 Token(TokenValue::tINTEGER(num), Loc(start, self.pos()))
             }
             Some(byte) => {
@@ -123,10 +215,8 @@ impl<'a> Lexer<'a> {
             }
         };
 
-        if self.debug {
-            println!("Reading token {:?}", token);
-        }
-        self.current_token = token
+        self.add_token(token);
+        Ok(())
     }
 }
 
@@ -140,14 +230,14 @@ mod tests {
             #[allow(non_snake_case)]
             fn $name() {
                 let mut lexer = Lexer::new($input);
-                lexer.get_next_token();
-                assert_eq!(lexer.current_token.value(), $tok);
-                assert_eq!(lexer.current_token.loc(), Loc($loc.start, $loc.end));
+                lexer.tokenize();
+                assert_eq!(lexer.tokens[0].value(), $tok);
+                assert_eq!(lexer.tokens[0].loc(), Loc($loc.start, $loc.end));
             }
         };
     }
 
-    assert_lex!(tINTEGER, "42", TokenValue::tINTEGER("42"), 0..2);
+    assert_lex!(tINTEGER, "42", TokenValue::tINTEGER(b"42"), 0..2);
 
     assert_lex!(BinOp_tPLUS, "+", TokenValue::BinOp(BinOp::tPLUS), 0..1);
     assert_lex!(BinOp_tMINUS, "-", TokenValue::BinOp(BinOp::tMINUS), 0..1);

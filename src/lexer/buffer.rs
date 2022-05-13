@@ -20,6 +20,10 @@ impl<'a> Buffer<'a> {
         self.pos += 1;
     }
 
+    pub(crate) fn set_pos(&mut self, pos: usize) {
+        self.pos = pos;
+    }
+
     pub(crate) fn pos(&self) -> usize {
         self.pos
     }

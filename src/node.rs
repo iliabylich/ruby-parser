@@ -1,6 +1,6 @@
 #[derive(PartialEq, Debug)]
 pub enum Node<'a> {
-    Number(&'a str),
+    Number(&'a [u8]),
     Plus(Box<Node<'a>>, Box<Node<'a>>),
     Minus(Box<Node<'a>>, Box<Node<'a>>),
     Mult(Box<Node<'a>>, Box<Node<'a>>),
@@ -12,7 +12,7 @@ pub enum Node<'a> {
 impl<'a> Node<'a> {
     pub fn eval(&self) -> u32 {
         match self {
-            Node::Number(n) => n.parse().unwrap(),
+            Node::Number(n) => std::str::from_utf8(n).unwrap().parse().unwrap(),
             Node::Plus(lhs, rhs) => lhs.eval() + rhs.eval(),
             Node::Minus(lhs, rhs) => lhs.eval() - rhs.eval(),
             Node::Mult(lhs, rhs) => lhs.eval() * rhs.eval(),

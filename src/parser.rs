@@ -23,7 +23,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse(&mut self) -> Node<'a> {
         // Initiate tokenizer
-        self.lexer.get_next_token();
+        self.lexer.tokenize();
 
         self.parse_expression()
     }
@@ -36,12 +36,12 @@ impl<'a> Parser<'a> {
     fn parse_primary(&mut self) -> Node<'a> {
         match self.lexer.current_token().value() {
             TokenValue::tLPAREN => {
-                self.lexer.get_next_token();
+                self.lexer.next_token();
                 let inner = self.parse_expression();
                 if self.lexer.current_token().value() != TokenValue::tRPAREN {
                     panic!("parse error: expected )")
                 }
-                self.lexer.get_next_token();
+                self.lexer.next_token();
                 Node::Parenthesized(Box::new(inner))
             }
 
@@ -49,7 +49,7 @@ impl<'a> Parser<'a> {
             TokenValue::Error(c) => panic!("Tokenizer error: {}", c),
 
             TokenValue::tINTEGER(n) => {
-                self.lexer.get_next_token();
+                self.lexer.next_token();
                 Node::Number(n)
             }
 
@@ -63,7 +63,7 @@ impl<'a> Parser<'a> {
             if bin_op.precedence() < min_prec {
                 break;
             }
-            self.lexer.get_next_token();
+            self.lexer.next_token();
             let mut rhs = self.parse_primary();
             lookahead = self.lexer.current_token();
             while let TokenValue::BinOp(lookahead_bin_op) = lookahead.value() {
@@ -105,19 +105,19 @@ fn test_parse() {
         ast,
         Node::Minus(
             Box::new(Node::Plus(
-                Box::new(Node::Number("22")),
+                Box::new(Node::Number(b"22")),
                 Box::new(Node::Mult(
                     Box::new(Node::Pow(
-                        Box::new(Node::Number("3")),
-                        Box::new(Node::Number("4"))
+                        Box::new(Node::Number(b"3")),
+                        Box::new(Node::Number(b"4"))
                     )),
                     Box::new(Node::Parenthesized(Box::new(Node::Plus(
-                        Box::new(Node::Number("2")),
-                        Box::new(Node::Number("2"))
+                        Box::new(Node::Number(b"2")),
+                        Box::new(Node::Number(b"2"))
                     ))))
                 ))
             )),
-            Box::new(Node::Number("1"))
+            Box::new(Node::Number(b"1"))
         )
     );
     assert_eq!(ast.eval(), 345);
