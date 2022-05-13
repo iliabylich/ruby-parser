@@ -106,7 +106,7 @@ impl std::convert::TryFrom<TokenValue<'_>> for BinOp {
             TokenValue::kNOT => Ok(BinOp::kNOT),
             TokenValue::kDEFINED => Ok(BinOp::kDEFINED),
             TokenValue::tEQL => Ok(BinOp::tEQL),
-            TokenValue::tOP_ASGN => Ok(BinOp::tOP_ASGN),
+            TokenValue::tOP_ASGN(_) => Ok(BinOp::tOP_ASGN),
             TokenValue::kRESCUE_MOD => Ok(BinOp::kRESCUE_MOD),
             TokenValue::tEH => Ok(BinOp::tEH),
             TokenValue::tCOLON => Ok(BinOp::tCOLON),

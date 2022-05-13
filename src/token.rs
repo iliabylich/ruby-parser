@@ -117,13 +117,12 @@ pub enum TokenValue<'a> {
     tANDDOT,                 // "&."
     tCOLON,                  // ":"
     tCOLON2,                 // "::"
-    tOP_ASGN,                // "operator-assignment" /* +=, -=  etc. */
+    tOP_ASGN(&'a [u8]),      // "operator-assignment" /* +=, -=  etc. */
     tASSOC,                  // "=>"
     tLPAREN,                 // "("
     tRPAREN,                 // ")"
     tLBRACK,                 // "["
     tRBRACK,                 // "]"
-    tLBRACE,                 // "{"
     tDSTAR,                  // "**arg"
     tAMPER,                  // "&"
     tLAMBDA,                 // "->"
@@ -164,6 +163,10 @@ pub enum TokenValue<'a> {
     tEQ,      // "=="
     tEQQ,     // "==="
     tEH,      // "?"
+
+    tEMBEDDED_COMMENT_START, // "=begin"
+    tCOMMENT,                // comment content
+    tEMBEDDED_COMMENT_END,   // "=end"
 
     tEOF,
 

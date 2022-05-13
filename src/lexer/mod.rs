@@ -19,29 +19,6 @@ pub struct Lexer<'a> {
     curly_braces: usize,
 }
 
-// buffer shortcut delegators
-impl<'a> Lexer<'a> {
-    pub(crate) fn skip_byte(&mut self) {
-        self.buffer.skip_byte()
-    }
-    pub(crate) fn current_byte(&self) -> Option<u8> {
-        self.buffer.current_byte()
-    }
-    pub(crate) fn take_byte(&mut self) -> Option<u8> {
-        self.buffer.take_byte()
-    }
-    #[allow(dead_code)]
-    pub(crate) fn is_eof(&self) -> bool {
-        self.buffer.is_eof()
-    }
-    pub(crate) fn pos(&self) -> usize {
-        self.buffer.pos()
-    }
-    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
-        self.buffer.slice(start, end)
-    }
-}
-
 impl<'a> Lexer<'a> {
     pub fn new(s: &'a str) -> Self {
         Self {
@@ -139,42 +116,105 @@ impl<'a> Lexer<'a> {
 
         // SAFETY: None (i.e. EOF) has been handled above, so `.unwrap_unchecked()` is safe
         let token = match unsafe { self.take_byte().unwrap_unchecked() } {
+            b'#' => {
+                todo!("handle comment")
+            }
+            b'*' => {
+                if let Some(b'*') = self.current_byte() {
+                    self.skip_byte();
+                    if let Some(b'=') = self.current_byte() {
+                        self.skip_byte();
+                        Token(TokenValue::tOP_ASGN(b"**="), Loc(start, self.pos()))
+                    } else {
+                        Token(TokenValue::tPOW, Loc(start, self.pos()))
+                    }
+                } else if let Some(b'=') = self.current_byte() {
+                    self.skip_byte();
+                    Token(TokenValue::tOP_ASGN(b"*="), Loc(start, self.pos()))
+                } else {
+                    Token(TokenValue::tSTAR, Loc(start, self.pos()))
+                }
+            }
+            b'!' => {
+                // !@ is handled on the parser level
+                if let Some(b'=') = self.current_byte() {
+                    self.skip_byte();
+                    Token(TokenValue::tNEQ, Loc(start, self.pos()))
+                } else if let Some(b'~') = self.current_byte() {
+                    self.skip_byte();
+                    Token(TokenValue::tNMATCH, Loc(start, self.pos()))
+                } else {
+                    Token(TokenValue::tBANG, Loc(start, self.pos()))
+                }
+            }
+            b'=' => {
+                if self.buffer.lookahead(b"begin") {
+                    Token(TokenValue::tEMBEDDED_COMMENT_START, Loc(start, self.pos()))
+                } else if let Some(b'=') = self.current_byte() {
+                    self.skip_byte();
+                    if let Some(b'=') = self.current_byte() {
+                        self.skip_byte();
+                        Token(TokenValue::tEQQ, Loc(start, self.pos()))
+                    } else {
+                        Token(TokenValue::tEQ, Loc(start, self.pos()))
+                    }
+                } else if let Some(b'~') = self.current_byte() {
+                    self.skip_byte();
+                    Token(TokenValue::tMATCH, Loc(start, self.pos()))
+                } else if let Some(b'>') = self.current_byte() {
+                    self.skip_byte();
+                    Token(TokenValue::tASSOC, Loc(start, self.pos()))
+                } else {
+                    Token(TokenValue::tEQL, Loc(start, self.pos()))
+                }
+            }
+            b'<' => todo!(),
+            b'>' => todo!(),
+            b'"' => todo!(),
+            b'`' => todo!(),
+            b'\'' => todo!(),
+            b'?' => todo!(),
+            b'&' => todo!(),
+            b'|' => todo!(),
+
+            // todo: extend
             b'+' => Token(TokenValue::tPLUS, Loc(start, self.pos())),
             b'-' => Token(TokenValue::tMINUS, Loc(start, self.pos())),
-            b'*' => match self.current_byte() {
-                Some(b'*') => {
-                    self.skip_byte();
-                    Token(TokenValue::tPOW, Loc(start, self.pos()))
-                }
-                _ => Token(TokenValue::tSTAR, Loc(start, self.pos())),
-            },
-            b'/' => Token(TokenValue::tDIVIDE, Loc(start, self.pos())),
-            b'(' => Token(TokenValue::tLPAREN, Loc(start, self.pos())),
-            b')' => Token(TokenValue::tRPAREN, Loc(start, self.pos())),
-            b'=' => match self.current_byte() {
-                Some(b'=') => {
-                    self.skip_byte();
-                    match self.current_byte() {
-                        Some(b'=') => {
-                            self.skip_byte();
-                            Token(TokenValue::tEQQ, Loc(start, self.pos()))
-                        }
-                        _ => Token(TokenValue::tEQ, Loc(start, self.pos())),
-                    }
-                }
-                _ => Token(TokenValue::tEQL, Loc(start, self.pos())),
-            },
+
+            b'.' => todo!(),
             b'0'..=b'9' => {
-                while let Some(byte) = self.current_byte() {
-                    if !byte.is_ascii_digit() {
-                        break;
-                    }
+                // todo: parse numeric
+                while let Some(b'0'..=b'9') = self.current_byte() {
                     self.skip_byte();
                 }
                 let num = self.slice(start, self.pos());
                 Token(TokenValue::tINTEGER(num), Loc(start, self.pos()))
             }
-            byte => Token(TokenValue::Error(byte as char), Loc(start, self.pos())),
+
+            b')' => Token(TokenValue::tRPAREN, Loc(start, self.pos())),
+            b']' => Token(TokenValue::tRBRACK, Loc(start, self.pos())),
+            b'}' => Token(TokenValue::tRCURLY, Loc(start, self.pos())),
+
+            b':' => todo!(),
+
+            b'/' => Token(TokenValue::tDIVIDE, Loc(start, self.pos())),
+            b'^' => todo!(),
+            b';' => todo!(),
+            b',' => todo!(),
+            b'~' => todo!(),
+            b'(' => Token(TokenValue::tLPAREN, Loc(start, self.pos())),
+            b'[' => Token(TokenValue::tLBRACK, Loc(start, self.pos())),
+            b'{' => Token(TokenValue::tLCURLY, Loc(start, self.pos())),
+            b'\\' => todo!(),
+            b'%' => todo!(),
+            b'$' => todo!(),
+            b'@' => todo!(),
+            b'_' => todo!(),
+
+            byte => {
+                // TODO: parse ident
+                Token(TokenValue::Error(byte as char), Loc(start, self.pos()))
+            }
         };
 
         self.add_token(token);
@@ -183,30 +223,4 @@ impl<'a> Lexer<'a> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    macro_rules! assert_lex {
-        ($name:ident, $input:literal, $tok:expr, $loc:expr) => {
-            #[test]
-            #[allow(non_snake_case)]
-            fn $name() {
-                let mut lexer = Lexer::new($input);
-                lexer.tokenize();
-                assert_eq!(lexer.tokens[0].value(), $tok);
-                assert_eq!(lexer.tokens[0].loc(), Loc($loc.start, $loc.end));
-            }
-        };
-    }
-
-    assert_lex!(tINTEGER, "42", TokenValue::tINTEGER(b"42"), 0..2);
-
-    assert_lex!(BinOp_tPLUS, "+", TokenValue::tPLUS, 0..1);
-    assert_lex!(BinOp_tMINUS, "-", TokenValue::tMINUS, 0..1);
-    assert_lex!(BinOp_tSTAR, "*", TokenValue::tSTAR, 0..1);
-    assert_lex!(BinOp_tDIVIDE, "/", TokenValue::tDIVIDE, 0..1);
-    assert_lex!(BinOp_tPOW, "**", TokenValue::tPOW, 0..2);
-    assert_lex!(BinOp_tEQL, "=", TokenValue::tEQL, 0..1);
-    assert_lex!(BinOp_tEQ, "==", TokenValue::tEQ, 0..2);
-    assert_lex!(BinOp_tEQQ, "===", TokenValue::tEQQ, 0..3);
-}
+mod lexer_tests;
