@@ -1,4 +1,6 @@
 mod buffer;
+mod handle_eof;
+mod skip_ws;
 mod string_literals;
 
 use crate::token::{BinOp, Loc, Token, TokenValue};
@@ -129,37 +131,20 @@ impl<'a> Lexer<'a> {
     pub fn get_next_value_token(&mut self) -> Result<(), ()> {
         let start = self.pos();
 
-        let token = match self.current_byte() {
-            // EOF | NULL      | ^D         | ^Z
-            None | Some(b'\0' | 0x04 | 0x1a) => {
-                let t_eof = Token(TokenValue::tEOF, Loc(self.pos(), self.pos()));
-                self.add_token(t_eof);
-                return Err(());
-            }
+        self.handle_eof()?;
+        self.skip_ws();
 
-            // whitespaces
-            Some(b'\r') => {
-                // TODO: warn about \r at middle of the line
-                return Ok(());
-            }
-
-            // SPACE  | TAB   | LF   | VTAB
-            Some(b' ' | b'\t' | 0x0c | 0x0b) => {
-                while let Some(b' ' | b'\t' | 0x0c | 0x0b) = self.current_byte() {
-                    self.skip_byte()
-                }
-                return Ok(());
-            }
-
-            Some(b'+') => {
+        // EOF has been handled above, so `.unwrap()` is safe
+        let token = match self.current_byte().unwrap() {
+            b'+' => {
                 self.skip_byte();
                 Token(TokenValue::BinOp(BinOp::tPLUS), Loc(start, self.pos()))
             }
-            Some(b'-') => {
+            b'-' => {
                 self.skip_byte();
                 Token(TokenValue::BinOp(BinOp::tMINUS), Loc(start, self.pos()))
             }
-            Some(b'*') => {
+            b'*' => {
                 self.skip_byte();
                 match self.current_byte() {
                     Some(b'*') => {
@@ -169,19 +154,19 @@ impl<'a> Lexer<'a> {
                     _ => Token(TokenValue::BinOp(BinOp::tSTAR), Loc(start, self.pos())),
                 }
             }
-            Some(b'/') => {
+            b'/' => {
                 self.skip_byte();
                 Token(TokenValue::BinOp(BinOp::tDIVIDE), Loc(start, self.pos()))
             }
-            Some(b'(') => {
+            b'(' => {
                 self.skip_byte();
                 Token(TokenValue::tLPAREN, Loc(start, self.pos()))
             }
-            Some(b')') => {
+            b')' => {
                 self.skip_byte();
                 Token(TokenValue::tRPAREN, Loc(start, self.pos()))
             }
-            Some(b'=') => {
+            b'=' => {
                 self.skip_byte();
                 match self.current_byte() {
                     Some(b'=') => {
@@ -197,7 +182,7 @@ impl<'a> Lexer<'a> {
                     _ => Token(TokenValue::BinOp(BinOp::tEQL), Loc(start, self.pos())),
                 }
             }
-            Some(byte) if byte.is_ascii_digit() => {
+            b'0'..=b'9' => {
                 let start = self.pos();
                 self.skip_byte();
                 while let Some(byte) = self.current_byte() {
@@ -209,7 +194,7 @@ impl<'a> Lexer<'a> {
                 let num = self.slice(start, self.pos());
                 Token(TokenValue::tINTEGER(num), Loc(start, self.pos()))
             }
-            Some(byte) => {
+            byte => {
                 self.skip_byte();
                 Token(TokenValue::Error(byte as char), Loc(start, self.pos()))
             }
