@@ -7,12 +7,6 @@ use crate::token::{Loc, Token, TokenValue};
 use buffer::Buffer;
 use string_literals::{StringLiteralAction, StringLiterals};
 
-macro_rules! handle_byte {
-    ($byte:literal, $lexer:expr) => {
-        <PerByteHandler as OnByte<$byte>>::tokenize($lexer)
-    };
-}
-
 pub struct Lexer<'a> {
     buffer: Buffer<'a>,
     debug: bool,
@@ -122,10 +116,10 @@ impl<'a> Lexer<'a> {
 
         // SAFETY: None (i.e. EOF) has been handled above, so `.unwrap_unchecked()` is safe
         match unsafe { self.take_byte().unwrap_unchecked() } {
-            b'#' => handle_byte!(b'#', self)?,
-            b'*' => handle_byte!(b'*', self)?,
-            b'!' => handle_byte!(b'!', self)?,
-            b'=' => handle_byte!(b'=', self)?,
+            b'#' => OnByte::<b'#'>::on_byte(self)?,
+            b'*' => OnByte::<b'*'>::on_byte(self)?,
+            b'!' => OnByte::<b'!'>::on_byte(self)?,
+            b'=' => OnByte::<b'='>::on_byte(self)?,
             b'<' => todo!(),
             b'>' => todo!(),
             b'"' => todo!(),
@@ -136,8 +130,8 @@ impl<'a> Lexer<'a> {
             b'|' => todo!(),
 
             // todo: extend
-            b'+' => handle_byte!(b'+', self)?,
-            b'-' => handle_byte!(b'-', self)?,
+            b'+' => OnByte::<b'+'>::on_byte(self)?,
+            b'-' => OnByte::<b'-'>::on_byte(self)?,
 
             b'.' => todo!(),
             b'0'..=b'9' => {
@@ -183,101 +177,100 @@ impl<'a> Lexer<'a> {
 }
 
 trait OnByte<const BYTE: u8> {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()>;
+    fn on_byte(&mut self) -> Result<(), ()>;
 }
 
-struct PerByteHandler;
-impl OnByte<b'#'> for PerByteHandler {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()> {
+impl OnByte<b'#'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
         todo!("handle comment");
         #[allow(unreachable_code)]
         Err(())
     }
 }
 
-impl OnByte<b'*'> for PerByteHandler {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()> {
-        let start = lexer.pos() - 1;
-        let token = if let Some(b'*') = lexer.current_byte() {
-            lexer.skip_byte();
-            if let Some(b'=') = lexer.current_byte() {
-                lexer.skip_byte();
-                Token(TokenValue::tOP_ASGN(b"**="), Loc(start, lexer.pos()))
+impl OnByte<b'*'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        let start = self.pos() - 1;
+        let token = if let Some(b'*') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'=') = self.current_byte() {
+                self.skip_byte();
+                Token(TokenValue::tOP_ASGN(b"**="), Loc(start, self.pos()))
             } else {
-                Token(TokenValue::tPOW, Loc(start, lexer.pos()))
+                Token(TokenValue::tPOW, Loc(start, self.pos()))
             }
-        } else if let Some(b'=') = lexer.current_byte() {
-            lexer.skip_byte();
-            Token(TokenValue::tOP_ASGN(b"*="), Loc(start, lexer.pos()))
+        } else if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            Token(TokenValue::tOP_ASGN(b"*="), Loc(start, self.pos()))
         } else {
-            Token(TokenValue::tSTAR, Loc(start, lexer.pos()))
+            Token(TokenValue::tSTAR, Loc(start, self.pos()))
         };
-        lexer.add_token(token);
+        self.add_token(token);
         Ok(())
     }
 }
 
-impl OnByte<b'!'> for PerByteHandler {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()> {
-        let start = lexer.pos() - 1;
+impl OnByte<b'!'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        let start = self.pos() - 1;
 
         // !@ is handled on the parser level
-        let token = if let Some(b'=') = lexer.current_byte() {
-            lexer.skip_byte();
-            Token(TokenValue::tNEQ, Loc(start, lexer.pos()))
-        } else if let Some(b'~') = lexer.current_byte() {
-            lexer.skip_byte();
-            Token(TokenValue::tNMATCH, Loc(start, lexer.pos()))
+        let token = if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            Token(TokenValue::tNEQ, Loc(start, self.pos()))
+        } else if let Some(b'~') = self.current_byte() {
+            self.skip_byte();
+            Token(TokenValue::tNMATCH, Loc(start, self.pos()))
         } else {
-            Token(TokenValue::tBANG, Loc(start, lexer.pos()))
+            Token(TokenValue::tBANG, Loc(start, self.pos()))
         };
-        lexer.add_token(token);
+        self.add_token(token);
         Ok(())
     }
 }
 
-impl OnByte<b'='> for PerByteHandler {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()> {
-        let start = lexer.pos() - 1;
+impl OnByte<b'='> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        let start = self.pos() - 1;
 
-        let token = if lexer.buffer.lookahead(b"begin") {
-            Token(TokenValue::tEMBEDDED_COMMENT_START, Loc(start, lexer.pos()))
-        } else if let Some(b'=') = lexer.current_byte() {
-            lexer.skip_byte();
-            if let Some(b'=') = lexer.current_byte() {
-                lexer.skip_byte();
-                Token(TokenValue::tEQQ, Loc(start, lexer.pos()))
+        let token = if self.buffer.lookahead(b"begin") {
+            Token(TokenValue::tEMBEDDED_COMMENT_START, Loc(start, self.pos()))
+        } else if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'=') = self.current_byte() {
+                self.skip_byte();
+                Token(TokenValue::tEQQ, Loc(start, self.pos()))
             } else {
-                Token(TokenValue::tEQ, Loc(start, lexer.pos()))
+                Token(TokenValue::tEQ, Loc(start, self.pos()))
             }
-        } else if let Some(b'~') = lexer.current_byte() {
-            lexer.skip_byte();
-            Token(TokenValue::tMATCH, Loc(start, lexer.pos()))
-        } else if let Some(b'>') = lexer.current_byte() {
-            lexer.skip_byte();
-            Token(TokenValue::tASSOC, Loc(start, lexer.pos()))
+        } else if let Some(b'~') = self.current_byte() {
+            self.skip_byte();
+            Token(TokenValue::tMATCH, Loc(start, self.pos()))
+        } else if let Some(b'>') = self.current_byte() {
+            self.skip_byte();
+            Token(TokenValue::tASSOC, Loc(start, self.pos()))
         } else {
-            Token(TokenValue::tEQL, Loc(start, lexer.pos()))
+            Token(TokenValue::tEQL, Loc(start, self.pos()))
         };
-        lexer.add_token(token);
+        self.add_token(token);
         Ok(())
     }
 }
 
-impl OnByte<b'+'> for PerByteHandler {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()> {
+impl OnByte<b'+'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
         // TODO: extend
-        let start = lexer.pos() - 1;
-        lexer.add_token(Token(TokenValue::tPLUS, Loc(start, lexer.pos())));
+        let start = self.pos() - 1;
+        self.add_token(Token(TokenValue::tPLUS, Loc(start, self.pos())));
         Ok(())
     }
 }
 
-impl OnByte<b'-'> for PerByteHandler {
-    fn tokenize(lexer: &mut Lexer) -> Result<(), ()> {
+impl OnByte<b'-'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
         // TODO; extend
-        let start = lexer.pos() - 1;
-        lexer.add_token(Token(TokenValue::tMINUS, Loc(start, lexer.pos())));
+        let start = self.pos() - 1;
+        self.add_token(Token(TokenValue::tMINUS, Loc(start, self.pos())));
         Ok(())
     }
 }
