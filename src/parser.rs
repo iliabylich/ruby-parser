@@ -1,6 +1,7 @@
+use crate::bin_op::BinOp;
 use crate::lexer::Lexer;
 use crate::node::Node;
-use crate::token::{BinOp, TokenValue};
+use crate::token::TokenValue;
 
 pub struct Parser<'a> {
     lexer: Lexer<'a>,

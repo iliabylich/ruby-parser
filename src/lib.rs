@@ -1,3 +1,4 @@
+mod bin_op;
 mod lexer;
 mod node;
 mod op_precedence;

@@ -3,7 +3,7 @@ mod handle_eof;
 mod skip_ws;
 mod string_literals;
 
-use crate::token::{BinOp, Loc, Token, TokenValue};
+use crate::token::{Loc, Token, TokenValue};
 use buffer::Buffer;
 use string_literals::{StringLiteralAction, StringLiterals};
 
@@ -134,8 +134,8 @@ impl<'a> Lexer<'a> {
         self.handle_eof()?;
         self.skip_ws();
 
-        // EOF has been handled above, so `.unwrap()` is safe
-        let token = match self.current_byte().unwrap() {
+        // SAFETY: None (i.e. EOF) has been handled above, so `.unwrap_unchecked()` is safe
+        let token = match unsafe { self.current_byte().unwrap_unchecked() } {
             b'+' => {
                 self.skip_byte();
                 Token(TokenValue::tPLUS, Loc(start, self.pos()))
