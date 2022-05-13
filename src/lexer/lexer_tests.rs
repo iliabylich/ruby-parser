@@ -6,7 +6,7 @@ macro_rules! assert_lex {
         #[allow(non_snake_case)]
         fn $test_name() {
             let mut lexer = Lexer::new($input);
-            lexer.tokenize();
+            lexer.tokenize_until_eof();
             assert_eq!(lexer.tokens[0].value(), $tok);
             assert_eq!(lexer.tokens[0].loc(), Loc($loc.start, $loc.end));
         }

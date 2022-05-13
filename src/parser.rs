@@ -24,7 +24,7 @@ impl<'a> Parser<'a> {
 
     pub fn parse(&mut self) -> Node<'a> {
         // Initiate tokenizer
-        self.lexer.tokenize();
+        self.lexer.tokenize_until_eof();
 
         self.parse_expression()
     }

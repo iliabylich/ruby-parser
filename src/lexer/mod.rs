@@ -5,13 +5,13 @@ mod string_literals;
 
 use crate::token::{Loc, Token, TokenValue};
 use buffer::Buffer;
-use string_literals::{StringLiteralAction, StringLiterals};
+use string_literals::{StringLiteral, StringLiteralAction, StringLiteralStack};
 
 pub struct Lexer<'a> {
     buffer: Buffer<'a>,
     debug: bool,
 
-    string_literals: StringLiterals<'a>,
+    string_literals: StringLiteralStack<'a>,
 
     tokens: Vec<Token<'a>>,
     token_idx: usize,
@@ -25,7 +25,7 @@ impl<'a> Lexer<'a> {
             buffer: Buffer::new(s.as_bytes()),
             debug: false,
 
-            string_literals: StringLiterals::new(),
+            string_literals: StringLiteralStack::new(),
 
             tokens: vec![],
             token_idx: 0,
@@ -39,12 +39,19 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    pub fn tokenize(&mut self) {
+    pub fn tokenize_until_eof(&mut self) {
+        if let Err(_err) = self._tokenize() {
+            // TODO: handle unexpected EOF error
+        }
+    }
+
+    fn _tokenize(&mut self) -> Result<(), ()> {
         loop {
-            let got_some_tokens = self.get_next_token();
-            if got_some_tokens.is_err() {
-                break;
-            }
+            if let Some(literal) = self.string_literals.last() {
+                self.tokenize_while_in_string(literal)?
+            } else {
+                self.tokenize_normally()?
+            };
         }
     }
 
@@ -66,55 +73,51 @@ impl<'a> Lexer<'a> {
         self.tokens.push(token);
     }
 
-    fn get_next_token(&mut self) -> Result<(), ()> {
-        // Handle current string literal (if any)
-        if let Some(string_literal) = self.string_literals.last() {
-            match string_literal.lex(&mut self.buffer) {
-                StringLiteralAction::InInterpolation {
-                    interpolation_started_with_curly_level,
-                } => {
-                    if self.current_byte() == Some(b'}')
-                        && interpolation_started_with_curly_level == self.curly_braces
-                    {
-                        self.add_token(Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1)));
-                        self.skip_byte();
-                    }
+    fn tokenize_while_in_string(&mut self, literal: StringLiteral<'a>) -> Result<(), ()> {
+        match literal.lex(&mut self.buffer) {
+            StringLiteralAction::InInterpolation {
+                interpolation_started_with_curly_level,
+            } => {
+                if self.current_byte() == Some(b'}')
+                    && interpolation_started_with_curly_level == self.curly_braces
+                {
+                    self.add_token(Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1)));
+                    self.skip_byte();
+                } else {
                     // we are after `#{` and should read an interpolated value
-                    self.get_next_value_token()?;
-                }
-                StringLiteralAction::EmitStringContent {
-                    content,
-                    start,
-                    end,
-                } => {
-                    self.add_token(Token(TokenValue::tSTRING_CONTENT(content), Loc(start, end)));
-                    self.buffer.set_pos(end);
-                }
-                StringLiteralAction::CloseLiteral {
-                    content,
-                    start,
-                    end,
-                    jump_to,
-                } => {
-                    self.add_token(Token(TokenValue::tSTRING_END(content), Loc(start, end)));
-                    self.buffer.set_pos(jump_to);
-                    self.string_literals.pop();
+                    self.tokenize_normally()?;
                 }
             }
-        } else {
-            self.get_next_value_token()?
+            StringLiteralAction::EmitStringContent {
+                content,
+                start,
+                end,
+            } => {
+                self.add_token(Token(TokenValue::tSTRING_CONTENT(content), Loc(start, end)));
+                self.buffer.set_pos(end);
+            }
+            StringLiteralAction::CloseLiteral {
+                content,
+                start,
+                end,
+                jump_to,
+            } => {
+                self.add_token(Token(TokenValue::tSTRING_END(content), Loc(start, end)));
+                self.buffer.set_pos(jump_to);
+                self.string_literals.pop();
+            }
         }
-
         Ok(())
     }
 
-    pub fn get_next_value_token(&mut self) -> Result<(), ()> {
+    pub fn tokenize_normally(&mut self) -> Result<(), ()> {
         self.handle_eof()?;
         self.skip_ws();
 
         let start = self.pos();
 
-        // SAFETY: None (i.e. EOF) has been handled above, so `.unwrap_unchecked()` is safe
+        // SAFETY: None (i.e. EOF) has been handled above in `handle_eof`.
+        //         so `.unwrap_unchecked()` is safe
         match unsafe { self.take_byte().unwrap_unchecked() } {
             b'#' => OnByte::<b'#'>::on_byte(self)?,
             b'*' => OnByte::<b'*'>::on_byte(self)?,
@@ -128,11 +131,8 @@ impl<'a> Lexer<'a> {
             b'?' => todo!(),
             b'&' => todo!(),
             b'|' => todo!(),
-
-            // todo: extend
             b'+' => OnByte::<b'+'>::on_byte(self)?,
             b'-' => OnByte::<b'-'>::on_byte(self)?,
-
             b'.' => todo!(),
             b'0'..=b'9' => {
                 // todo: parse numeric
@@ -268,7 +268,7 @@ impl OnByte<b'+'> for Lexer<'_> {
 
 impl OnByte<b'-'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        // TODO; extend
+        // TODO: extend
         let start = self.pos() - 1;
         self.add_token(Token(TokenValue::tMINUS, Loc(start, self.pos())));
         Ok(())

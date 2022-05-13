@@ -1,6 +1,6 @@
 use crate::lexer::buffer::Buffer;
 
-pub(crate) struct StringLiterals<'a> {
+pub(crate) struct StringLiteralStack<'a> {
     stack: Vec<StringLiteral<'a>>,
 }
 
@@ -39,7 +39,7 @@ pub(crate) enum StringLiteralAction<'a> {
     },
 }
 
-impl<'a> StringLiterals<'a> {
+impl<'a> StringLiteralStack<'a> {
     pub(crate) fn new() -> Self {
         Self { stack: vec![] }
     }
