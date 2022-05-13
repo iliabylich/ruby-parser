@@ -123,7 +123,7 @@ impl<'a> Lexer<'a> {
             b'*' => OnByte::<b'*'>::on_byte(self)?,
             b'!' => OnByte::<b'!'>::on_byte(self)?,
             b'=' => OnByte::<b'='>::on_byte(self)?,
-            b'<' => todo!(),
+            b'<' => OnByte::<b'<'>::on_byte(self)?,
             b'>' => todo!(),
             b'"' => todo!(),
             b'`' => todo!(),
@@ -173,6 +173,10 @@ impl<'a> Lexer<'a> {
         };
 
         Ok(())
+    }
+
+    pub(crate) fn tokenize_heredoc_id(&mut self) -> Option<&'a [u8]> {
+        None
     }
 }
 
@@ -289,6 +293,49 @@ assert_lex!(test_tEQ, "==", tEQ, 0..2);
 assert_lex!(test_tMATCH, "=~", tMATCH, 0..2);
 assert_lex!(test_tASSOC, "=>", tASSOC, 0..2);
 assert_lex!(test_tEQL, "=", tEQL, 0..1);
+
+impl OnByte<b'<'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        let start = self.pos() - 1;
+        // Check if heredoc id
+        if let Some(b'<') = self.current_byte() {
+            if let Some(prev_idx) = start.checked_sub(1) {
+                if self.buffer.byte_at(prev_idx) == Some(b' ') {
+                    if let Some(_here_id) = self.tokenize_heredoc_id() {
+                        return Ok(());
+                    }
+                }
+            }
+        }
+        // Otherwise just an operator
+        if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'>') = self.current_byte() {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tCMP, Loc(start, self.pos())));
+            } else {
+                self.add_token(Token(TokenValue::tLEQ, Loc(start, self.pos())));
+            }
+        } else if let Some(b'<') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'=') = self.current_byte() {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tOP_ASGN(b"<<="), Loc(start, self.pos())));
+            } else {
+                self.add_token(Token(TokenValue::tLSHFT, Loc(start, self.pos())));
+            }
+        } else {
+            self.add_token(Token(TokenValue::tLT, Loc(start, self.pos())));
+        }
+        Ok(())
+    }
+}
+// assert_lex!(test_tSTRING_BEG_HEREDOC, "<<-HERE", 0..5);
+assert_lex!(test_tCMP, "<=>", tCMP, 0..3);
+assert_lex!(test_tLEQ, "<=", tLEQ, 0..2);
+assert_lex!(test_tOP_ASGN_LSHIFT, "<<=", tOP_ASGN(b"<<="), 0..3);
+assert_lex!(test_tLSHIFT, "<<", tLSHFT, 0..2);
+assert_lex!(test_tLT, "<", tLT, 0..1);
 
 impl OnByte<b'+'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {

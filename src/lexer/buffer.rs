@@ -45,6 +45,10 @@ impl<'a> Buffer<'a> {
             false
         }
     }
+
+    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
+        self.input.get(idx).map(|byte| *byte)
+    }
 }
 
 use crate::Lexer;
