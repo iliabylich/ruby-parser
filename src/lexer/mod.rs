@@ -1,17 +1,38 @@
+mod buffer;
+
 use crate::token::{BinOp, Loc, Token, TokenValue};
+use buffer::Buffer;
 
 pub struct Lexer<'a> {
-    input: &'a [u8],
-    pos: usize,
+    buffer: Buffer<'a>,
     current_token: Token<'a>,
     debug: bool,
+}
+
+// buffer delegators
+impl<'a> Lexer<'a> {
+    pub(crate) fn skip_byte(&mut self) {
+        self.buffer.skip_byte()
+    }
+    pub(crate) fn current_byte(&self) -> Option<u8> {
+        self.buffer.current_byte()
+    }
+    #[allow(dead_code)]
+    pub(crate) fn is_eof(&self) -> bool {
+        self.buffer.is_eof()
+    }
+    pub(crate) fn pos(&self) -> usize {
+        self.buffer.pos()
+    }
+    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
+        self.buffer.slice(start, end)
+    }
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(s: &'a str) -> Self {
         Self {
-            input: s.as_bytes(),
-            pos: 0,
+            buffer: Buffer::new(s.as_bytes()),
             current_token: Token::default(),
             debug: false,
         }
@@ -29,76 +50,76 @@ impl<'a> Lexer<'a> {
     pub fn get_next_token(&mut self) {
         // skip whitespaces
         while self.current_byte() == Some(b' ') {
-            self.pos += 1;
+            self.skip_byte();
         }
 
-        let start = self.pos;
+        let start = self.pos();
 
         let token = match self.current_byte() {
-            None => Token(TokenValue::tEOF, Loc(self.pos, self.pos)),
+            None => Token(TokenValue::tEOF, Loc(self.pos(), self.pos())),
             Some(b'+') => {
-                self.pos += 1;
-                Token(TokenValue::BinOp(BinOp::tPLUS), Loc(start, self.pos))
+                self.skip_byte();
+                Token(TokenValue::BinOp(BinOp::tPLUS), Loc(start, self.pos()))
             }
             Some(b'-') => {
-                self.pos += 1;
-                Token(TokenValue::BinOp(BinOp::tMINUS), Loc(start, self.pos))
+                self.skip_byte();
+                Token(TokenValue::BinOp(BinOp::tMINUS), Loc(start, self.pos()))
             }
             Some(b'*') => {
-                self.pos += 1;
+                self.skip_byte();
                 match self.current_byte() {
                     Some(b'*') => {
-                        self.pos += 1;
-                        Token(TokenValue::BinOp(BinOp::tPOW), Loc(start, self.pos))
+                        self.skip_byte();
+                        Token(TokenValue::BinOp(BinOp::tPOW), Loc(start, self.pos()))
                     }
-                    _ => Token(TokenValue::BinOp(BinOp::tSTAR), Loc(start, self.pos)),
+                    _ => Token(TokenValue::BinOp(BinOp::tSTAR), Loc(start, self.pos())),
                 }
             }
             Some(b'/') => {
-                self.pos += 1;
-                Token(TokenValue::BinOp(BinOp::tDIVIDE), Loc(start, self.pos))
+                self.skip_byte();
+                Token(TokenValue::BinOp(BinOp::tDIVIDE), Loc(start, self.pos()))
             }
             Some(b'(') => {
-                self.pos += 1;
-                Token(TokenValue::tLPAREN, Loc(start, self.pos))
+                self.skip_byte();
+                Token(TokenValue::tLPAREN, Loc(start, self.pos()))
             }
             Some(b')') => {
-                self.pos += 1;
-                Token(TokenValue::tRPAREN, Loc(start, self.pos))
+                self.skip_byte();
+                Token(TokenValue::tRPAREN, Loc(start, self.pos()))
             }
             Some(b'=') => {
-                self.pos += 1;
+                self.skip_byte();
                 match self.current_byte() {
                     Some(b'=') => {
-                        self.pos += 1;
+                        self.skip_byte();
                         match self.current_byte() {
                             Some(b'=') => {
-                                self.pos += 1;
-                                Token(TokenValue::BinOp(BinOp::tEQQ), Loc(start, self.pos))
+                                self.skip_byte();
+                                Token(TokenValue::BinOp(BinOp::tEQQ), Loc(start, self.pos()))
                             }
-                            _ => Token(TokenValue::BinOp(BinOp::tEQ), Loc(start, self.pos)),
+                            _ => Token(TokenValue::BinOp(BinOp::tEQ), Loc(start, self.pos())),
                         }
                     }
-                    _ => Token(TokenValue::BinOp(BinOp::tEQL), Loc(start, self.pos)),
+                    _ => Token(TokenValue::BinOp(BinOp::tEQL), Loc(start, self.pos())),
                 }
             }
             Some(byte) if byte.is_ascii_digit() => {
-                let start = self.pos;
-                self.pos += 1;
+                let start = self.pos();
+                self.skip_byte();
                 while let Some(byte) = self.current_byte() {
                     if !byte.is_ascii_digit() {
                         break;
                     }
-                    self.pos += 1;
+                    self.skip_byte();
                 }
-                let num = &self.input[start..self.pos];
+                let num = self.slice(start, self.pos());
                 // SAFETY: all bytes in num are ASCII digits
                 let num = unsafe { std::str::from_utf8_unchecked(num) };
-                Token(TokenValue::tINTEGER(num), Loc(start, self.pos))
+                Token(TokenValue::tINTEGER(num), Loc(start, self.pos()))
             }
             Some(byte) => {
-                self.pos += 1;
-                Token(TokenValue::Error(byte as char), Loc(start, self.pos))
+                self.skip_byte();
+                Token(TokenValue::Error(byte as char), Loc(start, self.pos()))
             }
         };
 
@@ -106,14 +127,6 @@ impl<'a> Lexer<'a> {
             println!("Reading token {:?}", token);
         }
         self.current_token = token
-    }
-
-    fn current_byte(&mut self) -> Option<u8> {
-        if self.pos < self.input.len() {
-            Some(self.input[self.pos])
-        } else {
-            None
-        }
     }
 }
 
