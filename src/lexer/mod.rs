@@ -27,6 +27,9 @@ impl<'a> Lexer<'a> {
     pub(crate) fn current_byte(&self) -> Option<u8> {
         self.buffer.current_byte()
     }
+    pub(crate) fn take_byte(&mut self) -> Option<u8> {
+        self.buffer.take_byte()
+    }
     #[allow(dead_code)]
     pub(crate) fn is_eof(&self) -> bool {
         self.buffer.is_eof()
@@ -129,62 +132,39 @@ impl<'a> Lexer<'a> {
     }
 
     pub fn get_next_value_token(&mut self) -> Result<(), ()> {
-        let start = self.pos();
-
         self.handle_eof()?;
         self.skip_ws();
 
+        let start = self.pos();
+
         // SAFETY: None (i.e. EOF) has been handled above, so `.unwrap_unchecked()` is safe
-        let token = match unsafe { self.current_byte().unwrap_unchecked() } {
-            b'+' => {
-                self.skip_byte();
-                Token(TokenValue::tPLUS, Loc(start, self.pos()))
-            }
-            b'-' => {
-                self.skip_byte();
-                Token(TokenValue::tMINUS, Loc(start, self.pos()))
-            }
-            b'*' => {
-                self.skip_byte();
-                match self.current_byte() {
-                    Some(b'*') => {
-                        self.skip_byte();
-                        Token(TokenValue::tPOW, Loc(start, self.pos()))
-                    }
-                    _ => Token(TokenValue::tSTAR, Loc(start, self.pos())),
+        let token = match unsafe { self.take_byte().unwrap_unchecked() } {
+            b'+' => Token(TokenValue::tPLUS, Loc(start, self.pos())),
+            b'-' => Token(TokenValue::tMINUS, Loc(start, self.pos())),
+            b'*' => match self.current_byte() {
+                Some(b'*') => {
+                    self.skip_byte();
+                    Token(TokenValue::tPOW, Loc(start, self.pos()))
                 }
-            }
-            b'/' => {
-                self.skip_byte();
-                Token(TokenValue::tDIVIDE, Loc(start, self.pos()))
-            }
-            b'(' => {
-                self.skip_byte();
-                Token(TokenValue::tLPAREN, Loc(start, self.pos()))
-            }
-            b')' => {
-                self.skip_byte();
-                Token(TokenValue::tRPAREN, Loc(start, self.pos()))
-            }
-            b'=' => {
-                self.skip_byte();
-                match self.current_byte() {
-                    Some(b'=') => {
-                        self.skip_byte();
-                        match self.current_byte() {
-                            Some(b'=') => {
-                                self.skip_byte();
-                                Token(TokenValue::tEQQ, Loc(start, self.pos()))
-                            }
-                            _ => Token(TokenValue::tEQ, Loc(start, self.pos())),
+                _ => Token(TokenValue::tSTAR, Loc(start, self.pos())),
+            },
+            b'/' => Token(TokenValue::tDIVIDE, Loc(start, self.pos())),
+            b'(' => Token(TokenValue::tLPAREN, Loc(start, self.pos())),
+            b')' => Token(TokenValue::tRPAREN, Loc(start, self.pos())),
+            b'=' => match self.current_byte() {
+                Some(b'=') => {
+                    self.skip_byte();
+                    match self.current_byte() {
+                        Some(b'=') => {
+                            self.skip_byte();
+                            Token(TokenValue::tEQQ, Loc(start, self.pos()))
                         }
+                        _ => Token(TokenValue::tEQ, Loc(start, self.pos())),
                     }
-                    _ => Token(TokenValue::tEQL, Loc(start, self.pos())),
                 }
-            }
+                _ => Token(TokenValue::tEQL, Loc(start, self.pos())),
+            },
             b'0'..=b'9' => {
-                let start = self.pos();
-                self.skip_byte();
                 while let Some(byte) = self.current_byte() {
                     if !byte.is_ascii_digit() {
                         break;
@@ -194,10 +174,7 @@ impl<'a> Lexer<'a> {
                 let num = self.slice(start, self.pos());
                 Token(TokenValue::tINTEGER(num), Loc(start, self.pos()))
             }
-            byte => {
-                self.skip_byte();
-                Token(TokenValue::Error(byte as char), Loc(start, self.pos()))
-            }
+            byte => Token(TokenValue::Error(byte as char), Loc(start, self.pos())),
         };
 
         self.add_token(token);

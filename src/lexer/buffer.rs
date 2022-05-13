@@ -16,6 +16,12 @@ impl<'a> Buffer<'a> {
         self.input.get(self.pos).map(|byte| *byte)
     }
 
+    pub(crate) fn take_byte(&mut self) -> Option<u8> {
+        let result = self.current_byte();
+        self.skip_byte();
+        result
+    }
+
     pub(crate) fn skip_byte(&mut self) {
         self.pos += 1;
     }
