@@ -138,25 +138,25 @@ impl<'a> Lexer<'a> {
         let token = match self.current_byte().unwrap() {
             b'+' => {
                 self.skip_byte();
-                Token(TokenValue::BinOp(BinOp::tPLUS), Loc(start, self.pos()))
+                Token(TokenValue::tPLUS, Loc(start, self.pos()))
             }
             b'-' => {
                 self.skip_byte();
-                Token(TokenValue::BinOp(BinOp::tMINUS), Loc(start, self.pos()))
+                Token(TokenValue::tMINUS, Loc(start, self.pos()))
             }
             b'*' => {
                 self.skip_byte();
                 match self.current_byte() {
                     Some(b'*') => {
                         self.skip_byte();
-                        Token(TokenValue::BinOp(BinOp::tPOW), Loc(start, self.pos()))
+                        Token(TokenValue::tPOW, Loc(start, self.pos()))
                     }
-                    _ => Token(TokenValue::BinOp(BinOp::tSTAR), Loc(start, self.pos())),
+                    _ => Token(TokenValue::tSTAR, Loc(start, self.pos())),
                 }
             }
             b'/' => {
                 self.skip_byte();
-                Token(TokenValue::BinOp(BinOp::tDIVIDE), Loc(start, self.pos()))
+                Token(TokenValue::tDIVIDE, Loc(start, self.pos()))
             }
             b'(' => {
                 self.skip_byte();
@@ -174,12 +174,12 @@ impl<'a> Lexer<'a> {
                         match self.current_byte() {
                             Some(b'=') => {
                                 self.skip_byte();
-                                Token(TokenValue::BinOp(BinOp::tEQQ), Loc(start, self.pos()))
+                                Token(TokenValue::tEQQ, Loc(start, self.pos()))
                             }
-                            _ => Token(TokenValue::BinOp(BinOp::tEQ), Loc(start, self.pos())),
+                            _ => Token(TokenValue::tEQ, Loc(start, self.pos())),
                         }
                     }
-                    _ => Token(TokenValue::BinOp(BinOp::tEQL), Loc(start, self.pos())),
+                    _ => Token(TokenValue::tEQL, Loc(start, self.pos())),
                 }
             }
             b'0'..=b'9' => {
@@ -224,12 +224,12 @@ mod tests {
 
     assert_lex!(tINTEGER, "42", TokenValue::tINTEGER(b"42"), 0..2);
 
-    assert_lex!(BinOp_tPLUS, "+", TokenValue::BinOp(BinOp::tPLUS), 0..1);
-    assert_lex!(BinOp_tMINUS, "-", TokenValue::BinOp(BinOp::tMINUS), 0..1);
-    assert_lex!(BinOp_tSTAR, "*", TokenValue::BinOp(BinOp::tSTAR), 0..1);
-    assert_lex!(BinOp_tDIVIDE, "/", TokenValue::BinOp(BinOp::tDIVIDE), 0..1);
-    assert_lex!(BinOp_tPOW, "**", TokenValue::BinOp(BinOp::tPOW), 0..2);
-    assert_lex!(BinOp_tEQL, "=", TokenValue::BinOp(BinOp::tEQL), 0..1);
-    assert_lex!(BinOp_tEQ, "==", TokenValue::BinOp(BinOp::tEQ), 0..2);
-    assert_lex!(BinOp_tEQQ, "===", TokenValue::BinOp(BinOp::tEQQ), 0..3);
+    assert_lex!(BinOp_tPLUS, "+", TokenValue::tPLUS, 0..1);
+    assert_lex!(BinOp_tMINUS, "-", TokenValue::tMINUS, 0..1);
+    assert_lex!(BinOp_tSTAR, "*", TokenValue::tSTAR, 0..1);
+    assert_lex!(BinOp_tDIVIDE, "/", TokenValue::tDIVIDE, 0..1);
+    assert_lex!(BinOp_tPOW, "**", TokenValue::tPOW, 0..2);
+    assert_lex!(BinOp_tEQL, "=", TokenValue::tEQL, 0..1);
+    assert_lex!(BinOp_tEQ, "==", TokenValue::tEQ, 0..2);
+    assert_lex!(BinOp_tEQQ, "===", TokenValue::tEQQ, 0..3);
 }

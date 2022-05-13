@@ -28,6 +28,7 @@ pub enum TokenValue<'a> {
     kENSURE,       // `ensure'
     kEND,          // `end'
     kIF,           // `if'
+    kIF_MOD,       // `if` modifier
     kUNLESS,       // `unless'
     kTHEN,         // `then'
     kELSIF,        // `elsif'
@@ -56,7 +57,6 @@ pub enum TokenValue<'a> {
     kAND,          // `and'
     kOR,           // `or'
     kNOT,          // `not'
-    kIF_MOD,       // `if' modifier
     kUNLESS_MOD,   // `unless' modifier
     kWHILE_MOD,    // `while' modifier
     kUNTIL_MOD,    // `until' modifier
@@ -89,46 +89,46 @@ pub enum TokenValue<'a> {
     tREGEXP_END(&'a [u8]),
 
     // Punctuation/operators
-    tDOT(&'a [u8]), // "."
+    tDOT, // "."
     /* escaped chars, should be ignored otherwise */
-    tBACKSLASH(&'a [u8]),    // "backslash"
-    tSP(&'a [u8]),           // "escaped space"
-    tSLASH_T(&'a [u8]),      // "escaped horizontal tab"
-    tSLASH_F(&'a [u8]),      // "escaped form feed"
-    tSLASH_R(&'a [u8]),      // "escaped carriage return"
-    tVTAB(&'a [u8]),         // "escaped vertical tab"
-    tUPLUS(&'a [u8]),        // "unary+"
-    tUMINUS(&'a [u8]),       // "unary-"
-    tCMP(&'a [u8]),          // "<=>"
-    tNEQ(&'a [u8]),          // "!="
-    tGEQ(&'a [u8]),          // ">="
-    tLEQ(&'a [u8]),          // "<="
-    tANDOP(&'a [u8]),        // "&&"
-    tOROP(&'a [u8]),         // "||"
-    tMATCH(&'a [u8]),        // "=~"
-    tNMATCH(&'a [u8]),       // "!~"
-    tDOT2(&'a [u8]),         // ".."
-    tDOT3(&'a [u8]),         // "..."
-    tBDOT2(&'a [u8]),        // "(.."
-    tBDOT3(&'a [u8]),        // "(..."
-    tAREF(&'a [u8]),         // "[]"
-    tASET(&'a [u8]),         // "[]="
-    tLSHFT(&'a [u8]),        // "<<"
-    tRSHFT(&'a [u8]),        // ">>"
-    tANDDOT(&'a [u8]),       // "&."
-    tCOLON2(&'a [u8]),       // "::"
-    tCOLON3(&'a [u8]),       // ":: at EXPR_BEG"
-    tOP_ASGN(&'a [u8]),      // "operator-assignment" /* +=, -=  etc. */
-    tASSOC(&'a [u8]),        // "=>"
+    tBACKSLASH,              // "backslash"
+    tSP,                     // "escaped space"
+    tSLASH_T,                // "escaped horizontal tab"
+    tSLASH_F,                // "escaped form feed"
+    tSLASH_R,                // "escaped carriage return"
+    tVTAB,                   // "escaped vertical tab"
+    tUPLUS,                  // "unary+"
+    tUMINUS,                 // "unary-"
+    tUMINUS_NUM,             // "unary-" before number literal
+    tCMP,                    // "<=>"
+    tNEQ,                    // "!="
+    tGEQ,                    // ">="
+    tLEQ,                    // "<="
+    tANDOP,                  // "&&"
+    tOROP,                   // "||"
+    tMATCH,                  // "=~"
+    tNMATCH,                 // "!~"
+    tDOT2,                   // ".."
+    tDOT3,                   // "..."
+    tBDOT2,                  // "(.."
+    tBDOT3,                  // "(..."
+    tAREF,                   // "[]"
+    tASET,                   // "[]="
+    tLSHFT,                  // "<<"
+    tRSHFT,                  // ">>"
+    tANDDOT,                 // "&."
+    tCOLON,                  // ":"
+    tCOLON2,                 // "::"
+    tOP_ASGN,                // "operator-assignment" /* +=, -=  etc. */
+    tASSOC,                  // "=>"
     tLPAREN,                 // "("
-    tLPAREN_ARG(&'a [u8]),   // "( arg"
     tRPAREN,                 // ")"
-    tLBRACK(&'a [u8]),       // "["
-    tLBRACE(&'a [u8]),       // "{"
-    tLBRACE_ARG(&'a [u8]),   // "{ arg"
-    tDSTAR(&'a [u8]),        // "**arg"
-    tAMPER(&'a [u8]),        // "&"
-    tLAMBDA(&'a [u8]),       // "->"
+    tLBRACK,                 // "["
+    tRBRACK,                 // "]"
+    tLBRACE,                 // "{"
+    tDSTAR,                  // "**arg"
+    tAMPER,                  // "&"
+    tLAMBDA,                 // "->"
     tSYMBEG(&'a [u8]),       // "symbol literal"
     tSTRING_BEG(&'a [u8]),   // "string begin"
     tXSTRING_BEG(&'a [u8]),  // "backtick literal"
@@ -144,26 +144,29 @@ pub enum TokenValue<'a> {
     tLAMBEG(&'a [u8]),       //
     tLABEL_END(&'a [u8]),    //
 
-    tCOMMA(&'a [u8]),     // ","
-    tLCURLY,              // "{ (tLCURLY)"
-    tRCURLY,              // "}"
-    tLBRACK2(&'a [u8]),   // "[ (tLBRACK2)"
-    tPIPE(&'a [u8]),      // "|"
-    tAMPER2(&'a [u8]),    // "& (tAMPER2)"
-    tGT(&'a [u8]),        // ">"
-    tLT(&'a [u8]),        // "<"
-    tBACK_REF2(&'a [u8]), // "`"
-    tCARET(&'a [u8]),     // "^"
-    tLPAREN2,             // "( (tLPAREN2)"
-    tRBRACK(&'a [u8]),    // "]"
-    tSEMI(&'a [u8]),      // ";"
-    tSPACE(&'a [u8]),     // " "
-    tNL(&'a [u8]),        // "\n"
-    tPERCENT(&'a [u8]),   // "%"
-    tTILDE(&'a [u8]),     // "~"
-    tBANG(&'a [u8]),      // "!"
+    tCOMMA,   // ","
+    tLCURLY,  // "{"
+    tRCURLY,  // "}"
+    tEQL,     // "="
+    tPIPE,    // "|"
+    tGT,      // ">"
+    tLT,      // "<"
+    tCARET,   // "^"
+    tSEMI,    // ";"
+    tSPACE,   // " "
+    tNL,      // "\n"
+    tPERCENT, // "%"
+    tTILDE,   // "~"
+    tBANG,    // "!"
+    tPLUS,    // "+"
+    tMINUS,   // "-"
+    tPOW,     // "**"
+    tSTAR,    // "*"
+    tDIVIDE,  // "/"
+    tEQ,      // "=="
+    tEQQ,     // "==="
+    tEH,      // "?"
 
-    BinOp(BinOp),
     tEOF,
 
     // TODO: replace with diagnostics
@@ -269,6 +272,62 @@ pub enum BinOp {
     tBANG,
     tTILDE,
     tUPLUS,
+}
+
+impl std::convert::TryFrom<TokenValue<'_>> for BinOp {
+    type Error = ();
+
+    fn try_from(token: TokenValue<'_>) -> Result<Self, Self::Error> {
+        match token {
+            TokenValue::kIF_MOD => Ok(BinOp::kIF_MOD),
+            TokenValue::kUNLESS_MOD => Ok(BinOp::kUNLESS_MOD),
+            TokenValue::kWHILE_MOD => Ok(BinOp::kWHILE_MOD),
+            TokenValue::kUNTIL_MOD => Ok(BinOp::kUNTIL_MOD),
+            TokenValue::kIN => Ok(BinOp::kIN),
+            TokenValue::kOR => Ok(BinOp::kOR),
+            TokenValue::kAND => Ok(BinOp::kAND),
+            TokenValue::kNOT => Ok(BinOp::kNOT),
+            TokenValue::kDEFINED => Ok(BinOp::kDEFINED),
+            TokenValue::tEQL => Ok(BinOp::tEQL),
+            TokenValue::tOP_ASGN => Ok(BinOp::tOP_ASGN),
+            TokenValue::kRESCUE_MOD => Ok(BinOp::kRESCUE_MOD),
+            TokenValue::tEH => Ok(BinOp::tEH),
+            TokenValue::tCOLON => Ok(BinOp::tCOLON),
+            TokenValue::tDOT2 => Ok(BinOp::tDOT2),
+            TokenValue::tDOT3 => Ok(BinOp::tDOT3),
+            TokenValue::tBDOT2 => Ok(BinOp::tBDOT2),
+            TokenValue::tBDOT3 => Ok(BinOp::tBDOT3),
+            TokenValue::tOROP => Ok(BinOp::tOROP),
+            TokenValue::tANDOP => Ok(BinOp::tANDOP),
+            TokenValue::tCMP => Ok(BinOp::tCMP),
+            TokenValue::tEQ => Ok(BinOp::tEQ),
+            TokenValue::tEQQ => Ok(BinOp::tEQQ),
+            TokenValue::tNEQ => Ok(BinOp::tNEQ),
+            TokenValue::tMATCH => Ok(BinOp::tMATCH),
+            TokenValue::tNMATCH => Ok(BinOp::tNMATCH),
+            TokenValue::tGT => Ok(BinOp::tGT),
+            TokenValue::tGEQ => Ok(BinOp::tGEQ),
+            TokenValue::tLT => Ok(BinOp::tLT),
+            TokenValue::tLEQ => Ok(BinOp::tLEQ),
+            TokenValue::tPIPE => Ok(BinOp::tPIPE),
+            TokenValue::tCARET => Ok(BinOp::tCARET),
+            TokenValue::tAMPER => Ok(BinOp::tAMPER),
+            TokenValue::tLSHFT => Ok(BinOp::tLSHFT),
+            TokenValue::tRSHFT => Ok(BinOp::tRSHFT),
+            TokenValue::tPLUS => Ok(BinOp::tPLUS),
+            TokenValue::tMINUS => Ok(BinOp::tMINUS),
+            TokenValue::tSTAR => Ok(BinOp::tSTAR),
+            TokenValue::tDIVIDE => Ok(BinOp::tDIVIDE),
+            TokenValue::tPERCENT => Ok(BinOp::tPERCENT),
+            TokenValue::tUMINUS_NUM => Ok(BinOp::tUMINUS_NUM),
+            TokenValue::tUMINUS => Ok(BinOp::tUMINUS),
+            TokenValue::tPOW => Ok(BinOp::tPOW),
+            TokenValue::tBANG => Ok(BinOp::tBANG),
+            TokenValue::tTILDE => Ok(BinOp::tTILDE),
+            TokenValue::tUPLUS => Ok(BinOp::tUPLUS),
+            _ => Err(()),
+        }
+    }
 }
 
 impl BinOp {
