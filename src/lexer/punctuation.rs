@@ -3,7 +3,7 @@ use crate::token::{Loc, Token, TokenValue};
 
 impl OnByte<b'#'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!("handle comment");
+        todo!("parse_comment");
         #[allow(unreachable_code)]
         Err(())
     }
@@ -186,7 +186,7 @@ impl OnByte<b'"'> for Lexer<'_> {
 
 impl OnByte<b'`'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!()
+        todo!("unclear what to do here?? MRI does state-dependent analysis")
     }
 }
 
@@ -207,15 +207,38 @@ impl OnByte<b'\''> for Lexer<'_> {
 
 impl OnByte<b'?'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!()
+        todo!("parse_qmark")
     }
 }
 
 impl OnByte<b'&'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!()
+        let start = self.pos() - 1;
+        if let Some(b'&') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'=') = self.current_byte() {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tOP_ASGN(b"&&="), Loc(start, self.pos())));
+            } else {
+                self.add_token(Token(TokenValue::tANDOP, Loc(start, self.pos())));
+            }
+        } else if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            self.add_token(Token(TokenValue::tOP_ASGN(b"&="), Loc(start, self.pos())));
+        } else if let Some(b'.') = self.current_byte() {
+            self.skip_byte();
+            self.add_token(Token(TokenValue::tANDDOT, Loc(start, self.pos())));
+        } else {
+            self.add_token(Token(TokenValue::tAMPER, Loc(start, self.pos())));
+        }
+        Ok(())
     }
 }
+assert_lex!(test_tOP_ASGN_DAMPER, "&&=", tOP_ASGN(b"&&="), 0..3);
+assert_lex!(test_tANDOP, "&&", tANDOP, 0..2);
+assert_lex!(test_tOP_ASGN_AMPER, "&=", tOP_ASGN(b"&="), 0..2);
+assert_lex!(test_tANDDOT, "&.", tANDDOT, 0..2);
+assert_lex!(test_tAMPER, "&", tAMPER, 0..1);
 
 impl OnByte<b'|'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
