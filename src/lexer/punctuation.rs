@@ -242,9 +242,28 @@ assert_lex!(test_tAMPER, "&", tAMPER, 0..1);
 
 impl OnByte<b'|'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!()
+        let start = self.pos() - 1;
+        if let Some(b'|') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'=') = self.current_byte() {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tOP_ASGN(b"||="), Loc(start, self.pos())));
+            } else {
+                self.add_token(Token(TokenValue::tOROP, Loc(start, self.pos())));
+            }
+        } else if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            self.add_token(Token(TokenValue::tOP_ASGN(b"|="), Loc(start, self.pos())));
+        } else {
+            self.add_token(Token(TokenValue::tPIPE, Loc(start, self.pos())));
+        }
+        Ok(())
     }
 }
+assert_lex!(test_tOP_ASGN_DPIPE, "||=", tOP_ASGN(b"||="), 0..3);
+assert_lex!(test_tOROP, "||", tOROP, 0..2);
+assert_lex!(test_tOP_ASGN_PIPE, "|=", tOP_ASGN(b"|="), 0..2);
+assert_lex!(test_tPIPE, "|", tPIPE, 0..1);
 
 impl OnByte<b'+'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
