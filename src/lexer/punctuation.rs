@@ -332,7 +332,6 @@ impl OnByte<b'+'> for Lexer<'_> {
                 self.add_token(Token(TokenValue::tOP_ASGN(b"+="), Loc(start, self.pos())));
             }
             Some(b'0'..=b'9') => {
-                self.skip_byte();
                 let mut token = parse_number(&mut self.buffer)?;
                 token.1 .0 = start;
                 let new_value = self.slice(token.loc().0, token.loc().1);
@@ -383,9 +382,33 @@ assert_lex!(test_tUMINUS, "-5", tUMINUS, 0..1);
 
 impl OnByte<b'.'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!()
+        let start = self.pos() - 1;
+        match self.current_byte() {
+            Some(b'.') => {
+                self.skip_byte();
+                match self.current_byte() {
+                    Some(b'.') => {
+                        self.skip_byte();
+                        self.add_token(Token(TokenValue::tDOT3, Loc(start, self.pos())));
+                    }
+                    _ => {
+                        self.add_token(Token(TokenValue::tDOT2, Loc(start, self.pos())));
+                    }
+                }
+            }
+            Some(b'0'..=b'9') => {
+                todo!("Handle .<n> case as error?? Skip all number until NaN found");
+            }
+            _ => {
+                self.add_token(Token(TokenValue::tDOT, Loc(start, self.pos())));
+            }
+        }
+        Ok(())
     }
 }
+assert_lex!(test_tDOT3, "...", tDOT3, 0..3);
+assert_lex!(test_tDOT2, "..", tDOT2, 0..2);
+assert_lex!(test_tDOT, ".", tDOT, 0..1);
 
 impl OnByte<b')'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {

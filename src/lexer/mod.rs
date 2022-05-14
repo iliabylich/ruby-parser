@@ -140,6 +140,7 @@ impl<'a> Lexer<'a> {
             b'-' => OnByte::<b'-'>::on_byte(self)?,
             b'.' => OnByte::<b'.'>::on_byte(self)?,
             b'0'..=b'9' => {
+                self.buffer.set_pos(start);
                 let token = parse_number(&mut self.buffer)?;
                 self.add_token(token)
             }
