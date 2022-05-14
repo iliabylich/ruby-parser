@@ -9,14 +9,14 @@ pub(crate) enum StringLiteral<'a> {
     Plain {
         supports_interpolation: bool,
         currently_in_interpolation: bool,
-        ends_with: &'a str,
+        ends_with: &'a [u8],
         interpolation_started_with_curly_level: usize,
     },
 
     Heredoc {
         supports_interpolation: bool,
         currently_in_interpolation: bool,
-        ends_with: &'a str,
+        ends_with: &'a [u8],
         heredoc_id_ended_at: usize,
         interpolation_started_with_curly_level: usize,
     },
@@ -50,6 +50,10 @@ impl<'a> StringLiteralStack<'a> {
 
     pub(crate) fn pop(&mut self) {
         self.stack.pop().unwrap();
+    }
+
+    pub(crate) fn push(&mut self, literal: StringLiteral<'a>) {
+        self.stack.push(literal);
     }
 }
 
