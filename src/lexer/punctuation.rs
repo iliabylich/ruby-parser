@@ -1,6 +1,8 @@
 use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral};
 use crate::token::{Loc, Token, TokenValue};
 
+use super::number::parse_number;
+
 impl OnByte<b'#'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
         todo!("parse_comment");
@@ -322,12 +324,33 @@ assert_lex!(test_tPIPE, "|", tPIPE, 0..1);
 
 impl OnByte<b'+'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        // TODO: extend
         let start = self.pos() - 1;
-        self.add_token(Token(TokenValue::tPLUS, Loc(start, self.pos())));
+        // +@ is handled on the parser level
+        match self.current_byte() {
+            Some(b'=') => {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tOP_ASGN(b"+="), Loc(start, self.pos())));
+            }
+            Some(b'0'..=b'9') => {
+                self.skip_byte();
+                let mut token = parse_number(&mut self.buffer)?;
+                token.1 .0 = start;
+                let new_value = self.slice(token.loc().0, token.loc().1);
+                match &mut token.0 {
+                    TokenValue::tINTEGER(v) => *v = new_value,
+                    other => unreachable!("Unsupported token value {:?}", other),
+                };
+                self.add_token(token);
+            }
+            _ => {
+                self.add_token(Token(TokenValue::tPLUS, Loc(start, self.pos())));
+            }
+        }
         Ok(())
     }
 }
+assert_lex!(test_tOP_ASGN_PLUS, "+=", tOP_ASGN(b"+="), 0..2);
+assert_lex!(test_tPLUS_NUMBER, "+1", tINTEGER(b"+1"), 0..2);
 assert_lex!(test_tPLUS, "+", tPLUS, 0..1);
 
 impl OnByte<b'-'> for Lexer<'_> {
