@@ -436,26 +436,88 @@ assert_lex!(
 impl OnByte<b']'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
         let start = self.pos() - 1;
+        if self.brack_nest > 0 {
+            self.brack_nest -= 1;
+        } else {
+            todo!("Report brack_nest error");
+        }
         self.add_token(Token(TokenValue::tRBRACK, Loc(start, self.pos())));
         Ok(())
     }
 }
-assert_lex!(test_tRBRACK, "]", tRBRACK, 0..1);
+assert_lex!(
+    test_tRBRACK,
+    "]",
+    tRBRACK,
+    0..1,
+    setup = |lexer: &mut Lexer| {
+        lexer.brack_nest = 1;
+    }
+);
 
 impl OnByte<b'}'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
         let start = self.pos() - 1;
+        if self.curly_nest > 0 {
+            self.curly_nest -= 1;
+        } else {
+            todo!("Report curly_nest error");
+        }
         self.add_token(Token(TokenValue::tRCURLY, Loc(start, self.pos())));
         Ok(())
     }
 }
-assert_lex!(test_tRCURLY, "}", tRCURLY, 0..1);
+assert_lex!(
+    test_tRCURLY,
+    "}",
+    tRCURLY,
+    0..1,
+    setup = |lexer: &mut Lexer| {
+        lexer.curly_nest = 1;
+    }
+);
 
 impl OnByte<b':'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        todo!()
+        let start = self.pos() - 1;
+        match self.current_byte() {
+            Some(b':') => {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tCOLON2, Loc(start, self.pos())));
+            }
+            Some(b'"') => {
+                // :"..." symbol
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tSYMBEG, Loc(start, self.pos())));
+                self.string_literals.push(StringLiteral::Plain {
+                    supports_interpolation: true,
+                    currently_in_interpolation: false,
+                    ends_with: b" ",
+                    interpolation_started_with_curly_level: self.curly_nest,
+                });
+            }
+            Some(b'\'') => {
+                // :'...' symbol
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tDSYMBEG, Loc(start, self.pos())));
+                self.string_literals.push(StringLiteral::Plain {
+                    supports_interpolation: false,
+                    currently_in_interpolation: false,
+                    ends_with: b" ",
+                    interpolation_started_with_curly_level: 0,
+                });
+            }
+            _ => {
+                self.add_token(Token(TokenValue::tCOLON, Loc(start, self.pos())));
+            }
+        }
+        Ok(())
     }
 }
+assert_lex!(test_tCOLON2, "::", tCOLON2, 0..2);
+// assert_lex!(test_tDSYMBEG, ":\"", tDSYMBEG, 0..2);
+// assert_lex!(test_tSYMBEG, ":'", tSYMBEG, 0..2);
+assert_lex!(test_tCOLON, ":", tCOLON, 0..1);
 
 impl OnByte<b'/'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
