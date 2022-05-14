@@ -128,8 +128,8 @@ impl<'a> Lexer<'a> {
             b'<' => OnByte::<b'<'>::on_byte(self)?,
             b'>' => OnByte::<b'>'>::on_byte(self)?,
             b'"' => OnByte::<b'"'>::on_byte(self)?,
-            b'`' => todo!(),
-            b'\'' => todo!(),
+            b'`' => OnByte::<b'`'>::on_byte(self)?,
+            b'\'' => OnByte::<b'\''>::on_byte(self)?,
             b'?' => todo!(),
             b'&' => todo!(),
             b'|' => todo!(),
@@ -381,7 +381,28 @@ impl OnByte<b'"'> for Lexer<'_> {
         Ok(())
     }
 }
-// assert_lex!(test_tSTRING_BEG1, "\"", tSTRING_BEG(b"\""), 0..1);
+// assert_lex!(test_tSTRING_BEG_DQUOTE, "\"", tSTRING_BEG(b"\""), 0..1);
+
+impl OnByte<b'`'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        todo!()
+    }
+}
+
+impl OnByte<b'\''> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        let start = self.pos() - 1;
+        self.add_token(Token(TokenValue::tSTRING_BEG(b"'"), Loc(start, self.pos())));
+        self.string_literals.push(StringLiteral::Plain {
+            supports_interpolation: false,
+            currently_in_interpolation: false,
+            ends_with: b"'",
+            interpolation_started_with_curly_level: 0,
+        });
+        Ok(())
+    }
+}
+// assert_lex!(test_tSTRING_BEG1_SQUOTE, "'", tSTRING_BEG(b"'"), 0..1);
 
 impl OnByte<b'+'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
