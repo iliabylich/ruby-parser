@@ -355,13 +355,31 @@ assert_lex!(test_tPLUS, "+", tPLUS, 0..1);
 
 impl OnByte<b'-'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
-        // TODO: extend
         let start = self.pos() - 1;
-        self.add_token(Token(TokenValue::tMINUS, Loc(start, self.pos())));
+        // -@ is handled on the parser level
+        match self.current_byte() {
+            Some(b'=') => {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tOP_ASGN(b"-="), Loc(start, self.pos())));
+            }
+            Some(b'>') => {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tLAMBDA, Loc(start, self.pos())));
+            }
+            Some(b'0'..=b'9') => {
+                self.add_token(Token(TokenValue::tUMINUS, Loc(start, self.pos())));
+            }
+            _ => {
+                self.add_token(Token(TokenValue::tMINUS, Loc(start, self.pos())));
+            }
+        }
         Ok(())
     }
 }
+assert_lex!(test_tOP_ASGN_MINUS, "-=", tOP_ASGN(b"-="), 0..2);
+assert_lex!(test_tLAMBDA, "->", tLAMBDA, 0..2);
 assert_lex!(test_tMINUS, "-", tMINUS, 0..1);
+assert_lex!(test_tUMINUS, "-5", tUMINUS, 0..1);
 
 impl OnByte<b'.'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
