@@ -219,7 +219,7 @@ impl OnByte<b'"'> for Lexer<'_> {
             supports_interpolation: true,
             currently_in_interpolation: false,
             ends_with: b"\"",
-            interpolation_started_with_curly_level: self.curly_braces,
+            interpolation_started_with_curly_level: self.curly_nest,
         });
         Ok(())
     }
@@ -413,12 +413,25 @@ assert_lex!(test_tDOT, ".", tDOT, 0..1);
 impl OnByte<b')'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
         let start = self.pos() - 1;
+        if self.paren_nest > 0 {
+            self.paren_nest -= 1;
+        } else {
+            todo!("Report paren_nest error");
+        }
 
         self.add_token(Token(TokenValue::tRPAREN, Loc(start, self.pos())));
         Ok(())
     }
 }
-assert_lex!(test_tRPAREN, ")", tRPAREN, 0..1);
+assert_lex!(
+    test_tRPAREN,
+    ")",
+    tRPAREN,
+    0..1,
+    setup = |lexer: &mut Lexer| {
+        lexer.paren_nest = 1;
+    }
+);
 
 impl OnByte<b']'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
@@ -480,6 +493,7 @@ impl OnByte<b'~'> for Lexer<'_> {
 impl OnByte<b'('> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
         let start = self.pos() - 1;
+        self.paren_nest += 1;
         self.add_token(Token(TokenValue::tLPAREN, Loc(start, self.pos())));
         Ok(())
     }

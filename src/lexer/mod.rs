@@ -19,7 +19,9 @@ pub struct Lexer<'a> {
     tokens: Vec<Token<'a>>,
     token_idx: usize,
 
-    curly_braces: usize,
+    curly_nest: usize,
+    paren_nest: usize,
+    brack_nest: usize,
 }
 
 impl<'a> Lexer<'a> {
@@ -33,7 +35,9 @@ impl<'a> Lexer<'a> {
             tokens: vec![],
             token_idx: 0,
 
-            curly_braces: 0,
+            curly_nest: 0,
+            paren_nest: 0,
+            brack_nest: 0,
         }
     }
 
@@ -82,7 +86,7 @@ impl<'a> Lexer<'a> {
                 interpolation_started_with_curly_level,
             } => {
                 if self.current_byte() == Some(b'}')
-                    && interpolation_started_with_curly_level == self.curly_braces
+                    && interpolation_started_with_curly_level == self.curly_nest
                 {
                     self.add_token(Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1)));
                     self.skip_byte();
@@ -187,16 +191,27 @@ pub(crate) trait OnByte<const BYTE: u8> {
 }
 
 macro_rules! assert_lex {
-    ($test_name:ident, $input:literal, $tok:expr, $loc:expr) => {
+    ($test_name:ident, $input:literal, $tok:expr, $loc:expr, setup = $pre:expr) => {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
             use crate::{Lexer, Loc, TokenValue::*};
             let mut lexer = Lexer::new($input);
+            $pre(&mut lexer);
             lexer.tokenize_until_eof();
             assert_eq!(lexer.tokens[0].value(), $tok);
             assert_eq!(lexer.tokens[0].loc(), Loc($loc.start, $loc.end));
         }
+    };
+    // Shortcut with no lexer setup
+    ($test_name:ident, $input:literal, $tok:expr, $loc:expr) => {
+        assert_lex!(
+            $test_name,
+            $input,
+            $tok,
+            $loc,
+            setup = |_lexer: &mut Lexer| {}
+        );
     };
 }
 pub(crate) use assert_lex;
