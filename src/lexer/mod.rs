@@ -118,13 +118,15 @@ impl<'a> Lexer<'a> {
 
         // SAFETY: None (i.e. EOF) has been handled above in `handle_eof`.
         //         so `.unwrap_unchecked()` is safe
-        match unsafe { self.take_byte().unwrap_unchecked() } {
+        let byte = unsafe { self.take_byte().unwrap_unchecked() };
+
+        match byte {
             b'#' => OnByte::<b'#'>::on_byte(self)?,
             b'*' => OnByte::<b'*'>::on_byte(self)?,
             b'!' => OnByte::<b'!'>::on_byte(self)?,
             b'=' => OnByte::<b'='>::on_byte(self)?,
             b'<' => OnByte::<b'<'>::on_byte(self)?,
-            b'>' => todo!(),
+            b'>' => OnByte::<b'>'>::on_byte(self)?,
             b'"' => todo!(),
             b'`' => todo!(),
             b'\'' => todo!(),
@@ -334,8 +336,34 @@ impl OnByte<b'<'> for Lexer<'_> {
 assert_lex!(test_tCMP, "<=>", tCMP, 0..3);
 assert_lex!(test_tLEQ, "<=", tLEQ, 0..2);
 assert_lex!(test_tOP_ASGN_LSHIFT, "<<=", tOP_ASGN(b"<<="), 0..3);
-assert_lex!(test_tLSHIFT, "<<", tLSHFT, 0..2);
+assert_lex!(test_tLSHFT, "<<", tLSHFT, 0..2);
 assert_lex!(test_tLT, "<", tLT, 0..1);
+
+impl OnByte<b'>'> for Lexer<'_> {
+    fn on_byte(&mut self) -> Result<(), ()> {
+        let start = self.pos() - 1;
+        if let Some(b'=') = self.current_byte() {
+            self.skip_byte();
+            self.add_token(Token(TokenValue::tGEQ, Loc(start, self.pos())));
+        } else if let Some(b'>') = self.current_byte() {
+            self.skip_byte();
+            if let Some(b'=') = self.current_byte() {
+                self.skip_byte();
+                self.add_token(Token(TokenValue::tOP_ASGN(b">>="), Loc(start, self.pos())));
+            } else {
+                self.add_token(Token(TokenValue::tRSHFT, Loc(start, self.pos())));
+            }
+        } else {
+            self.add_token(Token(TokenValue::tGT, Loc(start, self.pos())));
+        }
+
+        Ok(())
+    }
+}
+assert_lex!(test_tGEQ, ">=", tGEQ, 0..2);
+assert_lex!(test_tOP_ASGN_RSHIFT, ">>=", tOP_ASGN(b">>="), 0..3);
+assert_lex!(test_tRSHFT, ">>", tRSHFT, 0..2);
+assert_lex!(test_tGT, ">", tGT, 0..1);
 
 impl OnByte<b'+'> for Lexer<'_> {
     fn on_byte(&mut self) -> Result<(), ()> {
