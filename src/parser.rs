@@ -23,9 +23,6 @@ impl<'a> Parser<'a> {
     }
 
     pub fn parse(&mut self) -> Node<'a> {
-        // Initiate tokenizer
-        self.lexer.tokenize_until_eof();
-
         self.parse_expression()
     }
 
@@ -37,12 +34,12 @@ impl<'a> Parser<'a> {
     fn parse_primary(&mut self) -> Node<'a> {
         match self.lexer.current_token().value() {
             TokenValue::tLPAREN => {
-                self.lexer.next_token();
+                self.lexer.skip_token();
                 let inner = self.parse_expression();
                 if self.lexer.current_token().value() != TokenValue::tRPAREN {
                     panic!("parse error: expected )")
                 }
-                self.lexer.next_token();
+                self.lexer.skip_token();
                 Node::Parenthesized(Box::new(inner))
             }
 
@@ -50,7 +47,7 @@ impl<'a> Parser<'a> {
             TokenValue::Error(c) => panic!("Tokenizer error: {}", c),
 
             TokenValue::tINTEGER(n) => {
-                self.lexer.next_token();
+                self.lexer.skip_token();
                 Node::Number(n)
             }
 
@@ -64,7 +61,7 @@ impl<'a> Parser<'a> {
             if bin_op.precedence() < min_prec {
                 break;
             }
-            self.lexer.next_token();
+            self.lexer.skip_token();
             let mut rhs = self.parse_primary();
             lookahead = self.lexer.current_token();
             while let Ok(lookahead_bin_op) = BinOp::try_from(lookahead.value()) {

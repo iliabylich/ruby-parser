@@ -16,8 +16,7 @@ pub struct Lexer<'a> {
 
     string_literals: StringLiteralStack<'a>,
 
-    tokens: Vec<Token<'a>>,
-    token_idx: usize,
+    current_token: Option<Token<'a>>,
 
     curly_nest: usize,
     paren_nest: usize,
@@ -32,8 +31,7 @@ impl<'a> Lexer<'a> {
 
             string_literals: StringLiteralStack::new(),
 
-            tokens: vec![],
-            token_idx: 0,
+            current_token: None,
 
             curly_nest: 0,
             paren_nest: 0,
@@ -46,41 +44,28 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    pub fn tokenize_until_eof(&mut self) {
-        if let Err(_err) = self._tokenize() {
-            // TODO: handle unexpected EOF error
+    pub fn current_token(&mut self) -> Token<'a> {
+        if self.current_token.is_none() {
+            self.current_token = Some(self.next_token())
+        }
+        // SAFETY: we've filled in current_token above
+        //         it's guaranteed to hold Some(Token)
+        unsafe { self.current_token.unwrap_unchecked() }
+    }
+
+    fn next_token(&mut self) -> Token<'a> {
+        if let Some(literal) = self.string_literals.last() {
+            self.tokenize_while_in_string(literal)
+        } else {
+            self.tokenize_normally()
         }
     }
 
-    fn _tokenize(&mut self) -> Result<(), ()> {
-        loop {
-            if let Some(literal) = self.string_literals.last() {
-                self.tokenize_while_in_string(literal)?
-            } else {
-                self.tokenize_normally()?
-            };
-        }
+    pub(crate) fn skip_token(&mut self) {
+        self.current_token = None;
     }
 
-    pub fn current_token(&self) -> Token<'a> {
-        self.tokens[self.token_idx]
-    }
-
-    pub fn next_token(&mut self) {
-        if self.token_idx < self.tokens.len() {
-            self.token_idx += 1;
-        }
-    }
-
-    pub(crate) fn add_token(&mut self, token: Token<'a>) {
-        if self.debug {
-            println!("Reading token {:?}", token);
-        }
-
-        self.tokens.push(token);
-    }
-
-    fn tokenize_while_in_string(&mut self, literal: StringLiteral<'a>) -> Result<(), ()> {
+    fn tokenize_while_in_string(&mut self, literal: StringLiteral<'a>) -> Token<'a> {
         match literal.lex(&mut self.buffer) {
             StringLiteralAction::InInterpolation {
                 interpolation_started_with_curly_level,
@@ -88,11 +73,12 @@ impl<'a> Lexer<'a> {
                 if self.current_byte() == Some(b'}')
                     && interpolation_started_with_curly_level == self.curly_nest
                 {
-                    self.add_token(Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1)));
+                    let token = Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1));
                     self.skip_byte();
+                    token
                 } else {
                     // we are after `#{` and should read an interpolated value
-                    self.tokenize_normally()?;
+                    self.tokenize_normally()
                 }
             }
             StringLiteralAction::EmitStringContent {
@@ -100,8 +86,9 @@ impl<'a> Lexer<'a> {
                 start,
                 end,
             } => {
-                self.add_token(Token(TokenValue::tSTRING_CONTENT(content), Loc(start, end)));
+                let token = Token(TokenValue::tSTRING_CONTENT(content), Loc(start, end));
                 self.buffer.set_pos(end);
+                token
             }
             StringLiteralAction::CloseLiteral {
                 content,
@@ -109,16 +96,18 @@ impl<'a> Lexer<'a> {
                 end,
                 jump_to,
             } => {
-                self.add_token(Token(TokenValue::tSTRING_END(content), Loc(start, end)));
+                let token = Token(TokenValue::tSTRING_END(content), Loc(start, end));
                 self.buffer.set_pos(jump_to);
                 self.string_literals.pop();
+                token
             }
         }
-        Ok(())
     }
 
-    pub fn tokenize_normally(&mut self) -> Result<(), ()> {
-        self.handle_eof()?;
+    pub fn tokenize_normally(&mut self) -> Token<'a> {
+        if let Some(eof_t) = self.handle_eof() {
+            return eof_t;
+        }
         self.skip_ws();
 
         let start = self.pos();
@@ -128,57 +117,51 @@ impl<'a> Lexer<'a> {
         let byte = unsafe { self.take_byte().unwrap_unchecked() };
 
         match byte {
-            b'#' => OnByte::<b'#'>::on_byte(self)?,
-            b'*' => OnByte::<b'*'>::on_byte(self)?,
-            b'!' => OnByte::<b'!'>::on_byte(self)?,
-            b'=' => OnByte::<b'='>::on_byte(self)?,
-            b'<' => OnByte::<b'<'>::on_byte(self)?,
-            b'>' => OnByte::<b'>'>::on_byte(self)?,
-            b'"' => OnByte::<b'"'>::on_byte(self)?,
-            b'`' => OnByte::<b'`'>::on_byte(self)?,
-            b'\'' => OnByte::<b'\''>::on_byte(self)?,
-            b'?' => OnByte::<b'?'>::on_byte(self)?,
-            b'&' => OnByte::<b'&'>::on_byte(self)?,
-            b'|' => OnByte::<b'|'>::on_byte(self)?,
-            b'+' => OnByte::<b'+'>::on_byte(self)?,
-            b'-' => OnByte::<b'-'>::on_byte(self)?,
-            b'.' => OnByte::<b'.'>::on_byte(self)?,
+            b'#' => OnByte::<b'#'>::on_byte(self),
+            b'*' => OnByte::<b'*'>::on_byte(self),
+            b'!' => OnByte::<b'!'>::on_byte(self),
+            b'=' => OnByte::<b'='>::on_byte(self),
+            b'<' => OnByte::<b'<'>::on_byte(self),
+            b'>' => OnByte::<b'>'>::on_byte(self),
+            b'"' => OnByte::<b'"'>::on_byte(self),
+            b'`' => OnByte::<b'`'>::on_byte(self),
+            b'\'' => OnByte::<b'\''>::on_byte(self),
+            b'?' => OnByte::<b'?'>::on_byte(self),
+            b'&' => OnByte::<b'&'>::on_byte(self),
+            b'|' => OnByte::<b'|'>::on_byte(self),
+            b'+' => OnByte::<b'+'>::on_byte(self),
+            b'-' => OnByte::<b'-'>::on_byte(self),
+            b'.' => OnByte::<b'.'>::on_byte(self),
             b'0'..=b'9' => {
                 self.buffer.set_pos(start);
-                let token = parse_number(&mut self.buffer)?;
-                self.add_token(token)
+                parse_number(&mut self.buffer)
             }
 
-            b')' => OnByte::<b')'>::on_byte(self)?,
-            b']' => OnByte::<b']'>::on_byte(self)?,
-            b'}' => OnByte::<b'}'>::on_byte(self)?,
+            b')' => OnByte::<b')'>::on_byte(self),
+            b']' => OnByte::<b']'>::on_byte(self),
+            b'}' => OnByte::<b'}'>::on_byte(self),
 
-            b':' => OnByte::<b':'>::on_byte(self)?,
+            b':' => OnByte::<b':'>::on_byte(self),
 
-            b'/' => OnByte::<b'/'>::on_byte(self)?,
-            b'^' => OnByte::<b'^'>::on_byte(self)?,
-            b';' => OnByte::<b';'>::on_byte(self)?,
-            b',' => OnByte::<b','>::on_byte(self)?,
-            b'~' => OnByte::<b'~'>::on_byte(self)?,
-            b'(' => OnByte::<b'('>::on_byte(self)?,
-            b'[' => OnByte::<b'['>::on_byte(self)?,
-            b'{' => OnByte::<b'{'>::on_byte(self)?,
-            b'\\' => OnByte::<b'\\'>::on_byte(self)?,
-            b'%' => OnByte::<b'%'>::on_byte(self)?,
-            b'$' => OnByte::<b'$'>::on_byte(self)?,
-            b'@' => OnByte::<b'@'>::on_byte(self)?,
-            b'_' => OnByte::<b'_'>::on_byte(self)?,
+            b'/' => OnByte::<b'/'>::on_byte(self),
+            b'^' => OnByte::<b'^'>::on_byte(self),
+            b';' => OnByte::<b';'>::on_byte(self),
+            b',' => OnByte::<b','>::on_byte(self),
+            b'~' => OnByte::<b'~'>::on_byte(self),
+            b'(' => OnByte::<b'('>::on_byte(self),
+            b'[' => OnByte::<b'['>::on_byte(self),
+            b'{' => OnByte::<b'{'>::on_byte(self),
+            b'\\' => OnByte::<b'\\'>::on_byte(self),
+            b'%' => OnByte::<b'%'>::on_byte(self),
+            b'$' => OnByte::<b'$'>::on_byte(self),
+            b'@' => OnByte::<b'@'>::on_byte(self),
+            b'_' => OnByte::<b'_'>::on_byte(self),
 
             byte => {
                 // TODO: parse ident
-                self.add_token(Token(
-                    TokenValue::Error(byte as char),
-                    Loc(start, self.pos()),
-                ))
+                Token(TokenValue::Error(byte as char), Loc(start, self.pos()))
             }
-        };
-
-        Ok(())
+        }
     }
 
     pub(crate) fn tokenize_heredoc_id(&mut self) -> Option<&'a [u8]> {
@@ -186,8 +169,8 @@ impl<'a> Lexer<'a> {
     }
 }
 
-pub(crate) trait OnByte<const BYTE: u8> {
-    fn on_byte(&mut self) -> Result<(), ()>;
+pub(crate) trait OnByte<'a, const BYTE: u8> {
+    fn on_byte(&mut self) -> Token<'a>;
 }
 
 macro_rules! assert_lex {
@@ -198,9 +181,9 @@ macro_rules! assert_lex {
             use crate::{Lexer, Loc, TokenValue::*};
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
-            lexer.tokenize_until_eof();
-            assert_eq!(lexer.tokens[0].value(), $tok);
-            assert_eq!(lexer.tokens[0].loc(), Loc($loc.start, $loc.end));
+            let token = lexer.current_token();
+            assert_eq!(token.value(), $tok);
+            assert_eq!(token.loc(), Loc($loc.start, $loc.end));
         }
     };
     // Shortcut with no lexer setup

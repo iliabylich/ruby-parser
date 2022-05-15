@@ -1,7 +1,7 @@
 use crate::lexer::buffer::Buffer;
 use crate::token::{Loc, Token, TokenValue};
 
-pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Result<Token<'a>, ()> {
+pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     let start = buffer.pos();
 
     // todo: parse numeric
@@ -9,5 +9,5 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Result<Token<'a>, ()>
         buffer.skip_byte();
     }
     let num = buffer.slice(start, buffer.pos());
-    Ok(Token(TokenValue::tINTEGER(num), Loc(start, buffer.pos())))
+    Token(TokenValue::tINTEGER(num), Loc(start, buffer.pos()))
 }
