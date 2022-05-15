@@ -189,7 +189,7 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
         token
     }
 }
-// assert_lex!(test_tSTRING_BEG_DQUOTE, "\"", tSTRING_BEG(b"\""), 0..1);
+assert_lex!(test_tSTRING_BEG_DQUOTE, "\"", tSTRING_BEG(b"\""), 0..1);
 
 impl<'a> OnByte<'a, b'`'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -210,7 +210,7 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         token
     }
 }
-// assert_lex!(test_tSTRING_BEG1_SQUOTE, "'", tSTRING_BEG(b"'"), 0..1);
+assert_lex!(test_tSTRING_BEG1_SQUOTE, "'", tSTRING_BEG(b"'"), 0..1);
 
 impl<'a> OnByte<'a, b'?'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -427,7 +427,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
             Some(b'"') => {
                 // :"..." symbol
                 self.skip_byte();
-                let token = Token(TokenValue::tSYMBEG, Loc(start, self.pos()));
+                let token = Token(TokenValue::tDSYMBEG, Loc(start, self.pos()));
                 self.string_literals.push(StringLiteral::Plain {
                     supports_interpolation: true,
                     currently_in_interpolation: false,
@@ -439,7 +439,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
             Some(b'\'') => {
                 // :'...' symbol
                 self.skip_byte();
-                let token = Token(TokenValue::tDSYMBEG, Loc(start, self.pos()));
+                let token = Token(TokenValue::tSYMBEG, Loc(start, self.pos()));
                 self.string_literals.push(StringLiteral::Plain {
                     supports_interpolation: false,
                     currently_in_interpolation: false,
@@ -453,8 +453,8 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
     }
 }
 assert_lex!(test_tCOLON2, "::", tCOLON2, 0..2);
-// assert_lex!(test_tDSYMBEG, ":\"", tDSYMBEG, 0..2);
-// assert_lex!(test_tSYMBEG, ":'", tSYMBEG, 0..2);
+assert_lex!(test_tDSYMBEG, ":\"", tDSYMBEG, 0..2);
+assert_lex!(test_tSYMBEG, ":'", tSYMBEG, 0..2);
 assert_lex!(test_tCOLON, ":", tCOLON, 0..1);
 
 impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
