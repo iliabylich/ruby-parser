@@ -615,9 +615,11 @@ assert_lex!(test_tSEMI, ";", tSEMI, 0..1);
 
 impl<'a> OnByte<'a, b','> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!()
+        let start = self.pos() - 1;
+        Token(TokenValue::tCOMMA, Loc(start, self.pos()))
     }
 }
+assert_lex!(test_tCOMMA, ",", tCOMMA, 0..1);
 
 impl<'a> OnByte<'a, b'~'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
