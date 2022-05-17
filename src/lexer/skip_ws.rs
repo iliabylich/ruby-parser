@@ -1,4 +1,4 @@
-use crate::Lexer;
+use crate::lexer::Lexer;
 
 impl<'a> Lexer<'a> {
     pub(crate) fn skip_ws(&mut self) {

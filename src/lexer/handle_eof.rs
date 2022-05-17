@@ -1,5 +1,5 @@
+use crate::lexer::Lexer;
 use crate::token::{Loc, Token, TokenValue};
-use crate::Lexer;
 
 impl<'a> Lexer<'a> {
     pub(crate) fn handle_eof(&mut self) -> Option<Token<'a>> {

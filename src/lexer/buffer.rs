@@ -51,7 +51,7 @@ impl<'a> Buffer<'a> {
     }
 }
 
-use crate::Lexer;
+use crate::lexer::Lexer;
 // buffer shortcut delegators
 impl<'a> Lexer<'a> {
     pub(crate) fn skip_byte(&mut self) {

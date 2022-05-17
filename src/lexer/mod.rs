@@ -1,6 +1,7 @@
 mod buffer;
 mod handle_eof;
 mod number;
+mod percent;
 mod punctuation;
 mod skip_ws;
 mod string_literals;
@@ -8,6 +9,7 @@ mod string_literals;
 use crate::token::{Loc, Token, TokenValue};
 use buffer::Buffer;
 use number::parse_number;
+use percent::parse_percent;
 use string_literals::{StringLiteral, StringLiteralAction, StringLiteralStack};
 
 pub struct Lexer<'a> {
@@ -161,7 +163,10 @@ impl<'a> Lexer<'a> {
             b'[' => OnByte::<b'['>::on_byte(self),
             b'{' => OnByte::<b'{'>::on_byte(self),
             b'\\' => OnByte::<b'\\'>::on_byte(self),
-            b'%' => OnByte::<b'%'>::on_byte(self),
+            b'%' => {
+                self.buffer.set_pos(start);
+                parse_percent(&mut self.buffer)
+            }
             b'$' => OnByte::<b'$'>::on_byte(self),
             b'@' => OnByte::<b'@'>::on_byte(self),
             b'_' => OnByte::<b'_'>::on_byte(self),
@@ -187,7 +192,10 @@ macro_rules! assert_lex {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
-            use crate::{Lexer, Loc, TokenValue::*};
+            use crate::{
+                lexer::Lexer,
+                token::{Loc, TokenValue::*},
+            };
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
             let token = lexer.current_token();
