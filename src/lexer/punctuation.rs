@@ -591,9 +591,19 @@ assert_lex!(test_tDIVIDE, "/", tDIVIDE, 0..1);
 
 impl<'a> OnByte<'a, b'^'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!()
+        let start = self.pos() - 1;
+
+        match self.current_byte() {
+            Some(b'=') => {
+                self.skip_byte();
+                Token(TokenValue::tOP_ASGN(b"^="), Loc(start, self.pos()))
+            }
+            _ => Token(TokenValue::tCARET, Loc(start, self.pos())),
+        }
     }
 }
+assert_lex!(test_tOP_ASGN_CARET, "^=", tOP_ASGN(b"^="), 0..2);
+assert_lex!(test_CARET, "^", tCARET, 0..1);
 
 impl<'a> OnByte<'a, b';'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
