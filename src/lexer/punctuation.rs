@@ -603,13 +603,15 @@ impl<'a> OnByte<'a, b'^'> for Lexer<'a> {
     }
 }
 assert_lex!(test_tOP_ASGN_CARET, "^=", tOP_ASGN(b"^="), 0..2);
-assert_lex!(test_CARET, "^", tCARET, 0..1);
+assert_lex!(test_tCARET, "^", tCARET, 0..1);
 
 impl<'a> OnByte<'a, b';'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!()
+        let start = self.pos() - 1;
+        Token(TokenValue::tSEMI, Loc(start, self.pos()))
     }
 }
+assert_lex!(test_tSEMI, ";", tSEMI, 0..1);
 
 impl<'a> OnByte<'a, b','> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
