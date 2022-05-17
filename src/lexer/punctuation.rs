@@ -656,9 +656,42 @@ impl<'a> OnByte<'a, b'{'> for Lexer<'a> {
 
 impl<'a> OnByte<'a, b'\\'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!()
+        let start = self.pos() - 1;
+        match self.current_byte() {
+            Some(b'\n') => {
+                self.skip_byte();
+                return self.next_token();
+            }
+            Some(b' ') => {
+                self.skip_byte();
+                Token(TokenValue::tSP, Loc(start, self.pos()))
+            }
+            Some(b'\t') => {
+                self.skip_byte();
+                Token(TokenValue::tSLASH_T, Loc(start, self.pos()))
+            }
+            Some(0x0c) => {
+                self.skip_byte();
+                Token(TokenValue::tSLASH_F, Loc(start, self.pos()))
+            }
+            Some(b'\r') => {
+                self.skip_byte();
+                Token(TokenValue::tSLASH_R, Loc(start, self.pos()))
+            }
+            Some(0x0b) => {
+                self.skip_byte();
+                Token(TokenValue::tVTAB, Loc(start, self.pos()))
+            }
+            _ => Token(TokenValue::tBACKSLASH, Loc(start, self.pos())),
+        }
     }
 }
+assert_lex!(test_tESCAPED_NL, "\\\n1", tINTEGER(b"1"), 2..3);
+assert_lex!(test_tESCAPED_SP, "\\ ", tSP, 0..2);
+assert_lex!(test_tESCAPED_TAB, "\\\t", tSLASH_T, 0..2);
+assert_lex!(test_tESCAPED_LF, "\\\x0c", tSLASH_F, 0..2);
+assert_lex!(test_tESCAPED_CR, "\\\r", tSLASH_R, 0..2);
+assert_lex!(test_tESCAPED_VTAB, "\\\x0b", tVTAB, 0..2);
 
 impl<'a> OnByte<'a, b'%'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
