@@ -623,9 +623,12 @@ assert_lex!(test_tCOMMA, ",", tCOMMA, 0..1);
 
 impl<'a> OnByte<'a, b'~'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!()
+        let start = self.pos() - 1;
+        // ~@ is handled on the parser level
+        Token(TokenValue::tTILDE, Loc(start, self.pos()))
     }
 }
+assert_lex!(test_tTILDE, "~", tTILDE, 0..1);
 
 impl<'a> OnByte<'a, b'('> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
