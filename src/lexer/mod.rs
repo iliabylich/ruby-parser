@@ -1,4 +1,5 @@
 mod buffer;
+mod gvar;
 mod handle_eof;
 mod number;
 mod percent;
@@ -8,6 +9,7 @@ mod string_literals;
 
 use crate::token::{Loc, Token, TokenValue};
 use buffer::Buffer;
+use gvar::parse_gvar;
 use number::parse_number;
 use percent::parse_percent;
 use string_literals::{StringLiteral, StringLiteralAction, StringLiteralStack};
@@ -167,7 +169,10 @@ impl<'a> Lexer<'a> {
                 self.buffer.set_pos(start);
                 parse_percent(&mut self.buffer)
             }
-            b'$' => OnByte::<b'$'>::on_byte(self),
+            b'$' => {
+                self.buffer.set_pos(start);
+                parse_gvar(&mut self.buffer)
+            }
             b'@' => OnByte::<b'@'>::on_byte(self),
             b'_' => OnByte::<b'_'>::on_byte(self),
 
