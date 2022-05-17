@@ -544,9 +544,49 @@ assert_lex!(test_tCOLON, ":", tCOLON, 0..1);
 impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos() - 1;
-        Token(TokenValue::tDIVIDE, Loc(start, self.pos()))
+        if self.new_expr_required {
+            let token = Token(TokenValue::tREGEXP_BEG(b"/"), Loc(start, self.pos()));
+            self.string_literals.push(StringLiteral::Plain {
+                supports_interpolation: true,
+                currently_in_interpolation: false,
+                ends_with: b"/",
+                interpolation_started_with_curly_level: self.curly_nest,
+            });
+            return token;
+        }
+
+        match self.current_byte() {
+            Some(b'=') => {
+                self.skip_byte();
+                Token(TokenValue::tOP_ASGN(b"/="), Loc(start, self.pos()))
+            }
+            _ => Token(TokenValue::tDIVIDE, Loc(start, self.pos())),
+        }
     }
 }
+assert_lex!(
+    test_tREGEXP_BEG,
+    "/",
+    tREGEXP_BEG(b"/"),
+    0..1,
+    setup = |lexer: &mut Lexer| {
+        lexer.require_new_expr();
+        lexer.curly_nest = 42;
+    },
+    assert = |lexer: &Lexer| {
+        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(
+            lexer.string_literals.last(),
+            Some(StringLiteral::Plain {
+                supports_interpolation: true,
+                currently_in_interpolation: false,
+                ends_with: b"/",
+                interpolation_started_with_curly_level: 42
+            })
+        )
+    }
+);
+assert_lex!(test_tOP_ASGN_DIV, "/=", tOP_ASGN(b"/="), 0..2);
 assert_lex!(test_tDIVIDE, "/", tDIVIDE, 0..1);
 
 impl<'a> OnByte<'a, b'^'> for Lexer<'a> {

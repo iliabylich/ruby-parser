@@ -21,6 +21,7 @@ pub struct Lexer<'a> {
     curly_nest: usize,
     paren_nest: usize,
     brack_nest: usize,
+    new_expr_required: bool,
 }
 
 impl<'a> Lexer<'a> {
@@ -36,6 +37,7 @@ impl<'a> Lexer<'a> {
             curly_nest: 0,
             paren_nest: 0,
             brack_nest: 0,
+            new_expr_required: false,
         }
     }
 
@@ -59,6 +61,10 @@ impl<'a> Lexer<'a> {
         } else {
             self.tokenize_normally()
         }
+    }
+
+    pub(crate) fn require_new_expr(&mut self) {
+        self.new_expr_required = true;
     }
 
     pub(crate) fn skip_token(&mut self) {
