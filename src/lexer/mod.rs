@@ -1,3 +1,4 @@
+mod atmark;
 mod buffer;
 mod gvar;
 mod handle_eof;
@@ -8,6 +9,7 @@ mod skip_ws;
 mod string_literals;
 
 use crate::token::{Loc, Token, TokenValue};
+use atmark::parse_atmark;
 use buffer::Buffer;
 use gvar::parse_gvar;
 use number::parse_number;
@@ -173,7 +175,10 @@ impl<'a> Lexer<'a> {
                 self.buffer.set_pos(start);
                 parse_gvar(&mut self.buffer)
             }
-            b'@' => OnByte::<b'@'>::on_byte(self),
+            b'@' => {
+                self.buffer.set_pos(start);
+                parse_atmark(&mut self.buffer)
+            }
             b'_' => OnByte::<b'_'>::on_byte(self),
 
             byte => {

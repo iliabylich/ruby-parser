@@ -693,12 +693,6 @@ assert_lex!(test_tESCAPED_LF, "\\\x0c", tSLASH_F, 0..2);
 assert_lex!(test_tESCAPED_CR, "\\\r", tSLASH_R, 0..2);
 assert_lex!(test_tESCAPED_VTAB, "\\\x0b", tVTAB, 0..2);
 
-impl<'a> OnByte<'a, b'@'> for Lexer<'a> {
-    fn on_byte(&mut self) -> Token<'a> {
-        todo!()
-    }
-}
-
 impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         todo!()
