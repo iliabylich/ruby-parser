@@ -189,7 +189,28 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
         token
     }
 }
-assert_lex!(test_tSTRING_BEG_DQUOTE, "\"", tSTRING_BEG(b"\""), 0..1);
+assert_lex!(
+    test_tSTRING_BEG_DQUOTE,
+    "\"",
+    tSTRING_BEG(b"\""),
+    0..1,
+    setup = |lexer: &mut Lexer| {
+        lexer.curly_nest = 42;
+    },
+    assert = |lexer: &Lexer| {
+        assert_eq!(lexer.string_literals.size(), 1);
+
+        assert_eq!(
+            lexer.string_literals.last(),
+            Some(StringLiteral::Plain {
+                supports_interpolation: true,
+                currently_in_interpolation: false,
+                ends_with: b"\"",
+                interpolation_started_with_curly_level: 42
+            })
+        );
+    }
+);
 
 impl<'a> OnByte<'a, b'`'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -210,7 +231,27 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         token
     }
 }
-assert_lex!(test_tSTRING_BEG1_SQUOTE, "'", tSTRING_BEG(b"'"), 0..1);
+assert_lex!(
+    test_tSTRING_BEG1_SQUOTE,
+    "'",
+    tSTRING_BEG(b"'"),
+    0..1,
+    setup = |lexer: &mut Lexer| {
+        lexer.curly_nest = 42;
+    },
+    assert = |lexer: &Lexer| {
+        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(
+            lexer.string_literals.last(),
+            Some(StringLiteral::Plain {
+                supports_interpolation: false,
+                currently_in_interpolation: false,
+                ends_with: b"'",
+                interpolation_started_with_curly_level: 0
+            })
+        )
+    }
+);
 
 impl<'a> OnByte<'a, b'?'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -371,7 +412,8 @@ assert_lex!(
     0..1,
     setup = |lexer: &mut Lexer| {
         lexer.paren_nest = 1;
-    }
+    },
+    assert = |_lexer: &Lexer| {}
 );
 
 impl<'a> OnByte<'a, b']'> for Lexer<'a> {
@@ -392,7 +434,8 @@ assert_lex!(
     0..1,
     setup = |lexer: &mut Lexer| {
         lexer.brack_nest = 1;
-    }
+    },
+    assert = |_lexer: &Lexer| {}
 );
 
 impl<'a> OnByte<'a, b'}'> for Lexer<'a> {
@@ -413,7 +456,8 @@ assert_lex!(
     0..1,
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 1;
-    }
+    },
+    assert = |_lexer: &Lexer| {}
 );
 
 impl<'a> OnByte<'a, b':'> for Lexer<'a> {
@@ -453,8 +497,48 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
     }
 }
 assert_lex!(test_tCOLON2, "::", tCOLON2, 0..2);
-assert_lex!(test_tDSYMBEG, ":\"", tDSYMBEG, 0..2);
-assert_lex!(test_tSYMBEG, ":'", tSYMBEG, 0..2);
+assert_lex!(
+    test_tDSYMBEG,
+    ":\"",
+    tDSYMBEG,
+    0..2,
+    setup = |lexer: &mut Lexer| {
+        lexer.curly_nest = 42;
+    },
+    assert = |lexer: &Lexer| {
+        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(
+            lexer.string_literals.last(),
+            Some(StringLiteral::Plain {
+                supports_interpolation: true,
+                currently_in_interpolation: false,
+                ends_with: b" ",
+                interpolation_started_with_curly_level: 42
+            })
+        )
+    }
+);
+assert_lex!(
+    test_tSYMBEG,
+    ":'",
+    tSYMBEG,
+    0..2,
+    setup = |lexer: &mut Lexer| {
+        lexer.curly_nest = 42;
+    },
+    assert = |lexer: &Lexer| {
+        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(
+            lexer.string_literals.last(),
+            Some(StringLiteral::Plain {
+                supports_interpolation: false,
+                currently_in_interpolation: false,
+                ends_with: b" ",
+                interpolation_started_with_curly_level: 0
+            })
+        )
+    }
+);
 assert_lex!(test_tCOLON, ":", tCOLON, 0..1);
 
 impl<'a> OnByte<'a, b'/'> for Lexer<'a> {

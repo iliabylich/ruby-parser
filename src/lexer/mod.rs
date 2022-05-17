@@ -174,7 +174,7 @@ pub(crate) trait OnByte<'a, const BYTE: u8> {
 }
 
 macro_rules! assert_lex {
-    ($test_name:ident, $input:literal, $tok:expr, $loc:expr, setup = $pre:expr) => {
+    ($test_name:ident, $input:literal, $tok:expr, $loc:expr, setup = $pre:expr, assert = $assert:expr) => {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
@@ -184,16 +184,18 @@ macro_rules! assert_lex {
             let token = lexer.current_token();
             assert_eq!(token.value(), $tok);
             assert_eq!(token.loc(), Loc($loc.start, $loc.end));
+            $assert(&lexer);
         }
     };
-    // Shortcut with no lexer setup
+    // Shortcut with no lexer setup/extra assert
     ($test_name:ident, $input:literal, $tok:expr, $loc:expr) => {
         assert_lex!(
             $test_name,
             $input,
             $tok,
             $loc,
-            setup = |_lexer: &mut Lexer| {}
+            setup = |_lexer: &mut Lexer| {},
+            assert = |_lexer: &Lexer| {}
         );
     };
 }

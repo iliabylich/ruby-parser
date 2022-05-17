@@ -4,7 +4,7 @@ pub(crate) struct StringLiteralStack<'a> {
     stack: Vec<StringLiteral<'a>>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum StringLiteral<'a> {
     Plain {
         supports_interpolation: bool,
@@ -54,6 +54,10 @@ impl<'a> StringLiteralStack<'a> {
 
     pub(crate) fn push(&mut self, literal: StringLiteral<'a>) {
         self.stack.push(literal);
+    }
+
+    pub(crate) fn size(&self) -> usize {
+        self.stack.len()
     }
 }
 
