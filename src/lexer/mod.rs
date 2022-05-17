@@ -2,6 +2,7 @@ mod atmark;
 mod buffer;
 mod gvar;
 mod handle_eof;
+mod ident;
 mod number;
 mod percent;
 mod punctuation;
@@ -12,8 +13,10 @@ use crate::token::{Loc, Token, TokenValue};
 use atmark::parse_atmark;
 use buffer::Buffer;
 use gvar::parse_gvar;
+use ident::parse_ident;
 use number::parse_number;
 use percent::parse_percent;
+
 use string_literals::{StringLiteral, StringLiteralAction, StringLiteralStack};
 
 pub struct Lexer<'a> {
@@ -133,6 +136,10 @@ impl<'a> Lexer<'a> {
 
         match byte {
             b'#' => OnByte::<b'#'>::on_byte(self),
+            b'\n' => {
+                // TODO: handle NL
+                self.tokenize_normally()
+            }
             b'*' => OnByte::<b'*'>::on_byte(self),
             b'!' => OnByte::<b'!'>::on_byte(self),
             b'=' => OnByte::<b'='>::on_byte(self),
@@ -182,8 +189,8 @@ impl<'a> Lexer<'a> {
             b'_' => OnByte::<b'_'>::on_byte(self),
 
             byte => {
-                // TODO: parse ident
-                Token(TokenValue::Error(byte as char), Loc(start, self.pos()))
+                self.buffer.set_pos(start);
+                parse_ident(&mut self.buffer)
             }
         }
     }

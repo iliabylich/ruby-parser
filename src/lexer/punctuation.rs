@@ -1,6 +1,7 @@
 use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral};
 use crate::token::{Loc, Token, TokenValue};
 
+use super::ident::parse_ident;
 use super::number::parse_number;
 
 impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
@@ -695,6 +696,26 @@ assert_lex!(test_tESCAPED_VTAB, "\\\x0b", tVTAB, 0..2);
 
 impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!()
+        let start = self.pos() - 1;
+
+        match start
+            .checked_sub(1)
+            .map(|idx| self.buffer.byte_at(idx))
+            .flatten()
+        {
+            // prev byte is either
+            //   + None (i.e. it's the first byte of the file)
+            //   + Some(b'\n')
+            // AND it's "__END__" sequence
+            None | Some(b'\n') if self.buffer.lookahead(b"_END__") => {
+                return Token(TokenValue::tEOF, Loc(start, self.pos()));
+            }
+            _ => {}
+        }
+
+        self.buffer.set_pos(start);
+        parse_ident(&mut self.buffer)
     }
 }
+assert_lex!(test_tEOF_at__END__, "__END__", tEOF, 0..1);
+assert_lex!(test_tEOF_at_NL___END__, "\n__END__", tEOF, 1..2);
