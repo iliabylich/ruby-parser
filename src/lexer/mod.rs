@@ -141,6 +141,15 @@ impl<'a> Lexer<'a> {
 
         let start = self.pos();
 
+        // Test token for testing.
+        // It allows sub-component tests to not depend on other components
+        #[cfg(test)]
+        if self.buffer.lookahead(b"TEST_TOKEN") {
+            let end = start + "TEST_TOKEN".len();
+            self.buffer.set_pos(end);
+            return Token(TokenValue::tTEST_TOKEN, Loc(start, end));
+        }
+
         // SAFETY: None (i.e. EOF) has been handled above in `handle_eof`.
         //         so `.unwrap_unchecked()` is safe
         let byte = unsafe { self.current_byte().unwrap_unchecked() };

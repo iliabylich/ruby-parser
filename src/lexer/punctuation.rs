@@ -727,7 +727,7 @@ impl<'a> OnByte<'a, b'\\'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tESCAPED_NL, "\\\n1", tINTEGER(b"1"), 2..3);
+assert_lex!(test_tESCAPED_NL, "\\\nTEST_TOKEN", tTEST_TOKEN, 2..12);
 assert_lex!(test_tESCAPED_SP, "\\ ", tSP, 0..2);
 assert_lex!(test_tESCAPED_TAB, "\\\t", tSLASH_T, 0..2);
 assert_lex!(test_tESCAPED_LF, "\\\x0c", tSLASH_F, 0..2);

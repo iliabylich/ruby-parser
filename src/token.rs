@@ -175,6 +175,9 @@ pub enum TokenValue<'a> {
     Error(char),
 
     None,
+
+    #[cfg(test)]
+    tTEST_TOKEN,
 }
 
 impl Default for TokenValue<'_> {

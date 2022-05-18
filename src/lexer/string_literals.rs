@@ -280,18 +280,18 @@ mod tests {
 
     #[test]
     fn test_string_plain_interp() {
-        let mut lexer = Lexer::new("\"foo#{42}bar\"");
+        let mut lexer = Lexer::new("\"foo#{TEST_TOKEN}bar\"");
         assert_eq!(
             lexer.tokenize_until_eof(),
             vec![
                 Token(TokenValue::tSTRING_BEG(b"\""), Loc(0, 1)),
                 Token(TokenValue::tSTRING_CONTENT(b"foo"), Loc(1, 4)),
                 Token(TokenValue::tSTRING_DBEG(b"#{"), Loc(4, 6)),
-                Token(TokenValue::tINTEGER(b"42"), Loc(6, 8)),
-                Token(TokenValue::tSTRING_DEND, Loc(8, 9)),
-                Token(TokenValue::tSTRING_CONTENT(b"bar"), Loc(9, 12)),
-                Token(TokenValue::tSTRING_END(b"\""), Loc(12, 13)),
-                Token(TokenValue::tEOF, Loc(13, 13))
+                Token(TokenValue::tTEST_TOKEN, Loc(6, 16)),
+                Token(TokenValue::tSTRING_DEND, Loc(16, 17)),
+                Token(TokenValue::tSTRING_CONTENT(b"bar"), Loc(17, 20)),
+                Token(TokenValue::tSTRING_END(b"\""), Loc(20, 21)),
+                Token(TokenValue::tEOF, Loc(21, 21))
             ]
         );
     }
