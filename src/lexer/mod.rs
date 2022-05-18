@@ -69,7 +69,7 @@ impl<'a> Lexer<'a> {
 
     fn next_token(&mut self) -> Token<'a> {
         if let Some(literal) = self.string_literals.last() {
-            self.tokenize_while_in_string(literal)
+            self.tokenize_while_in_string()
         } else {
             self.tokenize_normally()
         }
@@ -83,41 +83,33 @@ impl<'a> Lexer<'a> {
         self.current_token = None;
     }
 
-    fn tokenize_while_in_string(&mut self, literal: StringLiteral<'a>) -> Token<'a> {
+    fn tokenize_while_in_string(&mut self) -> Token<'a> {
+        // SAFETY: this method is called only if `string_literals` has at least 1 item
+        let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
+
         match literal.lex(&mut self.buffer) {
-            StringLiteralAction::InInterpolation {
+            StringLiteralAction::ReadInterpolatedContent {
                 interpolation_started_with_curly_level,
             } => {
                 if self.current_byte() == Some(b'}')
                     && interpolation_started_with_curly_level == self.curly_nest
                 {
-                    let token = Token(TokenValue::tRCURLY, Loc(self.pos(), self.pos() + 1));
+                    let token = Token(TokenValue::tSTRING_DEND, Loc(self.pos(), self.pos() + 1));
                     self.skip_byte();
+                    self.string_literals
+                        .last_mut()
+                        .unwrap()
+                        .stop_interpolation();
                     token
                 } else {
                     // we are after `#{` and should read an interpolated value
                     self.tokenize_normally()
                 }
             }
-            StringLiteralAction::EmitStringContent {
-                content,
-                start,
-                end,
-            } => {
-                let token = Token(TokenValue::tSTRING_CONTENT(content), Loc(start, end));
-                self.buffer.set_pos(end);
-                token
-            }
-            StringLiteralAction::CloseLiteral {
-                content,
-                start,
-                end,
-                jump_to,
-            } => {
-                let token = Token(TokenValue::tSTRING_END(content), Loc(start, end));
-                self.buffer.set_pos(jump_to);
+            StringLiteralAction::EmitToken { token } => token,
+            StringLiteralAction::CloseLiteral { end_token } => {
                 self.string_literals.pop();
-                token
+                end_token
             }
         }
     }

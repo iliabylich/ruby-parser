@@ -136,8 +136,8 @@ pub enum TokenValue<'a> {
     tSYMBOLS_BEG(&'a [u8]),  // "symbol list"
     tQSYMBOLS_BEG(&'a [u8]), // "verbatim symbol list"
     tSTRING_END(&'a [u8]),   // "string end"
-    tSTRING_DEND(&'a [u8]),  // "tRCURLY"
-    tSTRING_DBEG(&'a [u8]),  //
+    tSTRING_DBEG(&'a [u8]),  // "#{" or "#" (in case of #@var / #@@var / #$var)
+    tSTRING_DEND,            // "tRCURLY"
     tSTRING_DVAR(&'a [u8]),  //
     tLAMBEG(&'a [u8]),       //
     tLABEL_END(&'a [u8]),    //
@@ -185,3 +185,13 @@ impl Default for TokenValue<'_> {
 
 #[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct Loc(pub usize, pub usize);
+
+impl Loc {
+    pub fn begin(&self) -> usize {
+        self.0
+    }
+
+    pub fn end(&self) -> usize {
+        self.1
+    }
+}
