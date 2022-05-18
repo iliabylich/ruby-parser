@@ -143,6 +143,13 @@ impl ExtendNumber for Integer {
             number.kind = NumberKind::Float
         }
 
+        if buffer.current_byte() == Some(b'r') {
+            // TODO: check lookahead (like 'rescue')
+            buffer.skip_byte();
+            number.end += 1;
+            number.kind = NumberKind::Rational;
+        }
+
         // todo!("ExtendNumber for Integer")
         NumberExtendAction::Stop
     }
@@ -446,3 +453,7 @@ assert_lex!(
     tFLOAT(b"1.2E-3"),
     0..6
 );
+
+// Rationals
+assert_lex!(test_tRATIONAL_int, "1r", tRATIONAL(b"1r"), 0..2);
+assert_lex!(test_tRATIONAL_float, "1.2r", tRATIONAL(b"1.2r"), 0..4);
