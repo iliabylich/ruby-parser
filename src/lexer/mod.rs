@@ -143,12 +143,13 @@ impl<'a> Lexer<'a> {
 
         // SAFETY: None (i.e. EOF) has been handled above in `handle_eof`.
         //         so `.unwrap_unchecked()` is safe
-        let byte = unsafe { self.take_byte().unwrap_unchecked() };
+        let byte = unsafe { self.current_byte().unwrap_unchecked() };
 
         match byte {
             b'#' => OnByte::<b'#'>::on_byte(self),
             b'\n' => {
                 // TODO: handle NL
+                self.skip_byte();
                 self.tokenize_normally()
             }
             b'*' => OnByte::<b'*'>::on_byte(self),
