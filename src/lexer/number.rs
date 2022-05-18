@@ -127,6 +127,16 @@ impl ExtendNumber for Uninitialized {
 
 impl ExtendNumber for Integer {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+        let start = buffer.pos();
+
+        let dot_number_float_suffix_len = read_dot_number_float_suffix(buffer);
+        dbg!(dot_number_float_suffix_len);
+        if dot_number_float_suffix_len > 0 {
+            // extend to float
+            number.end += dot_number_float_suffix_len;
+            number.kind = NumberKind::Float;
+        }
+
         // todo!("ExtendNumber for Integer")
         NumberExtendAction::Stop
     }
@@ -175,7 +185,7 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
         NumberKind::Integer => Token(TokenValue::tINTEGER(slice), Loc(begin, end)),
         NumberKind::Rational => Token(TokenValue::tRATIONAL(slice), Loc(begin, end)),
         NumberKind::Complex => Token(TokenValue::tIMAGINARY(slice), Loc(begin, end)),
-        NumberKind::Float => todo!(),
+        NumberKind::Float => Token(TokenValue::tFLOAT(slice), Loc(begin, end)),
     };
     println!("{:?}", token);
     token
@@ -204,28 +214,49 @@ macro_rules! grab_integer_with_numbers {
     };
 }
 
-fn read_hexadecimal<'a>(buffer: &mut Buffer<'a>) -> usize {
+fn read_hexadecimal(buffer: &mut Buffer) -> usize {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F');
     buffer.pos() - start
 }
 
-fn read_binary<'a>(buffer: &mut Buffer<'a>) -> usize {
+fn read_binary(buffer: &mut Buffer) -> usize {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0' | b'1');
     buffer.pos() - start
 }
 
-fn read_decimal<'a>(buffer: &mut Buffer<'a>) -> usize {
+fn read_decimal(buffer: &mut Buffer) -> usize {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0'..=b'9');
     buffer.pos() - start
 }
 
-fn read_octal<'a>(buffer: &mut Buffer<'a>) -> usize {
+fn read_octal(buffer: &mut Buffer) -> usize {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0'..=b'7');
     buffer.pos() - start
+}
+
+// Reads .123 from "100.123".
+fn read_dot_number_float_suffix(buffer: &mut Buffer) -> usize {
+    let start = buffer.pos();
+
+    if buffer.byte_at(start) == Some(b'.') {
+        buffer.skip_byte();
+        let mut suffix_len = read_decimal(buffer);
+        if suffix_len == 0 {
+            // rollback
+            buffer.set_pos(start);
+            return 0;
+        }
+        // track leading '.'
+        suffix_len += 1;
+        buffer.set_pos(start + suffix_len);
+        suffix_len
+    } else {
+        0
+    }
 }
 
 // Test prefixes
@@ -344,3 +375,6 @@ assert_lex!(
     tINTEGER(b"02"),
     0..2
 );
+
+// Test float
+assert_lex!(test_tFLOAT_plain, "12.34", tFLOAT(b"12.34"), 0..5);
