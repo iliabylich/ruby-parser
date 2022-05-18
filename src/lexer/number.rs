@@ -130,11 +130,17 @@ impl ExtendNumber for Integer {
         let start = buffer.pos();
 
         let dot_number_float_suffix_len = read_dot_number_float_suffix(buffer);
-        dbg!(dot_number_float_suffix_len);
         if dot_number_float_suffix_len > 0 {
             // extend to float
             number.end += dot_number_float_suffix_len;
             number.kind = NumberKind::Float;
+        }
+
+        let e_float_suffix_len = read_e_float_suffix(buffer);
+        if e_float_suffix_len > 0 {
+            // extend to float
+            number.end += e_float_suffix_len;
+            number.kind = NumberKind::Float
         }
 
         // todo!("ExtendNumber for Integer")
@@ -252,6 +258,34 @@ fn read_dot_number_float_suffix(buffer: &mut Buffer) -> usize {
         }
         // track leading '.'
         suffix_len += 1;
+        buffer.set_pos(start + suffix_len);
+        suffix_len
+    } else {
+        0
+    }
+}
+
+// Reads [e|E][-+]<decimal>
+fn read_e_float_suffix(buffer: &mut Buffer) -> usize {
+    let start = buffer.pos();
+
+    if matches!(buffer.byte_at(start), Some(b'e' | b'E')) {
+        buffer.skip_byte();
+
+        let mut sign_length = 0;
+        if matches!(buffer.byte_at(start + 1), Some(b'-' | b'+')) {
+            sign_length = 1;
+            buffer.skip_byte();
+        }
+
+        let mut suffix_len = read_decimal(buffer);
+        if suffix_len == 0 {
+            // rollback
+            buffer.set_pos(0);
+            return 0;
+        }
+        // track leading 'e' and sign
+        suffix_len += 1 + sign_length;
         buffer.set_pos(start + suffix_len);
         suffix_len
     } else {
@@ -378,3 +412,37 @@ assert_lex!(
 
 // Test float
 assert_lex!(test_tFLOAT_plain, "12.34", tFLOAT(b"12.34"), 0..5);
+
+assert_lex!(test_tFLOAT_int_lower_e, "1e3", tFLOAT(b"1e3"), 0..3);
+assert_lex!(test_tFLOAT_int_plus_lower_e, "1e+3", tFLOAT(b"1e+3"), 0..4);
+assert_lex!(test_tFLOAT_int_minus_lower_e, "1e-3", tFLOAT(b"1e-3"), 0..4);
+assert_lex!(test_tFLOAT_float_lower_e, "1.2e3", tFLOAT(b"1.2e3"), 0..5);
+assert_lex!(
+    test_tFLOAT_float_plus_lower_e,
+    "1.2e+3",
+    tFLOAT(b"1.2e+3"),
+    0..6
+);
+assert_lex!(
+    test_tFLOAT_float_minus_lower_e,
+    "1.2e-3",
+    tFLOAT(b"1.2e-3"),
+    0..6
+);
+
+assert_lex!(test_tFLOAT_int_upper_e, "1E3", tFLOAT(b"1E3"), 0..3);
+assert_lex!(test_tFLOAT_int_plus_upper_e, "1E+3", tFLOAT(b"1E+3"), 0..4);
+assert_lex!(test_tFLOAT_int_minus_upper_e, "1E-3", tFLOAT(b"1E-3"), 0..4);
+assert_lex!(test_tFLOAT_float_upper_e, "1.2E3", tFLOAT(b"1.2E3"), 0..5);
+assert_lex!(
+    test_tFLOAT_float_plus_upper_e,
+    "1.2E+3",
+    tFLOAT(b"1.2E+3"),
+    0..6
+);
+assert_lex!(
+    test_tFLOAT_float_minus_upper_e,
+    "1.2E-3",
+    tFLOAT(b"1.2E-3"),
+    0..6
+);
