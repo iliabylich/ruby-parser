@@ -17,7 +17,9 @@ use ident::parse_ident;
 use number::parse_number;
 use percent::parse_percent;
 
-use string_literals::{StringLiteral, StringLiteralAction, StringLiteralStack};
+use string_literals::{
+    StringLiteral, StringLiteralAction, StringLiteralMetadata, StringLiteralStack,
+};
 
 pub struct Lexer<'a> {
     buffer: Buffer<'a>,

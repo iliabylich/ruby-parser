@@ -1,4 +1,4 @@
-use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral};
+use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral, StringLiteralMetadata};
 use crate::token::{Loc, Token, TokenValue};
 
 use super::ident::parse_ident;
@@ -181,11 +181,12 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos() - 1;
         let token = Token(TokenValue::tSTRING_BEG(b"\""), Loc(start, self.pos()));
-        self.string_literals.push(StringLiteral::Plain {
+        self.string_literals.push(StringLiteral {
             supports_interpolation: true,
             currently_in_interpolation: false,
             ends_with: b"\"",
             interpolation_started_with_curly_level: self.curly_nest,
+            metadata: StringLiteralMetadata::Plain,
         });
         token
     }
@@ -203,11 +204,12 @@ assert_lex!(
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Plain {
+            Some(StringLiteral {
                 supports_interpolation: true,
                 currently_in_interpolation: false,
                 ends_with: b"\"",
-                interpolation_started_with_curly_level: 42
+                interpolation_started_with_curly_level: 42,
+                metadata: StringLiteralMetadata::Plain
             })
         );
     }
@@ -223,11 +225,12 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos() - 1;
         let token = Token(TokenValue::tSTRING_BEG(b"'"), Loc(start, self.pos()));
-        self.string_literals.push(StringLiteral::Plain {
+        self.string_literals.push(StringLiteral {
             supports_interpolation: false,
             currently_in_interpolation: false,
             ends_with: b"'",
             interpolation_started_with_curly_level: 0,
+            metadata: StringLiteralMetadata::Plain,
         });
         token
     }
@@ -244,11 +247,12 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Plain {
+            Some(StringLiteral {
                 supports_interpolation: false,
                 currently_in_interpolation: false,
                 ends_with: b"'",
-                interpolation_started_with_curly_level: 0
+                interpolation_started_with_curly_level: 0,
+                metadata: StringLiteralMetadata::Plain
             })
         )
     }
@@ -473,11 +477,12 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
                 // :"..." symbol
                 self.skip_byte();
                 let token = Token(TokenValue::tDSYMBEG, Loc(start, self.pos()));
-                self.string_literals.push(StringLiteral::Plain {
+                self.string_literals.push(StringLiteral {
                     supports_interpolation: true,
                     currently_in_interpolation: false,
                     ends_with: b" ",
                     interpolation_started_with_curly_level: self.curly_nest,
+                    metadata: StringLiteralMetadata::Plain,
                 });
                 token
             }
@@ -485,11 +490,12 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
                 // :'...' symbol
                 self.skip_byte();
                 let token = Token(TokenValue::tSYMBEG, Loc(start, self.pos()));
-                self.string_literals.push(StringLiteral::Plain {
+                self.string_literals.push(StringLiteral {
                     supports_interpolation: false,
                     currently_in_interpolation: false,
                     ends_with: b" ",
                     interpolation_started_with_curly_level: 0,
+                    metadata: StringLiteralMetadata::Plain,
                 });
                 token
             }
@@ -510,11 +516,12 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Plain {
+            Some(StringLiteral {
                 supports_interpolation: true,
                 currently_in_interpolation: false,
                 ends_with: b" ",
-                interpolation_started_with_curly_level: 42
+                interpolation_started_with_curly_level: 42,
+                metadata: StringLiteralMetadata::Plain
             })
         )
     }
@@ -531,11 +538,12 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Plain {
+            Some(StringLiteral {
                 supports_interpolation: false,
                 currently_in_interpolation: false,
                 ends_with: b" ",
-                interpolation_started_with_curly_level: 0
+                interpolation_started_with_curly_level: 0,
+                metadata: StringLiteralMetadata::Plain
             })
         )
     }
@@ -547,11 +555,12 @@ impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
         let start = self.pos() - 1;
         if self.new_expr_required {
             let token = Token(TokenValue::tREGEXP_BEG(b"/"), Loc(start, self.pos()));
-            self.string_literals.push(StringLiteral::Plain {
+            self.string_literals.push(StringLiteral {
                 supports_interpolation: true,
                 currently_in_interpolation: false,
                 ends_with: b"/",
                 interpolation_started_with_curly_level: self.curly_nest,
+                metadata: StringLiteralMetadata::Plain,
             });
             return token;
         }
@@ -578,11 +587,12 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Plain {
+            Some(StringLiteral {
                 supports_interpolation: true,
                 currently_in_interpolation: false,
                 ends_with: b"/",
-                interpolation_started_with_curly_level: 42
+                interpolation_started_with_curly_level: 42,
+                metadata: StringLiteralMetadata::Plain
             })
         )
     }

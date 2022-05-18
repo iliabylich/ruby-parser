@@ -8,21 +8,19 @@ pub(crate) struct StringLiteralStack<'a> {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) enum StringLiteral<'a> {
-    Plain {
-        supports_interpolation: bool,
-        currently_in_interpolation: bool,
-        ends_with: &'a [u8],
-        interpolation_started_with_curly_level: usize,
-    },
+pub(crate) struct StringLiteral<'a> {
+    pub(crate) supports_interpolation: bool,
+    pub(crate) currently_in_interpolation: bool,
+    pub(crate) ends_with: &'a [u8],
+    pub(crate) interpolation_started_with_curly_level: usize,
 
-    Heredoc {
-        supports_interpolation: bool,
-        currently_in_interpolation: bool,
-        ends_with: &'a [u8],
-        heredoc_id_ended_at: usize,
-        interpolation_started_with_curly_level: usize,
-    },
+    pub(crate) metadata: StringLiteralMetadata,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub(crate) enum StringLiteralMetadata {
+    Plain,
+    Heredoc { heredoc_id_ended_at: usize },
 }
 
 pub(crate) enum StringLiteralAction<'a> {
@@ -71,84 +69,15 @@ enum ExtendAction<'a> {
 }
 
 impl<'a> StringLiteral<'a> {
-    fn supports_interpolation(&self) -> bool {
-        match self {
-            StringLiteral::Plain {
-                supports_interpolation,
-                ..
-            } => *supports_interpolation,
-            StringLiteral::Heredoc {
-                supports_interpolation,
-                ..
-            } => *supports_interpolation,
-        }
-    }
-
-    fn currently_in_interpolation(&self) -> bool {
-        match self {
-            StringLiteral::Plain {
-                currently_in_interpolation,
-                ..
-            } => *currently_in_interpolation,
-            StringLiteral::Heredoc {
-                currently_in_interpolation,
-                ..
-            } => *currently_in_interpolation,
-        }
-    }
-
-    fn currently_in_interpolation_mut(&mut self) -> &mut bool {
-        match self {
-            StringLiteral::Plain {
-                currently_in_interpolation,
-                ..
-            } => currently_in_interpolation,
-            StringLiteral::Heredoc {
-                currently_in_interpolation,
-                ..
-            } => currently_in_interpolation,
-        }
-    }
-
-    fn ends_with(&self) -> &'a [u8] {
-        match self {
-            StringLiteral::Plain { ends_with, .. } => *ends_with,
-            StringLiteral::Heredoc { ends_with, .. } => *ends_with,
-        }
-    }
-
-    fn interpolation_started_with_curly_level(&self) -> usize {
-        match self {
-            StringLiteral::Plain {
-                interpolation_started_with_curly_level,
-                ..
-            } => *interpolation_started_with_curly_level,
-            StringLiteral::Heredoc {
-                interpolation_started_with_curly_level,
-                ..
-            } => *interpolation_started_with_curly_level,
-        }
-    }
-
     pub(crate) fn stop_interpolation(&mut self) {
-        match self {
-            StringLiteral::Plain {
-                currently_in_interpolation,
-                ..
-            } => *currently_in_interpolation = false,
-            StringLiteral::Heredoc {
-                currently_in_interpolation,
-                ..
-            } => *currently_in_interpolation = false,
-        }
+        self.currently_in_interpolation = false;
     }
 
     pub(crate) fn lex(&mut self, buffer: &mut Buffer<'a>) -> StringLiteralAction<'a> {
-        if self.currently_in_interpolation() && self.supports_interpolation() {
+        if self.currently_in_interpolation && self.supports_interpolation {
             // yield control to lexer to read interpolated tokens
             return StringLiteralAction::ReadInterpolatedContent {
-                interpolation_started_with_curly_level: self
-                    .interpolation_started_with_curly_level(),
+                interpolation_started_with_curly_level: self.interpolation_started_with_curly_level,
             };
         }
 
@@ -171,22 +100,21 @@ impl<'a> StringLiteral<'a> {
                 } else {
                     // No string content recorded, just emit tSTRING_END
                     let token = Token(
-                        TokenValue::tSTRING_END(self.ends_with()),
+                        TokenValue::tSTRING_END(self.ends_with),
                         Loc(
                             string_end_starts_at,
-                            string_end_starts_at + self.ends_with().len(),
+                            string_end_starts_at + self.ends_with.len(),
                         ),
                     );
                     // Set buffer.pos to post-string location
-                    buffer.set_pos(string_end_starts_at + self.ends_with().len());
+                    buffer.set_pos(string_end_starts_at + self.ends_with.len());
                     StringLiteralAction::CloseLiteral { end_token: token }
                 }
             }
             ExtendAction::FoundInterpolation {
                 interpolation_starts_at,
             } => {
-                let in_interpolation = self.currently_in_interpolation_mut();
-                *in_interpolation = true;
+                self.currently_in_interpolation = true;
 
                 // flush what's available (if any)
                 if interpolation_starts_at > start {
@@ -229,16 +157,16 @@ impl<'a> StringLiteral<'a> {
 
     fn try_to_extend(&self, buffer: &mut Buffer<'a>) -> ExtendAction<'a> {
         // Check if it's a string end
-        if buffer.lookahead(self.ends_with()) {
+        if buffer.lookahead(self.ends_with) {
             return ExtendAction::FoundStringEnd {
-                string_end_starts_at: buffer.pos() + self.ends_with().len(),
+                string_end_starts_at: buffer.pos() + self.ends_with.len(),
             };
         }
 
         let start = buffer.pos();
 
         // is it interpolation?
-        if self.supports_interpolation() {
+        if self.supports_interpolation {
             match buffer.byte_at(start) {
                 Some(b'#') => {
                     // potentially an interpolation
@@ -276,7 +204,7 @@ impl<'a> StringLiteral<'a> {
         //      5. string end
         //      6. escaped tNL
         // 2. for non-interpolation - until string end
-        if self.supports_interpolation() {
+        if self.supports_interpolation {
             loop {
                 if buffer.lookahead(b"#{") {
                     return ExtendAction::FoundInterpolation {
@@ -301,7 +229,7 @@ impl<'a> StringLiteral<'a> {
                         token: Token(TokenValue::tGVAR(b"$foo"), Loc(1, 2)),
                     };
                 }
-                if buffer.lookahead(self.ends_with()) {
+                if buffer.lookahead(self.ends_with) {
                     return ExtendAction::FoundStringEnd {
                         string_end_starts_at: buffer.pos(),
                     };
@@ -315,7 +243,7 @@ impl<'a> StringLiteral<'a> {
             }
         } else {
             loop {
-                if buffer.lookahead(self.ends_with()) {
+                if buffer.lookahead(self.ends_with) {
                     return ExtendAction::FoundStringEnd {
                         string_end_starts_at: buffer.pos(),
                     };
