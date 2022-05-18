@@ -8,7 +8,7 @@ struct Integer;
 #[derive(Clone, Copy)]
 struct Rational;
 #[derive(Clone, Copy)]
-struct Complex;
+struct Imaginary;
 #[derive(Clone, Copy)]
 struct Float;
 
@@ -17,7 +17,7 @@ enum NumberKind {
     Uninitialized,
     Integer,
     Rational,
-    Complex,
+    Imaginary,
     Float,
 }
 
@@ -150,7 +150,13 @@ impl ExtendNumber for Integer {
             number.kind = NumberKind::Rational;
         }
 
-        // todo!("ExtendNumber for Integer")
+        if buffer.current_byte() == Some(b'i') {
+            // TODO: check lookahead (like 'if')
+            buffer.skip_byte();
+            number.end += 1;
+            number.kind = NumberKind::Imaginary
+        }
+
         NumberExtendAction::Stop
     }
 }
@@ -161,9 +167,9 @@ impl ExtendNumber for Rational {
     }
 }
 
-impl ExtendNumber for Complex {
+impl ExtendNumber for Imaginary {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
-        todo!("ExtendNumber for Complex")
+        todo!("ExtendNumber for Imaginary")
     }
 }
 
@@ -179,7 +185,7 @@ impl ExtendNumber for Number {
             NumberKind::Uninitialized => Uninitialized::extend(number, buffer),
             NumberKind::Integer => Integer::extend(number, buffer),
             NumberKind::Rational => Rational::extend(number, buffer),
-            NumberKind::Complex => Complex::extend(number, buffer),
+            NumberKind::Imaginary => Imaginary::extend(number, buffer),
             NumberKind::Float => Float::extend(number, buffer),
         }
     }
@@ -197,7 +203,7 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
         NumberKind::Uninitialized => unreachable!("ExtendNumber made no transition"),
         NumberKind::Integer => Token(TokenValue::tINTEGER(slice), Loc(begin, end)),
         NumberKind::Rational => Token(TokenValue::tRATIONAL(slice), Loc(begin, end)),
-        NumberKind::Complex => Token(TokenValue::tIMAGINARY(slice), Loc(begin, end)),
+        NumberKind::Imaginary => Token(TokenValue::tIMAGINARY(slice), Loc(begin, end)),
         NumberKind::Float => Token(TokenValue::tFLOAT(slice), Loc(begin, end)),
     };
     println!("{:?}", token);
@@ -457,3 +463,21 @@ assert_lex!(
 // Rationals
 assert_lex!(test_tRATIONAL_int, "1r", tRATIONAL(b"1r"), 0..2);
 assert_lex!(test_tRATIONAL_float, "1.2r", tRATIONAL(b"1.2r"), 0..4);
+
+// Imaginary
+assert_lex!(test_tIMAGINARY_int, "1i", tIMAGINARY(b"1i"), 0..2);
+assert_lex!(test_tIMAGINARY_float, "1.2i", tIMAGINARY(b"1.2i"), 0..4);
+
+// Rational + Imaginary
+assert_lex!(
+    test_tIMAGINARY_rational_int,
+    "1ri",
+    tIMAGINARY(b"1ri"),
+    0..3
+);
+assert_lex!(
+    test_tIMAGINARY_rational_float,
+    "1.2ri",
+    tIMAGINARY(b"1.2ri"),
+    0..5
+);
