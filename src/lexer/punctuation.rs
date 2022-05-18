@@ -653,6 +653,7 @@ assert_lex!(test_tLPAREN, "(", tLPAREN, 0..1);
 impl<'a> OnByte<'a, b'['> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos() - 1;
+        self.brack_nest += 1;
         Token(TokenValue::tLBRACK, Loc(start, self.pos()))
     }
 }
@@ -661,6 +662,7 @@ assert_lex!(test_tLBRACK, "[", tLBRACK, 0..1);
 impl<'a> OnByte<'a, b'{'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos() - 1;
+        self.curly_nest += 1;
         Token(TokenValue::tLCURLY, Loc(start, self.pos()))
     }
 }

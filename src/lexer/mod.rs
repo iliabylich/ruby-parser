@@ -70,11 +70,27 @@ impl<'a> Lexer<'a> {
     }
 
     fn next_token(&mut self) -> Token<'a> {
-        if let Some(literal) = self.string_literals.last() {
+        let token = if let Some(literal) = self.string_literals.last() {
             self.tokenize_while_in_string()
         } else {
             self.tokenize_normally()
+        };
+        if self.debug {
+            println!("Returning token {:?}", token);
         }
+        token
+    }
+
+    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
+        let mut tokens = vec![];
+        loop {
+            let token = self.next_token();
+            tokens.push(token);
+            if token.value() == TokenValue::tEOF {
+                break;
+            }
+        }
+        tokens
     }
 
     pub(crate) fn require_new_expr(&mut self) {

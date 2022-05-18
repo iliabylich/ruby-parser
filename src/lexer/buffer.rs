@@ -1,3 +1,4 @@
+#[derive(Debug)]
 pub struct Buffer<'a> {
     input: &'a [u8],
     pos: usize,

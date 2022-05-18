@@ -23,6 +23,7 @@ pub(crate) enum StringLiteralMetadata {
     Heredoc { heredoc_id_ended_at: usize },
 }
 
+#[derive(Debug)]
 pub(crate) enum StringLiteralAction<'a> {
     ReadInterpolatedContent {
         interpolation_started_with_curly_level: usize,
@@ -61,6 +62,7 @@ impl<'a> StringLiteralStack<'a> {
     }
 }
 
+#[derive(Debug)]
 enum ExtendAction<'a> {
     FoundStringEnd { string_end_starts_at: usize },
     FoundInterpolation { interpolation_starts_at: usize },
@@ -83,7 +85,8 @@ impl<'a> StringLiteral<'a> {
 
         let start = buffer.pos();
 
-        match self.try_to_extend(buffer) {
+        let extend_action = self.try_to_extend(buffer);
+        match extend_action {
             ExtendAction::FoundStringEnd {
                 string_end_starts_at,
             } => {
@@ -114,8 +117,6 @@ impl<'a> StringLiteral<'a> {
             ExtendAction::FoundInterpolation {
                 interpolation_starts_at,
             } => {
-                self.currently_in_interpolation = true;
-
                 // flush what's available (if any)
                 if interpolation_starts_at > start {
                     let token = Token(
@@ -132,6 +133,7 @@ impl<'a> StringLiteral<'a> {
                         TokenValue::tSTRING_DBEG(b"#{"),
                         Loc(interpolation_starts_at, interpolation_starts_at + 2),
                     );
+                    self.currently_in_interpolation = true;
                     buffer.set_pos(interpolation_starts_at + 2);
                     StringLiteralAction::EmitToken { token }
                 }
@@ -159,7 +161,7 @@ impl<'a> StringLiteral<'a> {
         // Check if it's a string end
         if buffer.lookahead(self.ends_with) {
             return ExtendAction::FoundStringEnd {
-                string_end_starts_at: buffer.pos() + self.ends_with.len(),
+                string_end_starts_at: buffer.pos(),
             };
         }
 
@@ -174,7 +176,7 @@ impl<'a> StringLiteral<'a> {
                         Some(b'{') => {
                             // #{ interpolation
                             return ExtendAction::FoundInterpolation {
-                                interpolation_starts_at: start + 1,
+                                interpolation_starts_at: start,
                             };
                         }
                         Some(b'@') => {
@@ -251,5 +253,65 @@ impl<'a> StringLiteral<'a> {
                 buffer.skip_byte();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        lexer::Lexer,
+        token::{Loc, Token, TokenValue},
+    };
+
+    #[test]
+    fn test_string_plain_non_interp() {
+        let mut lexer = Lexer::new("'foo'");
+        assert_eq!(
+            lexer.tokenize_until_eof(),
+            vec![
+                Token(TokenValue::tSTRING_BEG(b"'"), Loc(0, 1)),
+                Token(TokenValue::tSTRING_CONTENT(b"foo"), Loc(1, 4)),
+                Token(TokenValue::tSTRING_END(b"'"), Loc(4, 5)),
+                Token(TokenValue::tEOF, Loc(5, 5))
+            ]
+        );
+    }
+
+    #[test]
+    fn test_string_plain_interp() {
+        let mut lexer = Lexer::new("\"foo#{42}bar\"");
+        assert_eq!(
+            lexer.tokenize_until_eof(),
+            vec![
+                Token(TokenValue::tSTRING_BEG(b"\""), Loc(0, 1)),
+                Token(TokenValue::tSTRING_CONTENT(b"foo"), Loc(1, 4)),
+                Token(TokenValue::tSTRING_DBEG(b"#{"), Loc(4, 6)),
+                Token(TokenValue::tINTEGER(b"42"), Loc(6, 8)),
+                Token(TokenValue::tSTRING_DEND, Loc(8, 9)),
+                Token(TokenValue::tSTRING_CONTENT(b"bar"), Loc(9, 12)),
+                Token(TokenValue::tSTRING_END(b"\""), Loc(12, 13)),
+                Token(TokenValue::tEOF, Loc(13, 13))
+            ]
+        );
+    }
+
+    #[test]
+    fn test_string_interp_braces() {
+        let mut lexer = Lexer::new("\"#{{} + {}}\"");
+        assert_eq!(
+            lexer.tokenize_until_eof(),
+            vec![
+                Token(TokenValue::tSTRING_BEG(b"\""), Loc(0, 1)),
+                Token(TokenValue::tSTRING_DBEG(b"#{"), Loc(1, 3)),
+                Token(TokenValue::tLCURLY, Loc(3, 4)),
+                Token(TokenValue::tRCURLY, Loc(4, 5)),
+                Token(TokenValue::tPLUS, Loc(6, 7)),
+                Token(TokenValue::tLCURLY, Loc(8, 9)),
+                Token(TokenValue::tRCURLY, Loc(9, 10)),
+                Token(TokenValue::tSTRING_DEND, Loc(10, 11)),
+                Token(TokenValue::tSTRING_END(b"\""), Loc(11, 12)),
+                Token(TokenValue::tEOF, Loc(12, 12)),
+            ]
+        );
     }
 }
