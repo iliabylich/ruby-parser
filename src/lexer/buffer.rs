@@ -9,18 +9,8 @@ impl<'a> Buffer<'a> {
         Self { input, pos: 0 }
     }
 
-    pub(crate) fn is_eof(&self) -> bool {
-        self.pos >= self.input.len()
-    }
-
     pub(crate) fn current_byte(&self) -> Option<u8> {
         self.input.get(self.pos).map(|byte| *byte)
-    }
-
-    pub(crate) fn take_byte(&mut self) -> Option<u8> {
-        let result = self.current_byte();
-        self.skip_byte();
-        result
     }
 
     pub(crate) fn skip_byte(&mut self) {
@@ -60,13 +50,6 @@ impl<'a> Lexer<'a> {
     }
     pub(crate) fn current_byte(&self) -> Option<u8> {
         self.buffer.current_byte()
-    }
-    pub(crate) fn take_byte(&mut self) -> Option<u8> {
-        self.buffer.take_byte()
-    }
-    #[allow(dead_code)]
-    pub(crate) fn is_eof(&self) -> bool {
-        self.buffer.is_eof()
     }
     pub(crate) fn pos(&self) -> usize {
         self.buffer.pos()

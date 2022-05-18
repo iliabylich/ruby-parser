@@ -1,8 +1,8 @@
 use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral, StringLiteralMetadata};
 use crate::token::{Loc, Token, TokenValue};
 
-use super::ident::parse_ident;
-use super::number::parse_number;
+use crate::lexer::ident::parse_ident;
+use crate::lexer::number::parse_number;
 
 impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
