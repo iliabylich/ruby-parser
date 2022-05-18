@@ -6,7 +6,7 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
         NumberKind::Float(Float {
             has_dot_number_suffix,
             ..
-        }) if has_dot_number_suffix => return false,
+        }) => debug_assert!(!has_dot_number_suffix),
         _ => {}
     }
 
@@ -47,7 +47,7 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
 pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
     // Do not let it to be parsed twice
     match number.kind {
-        NumberKind::Float(Float { has_e_suffix, .. }) if has_e_suffix => return false,
+        NumberKind::Float(Float { has_e_suffix, .. }) => debug_assert!(!has_e_suffix),
         _ => {}
     }
 

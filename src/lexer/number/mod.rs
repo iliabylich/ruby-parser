@@ -51,11 +51,11 @@ enum NumberExtendAction {
 }
 
 trait ExtendNumber {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction;
+    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction;
 }
 
 impl ExtendNumber for Uninitialized {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
         let start = buffer.pos();
 
         let byte = buffer.current_byte().unwrap();
@@ -130,7 +130,7 @@ impl ExtendNumber for Uninitialized {
 }
 
 impl ExtendNumber for Integer {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
         if try_to_extend_with::dot_number_suffix(number, buffer)
             || try_to_extend_with::e_suffix(number, buffer)
             || try_to_extend_with::r_suffix(number, buffer)
@@ -144,7 +144,7 @@ impl ExtendNumber for Integer {
 }
 
 impl ExtendNumber for Rational {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
         if try_to_extend_with::i_suffix(number, buffer) {
             return NumberExtendAction::Continue;
         }
@@ -154,15 +154,15 @@ impl ExtendNumber for Rational {
 }
 
 impl ExtendNumber for Imaginary {
-    fn extend(_number: &mut Number, _buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(self, _number: &mut Number, _buffer: &mut Buffer) -> NumberExtendAction {
         // Imaginary numbers can't be extended to anything bigger
         NumberExtendAction::Stop
     }
 }
 
 impl ExtendNumber for Float {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
-        if try_to_extend_with::e_suffix(number, buffer)
+    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+        if (!self.has_e_suffix && try_to_extend_with::e_suffix(number, buffer))
             || try_to_extend_with::r_suffix(number, buffer)
             || try_to_extend_with::i_suffix(number, buffer)
         {
@@ -173,21 +173,21 @@ impl ExtendNumber for Float {
     }
 }
 
-impl ExtendNumber for Number {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
-        match number.kind {
-            NumberKind::Uninitialized(_) => Uninitialized::extend(number, buffer),
-            NumberKind::Integer(_) => Integer::extend(number, buffer),
-            NumberKind::Rational(_) => Rational::extend(number, buffer),
-            NumberKind::Imaginary(_) => Imaginary::extend(number, buffer),
-            NumberKind::Float(_) => Float::extend(number, buffer),
-        }
-    }
-}
-
 pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     let mut number = Number::new(buffer.pos());
-    while Number::extend(&mut number, buffer) == NumberExtendAction::Continue {}
+    loop {
+        let action = match number.kind {
+            NumberKind::Uninitialized(parser) => parser.extend(&mut number, buffer),
+            NumberKind::Integer(parser) => parser.extend(&mut number, buffer),
+            NumberKind::Rational(parser) => parser.extend(&mut number, buffer),
+            NumberKind::Imaginary(parser) => parser.extend(&mut number, buffer),
+            NumberKind::Float(parser) => parser.extend(&mut number, buffer),
+        };
+
+        if action == NumberExtendAction::Stop {
+            break;
+        }
+    }
 
     let begin = number.begin;
     let end = number.end;
