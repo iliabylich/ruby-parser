@@ -181,38 +181,50 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     token
 }
 
+macro_rules! grab_integer_with_numbers {
+    ($buffer:expr, $pat:pat) => {
+        loop {
+            match $buffer.current_byte() {
+                Some($pat) => $buffer.skip_byte(),
+                Some(b'_') => {
+                    if $buffer.byte_at($buffer.pos() - 1) == Some(b'_') {
+                        // reject 2 cons '_' bytes
+                        break;
+                    } else {
+                        $buffer.skip_byte();
+                    }
+                }
+                _other => break,
+            }
+        }
+        // Discard trailing '_'
+        if $buffer.byte_at($buffer.pos() - 1) == Some(b'_') {
+            $buffer.set_pos($buffer.pos() - 1);
+        }
+    };
+}
+
 fn read_hexadecimal<'a>(buffer: &mut Buffer<'a>) -> usize {
     let start = buffer.pos();
-    while matches!(
-        buffer.current_byte(),
-        Some(b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F' | b'_')
-    ) {
-        buffer.skip_byte();
-    }
+    grab_integer_with_numbers!(buffer, b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F');
     buffer.pos() - start
 }
 
 fn read_binary<'a>(buffer: &mut Buffer<'a>) -> usize {
     let start = buffer.pos();
-    while matches!(buffer.current_byte(), Some(b'0' | b'1' | b'_')) {
-        buffer.skip_byte();
-    }
+    grab_integer_with_numbers!(buffer, b'0' | b'1');
     buffer.pos() - start
 }
 
 fn read_decimal<'a>(buffer: &mut Buffer<'a>) -> usize {
     let start = buffer.pos();
-    while matches!(buffer.current_byte(), Some(b'0'..=b'9' | b'_')) {
-        buffer.skip_byte();
-    }
+    grab_integer_with_numbers!(buffer, b'0'..=b'9');
     buffer.pos() - start
 }
 
 fn read_octal<'a>(buffer: &mut Buffer<'a>) -> usize {
     let start = buffer.pos();
-    while matches!(buffer.current_byte(), Some(b'0'..=b'7' | b'_')) {
-        buffer.skip_byte();
-    }
+    grab_integer_with_numbers!(buffer, b'0'..=b'7');
     buffer.pos() - start
 }
 
@@ -302,4 +314,33 @@ assert_lex!(
     "02_7",
     tINTEGER(b"02_7"),
     0..4
+);
+
+// Test trailing underscore
+assert_lex!(
+    test_tINTEGER_hexadecimal_with_trailing_underscore,
+    "0x1_",
+    tINTEGER(b"0x1"),
+    0..3
+);
+
+assert_lex!(
+    test_tINTEGER_binary_with_trailing_underscore,
+    "0b1_",
+    tINTEGER(b"0b1"),
+    0..3
+);
+
+assert_lex!(
+    test_tINTEGER_decimal_with_trailing_underscore,
+    "0d8_",
+    tINTEGER(b"0d8"),
+    0..3
+);
+
+assert_lex!(
+    test_tINTEGER_octal_with_trailing_underscore,
+    "02_",
+    tINTEGER(b"02"),
+    0..2
 );
