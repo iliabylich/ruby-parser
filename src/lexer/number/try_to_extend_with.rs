@@ -2,13 +2,13 @@ use crate::lexer::number::{read, Buffer, Float, Imaginary, Number, NumberKind, R
 
 pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
     // Do not let it to be parsed twice
-    match number.kind {
+    debug_assert!(!matches!(
+        number.kind,
         NumberKind::Float(Float {
-            has_dot_number_suffix,
+            has_dot_number_suffix: true,
             ..
-        }) => debug_assert!(!has_dot_number_suffix),
-        _ => {}
-    }
+        })
+    ));
 
     let start = buffer.pos();
 
@@ -46,10 +46,13 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
 
 pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
     // Do not let it to be parsed twice
-    match number.kind {
-        NumberKind::Float(Float { has_e_suffix, .. }) => debug_assert!(!has_e_suffix),
-        _ => {}
-    }
+    debug_assert!(!matches!(
+        number.kind,
+        NumberKind::Float(Float {
+            has_e_suffix: true,
+            ..
+        })
+    ));
 
     let e_float_suffix_len = {
         let start = buffer.pos();
