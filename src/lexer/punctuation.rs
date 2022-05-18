@@ -348,7 +348,7 @@ impl<'a> OnByte<'a, b'+'> for Lexer<'a> {
             Some(b'0'..=b'9') => {
                 let mut token = parse_number(&mut self.buffer);
                 token.1 .0 = start;
-                let new_value = self.slice(token.loc().0, token.loc().1);
+                let new_value = self.slice(token.loc().begin(), token.loc().end());
                 match &mut token.0 {
                     TokenValue::tINTEGER(v) => *v = new_value,
                     other => unreachable!("Unsupported token value {:?}", other),
