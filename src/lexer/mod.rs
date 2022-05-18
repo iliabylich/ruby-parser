@@ -70,7 +70,7 @@ impl<'a> Lexer<'a> {
     }
 
     fn next_token(&mut self) -> Token<'a> {
-        let token = if let Some(literal) = self.string_literals.last() {
+        let token = if self.string_literals.last().is_some() {
             self.tokenize_while_in_string()
         } else {
             self.tokenize_normally()
@@ -81,6 +81,7 @@ impl<'a> Lexer<'a> {
         token
     }
 
+    #[cfg(test)]
     pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
         let mut tokens = vec![];
         loop {
@@ -198,7 +199,7 @@ impl<'a> Lexer<'a> {
             }
             b'_' => OnByte::<b'_'>::on_byte(self),
 
-            byte => {
+            _ident_start => {
                 self.buffer.set_pos(start);
                 parse_ident(&mut self.buffer)
             }

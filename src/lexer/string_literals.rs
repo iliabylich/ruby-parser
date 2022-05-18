@@ -57,6 +57,7 @@ impl<'a> StringLiteralStack<'a> {
         self.stack.push(literal);
     }
 
+    #[cfg(test)]
     pub(crate) fn size(&self) -> usize {
         self.stack.len()
     }
