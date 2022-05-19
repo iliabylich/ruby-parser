@@ -11,6 +11,8 @@ pub(crate) struct StringLiteral<'a> {
     pub(crate) interpolation_started_with_curly_level: usize,
 
     pub(crate) metadata: StringLiteralMetadata,
+
+    pub(crate) next_token_to_emit: Option<Token<'a>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -28,6 +30,21 @@ pub(crate) enum StringExtendAction<'a> {
 }
 
 impl<'a> StringLiteral<'a> {
+    pub(crate) fn new(
+        supports_interpolation: bool,
+        ends_with: &'a [u8],
+        interpolation_started_with_curly_level: usize,
+        metadata: StringLiteralMetadata,
+    ) -> Self {
+        Self {
+            supports_interpolation,
+            currently_in_interpolation: false,
+            ends_with,
+            interpolation_started_with_curly_level,
+            metadata,
+            next_token_to_emit: None,
+        }
+    }
     pub(crate) fn stop_interpolation(&mut self) {
         self.currently_in_interpolation = false;
     }

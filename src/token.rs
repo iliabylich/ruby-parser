@@ -1,4 +1,4 @@
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
 
 impl<'a> Token<'a> {
@@ -12,7 +12,7 @@ impl<'a> Token<'a> {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum TokenValue<'a> {
     // Keyword tokens.
     // They are always represented by the same word in code,
@@ -186,7 +186,7 @@ impl Default for TokenValue<'_> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub struct Loc(pub usize, pub usize);
 
 impl Loc {
