@@ -16,10 +16,12 @@ use gvar::parse_gvar;
 use ident::parse_ident;
 use numbers::parse_number;
 use percent::parse_percent;
+use strings::parse_string;
 
 use strings::{
-    literal::{StringLiteral, StringLiteralAction, StringLiteralMetadata},
+    literal::{StringLiteral, StringLiteralMetadata},
     stack::StringLiteralStack,
+    ParseStringResult,
 };
 
 pub struct Lexer<'a> {
@@ -107,8 +109,8 @@ impl<'a> Lexer<'a> {
         // SAFETY: this method is called only if `string_literals` has at least 1 item
         let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
 
-        match literal.lex(&mut self.buffer) {
-            StringLiteralAction::ReadInterpolatedContent {
+        match parse_string(literal, &mut self.buffer) {
+            ParseStringResult::ReadInterpolatedContent {
                 interpolation_started_with_curly_level,
             } => {
                 if self.current_byte() == Some(b'}')
@@ -126,8 +128,8 @@ impl<'a> Lexer<'a> {
                     self.tokenize_normally()
                 }
             }
-            StringLiteralAction::EmitToken { token } => token,
-            StringLiteralAction::CloseLiteral { end_token } => {
+            ParseStringResult::EmitToken { token } => token,
+            ParseStringResult::CloseLiteral { end_token } => {
                 self.string_literals.pop();
                 end_token
             }
