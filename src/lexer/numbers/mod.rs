@@ -1,8 +1,8 @@
 use crate::lexer::buffer::Buffer;
 use crate::token::{Loc, Token, TokenValue};
 
-mod read;
-mod try_to_extend_with;
+pub(crate) mod read;
+pub(crate) mod try_to_extend_with;
 
 #[derive(Clone, Copy, Debug)]
 struct Uninitialized;

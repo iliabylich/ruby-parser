@@ -1,13 +1,13 @@
-mod atmark;
-mod buffer;
-mod gvar;
-mod handle_eof;
-mod ident;
-mod numbers;
-mod percent;
-mod punctuation;
-mod skip_ws;
-mod string_literals;
+pub(crate) mod atmark;
+pub(crate) mod buffer;
+pub(crate) mod gvar;
+pub(crate) mod handle_eof;
+pub(crate) mod ident;
+pub(crate) mod numbers;
+pub(crate) mod percent;
+pub(crate) mod punctuation;
+pub(crate) mod skip_ws;
+pub(crate) mod strings;
 
 use crate::token::{Loc, Token, TokenValue};
 use atmark::parse_atmark;
@@ -17,8 +17,9 @@ use ident::parse_ident;
 use numbers::parse_number;
 use percent::parse_percent;
 
-use string_literals::{
-    StringLiteral, StringLiteralAction, StringLiteralMetadata, StringLiteralStack,
+use strings::{
+    literal::{StringLiteral, StringLiteralAction, StringLiteralMetadata},
+    stack::StringLiteralStack,
 };
 
 pub struct Lexer<'a> {
