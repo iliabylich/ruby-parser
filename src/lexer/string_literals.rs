@@ -166,38 +166,6 @@ impl<'a> StringLiteral<'a> {
             };
         }
 
-        let start = buffer.pos();
-
-        // is it interpolation?
-        if self.supports_interpolation {
-            match buffer.byte_at(start) {
-                Some(b'#') => {
-                    // potentially an interpolation
-                    match buffer.byte_at(start + 1) {
-                        Some(b'{') => {
-                            // #{ interpolation
-                            return ExtendAction::FoundInterpolation {
-                                interpolation_starts_at: start,
-                            };
-                        }
-                        Some(b'@') => {
-                            // #@@x or #@x or #$x
-                            // FIXME: this is just a stub that is 100% incorrect
-                            return ExtendAction::FoundInterpolatedToken {
-                                token: Token(TokenValue::tIVAR(b"@foo"), Loc(1, 2)),
-                            };
-                        }
-                        _ => {
-                            // no inerpolation
-                        }
-                    }
-                }
-                _ => {
-                    // no interpolation
-                }
-            }
-        }
-
         // otherwise it's just a string content:
         // 1. for interpolation: until
         //      1. "#{"
