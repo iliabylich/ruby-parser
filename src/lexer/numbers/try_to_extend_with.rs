@@ -1,4 +1,4 @@
-use crate::lexer::number::{read, Buffer, Float, Imaginary, Number, NumberKind, Rational};
+use crate::lexer::numbers::{read, Buffer, Float, Imaginary, Number, NumberKind, Rational};
 
 pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
     // Do not let it to be parsed twice

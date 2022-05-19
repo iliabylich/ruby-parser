@@ -2,7 +2,7 @@ use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral, StringLiteralMetada
 use crate::token::{Loc, Token, TokenValue};
 
 use crate::lexer::ident::parse_ident;
-use crate::lexer::number::parse_number;
+use crate::lexer::numbers::parse_number;
 
 impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {

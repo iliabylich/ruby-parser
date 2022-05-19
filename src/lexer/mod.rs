@@ -3,7 +3,7 @@ mod buffer;
 mod gvar;
 mod handle_eof;
 mod ident;
-mod number;
+mod numbers;
 mod percent;
 mod punctuation;
 mod skip_ws;
@@ -14,7 +14,7 @@ use atmark::parse_atmark;
 use buffer::Buffer;
 use gvar::parse_gvar;
 use ident::parse_ident;
-use number::parse_number;
+use numbers::parse_number;
 use percent::parse_percent;
 
 use string_literals::{
