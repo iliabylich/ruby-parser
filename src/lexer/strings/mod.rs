@@ -7,26 +7,32 @@ use literal::{StringExtendAction, StringLiteral};
 
 #[derive(Debug)]
 pub(crate) enum ParseStringResult<'a> {
-    ReadInterpolatedContent {
-        interpolation_started_with_curly_level: usize,
-    },
-    EmitToken {
-        token: Token<'a>,
-    },
-    CloseLiteral {
-        end_token: Token<'a>,
-    },
+    ReadInterpolatedContent,
+    EmitToken { token: Token<'a> },
+    CloseLiteral { end_token: Token<'a> },
 }
 
 pub(crate) fn parse_string<'a>(
     literal: &mut StringLiteral<'a>,
     buffer: &mut Buffer<'a>,
+    curly_nest: usize,
 ) -> ParseStringResult<'a> {
     if literal.currently_in_interpolation && literal.supports_interpolation {
+        if buffer.current_byte() == Some(b'}')
+            && literal.interpolation_started_with_curly_level == curly_nest
+        {
+            // Close interpolation
+            let token = Token(
+                TokenValue::tSTRING_DEND,
+                Loc(buffer.pos(), buffer.pos() + 1),
+            );
+            buffer.skip_byte();
+            literal.currently_in_interpolation = false;
+            return ParseStringResult::EmitToken { token };
+        }
+
         // yield control to lexer to read interpolated tokens
-        return ParseStringResult::ReadInterpolatedContent {
-            interpolation_started_with_curly_level: literal.interpolation_started_with_curly_level,
-        };
+        return ParseStringResult::ReadInterpolatedContent;
     }
 
     let start = buffer.pos();

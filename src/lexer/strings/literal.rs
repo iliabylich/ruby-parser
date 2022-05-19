@@ -11,8 +11,6 @@ pub(crate) struct StringLiteral<'a> {
     pub(crate) interpolation_started_with_curly_level: usize,
 
     pub(crate) metadata: StringLiteralMetadata,
-
-    pub(crate) next_token_to_emit: Option<Token<'a>>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -42,11 +40,7 @@ impl<'a> StringLiteral<'a> {
             ends_with,
             interpolation_started_with_curly_level,
             metadata,
-            next_token_to_emit: None,
         }
-    }
-    pub(crate) fn stop_interpolation(&mut self) {
-        self.currently_in_interpolation = false;
     }
 
     pub(crate) fn extend(&self, buffer: &mut Buffer<'a>) -> StringExtendAction<'a> {
@@ -60,9 +54,9 @@ impl<'a> StringLiteral<'a> {
         // otherwise it's just a string content:
         // 1. for interpolation: until
         //      1. "#{"
-        //      2. "#@@x"
-        //      3. "#@x"
-        //      4. "#$x"
+        //      2. "#@@<identchar>"
+        //      3. "#@<identchar>"
+        //      4. "#$<identchar>"
         //      5. string end
         //      6. escaped tNL
         // 2. for non-interpolation - until string end

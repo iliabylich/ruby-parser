@@ -9,7 +9,7 @@ pub(crate) mod punctuation;
 pub(crate) mod skip_ws;
 pub(crate) mod strings;
 
-use crate::token::{Loc, Token, TokenValue};
+use crate::token::Token;
 use atmark::parse_atmark;
 use buffer::Buffer;
 use gvar::parse_gvar;
@@ -86,6 +86,8 @@ impl<'a> Lexer<'a> {
 
     #[cfg(test)]
     pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
+        use crate::token::TokenValue;
+
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
@@ -109,24 +111,11 @@ impl<'a> Lexer<'a> {
         // SAFETY: this method is called only if `string_literals` has at least 1 item
         let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
 
-        match parse_string(literal, &mut self.buffer) {
-            ParseStringResult::ReadInterpolatedContent {
-                interpolation_started_with_curly_level,
-            } => {
-                if self.current_byte() == Some(b'}')
-                    && interpolation_started_with_curly_level == self.curly_nest
-                {
-                    let token = Token(TokenValue::tSTRING_DEND, Loc(self.pos(), self.pos() + 1));
-                    self.skip_byte();
-                    self.string_literals
-                        .last_mut()
-                        .unwrap()
-                        .stop_interpolation();
-                    token
-                } else {
-                    // we are after `#{` and should read an interpolated value
-                    self.tokenize_normally()
-                }
+        match parse_string(literal, &mut self.buffer, self.curly_nest) {
+            ParseStringResult::ReadInterpolatedContent => {
+                // we are after `#{` (but not at matching '}')
+                // and should read an interpolated value
+                self.tokenize_normally()
             }
             ParseStringResult::EmitToken { token } => token,
             ParseStringResult::CloseLiteral { end_token } => {
@@ -148,6 +137,8 @@ impl<'a> Lexer<'a> {
         // It allows sub-component tests to not depend on other components
         #[cfg(test)]
         if self.buffer.const_lookahead(b"TEST_TOKEN") {
+            use crate::token::{Loc, TokenValue};
+
             let end = start + "TEST_TOKEN".len();
             self.buffer.set_pos(end);
             return Token(TokenValue::tTEST_TOKEN, Loc(start, end));
