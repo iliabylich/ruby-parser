@@ -37,6 +37,15 @@ impl<'a> Buffer<'a> {
         }
     }
 
+    pub(crate) fn const_lookahead<const N: usize>(&self, pattern: &[u8; N]) -> bool {
+        for i in 0..N {
+            if self.byte_at(self.pos + i) != Some(pattern[i]) {
+                return false;
+            }
+        }
+        true
+    }
+
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
         self.input.get(idx).map(|byte| *byte)
     }

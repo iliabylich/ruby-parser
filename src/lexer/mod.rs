@@ -144,7 +144,7 @@ impl<'a> Lexer<'a> {
         // Test token for testing.
         // It allows sub-component tests to not depend on other components
         #[cfg(test)]
-        if self.buffer.lookahead(b"TEST_TOKEN") {
+        if self.buffer.const_lookahead(b"TEST_TOKEN") {
             let end = start + "TEST_TOKEN".len();
             self.buffer.set_pos(end);
             return Token(TokenValue::tTEST_TOKEN, Loc(start, end));

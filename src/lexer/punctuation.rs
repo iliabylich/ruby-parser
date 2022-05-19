@@ -70,7 +70,7 @@ impl<'a> OnByte<'a, b'='> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
 
-        if self.buffer.lookahead(b"begin") {
+        if self.buffer.const_lookahead(b"begin") {
             return Token(TokenValue::tEMBEDDED_COMMENT_START, Loc(start, self.pos()));
         }
 
@@ -747,7 +747,7 @@ impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
             //   + None (i.e. it's the first byte of the file)
             //   + Some(b'\n')
             // AND it's "__END__" sequence
-            None | Some(b'\n') if self.buffer.lookahead(b"__END__") => {
+            None | Some(b'\n') if self.buffer.const_lookahead(b"__END__") => {
                 return Token(TokenValue::tEOF, Loc(start, start));
             }
             _ => {}

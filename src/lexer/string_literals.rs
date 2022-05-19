@@ -177,24 +177,24 @@ impl<'a> StringLiteral<'a> {
         // 2. for non-interpolation - until string end
         if self.supports_interpolation {
             loop {
-                if buffer.lookahead(b"#{") {
+                if buffer.const_lookahead(b"#{") {
                     return ExtendAction::FoundInterpolation {
                         interpolation_starts_at: buffer.pos(),
                     };
                 }
-                if buffer.lookahead(b"#@@") {
+                if buffer.const_lookahead(b"#@@") {
                     // FIXME: this is an absolutely incorrect stub
                     return ExtendAction::FoundInterpolatedToken {
                         token: Token(TokenValue::tCVAR(b"@@foo"), Loc(1, 2)),
                     };
                 }
-                if buffer.lookahead(b"#@") {
+                if buffer.const_lookahead(b"#@") {
                     // FIXME: this is an absolutely incorrect stub
                     return ExtendAction::FoundInterpolatedToken {
                         token: Token(TokenValue::tIVAR(b"@foo"), Loc(1, 2)),
                     };
                 }
-                if buffer.lookahead(b"#$") {
+                if buffer.const_lookahead(b"#$") {
                     // FIXME: this is an absolutely incorrect stub
                     return ExtendAction::FoundInterpolatedToken {
                         token: Token(TokenValue::tGVAR(b"$foo"), Loc(1, 2)),
@@ -205,7 +205,7 @@ impl<'a> StringLiteral<'a> {
                         string_end_starts_at: buffer.pos(),
                     };
                 }
-                if buffer.lookahead(b"\\\n") {
+                if buffer.const_lookahead(b"\\\n") {
                     return ExtendAction::FoundEscapedNl {
                         escaped_nl_starts_at: buffer.pos(),
                     };
