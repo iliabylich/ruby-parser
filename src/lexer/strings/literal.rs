@@ -1,5 +1,5 @@
 use crate::{
-    lexer::buffer::Buffer,
+    lexer::{buffer::Buffer, ident::is_identchar},
     token::{Loc, Token, TokenValue},
 };
 
