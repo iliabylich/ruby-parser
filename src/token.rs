@@ -136,9 +136,9 @@ pub enum TokenValue<'a> {
     tSYMBOLS_BEG(&'a [u8]),  // "symbol list"
     tQSYMBOLS_BEG(&'a [u8]), // "verbatim symbol list"
     tSTRING_END(&'a [u8]),   // "string end"
-    tSTRING_DBEG(&'a [u8]),  // "#{" or "#" (in case of #@var / #@@var / #$var)
+    tSTRING_DBEG,            // "#{"
     tSTRING_DEND,            // "tRCURLY"
-    tSTRING_DVAR(&'a [u8]),  //
+    tSTRING_DVAR,            // "#" (in case of #@var / #@@var / #$var)
     tLAMBEG(&'a [u8]),       //
     tLABEL_END(&'a [u8]),    //
 

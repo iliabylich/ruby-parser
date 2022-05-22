@@ -17,6 +17,12 @@ pub(crate) fn parse_string<'a>(
     buffer: &mut Buffer<'a>,
     curly_nest: usize,
 ) -> ParseStringResult<'a> {
+    // emit cached pre-recorded token (if any)
+    if let Some(token) = literal.next_token.take() {
+        buffer.set_pos(token.loc().end());
+        return ParseStringResult::EmitToken { token };
+    }
+
     if literal.currently_in_interpolation && literal.supports_interpolation {
         if buffer.current_byte() == Some(b'}')
             && literal.interpolation_started_with_curly_level == curly_nest
@@ -82,7 +88,7 @@ pub(crate) fn parse_string<'a>(
             } else {
                 // No string content recorded
                 let token = Token(
-                    TokenValue::tSTRING_DBEG(b"#{"),
+                    TokenValue::tSTRING_DBEG,
                     Loc(interpolation_starts_at, interpolation_starts_at + 2),
                 );
                 literal.currently_in_interpolation = true;
@@ -90,9 +96,15 @@ pub(crate) fn parse_string<'a>(
                 ParseStringResult::EmitToken { token }
             }
         }
-        StringExtendAction::FoundInterpolatedToken { token } => {
-            buffer.set_pos(token.loc().end());
-            ParseStringResult::EmitToken { token }
+        StringExtendAction::FoundInterpolatedToken {
+            interp_token,
+            var_token,
+        } => {
+            buffer.set_pos(interp_token.loc().end());
+            literal.next_token = Some(var_token);
+            ParseStringResult::EmitToken {
+                token: interp_token,
+            }
         }
         StringExtendAction::FoundEscapedNl {
             escaped_nl_starts_at,

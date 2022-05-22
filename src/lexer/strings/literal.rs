@@ -9,6 +9,7 @@ pub(crate) struct StringLiteral<'a> {
     pub(crate) currently_in_interpolation: bool,
     pub(crate) ends_with: &'a [u8],
     pub(crate) interpolation_started_with_curly_level: usize,
+    pub(crate) next_token: Option<Token<'a>>,
 
     pub(crate) metadata: StringLiteralMetadata,
 }
@@ -21,10 +22,19 @@ pub(crate) enum StringLiteralMetadata {
 
 #[derive(Debug)]
 pub(crate) enum StringExtendAction<'a> {
-    FoundStringEnd { string_end_starts_at: usize },
-    FoundInterpolation { interpolation_starts_at: usize },
-    FoundInterpolatedToken { token: Token<'a> },
-    FoundEscapedNl { escaped_nl_starts_at: usize },
+    FoundStringEnd {
+        string_end_starts_at: usize,
+    },
+    FoundInterpolation {
+        interpolation_starts_at: usize,
+    },
+    FoundInterpolatedToken {
+        interp_token: Token<'a>,
+        var_token: Token<'a>,
+    },
+    FoundEscapedNl {
+        escaped_nl_starts_at: usize,
+    },
 }
 
 impl<'a> StringLiteral<'a> {
@@ -39,6 +49,7 @@ impl<'a> StringLiteral<'a> {
             currently_in_interpolation: false,
             ends_with,
             interpolation_started_with_curly_level,
+            next_token: None,
             metadata,
         }
     }
@@ -67,23 +78,72 @@ impl<'a> StringLiteral<'a> {
                         interpolation_starts_at: buffer.pos(),
                     };
                 }
+
+                fn read_ident<'a>(buffer: &mut Buffer<'a>, start: usize) -> Option<usize> {
+                    let mut end = start;
+                    while buffer.byte_at(end).map(|byte| is_identchar(byte)) == Some(true) {
+                        end += 1;
+                    }
+                    if start != end && !matches!(buffer.byte_at(start), Some(b'0'..=b'9')) {
+                        Some(end)
+                    } else {
+                        None
+                    }
+                }
+
                 if buffer.const_lookahead(b"#@@") {
-                    // FIXME: this is an absolutely incorrect stub
-                    return StringExtendAction::FoundInterpolatedToken {
-                        token: Token(TokenValue::tCVAR(b"@@foo"), Loc(1, 2)),
-                    };
+                    if let Some(ident_end) = read_ident(buffer, buffer.pos() + 3) {
+                        // #@@foo interpolation
+                        return StringExtendAction::FoundInterpolatedToken {
+                            interp_token: Token(
+                                TokenValue::tSTRING_DVAR,
+                                Loc(buffer.pos(), buffer.pos() + 1),
+                            ),
+                            var_token: Token(
+                                TokenValue::tCVAR(buffer.slice(buffer.pos() + 1, ident_end)),
+                                Loc(buffer.pos() + 1, ident_end),
+                            ),
+                        };
+                    } else {
+                        // just #@@ string content
+                        // keep reading
+                    }
                 }
                 if buffer.const_lookahead(b"#@") {
-                    // FIXME: this is an absolutely incorrect stub
-                    return StringExtendAction::FoundInterpolatedToken {
-                        token: Token(TokenValue::tIVAR(b"@foo"), Loc(1, 2)),
-                    };
+                    if let Some(ident_end) = read_ident(buffer, buffer.pos() + 2) {
+                        // #@foo interpolation
+                        return StringExtendAction::FoundInterpolatedToken {
+                            interp_token: Token(
+                                TokenValue::tSTRING_DVAR,
+                                Loc(buffer.pos(), buffer.pos() + 1),
+                            ),
+                            var_token: Token(
+                                TokenValue::tIVAR(buffer.slice(buffer.pos() + 1, ident_end)),
+                                Loc(buffer.pos() + 1, ident_end),
+                            ),
+                        };
+                    } else {
+                        // just #@ string content
+                        // keep reading
+                    }
                 }
                 if buffer.const_lookahead(b"#$") {
-                    // FIXME: this is an absolutely incorrect stub
-                    return StringExtendAction::FoundInterpolatedToken {
-                        token: Token(TokenValue::tGVAR(b"$foo"), Loc(1, 2)),
-                    };
+                    if let Some(ident_end) = read_ident(buffer, buffer.pos() + 2) {
+                        // #@foo interpolation
+                        return StringExtendAction::FoundInterpolatedToken {
+                            interp_token: Token(
+                                TokenValue::tSTRING_DVAR,
+                                Loc(buffer.pos(), buffer.pos() + 1),
+                            ),
+                            var_token: Token(
+                                TokenValue::tGVAR(buffer.slice(buffer.pos() + 1, ident_end)),
+                                Loc(buffer.pos() + 1, ident_end),
+                            ),
+                        };
+                    } else {
+                        // just #$ string content
+                        // keep reading
+                    }
                 }
                 if buffer.lookahead(self.ends_with) {
                     return StringExtendAction::FoundStringEnd {
