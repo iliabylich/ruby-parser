@@ -174,7 +174,7 @@ pub enum TokenValue<'a> {
     // TODO: replace with diagnostics
     Error(char),
 
-    None,
+    tUNINITIALIZED,
 
     #[cfg(test)]
     tTEST_TOKEN,
@@ -182,7 +182,7 @@ pub enum TokenValue<'a> {
 
 impl Default for TokenValue<'_> {
     fn default() -> Self {
-        Self::None
+        Self::tUNINITIALIZED
     }
 }
 

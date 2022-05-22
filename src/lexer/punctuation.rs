@@ -190,12 +190,12 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = Token(TokenValue::tSTRING_BEG(b"\""), Loc(start, self.pos()));
-        self.string_literals.push(StringLiteral::new(
-            true,
-            b"\"",
-            self.curly_nest,
-            StringLiteralMetadata::Plain,
-        ));
+        self.string_literals.push(
+            StringLiteral::string()
+                .with_ending(b"\"")
+                .with_curly_level(self.curly_nest)
+                .with_interpolation_support(true),
+        );
         token
     }
 }
@@ -212,12 +212,14 @@ assert_lex!(
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::new(
-                true,
-                b"\"",
-                42,
-                StringLiteralMetadata::Plain
-            ))
+            Some(StringLiteral {
+                supports_interpolation: true,
+                currently_in_interpolation: false,
+                ends_with: b"\"",
+                interpolation_started_with_curly_level: 42,
+                next_token: None,
+                metadata: StringLiteralMetadata::String,
+            })
         );
     }
 );
@@ -233,12 +235,12 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = Token(TokenValue::tSTRING_BEG(b"'"), Loc(start, self.pos()));
-        self.string_literals.push(StringLiteral::new(
-            false,
-            b"'",
-            0,
-            StringLiteralMetadata::Plain,
-        ));
+        self.string_literals.push(
+            StringLiteral::string()
+                .with_interpolation_support(false)
+                .with_ending(b"'")
+                .with_curly_level(0),
+        );
         token
     }
 }
@@ -254,12 +256,14 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::new(
-                false,
-                b"'",
-                0,
-                StringLiteralMetadata::Plain
-            ))
+            Some(StringLiteral {
+                supports_interpolation: false,
+                currently_in_interpolation: false,
+                ends_with: b"'",
+                interpolation_started_with_curly_level: 0,
+                next_token: None,
+                metadata: StringLiteralMetadata::String
+            })
         )
     }
 );
@@ -492,24 +496,24 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
                 // :"..." symbol
                 self.skip_byte();
                 let token = Token(TokenValue::tDSYMBEG, Loc(start, self.pos()));
-                self.string_literals.push(StringLiteral::new(
-                    true,
-                    b" ",
-                    self.curly_nest,
-                    StringLiteralMetadata::Plain,
-                ));
+                self.string_literals.push(
+                    StringLiteral::symbol()
+                        .with_interpolation_support(true)
+                        .with_ending(b" ")
+                        .with_curly_level(self.curly_nest),
+                );
                 token
             }
             Some(b'\'') => {
                 // :'...' symbol
                 self.skip_byte();
                 let token = Token(TokenValue::tSYMBEG, Loc(start, self.pos()));
-                self.string_literals.push(StringLiteral::new(
-                    false,
-                    b" ",
-                    0,
-                    StringLiteralMetadata::Plain,
-                ));
+                self.string_literals.push(
+                    StringLiteral::symbol()
+                        .with_interpolation_support(false)
+                        .with_ending(b" ")
+                        .with_curly_level(0),
+                );
                 token
             }
             _ => Token(TokenValue::tCOLON, Loc(start, self.pos())),
@@ -529,12 +533,14 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::new(
-                true,
-                b" ",
-                42,
-                StringLiteralMetadata::Plain
-            ))
+            Some(StringLiteral {
+                supports_interpolation: true,
+                currently_in_interpolation: false,
+                ends_with: b" ",
+                interpolation_started_with_curly_level: 42,
+                next_token: None,
+                metadata: StringLiteralMetadata::Symbol
+            })
         )
     }
 );
@@ -550,12 +556,14 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::new(
-                false,
-                b" ",
-                0,
-                StringLiteralMetadata::Plain
-            ))
+            Some(StringLiteral {
+                supports_interpolation: false,
+                currently_in_interpolation: false,
+                ends_with: b" ",
+                interpolation_started_with_curly_level: 0,
+                next_token: None,
+                metadata: StringLiteralMetadata::Symbol
+            })
         )
     }
 );

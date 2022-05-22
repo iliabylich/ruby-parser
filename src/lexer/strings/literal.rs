@@ -3,7 +3,7 @@ use crate::{
     token::{Loc, Token, TokenValue},
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub(crate) struct StringLiteral<'a> {
     pub(crate) supports_interpolation: bool,
     pub(crate) currently_in_interpolation: bool,
@@ -16,8 +16,16 @@ pub(crate) struct StringLiteral<'a> {
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) enum StringLiteralMetadata {
-    Plain,
+    String,
+    Symbol,
+    Regexp,
     Heredoc { heredoc_id_ended_at: usize },
+}
+
+impl Default for StringLiteralMetadata {
+    fn default() -> Self {
+        Self::String
+    }
 }
 
 #[derive(Debug)]
@@ -38,20 +46,44 @@ pub(crate) enum StringExtendAction<'a> {
 }
 
 impl<'a> StringLiteral<'a> {
-    pub(crate) fn new(
-        supports_interpolation: bool,
-        ends_with: &'a [u8],
-        interpolation_started_with_curly_level: usize,
-        metadata: StringLiteralMetadata,
-    ) -> Self {
+    pub(crate) fn string() -> Self {
         Self {
-            supports_interpolation,
-            currently_in_interpolation: false,
-            ends_with,
-            interpolation_started_with_curly_level,
-            next_token: None,
-            metadata,
+            metadata: StringLiteralMetadata::String,
+            ..Self::default()
         }
+    }
+    pub(crate) fn symbol() -> Self {
+        Self {
+            metadata: StringLiteralMetadata::Symbol,
+            ..Self::default()
+        }
+    }
+    pub(crate) fn regexp() -> Self {
+        Self {
+            metadata: StringLiteralMetadata::Regexp,
+            ..Self::default()
+        }
+    }
+    pub(crate) fn heredoc(heredoc_id_ended_at: usize) -> Self {
+        Self {
+            metadata: StringLiteralMetadata::Heredoc {
+                heredoc_id_ended_at,
+            },
+            ..Self::default()
+        }
+    }
+
+    pub(crate) fn with_interpolation_support(mut self, value: bool) -> Self {
+        self.supports_interpolation = value;
+        self
+    }
+    pub(crate) fn with_ending(mut self, value: &'a [u8]) -> Self {
+        self.ends_with = value;
+        self
+    }
+    pub(crate) fn with_curly_level(mut self, value: usize) -> Self {
+        self.interpolation_started_with_curly_level = value;
+        self
     }
 
     pub(crate) fn extend(&self, buffer: &mut Buffer<'a>) -> StringExtendAction<'a> {
