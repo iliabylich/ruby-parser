@@ -35,7 +35,6 @@ pub struct Lexer<'a> {
     curly_nest: usize,
     paren_nest: usize,
     brack_nest: usize,
-    new_expr_required: bool,
 }
 
 impl<'a> Lexer<'a> {
@@ -51,7 +50,6 @@ impl<'a> Lexer<'a> {
             curly_nest: 0,
             paren_nest: 0,
             brack_nest: 0,
-            new_expr_required: false,
         }
     }
 
@@ -63,9 +61,6 @@ impl<'a> Lexer<'a> {
     pub fn current_token(&mut self) -> Token<'a> {
         if self.current_token.is_none() {
             self.current_token = Some(self.next_token());
-
-            // Reses all possibly set flags
-            self.new_expr_required = false;
         }
         // SAFETY: we've filled in current_token above
         //         it's guaranteed to hold Some(Token)
@@ -97,10 +92,6 @@ impl<'a> Lexer<'a> {
             }
         }
         tokens
-    }
-
-    pub(crate) fn require_new_expr(&mut self) {
-        self.new_expr_required = true;
     }
 
     pub(crate) fn skip_token(&mut self) {

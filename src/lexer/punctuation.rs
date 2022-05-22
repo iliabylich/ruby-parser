@@ -565,16 +565,7 @@ impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
-        if self.new_expr_required {
-            let token = Token(TokenValue::tREGEXP_BEG(b"/"), Loc(start, self.pos()));
-            self.string_literals.push(StringLiteral::new(
-                true,
-                b"/",
-                self.curly_nest,
-                StringLiteralMetadata::Plain,
-            ));
-            return token;
-        }
+        // Regexp begin is handled on the parser level
 
         match self.current_byte() {
             Some(b'=') => {
@@ -585,28 +576,6 @@ impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(
-    test_tREGEXP_BEG,
-    "/",
-    tREGEXP_BEG(b"/"),
-    0..1,
-    setup = |lexer: &mut Lexer| {
-        lexer.require_new_expr();
-        lexer.curly_nest = 42;
-    },
-    assert = |lexer: &Lexer| {
-        assert_eq!(lexer.string_literals.size(), 1);
-        assert_eq!(
-            lexer.string_literals.last(),
-            Some(StringLiteral::new(
-                true,
-                b"/",
-                42,
-                StringLiteralMetadata::Plain
-            ))
-        )
-    }
-);
 assert_lex!(test_tOP_ASGN_DIV, "/=", tOP_ASGN(b"/="), 0..2);
 assert_lex!(test_tDIVIDE, "/", tDIVIDE, 0..1);
 
