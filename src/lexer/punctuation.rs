@@ -1,4 +1,4 @@
-use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral, StringLiteralMetadata};
+use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral};
 use crate::token::{Loc, Token, TokenValue};
 
 use crate::lexer::ident::parse_ident;
@@ -208,7 +208,7 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::literal::NextAction;
+        use crate::lexer::strings::literal::{NextAction, StringLiteralMetadata};
         assert_eq!(lexer.string_literals.size(), 1);
 
         assert_eq!(
@@ -254,7 +254,7 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::literal::NextAction;
+        use crate::lexer::strings::literal::{NextAction, StringLiteralMetadata};
 
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
@@ -533,7 +533,7 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::literal::NextAction;
+        use crate::lexer::strings::literal::{NextAction, StringLiteralMetadata};
 
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
@@ -558,7 +558,7 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::literal::NextAction;
+        use crate::lexer::strings::literal::{NextAction, StringLiteralMetadata};
 
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(

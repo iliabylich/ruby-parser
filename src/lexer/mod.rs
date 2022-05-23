@@ -19,9 +19,8 @@ use percent::parse_percent;
 use strings::parse_string;
 
 use strings::{
-    literal::{StringLiteral, StringLiteralMetadata},
+    literal::{StringExtendAction, StringLiteral},
     stack::StringLiteralStack,
-    ParseStringResult,
 };
 
 pub struct Lexer<'a> {
@@ -101,18 +100,31 @@ impl<'a> Lexer<'a> {
         let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
 
         match parse_string(literal, &mut self.buffer, self.curly_nest) {
-            ParseStringResult::ReadInterpolatedContent => {
+            StringExtendAction::EmitToken { token } => {
+                // just emit what literal gives us
+                token
+            }
+            StringExtendAction::FoundStringEnd { token } => {
+                // close current literal
+                self.string_literals.pop();
+                // and dispatch string end token
+                token
+            }
+            StringExtendAction::FoundInterpolation { token } => {
+                // mark current literal as "in interpolation mode"
+                literal.currently_in_interpolation = true;
+                // and dispatch dynamic string begin token
+                token
+            }
+            StringExtendAction::ReadInterpolatedContent => {
                 // we are after `#{` (but not at matching '}')
                 // and should read an interpolated value
                 self.tokenize_normally()
             }
-            ParseStringResult::EmitToken { token } => token,
-            ParseStringResult::CloseLiteral { end_token } => {
+            StringExtendAction::EmitEOF => {
+                // close current literal
                 self.string_literals.pop();
-                end_token
-            }
-            ParseStringResult::EmitEOF => {
-                self.string_literals.pop();
+                // and emit EOF
                 Token(TokenValue::tEOF, Loc(self.buffer.pos(), self.buffer.pos()))
             }
         }

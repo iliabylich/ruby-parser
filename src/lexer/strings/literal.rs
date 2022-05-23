@@ -33,7 +33,8 @@ pub(crate) enum StringExtendAction<'a> {
     EmitToken { token: Token<'a> },
     FoundStringEnd { token: Token<'a> },
     FoundInterpolation { token: Token<'a> },
-    NoAction,
+    EmitEOF,
+    ReadInterpolatedContent,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -70,10 +71,6 @@ impl<'a> NextAction<'a> {
                 unreachable!("The queue of string extend actions supports only 2 elements")
             }
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        matches!(self, Self::NoAction)
     }
 }
 
@@ -124,32 +121,31 @@ impl<'a> StringLiteral<'a> {
         self
     }
 
-    pub(crate) fn is_currently_in_interpolation(&self) -> bool {
-        if !self.next_action.is_empty() {
-            // There's still work to emit before making a decision on interpolation
-            return false;
-        }
-
-        self.supports_interpolation && self.currently_in_interpolation
-    }
-
-    pub(crate) fn can_close_interpolation(
-        &self,
+    pub(crate) fn extend(
+        &mut self,
         buffer: &mut Buffer<'a>,
-        curly_nest: usize,
-    ) -> bool {
-        if !self.next_action.is_empty() {
-            // There's still work to emit before making a decision on interpolation
-            return false;
-        }
-
-        buffer.current_byte() == Some(b'}')
-            && self.interpolation_started_with_curly_level == curly_nest
-    }
-
-    pub(crate) fn extend(&mut self, buffer: &mut Buffer<'a>) -> StringExtendAction<'a> {
+        current_curly_nest: usize,
+    ) -> StringExtendAction<'a> {
         if let Some(cached_action) = self.next_action.take() {
             return cached_action;
+        }
+
+        if self.supports_interpolation && self.currently_in_interpolation {
+            if buffer.current_byte() == Some(b'}')
+                && self.interpolation_started_with_curly_level == current_curly_nest
+            {
+                // Close interpolation
+                let token = Token(
+                    TokenValue::tSTRING_DEND,
+                    Loc(buffer.pos(), buffer.pos() + 1),
+                );
+                buffer.skip_byte();
+                self.currently_in_interpolation = false;
+                return StringExtendAction::EmitToken { token };
+            }
+
+            // yield control to lexer to read interpolated tokens
+            return StringExtendAction::ReadInterpolatedContent;
         }
 
         let start = buffer.pos();
@@ -198,7 +194,7 @@ impl<'a> StringLiteral<'a> {
                     if let Some(token) = string_content_to_emit(buffer, start, buffer.pos()) {
                         return StringExtendAction::EmitToken { token };
                     } else {
-                        return StringExtendAction::NoAction;
+                        return StringExtendAction::EmitEOF;
                     }
                 }
 
@@ -352,7 +348,7 @@ impl<'a> StringLiteral<'a> {
                     if let Some(token) = string_content_to_emit(buffer, start, buffer.pos()) {
                         return StringExtendAction::EmitToken { token };
                     } else {
-                        return StringExtendAction::NoAction;
+                        return StringExtendAction::EmitEOF;
                     }
                 }
                 if buffer.lookahead(self.ends_with) {
