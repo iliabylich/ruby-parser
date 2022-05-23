@@ -9,7 +9,7 @@ pub(crate) mod punctuation;
 pub(crate) mod skip_ws;
 pub(crate) mod strings;
 
-use crate::token::Token;
+use crate::token::{Loc, Token, TokenValue};
 use atmark::parse_atmark;
 use buffer::Buffer;
 use gvar::parse_gvar;
@@ -81,8 +81,6 @@ impl<'a> Lexer<'a> {
 
     #[cfg(test)]
     pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
-        use crate::token::TokenValue;
-
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
@@ -113,6 +111,10 @@ impl<'a> Lexer<'a> {
                 self.string_literals.pop();
                 end_token
             }
+            ParseStringResult::EmitEOF => {
+                self.string_literals.pop();
+                Token(TokenValue::tEOF, Loc(self.buffer.pos(), self.buffer.pos()))
+            }
         }
     }
 
@@ -128,8 +130,6 @@ impl<'a> Lexer<'a> {
         // It allows sub-component tests to not depend on other components
         #[cfg(test)]
         if self.buffer.const_lookahead(b"TEST_TOKEN") {
-            use crate::token::{Loc, TokenValue};
-
             let end = start + "TEST_TOKEN".len();
             self.buffer.set_pos(end);
             return Token(TokenValue::tTEST_TOKEN, Loc(start, end));

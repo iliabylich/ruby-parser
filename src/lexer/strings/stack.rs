@@ -1,5 +1,6 @@
 use crate::lexer::strings::literal::StringLiteral;
 
+#[derive(Debug)]
 pub(crate) struct StringLiteralStack<'a> {
     stack: Vec<StringLiteral<'a>>,
 }

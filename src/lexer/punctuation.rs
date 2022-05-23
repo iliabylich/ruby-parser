@@ -208,6 +208,7 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
+        use crate::lexer::strings::literal::NextAction;
         assert_eq!(lexer.string_literals.size(), 1);
 
         assert_eq!(
@@ -217,7 +218,7 @@ assert_lex!(
                 currently_in_interpolation: false,
                 ends_with: b"\"",
                 interpolation_started_with_curly_level: 42,
-                next_token: None,
+                next_action: NextAction::NoAction,
                 metadata: StringLiteralMetadata::String,
             })
         );
@@ -253,6 +254,8 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
+        use crate::lexer::strings::literal::NextAction;
+
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
@@ -261,7 +264,7 @@ assert_lex!(
                 currently_in_interpolation: false,
                 ends_with: b"'",
                 interpolation_started_with_curly_level: 0,
-                next_token: None,
+                next_action: NextAction::NoAction,
                 metadata: StringLiteralMetadata::String
             })
         )
@@ -530,6 +533,8 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
+        use crate::lexer::strings::literal::NextAction;
+
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
@@ -538,7 +543,7 @@ assert_lex!(
                 currently_in_interpolation: false,
                 ends_with: b" ",
                 interpolation_started_with_curly_level: 42,
-                next_token: None,
+                next_action: NextAction::NoAction,
                 metadata: StringLiteralMetadata::Symbol
             })
         )
@@ -553,6 +558,8 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
+        use crate::lexer::strings::literal::NextAction;
+
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
@@ -561,7 +568,7 @@ assert_lex!(
                 currently_in_interpolation: false,
                 ends_with: b" ",
                 interpolation_started_with_curly_level: 0,
-                next_token: None,
+                next_action: NextAction::NoAction,
                 metadata: StringLiteralMetadata::Symbol
             })
         )
