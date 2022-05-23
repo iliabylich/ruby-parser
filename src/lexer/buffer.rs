@@ -13,6 +13,10 @@ impl<'a> Buffer<'a> {
         self.input.get(self.pos).map(|byte| *byte)
     }
 
+    pub(crate) fn is_eof(&self) -> bool {
+        self.current_byte().is_none()
+    }
+
     pub(crate) fn skip_byte(&mut self) {
         self.pos += 1;
     }
