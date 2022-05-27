@@ -11,7 +11,7 @@ pub(crate) enum Utf8Char {
 
 impl<'a> Buffer<'a> {
     // Returns size of the UTF-8 char
-    pub(crate) fn utf8_char_at(&self, mut idx: usize) -> Utf8Char {
+    pub(crate) fn utf8_char_at(&self, idx: usize) -> Utf8Char {
         if let Some(c) = self.byte_at(idx) {
             let size = if c & 0x80 == 0 {
                 1

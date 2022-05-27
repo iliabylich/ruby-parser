@@ -1,7 +1,8 @@
-use crate::lexer::buffer::Buffer;
+use crate::lexer::{
+    buffer::Buffer,
+    ident::{is_identchar, lookahead_ident},
+};
 use crate::token::{Loc, Token, TokenValue};
-
-use crate::lexer::ident::is_identchar;
 
 pub(crate) fn parse_atmark<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     let token = match lookahead_atmark(buffer, buffer.pos()) {
@@ -48,6 +49,13 @@ pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>, start: usize) -> Lookahe
         ))
     };
 
+    let invalid_var_name = || {
+        LookaheadAtMarkResult::InvalidVarName(Token(
+            token_value_fn(buffer.slice(start, ident_start)),
+            Loc(start, ident_start),
+        ))
+    };
+
     match buffer.byte_at(ident_start) {
         None => {
             return empty_var_name();
@@ -57,24 +65,25 @@ pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>, start: usize) -> Lookahe
             return empty_var_name();
         }
         Some(byte) if byte.is_ascii_digit() => {
-            return LookaheadAtMarkResult::InvalidVarName(Token(
-                token_value_fn(buffer.slice(start, ident_start)),
-                Loc(start, ident_start),
-            ));
+            return invalid_var_name();
         }
         Some(_) => {
             // read while possible
-            let mut ident_end = ident_start;
-            while buffer.byte_at(ident_end).map(|byte| is_identchar(byte)) == Some(true) {
-                ident_end += 1;
+            match lookahead_ident(buffer, ident_start) {
+                Some(length) => {
+                    let ident_end = ident_start + length;
+                    let token = Token(
+                        token_value_fn(buffer.slice(start, ident_end)),
+                        Loc(start, ident_end),
+                    );
+
+                    return LookaheadAtMarkResult::Ok(token);
+                }
+                None => {
+                    // something like "@\xFF"
+                    return invalid_var_name();
+                }
             }
-
-            let token = Token(
-                token_value_fn(buffer.slice(start, ident_end)),
-                Loc(start, ident_end),
-            );
-
-            LookaheadAtMarkResult::Ok(token)
         }
     }
 }
