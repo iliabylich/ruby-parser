@@ -92,12 +92,12 @@ pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>, start: usize) -> Lookahe
 mod tests {
     use crate::lexer::assert_lex;
 
-    assert_lex!(test_tIVAR_valid, "@ivar", tIVAR(b"@ivar"), 0..5);
-    assert_lex!(test_tCVAR_valid, "@@cvar", tCVAR(b"@@cvar"), 0..6);
+    assert_lex!(test_tIVAR_valid, b"@ivar", tIVAR(b"@ivar"), 0..5);
+    assert_lex!(test_tCVAR_valid, b"@@cvar", tCVAR(b"@@cvar"), 0..6);
 
-    assert_lex!(test_tIVAR_no_id, "@", tIVAR(b"@"), 0..1);
-    assert_lex!(test_tCVAR_no_id, "@@", tCVAR(b"@@"), 0..2);
+    assert_lex!(test_tIVAR_no_id, b"@", tIVAR(b"@"), 0..1);
+    assert_lex!(test_tCVAR_no_id, b"@@", tCVAR(b"@@"), 0..2);
 
-    assert_lex!(test_tIVAR_invalid_id, "@(", tIVAR(b"@"), 0..1);
-    assert_lex!(test_tCVAR_invalid_id, "@@(", tCVAR(b"@@"), 0..2);
+    assert_lex!(test_tIVAR_invalid_id, b"@(", tIVAR(b"@"), 0..1);
+    assert_lex!(test_tCVAR_invalid_id, b"@@(", tCVAR(b"@@"), 0..2);
 }

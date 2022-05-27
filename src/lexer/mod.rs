@@ -37,9 +37,9 @@ pub struct Lexer<'a> {
 }
 
 impl<'a> Lexer<'a> {
-    pub fn new(s: &'a str) -> Self {
+    pub fn new(input: &'a [u8]) -> Self {
         Self {
-            buffer: Buffer::new(s.as_bytes()),
+            buffer: Buffer::new(input),
             debug: false,
 
             string_literals: StringLiteralStack::new(),
@@ -223,7 +223,7 @@ pub(crate) trait OnByte<'a, const BYTE: u8> {
 }
 
 macro_rules! assert_lex {
-    ($test_name:ident, $input:literal, $tok:expr, $loc:expr, setup = $pre:expr, assert = $assert:expr) => {
+    ($test_name:ident, $input:expr, $tok:expr, $loc:expr, setup = $pre:expr, assert = $assert:expr) => {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {

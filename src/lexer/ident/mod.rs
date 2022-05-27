@@ -161,39 +161,40 @@ mod tests {
         assert_eq!(lookahead_ident(&buffer, 0), Some(6)); // captures "абв"
     }
 
-    assert_lex!(test_tIDENTIFIER_plain, "foo", tIDENTIFIER(b"foo"), 0..3);
+    assert_lex!(test_tIDENTIFIER_plain, b"foo", tIDENTIFIER(b"foo"), 0..3);
+
     assert_lex!(
         test_tIDENTIFIER_multibyte,
-        "абв+",
-        tIDENTIFIER("абв".as_bytes()),
-        0..("абв".as_bytes().len())
+        b"\xD0\xB0\xD0\xB1\xD0\xB2+",
+        tIDENTIFIER(b"\xD0\xB0\xD0\xB1\xD0\xB2"),
+        0..6
     );
 
-    assert_lex!(test_tFID_predicate, "foo?", tFID(b"foo?"), 0..4);
-    assert_lex!(test_tFID_predicate_eq, "foo?=", tIDENTIFIER(b"foo"), 0..3);
-    assert_lex!(test_tFID_bang, "foo!", tFID(b"foo!"), 0..4);
-    assert_lex!(test_tFID_bang_eq, "foo!=", tIDENTIFIER(b"foo"), 0..3);
-    assert_lex!(test_tIDENTIFIER_setter, "foo=", tIDENTIFIER(b"foo="), 0..4);
+    assert_lex!(test_tFID_predicate, b"foo?", tFID(b"foo?"), 0..4);
+    assert_lex!(test_tFID_predicate_eq, b"foo?=", tIDENTIFIER(b"foo"), 0..3);
+    assert_lex!(test_tFID_bang, b"foo!", tFID(b"foo!"), 0..4);
+    assert_lex!(test_tFID_bang_eq, b"foo!=", tIDENTIFIER(b"foo"), 0..3);
+    assert_lex!(test_tIDENTIFIER_setter, b"foo=", tIDENTIFIER(b"foo="), 0..4);
     assert_lex!(
         test_tIDENTIFIER_setter_tilde,
-        "foo=~",
+        b"foo=~",
         tIDENTIFIER(b"foo"),
         0..3
     );
     assert_lex!(
         test_tIDENTIFIER_setter_eq,
-        "foo==",
+        b"foo==",
         tIDENTIFIER(b"foo"),
         0..3
     );
     assert_lex!(
         test_tIDENTIFIER_setter_gt,
-        "foo=>",
+        b"foo=>",
         tIDENTIFIER(b"foo"),
         0..3
     );
 
-    assert_lex!(test_tLABEL, "foo:", tLABEL(b"foo:"), 0..4);
+    assert_lex!(test_tLABEL, b"foo:", tLABEL(b"foo:"), 0..4);
 
-    assert_lex!(test_reserved_word, "if", kIF, 0..2);
+    assert_lex!(test_reserved_word, b"if", kIF, 0..2);
 }

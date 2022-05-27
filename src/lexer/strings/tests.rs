@@ -5,7 +5,7 @@ use crate::{
 
 #[test]
 fn test_string_plain_non_interp() {
-    let mut lexer = Lexer::new("'foo'");
+    let mut lexer = Lexer::new(b"'foo'");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -19,7 +19,7 @@ fn test_string_plain_non_interp() {
 
 #[test]
 fn test_string_plain_interp() {
-    let mut lexer = Lexer::new("\"foo#{TEST_TOKEN}bar\"");
+    let mut lexer = Lexer::new(b"\"foo#{TEST_TOKEN}bar\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -37,7 +37,7 @@ fn test_string_plain_interp() {
 
 #[test]
 fn test_string_interp_braces() {
-    let mut lexer = Lexer::new("\"#{{} + {}}\"");
+    let mut lexer = Lexer::new(b"\"#{{} + {}}\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -57,7 +57,7 @@ fn test_string_interp_braces() {
 
 #[test]
 fn test_string_iterp_raw_cvar() {
-    let mut lexer = Lexer::new("\"#@@foo\"");
+    let mut lexer = Lexer::new(b"\"#@@foo\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -72,7 +72,7 @@ fn test_string_iterp_raw_cvar() {
 
 #[test]
 fn test_string_iterp_raw_ivar() {
-    let mut lexer = Lexer::new("\"#@foo\"");
+    let mut lexer = Lexer::new(b"\"#@foo\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -87,7 +87,7 @@ fn test_string_iterp_raw_ivar() {
 
 #[test]
 fn test_string_iterp_raw_gvar() {
-    let mut lexer = Lexer::new("\"#$foo\"");
+    let mut lexer = Lexer::new(b"\"#$foo\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -102,7 +102,7 @@ fn test_string_iterp_raw_gvar() {
 
 #[test]
 fn test_string_interp_raw_cvar_invalid() {
-    let mut lexer = Lexer::new("\"#@@1\"");
+    let mut lexer = Lexer::new(b"\"#@@1\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -116,7 +116,7 @@ fn test_string_interp_raw_cvar_invalid() {
 
 #[test]
 fn test_string_interp_raw_ivar_invalid() {
-    let mut lexer = Lexer::new("\"#@1\"");
+    let mut lexer = Lexer::new(b"\"#@1\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -130,7 +130,7 @@ fn test_string_interp_raw_ivar_invalid() {
 
 #[test]
 fn test_string_interp_raw_gvar_invalid() {
-    let mut lexer = Lexer::new("\"#$1\"");
+    let mut lexer = Lexer::new(b"\"#$1\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -144,7 +144,7 @@ fn test_string_interp_raw_gvar_invalid() {
 
 #[test]
 fn test_string_interp_raw_cvar_no_id() {
-    let mut lexer = Lexer::new("\"#@@\"");
+    let mut lexer = Lexer::new(b"\"#@@\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -158,7 +158,7 @@ fn test_string_interp_raw_cvar_no_id() {
 
 #[test]
 fn test_string_interp_raw_ivar_no_id() {
-    let mut lexer = Lexer::new("\"#@\"");
+    let mut lexer = Lexer::new(b"\"#@\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
@@ -172,7 +172,7 @@ fn test_string_interp_raw_ivar_no_id() {
 
 #[test]
 fn test_string_interp_raw_gvar_no_id() {
-    let mut lexer = Lexer::new("\"#$\"");
+    let mut lexer = Lexer::new(b"\"#$\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![

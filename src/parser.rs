@@ -9,9 +9,9 @@ pub struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub fn new(s: &'a str) -> Self {
+    pub fn new(input: &'a [u8]) -> Self {
         Self {
-            lexer: Lexer::new(s),
+            lexer: Lexer::new(input),
             debug: false,
         }
     }
@@ -98,7 +98,7 @@ impl<'a> Parser<'a> {
 
 #[test]
 fn test_parse() {
-    let ast = Parser::new("22 + 3 ** 4 * (2 + 2) - 1").debug().parse();
+    let ast = Parser::new(b"22 + 3 ** 4 * (2 + 2) - 1").debug().parse();
     assert_eq!(
         ast,
         Node::Minus(
