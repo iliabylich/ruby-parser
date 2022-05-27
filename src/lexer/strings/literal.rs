@@ -1,7 +1,11 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{buffer::Buffer, ident::is_identchar},
+    lexer::{
+        atmark::{lookahead_atmark, LookaheadAtMarkResult},
+        buffer::Buffer,
+        ident::is_identchar,
+    },
     token::{Loc, Token, TokenValue},
 };
 
@@ -172,14 +176,9 @@ impl<'a> StringLiteral<'a> {
                     self.handle_common_interpolation(buffer, start)?;
                 }
 
-                if buffer.const_lookahead(b"#@@") {
-                    // handle #@@foo interpolation
-                    self.handle_raw_cvar_interpolation(buffer, start)?;
-                }
-
                 if buffer.const_lookahead(b"#@") {
-                    // handle #@foo interpolation
-                    self.handle_raw_ivar_interpolation(buffer, start)?;
+                    // handle #@foo / #@@foo interpolation
+                    self.handle_raw_atmark_interpolation(buffer, start)?;
                 }
 
                 if buffer.const_lookahead(b"#$") {
@@ -248,50 +247,12 @@ impl<'a> StringLiteral<'a> {
     }
 
     #[must_use]
-    fn handle_raw_cvar_interpolation(
+    fn handle_raw_atmark_interpolation(
         &mut self,
         buffer: &mut Buffer<'a>,
         start: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
-        if let Some(ident_end) = read_ident(buffer, buffer.pos() + 3) {
-            // #@@foo interpolation
-            let interp_action = StringExtendAction::EmitToken {
-                token: Token(
-                    TokenValue::tSTRING_DVAR,
-                    Loc(buffer.pos(), buffer.pos() + 1),
-                ),
-            };
-            let var_action = StringExtendAction::EmitToken {
-                token: Token(
-                    TokenValue::tCVAR(buffer.slice(buffer.pos() + 1, ident_end)),
-                    Loc(buffer.pos() + 1, ident_end),
-                ),
-            };
-            let string_content = string_content_to_emit(buffer, start, buffer.pos());
-            buffer.set_pos(ident_end);
-
-            if let Some(token) = string_content {
-                self.next_action.add(interp_action);
-                self.next_action.add(var_action);
-                ControlFlow::Break(StringExtendAction::EmitToken { token })
-            } else {
-                self.next_action.add(var_action);
-                ControlFlow::Break(interp_action)
-            }
-        } else {
-            // just #@@ string content without subsequent identifier
-            // keep reading
-            ControlFlow::Continue(())
-        }
-    }
-
-    #[must_use]
-    fn handle_raw_ivar_interpolation(
-        &mut self,
-        buffer: &mut Buffer<'a>,
-        start: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
-        if let Some(ident_end) = read_ident(buffer, buffer.pos() + 2) {
+        if let LookaheadAtMarkResult::Ok(token) = lookahead_atmark(buffer, buffer.pos() + 1) {
             // #@foo interpolation
             let interp_action = StringExtendAction::EmitToken {
                 token: Token(
@@ -299,14 +260,9 @@ impl<'a> StringLiteral<'a> {
                     Loc(buffer.pos(), buffer.pos() + 1),
                 ),
             };
-            let var_action = StringExtendAction::EmitToken {
-                token: Token(
-                    TokenValue::tIVAR(buffer.slice(buffer.pos() + 1, ident_end)),
-                    Loc(buffer.pos() + 1, ident_end),
-                ),
-            };
+            let var_action = StringExtendAction::EmitToken { token };
             let string_content = string_content_to_emit(buffer, start, buffer.pos());
-            buffer.set_pos(ident_end);
+            buffer.set_pos(token.loc().end());
 
             if let Some(token) = string_content {
                 self.next_action.add(interp_action);

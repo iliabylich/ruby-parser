@@ -1,7 +1,19 @@
-#[derive(Debug)]
 pub struct Buffer<'a> {
     input: &'a [u8],
     pos: usize,
+}
+
+impl std::fmt::Debug for Buffer<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let input = &self.input[self.pos..];
+        let input = &input[..std::cmp::min(input.len(), 10)];
+        let input = std::str::from_utf8(input).unwrap();
+
+        f.debug_struct("Buffer")
+            .field("input", &input)
+            .field("pos", &self.pos)
+            .finish()
+    }
 }
 
 impl<'a> Buffer<'a> {

@@ -4,18 +4,15 @@ use crate::token::{Loc, Token, TokenValue};
 use crate::lexer::ident::is_identchar;
 
 pub(crate) fn parse_atmark<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
-    let token = match lookahead_atmark(buffer) {
-        Ok(token) => token,
-        Err(incomplete_token) => {
-            match buffer.byte_at(incomplete_token.loc().end()) {
-                Some(b'0'..=b'9') => {
-                    // TODO: report __invalid__ ivar/cvar name
-                }
-                None | Some(_) => {
-                    // TODO: report __empty__ ivar/cvar name
-                }
-            }
-            incomplete_token
+    let token = match lookahead_atmark(buffer, buffer.pos()) {
+        LookaheadAtMarkResult::Ok(token) => token,
+        LookaheadAtMarkResult::InvalidVarName(token) => {
+            // TODO: report __invalid__ ivar/cvar name
+            token
+        }
+        LookaheadAtMarkResult::EmptyVarName(token) => {
+            // TODO: report __empty__ ivar/cvar name
+            token
         }
     };
 
@@ -23,10 +20,15 @@ pub(crate) fn parse_atmark<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     token
 }
 
+pub(crate) enum LookaheadAtMarkResult<'a> {
+    Ok(Token<'a>),
+    InvalidVarName(Token<'a>),
+    EmptyVarName(Token<'a>),
+}
+
 // Returns Ok(Token) or Err(Token with only '@' / '@@')
-pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>) -> Result<Token<'a>, Token<'a>> {
-    let start = buffer.pos();
-    let mut ident_start = buffer.pos() + 1;
+pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>, start: usize) -> LookaheadAtMarkResult<'a> {
+    let mut ident_start = start + 1;
 
     let mut token_value_fn: fn(&'a [u8]) -> TokenValue<'a> = TokenValue::tIVAR;
 
@@ -39,20 +41,41 @@ pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>) -> Result<Token<'a>, Tok
         _ => {}
     }
 
-    let mut ident_end = ident_start;
-    while buffer.byte_at(ident_end).map(|byte| is_identchar(byte)) == Some(true) {
-        ident_end += 1;
-    }
+    let empty_var_name = || {
+        LookaheadAtMarkResult::EmptyVarName(Token(
+            token_value_fn(buffer.slice(start, ident_start)),
+            Loc(start, ident_start),
+        ))
+    };
 
-    let token = Token(
-        token_value_fn(buffer.slice(start, ident_end)),
-        Loc(start, ident_end),
-    );
+    match buffer.byte_at(ident_start) {
+        None => {
+            return empty_var_name();
+        }
+        Some(byte) if !is_identchar(byte) => {
+            // ditto
+            return empty_var_name();
+        }
+        Some(byte) if byte.is_ascii_digit() => {
+            return LookaheadAtMarkResult::InvalidVarName(Token(
+                token_value_fn(buffer.slice(start, ident_start)),
+                Loc(start, ident_start),
+            ));
+        }
+        Some(_) => {
+            // read while possible
+            let mut ident_end = ident_start;
+            while buffer.byte_at(ident_end).map(|byte| is_identchar(byte)) == Some(true) {
+                ident_end += 1;
+            }
 
-    if ident_start == ident_end {
-        Err(token)
-    } else {
-        Ok(token)
+            let token = Token(
+                token_value_fn(buffer.slice(start, ident_end)),
+                Loc(start, ident_end),
+            );
+
+            LookaheadAtMarkResult::Ok(token)
+        }
     }
 }
 
