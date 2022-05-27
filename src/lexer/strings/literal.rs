@@ -4,7 +4,7 @@ use crate::{
     lexer::{
         atmark::{lookahead_atmark, LookaheadAtMarkResult},
         buffer::Buffer,
-        ident::is_identchar,
+        gvar::{lookahead_gvar, LookaheadGvarResult},
     },
     token::{Loc, Token, TokenValue},
 };
@@ -285,7 +285,7 @@ impl<'a> StringLiteral<'a> {
         buffer: &mut Buffer<'a>,
         start: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
-        if let Some(ident_end) = read_ident(buffer, buffer.pos() + 2) {
+        if let LookaheadGvarResult::Ok(token) = lookahead_gvar(buffer, buffer.pos() + 1) {
             // #$foo interpolation
             let interp_action = StringExtendAction::EmitToken {
                 token: Token(
@@ -293,14 +293,9 @@ impl<'a> StringLiteral<'a> {
                     Loc(buffer.pos(), buffer.pos() + 1),
                 ),
             };
-            let var_action = StringExtendAction::EmitToken {
-                token: Token(
-                    TokenValue::tGVAR(buffer.slice(buffer.pos() + 1, ident_end)),
-                    Loc(buffer.pos() + 1, ident_end),
-                ),
-            };
+            let var_action = StringExtendAction::EmitToken { token };
             let string_content = string_content_to_emit(buffer, start, buffer.pos());
-            buffer.set_pos(ident_end);
+            buffer.set_pos(token.loc().end());
 
             if let Some(token) = string_content {
                 self.next_action.add(interp_action);
@@ -370,18 +365,5 @@ fn string_content_to_emit<'a>(buffer: &Buffer<'a>, start: usize, end: usize) -> 
             TokenValue::tSTRING_CONTENT(buffer.slice(start, end)),
             Loc(start, end),
         ))
-    }
-}
-
-// Utility helper: reads
-fn read_ident<'a>(buffer: &Buffer<'a>, start: usize) -> Option<usize> {
-    let mut end = start;
-    while buffer.byte_at(end).map(|byte| is_identchar(byte)) == Some(true) {
-        end += 1;
-    }
-    if start != end && !matches!(buffer.byte_at(start), Some(b'0'..=b'9')) {
-        Some(end)
-    } else {
-        None
     }
 }

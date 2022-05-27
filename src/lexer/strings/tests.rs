@@ -129,20 +129,6 @@ fn test_string_interp_raw_ivar_invalid() {
 }
 
 #[test]
-fn test_string_interp_raw_gvar_invalid() {
-    let mut lexer = Lexer::new(b"\"#$1\"");
-    assert_eq!(
-        lexer.tokenize_until_eof(),
-        vec![
-            Token(TokenValue::tSTRING_BEG(b"\""), Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT(b"#$1"), Loc(1, 4)),
-            Token(TokenValue::tSTRING_END(b"\""), Loc(4, 5)),
-            Token(TokenValue::tEOF, Loc(5, 5)),
-        ]
-    );
-}
-
-#[test]
 fn test_string_interp_raw_cvar_no_id() {
     let mut lexer = Lexer::new(b"\"#@@\"");
     assert_eq!(
@@ -164,20 +150,6 @@ fn test_string_interp_raw_ivar_no_id() {
         vec![
             Token(TokenValue::tSTRING_BEG(b"\""), Loc(0, 1)),
             Token(TokenValue::tSTRING_CONTENT(b"#@"), Loc(1, 3)),
-            Token(TokenValue::tSTRING_END(b"\""), Loc(3, 4)),
-            Token(TokenValue::tEOF, Loc(4, 4)),
-        ]
-    );
-}
-
-#[test]
-fn test_string_interp_raw_gvar_no_id() {
-    let mut lexer = Lexer::new(b"\"#$\"");
-    assert_eq!(
-        lexer.tokenize_until_eof(),
-        vec![
-            Token(TokenValue::tSTRING_BEG(b"\""), Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT(b"#$"), Loc(1, 3)),
             Token(TokenValue::tSTRING_END(b"\""), Loc(3, 4)),
             Token(TokenValue::tEOF, Loc(4, 4)),
         ]
