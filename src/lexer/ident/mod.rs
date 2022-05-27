@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::lexer::buffer::{utf8::Utf8Char, Buffer};
 use crate::token::{Loc, Token, TokenValue};
 
 mod reserved_words;
@@ -11,11 +11,15 @@ pub(crate) fn is_identchar(byte: u8) -> bool {
 
 pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     let start = buffer.pos();
-    buffer.skip_byte();
 
-    while buffer.current_byte().map(|byte| is_identchar(byte)) == Some(true) {
-        buffer.skip_byte();
-    }
+    let length = match lookahead_ident(buffer, start) {
+        Some(length) => length,
+        None => {
+            todo!("handle ident that start with non-UTF-8 byte")
+        }
+    };
+
+    buffer.set_pos(start + length);
 
     // lookahead to handle predicate/bang/setter method names
     match buffer.current_byte() {
@@ -81,6 +85,42 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     Token(TokenValue::tIDENTIFIER(slice), Loc(start, end))
 }
 
+// Returns None / Some(ident_length)
+pub(crate) fn lookahead_ident<'a>(buffer: &Buffer<'a>, start: usize) -> Option<usize> {
+    let mut end = start;
+
+    loop {
+        match buffer.byte_at(end) {
+            Some(byte) if !is_identchar(byte) => {
+                break;
+            }
+            None => {
+                break;
+            }
+            _ => {}
+        }
+
+        match buffer.utf8_char_at(end) {
+            Utf8Char::Valid(size) => {
+                // keep consuming
+                end += size
+            }
+            Utf8Char::Invalid => {
+                break;
+            }
+            Utf8Char::EOF => {
+                break;
+            }
+        }
+    }
+
+    if end == start {
+        None
+    } else {
+        Some(end - start)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::lexer::assert_lex;
@@ -100,7 +140,34 @@ mod tests {
         assert!(!is_identchar(b'#'));
     }
 
+    #[test]
+    fn test_lookahead_ident() {
+        use super::{lookahead_ident, Buffer};
+
+        // ASCII ("foo")
+        let buffer = Buffer::new(b" foo<2");
+        assert_eq!(lookahead_ident(&buffer, 1), Some(3)); // captures "foo"
+
+        // valid UTF-8 ("абв")
+        let buffer = Buffer::new("абв".as_bytes());
+        assert_eq!(lookahead_ident(&buffer, 0), Some(6)); // captures "абв"
+
+        // ASCII ("foo") followed by malformed bytes (208, 0)
+        let buffer = Buffer::new(&[b'f', b'o', b'o', 208, 0]);
+        assert_eq!(lookahead_ident(&buffer, 0), Some(3)); // captures "foo"
+
+        // UTF-8 ("абв") followed by malformed bytes (208, 0)
+        let buffer = Buffer::new(&[208, 176, 208, 177, 208, 177, 208, 0]);
+        assert_eq!(lookahead_ident(&buffer, 0), Some(6)); // captures "абв"
+    }
+
     assert_lex!(test_tIDENTIFIER_plain, "foo", tIDENTIFIER(b"foo"), 0..3);
+    assert_lex!(
+        test_tIDENTIFIER_multibyte,
+        "абв+",
+        tIDENTIFIER("абв".as_bytes()),
+        0..("абв".as_bytes().len())
+    );
 
     assert_lex!(test_tFID_predicate, "foo?", tFID(b"foo?"), 0..4);
     assert_lex!(test_tFID_predicate_eq, "foo?=", tIDENTIFIER(b"foo"), 0..3);
