@@ -37,7 +37,12 @@ impl<'a> Buffer<'a> {
     }
 
     pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
-        self.input.get(start..end).unwrap_or(b"")
+        self.input.get(start..end).unwrap_or_else(|| {
+            panic!(
+                "wrong start/end given: {}..{} (lenth = {})",
+                start, end, self.pos
+            )
+        })
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
