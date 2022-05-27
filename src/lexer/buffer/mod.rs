@@ -1,3 +1,6 @@
+mod lexer_proxy;
+pub(crate) mod utf8;
+
 pub struct Buffer<'a> {
     input: &'a [u8],
     pos: usize,
@@ -21,14 +24,6 @@ impl<'a> Buffer<'a> {
         Self { input, pos: 0 }
     }
 
-    pub(crate) fn current_byte(&self) -> Option<u8> {
-        self.input.get(self.pos).map(|byte| *byte)
-    }
-
-    pub(crate) fn is_eof(&self) -> bool {
-        self.current_byte().is_none()
-    }
-
     pub(crate) fn skip_byte(&mut self) {
         self.pos += 1;
     }
@@ -43,6 +38,18 @@ impl<'a> Buffer<'a> {
 
     pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
         self.input.get(start..end).unwrap_or(b"")
+    }
+
+    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
+        self.input.get(idx).map(|byte| *byte)
+    }
+
+    pub(crate) fn current_byte(&self) -> Option<u8> {
+        self.byte_at(self.pos)
+    }
+
+    pub(crate) fn is_eof(&self) -> bool {
+        self.current_byte().is_none()
     }
 
     pub(crate) fn lookahead(&self, pattern: &[u8]) -> bool {
@@ -61,26 +68,22 @@ impl<'a> Buffer<'a> {
         }
         true
     }
-
-    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        self.input.get(idx).map(|byte| *byte)
-    }
 }
 
-use crate::lexer::Lexer;
-// buffer shortcut delegators
-impl<'a> Lexer<'a> {
-    pub(crate) fn skip_byte(&mut self) {
-        self.buffer.skip_byte()
-    }
-    pub(crate) fn current_byte(&self) -> Option<u8> {
-        self.buffer.current_byte()
-    }
-    pub(crate) fn pos(&self) -> usize {
-        self.buffer.pos()
-    }
-    #[allow(dead_code)]
-    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
-        self.buffer.slice(start, end)
-    }
+#[test]
+fn test_lookahead() {
+    let buffer = Buffer::new(b"foo");
+    assert!(buffer.lookahead(b"f"));
+    assert!(buffer.lookahead(b"fo"));
+    assert!(buffer.lookahead(b"foo"));
+    assert!(!buffer.lookahead(b"fooo"));
+}
+
+#[test]
+fn test_const_lookahead() {
+    let buffer = Buffer::new(b"foo");
+    assert!(buffer.const_lookahead(b"f"));
+    assert!(buffer.const_lookahead(b"fo"));
+    assert!(buffer.const_lookahead(b"foo"));
+    assert!(!buffer.const_lookahead(b"fooo"));
 }
