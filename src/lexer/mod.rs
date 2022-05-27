@@ -236,6 +236,7 @@ macro_rules! assert_lex {
             let token = lexer.current_token();
             assert_eq!(token.value(), $tok);
             assert_eq!(token.loc(), Loc($loc.start, $loc.end));
+            assert_eq!(token.loc().end(), lexer.buffer.pos());
             $assert(&lexer);
         }
     };
