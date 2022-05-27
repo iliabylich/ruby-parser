@@ -241,7 +241,7 @@ macro_rules! assert_lex {
         }
     };
     // Shortcut with no lexer setup/extra assert
-    ($test_name:ident, $input:literal, $tok:expr, $loc:expr) => {
+    ($test_name:ident, $input:expr, $tok:expr, $loc:expr) => {
         assert_lex!(
             $test_name,
             $input,

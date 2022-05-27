@@ -1,4 +1,5 @@
 use crate::lexer::{
+    assert_lex,
     buffer::Buffer,
     ident::{is_identchar, lookahead_ident},
 };
@@ -88,16 +89,11 @@ pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>, start: usize) -> Lookahe
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use crate::lexer::assert_lex;
+assert_lex!(test_tIVAR_valid, b"@ivar", tIVAR(b"@ivar"), 0..5);
+assert_lex!(test_tCVAR_valid, b"@@cvar", tCVAR(b"@@cvar"), 0..6);
 
-    assert_lex!(test_tIVAR_valid, b"@ivar", tIVAR(b"@ivar"), 0..5);
-    assert_lex!(test_tCVAR_valid, b"@@cvar", tCVAR(b"@@cvar"), 0..6);
+assert_lex!(test_tIVAR_no_id, b"@", tIVAR(b"@"), 0..1);
+assert_lex!(test_tCVAR_no_id, b"@@", tCVAR(b"@@"), 0..2);
 
-    assert_lex!(test_tIVAR_no_id, b"@", tIVAR(b"@"), 0..1);
-    assert_lex!(test_tCVAR_no_id, b"@@", tCVAR(b"@@"), 0..2);
-
-    assert_lex!(test_tIVAR_invalid_id, b"@(", tIVAR(b"@"), 0..1);
-    assert_lex!(test_tCVAR_invalid_id, b"@@(", tCVAR(b"@@"), 0..2);
-}
+assert_lex!(test_tIVAR_invalid_id, b"@(", tIVAR(b"@"), 0..1);
+assert_lex!(test_tCVAR_invalid_id, b"@@(", tCVAR(b"@@"), 0..2);
