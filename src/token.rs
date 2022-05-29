@@ -126,7 +126,7 @@ pub enum TokenValue<'a> {
     tDSTAR,                  // "**arg"
     tAMPER,                  // "&"
     tLAMBDA,                 // "->"
-    tSYMBEG,                 // "symbol literal start"
+    tSYMBEG(&'a [u8]),       // "symbol literal start"
     tDSYMBEG,                // "dynamic symbol literal start"
     tSTRING_BEG(&'a [u8]),   // "string begin"
     tXSTRING_BEG(&'a [u8]),  // "backtick literal"

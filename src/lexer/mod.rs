@@ -194,7 +194,11 @@ impl<'a> Lexer<'a> {
             b'\\' => OnByte::<b'\\'>::on_byte(self),
             b'%' => {
                 self.buffer.set_pos(start);
-                parse_percent(&mut self.buffer)
+                let (literal, token) = parse_percent(&mut self.buffer, self.curly_nest);
+                if let Some(literal) = literal {
+                    self.string_literals.push(literal);
+                }
+                token
             }
             b'$' => {
                 self.buffer.set_pos(start);

@@ -510,7 +510,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
             Some(b'\'') => {
                 // :'...' symbol
                 self.skip_byte();
-                let token = Token(TokenValue::tSYMBEG, Loc(start, self.pos()));
+                let token = Token(TokenValue::tSYMBEG(b":'"), Loc(start, self.pos()));
                 self.string_literals.push(
                     StringLiteral::symbol()
                         .with_interpolation_support(false)
@@ -552,7 +552,7 @@ assert_lex!(
 assert_lex!(
     test_tSYMBEG,
     b":'",
-    tSYMBEG,
+    tSYMBEG(b":'"),
     0..2,
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 42;
