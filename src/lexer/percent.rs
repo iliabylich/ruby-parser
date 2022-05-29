@@ -72,26 +72,26 @@ pub(crate) fn parse_percent<'a>(
 
         b'W' => {
             token = Token(TokenValue::tWORDS_BEG(slice), loc);
-            literal = StringLiteral::string()
+            literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'w' => {
             token = Token(TokenValue::tWORDS_BEG(slice), loc);
-            literal = StringLiteral::string()
+            literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
 
         b'I' => {
             token = Token(TokenValue::tSYMBOLS_BEG(slice), loc);
-            literal = StringLiteral::string()
+            literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'i' => {
             token = Token(TokenValue::tSYMBOLS_BEG(slice), loc);
-            literal = StringLiteral::string()
+            literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
@@ -229,7 +229,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_w_upper,
         input = b"%W{",
-        type = string,
+        type = array,
         token = TokenValue::tWORDS_BEG,
         ends_with = b"}",
         with_interpolation_support = true
@@ -239,7 +239,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_w_lower,
         input = b"%w{",
-        type = string,
+        type = array,
         token = TokenValue::tWORDS_BEG,
         ends_with = b"}",
         with_interpolation_support = false
@@ -249,7 +249,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_i_upper,
         input = b"%I{",
-        type = string,
+        type = array,
         token = TokenValue::tSYMBOLS_BEG,
         ends_with = b"}",
         with_interpolation_support = true
@@ -259,7 +259,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_i_lower,
         input = b"%i{",
-        type = string,
+        type = array,
         token = TokenValue::tSYMBOLS_BEG,
         ends_with = b"}",
         with_interpolation_support = false

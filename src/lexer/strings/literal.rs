@@ -25,6 +25,7 @@ pub(crate) enum StringLiteralMetadata {
     String,
     Symbol,
     Regexp,
+    Array,
     Heredoc { heredoc_id_ended_at: usize },
 }
 
@@ -102,6 +103,12 @@ impl<'a> StringLiteral<'a> {
     pub(crate) fn regexp() -> Self {
         Self {
             metadata: StringLiteralMetadata::Regexp,
+            ..Self::default()
+        }
+    }
+    pub(crate) fn array() -> Self {
+        Self {
+            metadata: StringLiteralMetadata::Array,
             ..Self::default()
         }
     }
