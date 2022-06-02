@@ -35,10 +35,6 @@ impl<'a> Buffer<'a> {
             Utf8Char::EOF
         }
     }
-
-    pub(crate) fn current_utf8_char(&self) -> Utf8Char {
-        self.utf8_char_at(self.pos)
-    }
 }
 
 #[test]
