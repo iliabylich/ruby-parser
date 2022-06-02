@@ -1,9 +1,9 @@
 use crate::token::TokenValue;
 
 #[derive(Clone, Copy)]
-pub(crate) struct ReservedWord<'a> {
+pub(crate) struct ReservedWord {
     name: &'static [u8],
-    pub(crate) token_value: TokenValue<'a>,
+    pub(crate) token_value: TokenValue,
 }
 
 pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[

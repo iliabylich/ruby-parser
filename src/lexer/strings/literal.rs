@@ -15,7 +15,7 @@ pub(crate) struct StringLiteral<'a> {
     pub(crate) currently_in_interpolation: bool,
     pub(crate) ends_with: &'a [u8],
     pub(crate) interpolation_started_with_curly_level: usize,
-    pub(crate) next_action: NextAction<'a>,
+    pub(crate) next_action: NextAction,
 
     pub(crate) metadata: StringLiteralMetadata,
 }
@@ -36,23 +36,23 @@ impl Default for StringLiteralMetadata {
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) enum StringExtendAction<'a> {
-    EmitToken { token: Token<'a> },
-    FoundStringEnd { token: Token<'a> },
-    FoundInterpolation { token: Token<'a> },
+pub(crate) enum StringExtendAction {
+    EmitToken { token: Token },
+    FoundStringEnd { token: Token },
+    FoundInterpolation { token: Token },
     EmitEOF,
     ReadInterpolatedContent,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) enum NextAction<'a> {
+pub(crate) enum NextAction {
     NoAction,
-    OneAction(StringExtendAction<'a>),
-    TwoActions(StringExtendAction<'a>, StringExtendAction<'a>),
+    OneAction(StringExtendAction),
+    TwoActions(StringExtendAction, StringExtendAction),
 }
 
-impl<'a> NextAction<'a> {
-    fn take(&mut self) -> Option<StringExtendAction<'a>> {
+impl<'a> NextAction {
+    fn take(&mut self) -> Option<StringExtendAction> {
         match *self {
             Self::NoAction => None,
             Self::OneAction(action) => {
@@ -66,7 +66,7 @@ impl<'a> NextAction<'a> {
         }
     }
 
-    fn add(&mut self, action: StringExtendAction<'a>) {
+    fn add(&mut self, action: StringExtendAction) {
         match self {
             Self::NoAction => {
                 *self = Self::OneAction(action);
@@ -81,7 +81,7 @@ impl<'a> NextAction<'a> {
     }
 }
 
-impl Default for NextAction<'_> {
+impl Default for NextAction {
     fn default() -> Self {
         Self::NoAction
     }
@@ -138,7 +138,7 @@ impl<'a> StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         if let Some(cached_action) = self.next_action.take() {
             return ControlFlow::Break(cached_action);
         }
@@ -221,7 +221,7 @@ impl<'a> StringLiteral<'a> {
     }
 
     #[must_use]
-    fn handle_eof(&self, buffer: &Buffer<'a>, start: usize) -> ControlFlow<StringExtendAction<'a>> {
+    fn handle_eof(&self, buffer: &Buffer<'a>, start: usize) -> ControlFlow<StringExtendAction> {
         if let Some(token) = string_content_to_emit(buffer, start, buffer.pos()) {
             ControlFlow::Break(StringExtendAction::EmitToken { token })
         } else {
@@ -234,7 +234,7 @@ impl<'a> StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         start: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         // #{ interpolation
         let action = StringExtendAction::FoundInterpolation {
             token: Token(
@@ -258,7 +258,7 @@ impl<'a> StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         start: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         if let LookaheadAtMarkResult::Ok(token) = lookahead_atmark(buffer, buffer.pos() + 1) {
             // #@foo interpolation
             let interp_action = StringExtendAction::EmitToken {
@@ -291,7 +291,7 @@ impl<'a> StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         start: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         if let LookaheadGvarResult::Ok(token) = lookahead_gvar(buffer, buffer.pos() + 1) {
             // #$foo interpolation
             let interp_action = StringExtendAction::EmitToken {
@@ -324,10 +324,10 @@ impl<'a> StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         start: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         let string_end_action = StringExtendAction::FoundStringEnd {
             token: Token(
-                TokenValue::tSTRING_END(self.ends_with),
+                TokenValue::tSTRING_END,
                 Loc(buffer.pos(), buffer.pos() + self.ends_with.len()),
             ),
         };
@@ -347,14 +347,11 @@ impl<'a> StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         start: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         // just emit what we've got so far
         // parser will merge two consectuive string literals
         let action = StringExtendAction::EmitToken {
-            token: Token(
-                TokenValue::tSTRING_CONTENT(buffer.slice(start, buffer.pos())),
-                Loc(start, buffer.pos()),
-            ),
+            token: Token(TokenValue::tSTRING_CONTENT, Loc(start, buffer.pos())),
         };
         // and skip escaped NL
         buffer.set_pos(buffer.pos() + 2);
@@ -364,13 +361,10 @@ impl<'a> StringLiteral<'a> {
 
 // Utility helper: checks whether there's recorded string content,
 // returns a tSTRING_CONTENT is there's any
-fn string_content_to_emit<'a>(buffer: &Buffer<'a>, start: usize, end: usize) -> Option<Token<'a>> {
+fn string_content_to_emit<'a>(buffer: &Buffer<'a>, start: usize, end: usize) -> Option<Token> {
     if start == end {
         None
     } else {
-        Some(Token(
-            TokenValue::tSTRING_CONTENT(buffer.slice(start, end)),
-            Loc(start, end),
-        ))
+        Some(Token(TokenValue::tSTRING_CONTENT, Loc(start, end)))
     }
 }

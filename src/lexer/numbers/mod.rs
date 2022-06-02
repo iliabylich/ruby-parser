@@ -173,7 +173,7 @@ impl ExtendNumber for Float {
     }
 }
 
-pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
+pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token {
     let mut number = Number::new(buffer.pos());
     loop {
         let action = match number.kind {
@@ -195,10 +195,10 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
 
     let token = match number.kind {
         NumberKind::Uninitialized(_) => unreachable!("ExtendNumber made no transition"),
-        NumberKind::Integer(_) => Token(TokenValue::tINTEGER(slice), Loc(begin, end)),
-        NumberKind::Rational(_) => Token(TokenValue::tRATIONAL(slice), Loc(begin, end)),
-        NumberKind::Imaginary(_) => Token(TokenValue::tIMAGINARY(slice), Loc(begin, end)),
-        NumberKind::Float(_) => Token(TokenValue::tFLOAT(slice), Loc(begin, end)),
+        NumberKind::Integer(_) => Token(TokenValue::tINTEGER, Loc(begin, end)),
+        NumberKind::Rational(_) => Token(TokenValue::tRATIONAL, Loc(begin, end)),
+        NumberKind::Imaginary(_) => Token(TokenValue::tIMAGINARY, Loc(begin, end)),
+        NumberKind::Float(_) => Token(TokenValue::tFLOAT, Loc(begin, end)),
     };
     println!("{:?}", token);
     token

@@ -6,7 +6,7 @@ use crate::lexer::strings::literal::StringLiteral;
 pub(crate) fn parse_percent<'a>(
     buffer: &mut Buffer<'a>,
     curly_level: usize,
-) -> (Option<StringLiteral<'a>>, Token<'a>) {
+) -> (Option<StringLiteral<'a>>, Token) {
     let start = buffer.pos();
     buffer.skip_byte();
 
@@ -58,60 +58,60 @@ pub(crate) fn parse_percent<'a>(
 
     match literal_type {
         b'Q' => {
-            token = Token(TokenValue::tSTRING_BEG(slice), loc);
+            token = Token(TokenValue::tSTRING_BEG, loc);
             literal = StringLiteral::string()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'q' => {
-            token = Token(TokenValue::tSTRING_BEG(slice), loc);
+            token = Token(TokenValue::tSTRING_BEG, loc);
             literal = StringLiteral::string()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
 
         b'W' => {
-            token = Token(TokenValue::tWORDS_BEG(slice), loc);
+            token = Token(TokenValue::tWORDS_BEG, loc);
             literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'w' => {
-            token = Token(TokenValue::tWORDS_BEG(slice), loc);
+            token = Token(TokenValue::tWORDS_BEG, loc);
             literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
 
         b'I' => {
-            token = Token(TokenValue::tSYMBOLS_BEG(slice), loc);
+            token = Token(TokenValue::tSYMBOLS_BEG, loc);
             literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'i' => {
-            token = Token(TokenValue::tSYMBOLS_BEG(slice), loc);
+            token = Token(TokenValue::tSYMBOLS_BEG, loc);
             literal = StringLiteral::array()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
 
         b'x' => {
-            token = Token(TokenValue::tXSTRING_BEG(slice), loc);
+            token = Token(TokenValue::tXSTRING_BEG, loc);
             literal = StringLiteral::string()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
 
         b'r' => {
-            token = Token(TokenValue::tREGEXP_BEG(slice), loc);
+            token = Token(TokenValue::tREGEXP_BEG, loc);
             literal = StringLiteral::regexp()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
 
         b's' => {
-            token = Token(TokenValue::tSYMBEG(slice), loc);
+            token = Token(TokenValue::tSYMBEG, loc);
             literal = StringLiteral::string()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
@@ -143,7 +143,8 @@ mod tests {
                 let len = $input.len();
 
                 let mut lexer = Lexer::new($input);
-                assert_eq!(lexer.next_token(), Token($token($input), Loc(0, len)));
+                let token = lexer.next_token();
+                assert_eq!(token, Token($token, Loc(0, len)));
 
                 assert_eq!(
                     lexer.string_literals.size(),

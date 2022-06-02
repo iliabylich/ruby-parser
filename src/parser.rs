@@ -46,9 +46,11 @@ impl<'a> Parser<'a> {
             TokenValue::tEOF => panic!("EOF"),
             TokenValue::Error(c) => panic!("Tokenizer error: {}", c),
 
-            TokenValue::tINTEGER(n) => {
+            TokenValue::tINTEGER => {
+                let loc = self.lexer.current_token().loc();
+                let node = Node::Number(self.lexer.buffer.slice(loc.begin(), loc.end()));
                 self.lexer.skip_token();
-                Node::Number(n)
+                node
             }
 
             other => panic!("parse_primary: expected Number or Lparen, got {:?}", other),

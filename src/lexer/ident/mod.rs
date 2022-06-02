@@ -12,7 +12,7 @@ pub(crate) fn is_identchar(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
 }
 
-pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
+pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token {
     let start = buffer.pos();
 
     let length = match lookahead_ident(buffer, start) {
@@ -33,10 +33,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
             } else {
                 // append `!` or `?`
                 buffer.skip_byte();
-                return Token(
-                    TokenValue::tFID(buffer.slice(start, buffer.pos())),
-                    Loc(start, buffer.pos()),
-                );
+                return Token(TokenValue::tFID, Loc(start, buffer.pos()));
             }
         }
         Some(b'=') => {
@@ -53,10 +50,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
                 _ => {
                     // `foo=` setter, consume `'='
                     buffer.skip_byte();
-                    return Token(
-                        TokenValue::tIDENTIFIER(buffer.slice(start, buffer.pos())),
-                        Loc(start, buffer.pos()),
-                    );
+                    return Token(TokenValue::tIDENTIFIER, Loc(start, buffer.pos()));
                 }
             }
         }
@@ -70,10 +64,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     // are handled on the parser level
     if buffer.current_byte() == Some(b':') {
         buffer.skip_byte();
-        return Token(
-            TokenValue::tLABEL(buffer.slice(start, buffer.pos())),
-            Loc(start, buffer.pos()),
-        );
+        return Token(TokenValue::tLABEL, Loc(start, buffer.pos()));
     }
 
     let end = buffer.pos();
@@ -85,7 +76,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
     }
 
     // otherwise it's just a plain identifier
-    Token(TokenValue::tIDENTIFIER(slice), Loc(start, end))
+    Token(TokenValue::tIDENTIFIER, Loc(start, end))
 }
 
 // Returns None / Some(ident_length)
@@ -156,39 +147,43 @@ fn test_lookahead_ident() {
     assert_eq!(lookahead_ident(&buffer, 0), Some(6)); // captures "абв"
 }
 
-assert_lex!(test_tIDENTIFIER_plain, b"foo", tIDENTIFIER(b"foo"), 0..3);
+assert_lex!(test_tIDENTIFIER_plain, b"foo", tIDENTIFIER, b"foo", 0..3);
 
 assert_lex!(
     test_tIDENTIFIER_multibyte,
     b"\xD0\xB0\xD0\xB1\xD0\xB2+",
-    tIDENTIFIER(b"\xD0\xB0\xD0\xB1\xD0\xB2"),
+    tIDENTIFIER,
+    b"\xD0\xB0\xD0\xB1\xD0\xB2",
     0..6
 );
 
-assert_lex!(test_tFID_predicate, b"foo?", tFID(b"foo?"), 0..4);
-assert_lex!(test_tFID_predicate_eq, b"foo?=", tIDENTIFIER(b"foo"), 0..3);
-assert_lex!(test_tFID_bang, b"foo!", tFID(b"foo!"), 0..4);
-assert_lex!(test_tFID_bang_eq, b"foo!=", tIDENTIFIER(b"foo"), 0..3);
-assert_lex!(test_tIDENTIFIER_setter, b"foo=", tIDENTIFIER(b"foo="), 0..4);
+assert_lex!(test_tFID_predicate, b"foo?", tFID, b"foo?", 0..4);
+assert_lex!(test_tFID_predicate_eq, b"foo?=", tIDENTIFIER, b"foo", 0..3);
+assert_lex!(test_tFID_bang, b"foo!", tFID, b"foo!", 0..4);
+assert_lex!(test_tFID_bang_eq, b"foo!=", tIDENTIFIER, b"foo", 0..3);
+assert_lex!(test_tIDENTIFIER_setter, b"foo=", tIDENTIFIER, b"foo=", 0..4);
 assert_lex!(
     test_tIDENTIFIER_setter_tilde,
     b"foo=~",
-    tIDENTIFIER(b"foo"),
+    tIDENTIFIER,
+    b"foo",
     0..3
 );
 assert_lex!(
     test_tIDENTIFIER_setter_eq,
     b"foo==",
-    tIDENTIFIER(b"foo"),
+    tIDENTIFIER,
+    b"foo",
     0..3
 );
 assert_lex!(
     test_tIDENTIFIER_setter_gt,
     b"foo=>",
-    tIDENTIFIER(b"foo"),
+    tIDENTIFIER,
+    b"foo",
     0..3
 );
 
-assert_lex!(test_tLABEL, b"foo:", tLABEL(b"foo:"), 0..4);
+assert_lex!(test_tLABEL, b"foo:", tLABEL, b"foo:", 0..4);
 
-assert_lex!(test_reserved_word, b"if", kIF, 0..2);
+assert_lex!(test_reserved_word, b"if", kIF, b"if", 0..2);

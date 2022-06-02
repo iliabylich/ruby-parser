@@ -24,12 +24,12 @@ use strings::{
 };
 
 pub struct Lexer<'a> {
-    buffer: Buffer<'a>,
+    pub(crate) buffer: Buffer<'a>,
     debug: bool,
 
     string_literals: StringLiteralStack<'a>,
 
-    current_token: Option<Token<'a>>,
+    current_token: Option<Token>,
 
     curly_nest: usize,
     paren_nest: usize,
@@ -57,7 +57,7 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    pub fn current_token(&mut self) -> Token<'a> {
+    pub fn current_token(&mut self) -> Token {
         if self.current_token.is_none() {
             self.current_token = Some(self.next_token());
         }
@@ -66,7 +66,7 @@ impl<'a> Lexer<'a> {
         unsafe { self.current_token.unwrap_unchecked() }
     }
 
-    fn next_token(&mut self) -> Token<'a> {
+    fn next_token(&mut self) -> Token {
         let token = if self.string_literals.last().is_some() {
             self.tokenize_while_in_string()
         } else {
@@ -79,7 +79,7 @@ impl<'a> Lexer<'a> {
     }
 
     #[cfg(test)]
-    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
+    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
@@ -95,7 +95,7 @@ impl<'a> Lexer<'a> {
         self.current_token = None;
     }
 
-    fn tokenize_while_in_string(&mut self) -> Token<'a> {
+    fn tokenize_while_in_string(&mut self) -> Token {
         // SAFETY: this method is called only if `string_literals` has at least 1 item
         let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
 
@@ -130,7 +130,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn tokenize_normally(&mut self) -> Token<'a> {
+    pub fn tokenize_normally(&mut self) -> Token {
         if let Some(eof_t) = self.handle_eof() {
             return eof_t;
         }
@@ -223,11 +223,19 @@ impl<'a> Lexer<'a> {
 }
 
 pub(crate) trait OnByte<'a, const BYTE: u8> {
-    fn on_byte(&mut self) -> Token<'a>;
+    fn on_byte(&mut self) -> Token;
 }
 
 macro_rules! assert_lex {
-    ($test_name:ident, $input:expr, $tok:expr, $loc:expr, setup = $pre:expr, assert = $assert:expr) => {
+    (
+        $test_name:ident,
+        $input:expr,
+        $tok:expr,
+        $value:expr,
+        $loc:expr,
+        setup = $pre:expr,
+        assert = $assert:expr
+    ) => {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
@@ -241,15 +249,17 @@ macro_rules! assert_lex {
             assert_eq!(token.value(), $tok);
             assert_eq!(token.loc(), Loc($loc.start, $loc.end));
             assert_eq!(token.loc().end(), lexer.buffer.pos());
+            assert_eq!(&$input[$loc.start..$loc.end], $value);
             $assert(&lexer);
         }
     };
     // Shortcut with no lexer setup/extra assert
-    ($test_name:ident, $input:expr, $tok:expr, $loc:expr) => {
+    ($test_name:ident, $input:expr, $tok:expr, $value:expr, $loc:expr) => {
         assert_lex!(
             $test_name,
             $input,
             $tok,
+            $value,
             $loc,
             setup = |_lexer: &mut Lexer| {},
             assert = |_lexer: &Lexer| {}

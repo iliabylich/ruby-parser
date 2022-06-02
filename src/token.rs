@@ -1,8 +1,8 @@
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
+pub struct Token(pub TokenValue, pub Loc);
 
-impl<'a> Token<'a> {
-    pub fn value(&self) -> TokenValue<'a> {
+impl Token {
+    pub fn value(&self) -> TokenValue {
         self.0
     }
 
@@ -13,7 +13,7 @@ impl<'a> Token<'a> {
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TokenValue<'a> {
+pub enum TokenValue {
     // Keyword tokens.
     // They are always represented by the same word in code,
     // so they have no attached value, it can be easily inferred
@@ -68,79 +68,79 @@ pub enum TokenValue<'a> {
     k__ENCODING__, // `__ENCODING__'
 
     // Variables, contain <var name>
-    tIDENTIFIER(&'a [u8]), // "local variable or method"
-    tFID(&'a [u8]),        // "method"
-    tGVAR(&'a [u8]),       // "global variable"
-    tIVAR(&'a [u8]),       // "instance variable"
-    tCONSTANT(&'a [u8]),   // "constant"
-    tCVAR(&'a [u8]),       // "class variable"
-    tLABEL(&'a [u8]),      // "label"
+    tIDENTIFIER, // "local variable or method"
+    tFID,        // "method"
+    tGVAR,       // "global variable"
+    tIVAR,       // "instance variable"
+    tCONSTANT,   // "constant"
+    tCVAR,       // "class variable"
+    tLABEL,      // "label"
 
-    tINTEGER(&'a [u8]),        // "integer literal"
-    tFLOAT(&'a [u8]),          // "float literal"
-    tRATIONAL(&'a [u8]),       // "rational literal"
-    tIMAGINARY(&'a [u8]),      // "imaginary literal"
-    tCHAR(&'a [u8]),           // "char literal"
-    tNTH_REF(&'a [u8]),        // "numbered reference"
-    tBACK_REF(&'a [u8]),       // "back reference"
-    tSTRING_CONTENT(&'a [u8]), // "literal content"
-    tREGEXP_END(&'a [u8]),
+    tINTEGER,        // "integer literal"
+    tFLOAT,          // "float literal"
+    tRATIONAL,       // "rational literal"
+    tIMAGINARY,      // "imaginary literal"
+    tCHAR,           // "char literal"
+    tNTH_REF,        // "numbered reference"
+    tBACK_REF,       // "back reference"
+    tSTRING_CONTENT, // "literal content"
+    tREGEXP_END,
 
     // Punctuation/operators
     tDOT, // "."
     /* escaped chars, should be ignored otherwise */
-    tBACKSLASH,              // "backslash"
-    tSP,                     // "escaped space"
-    tSLASH_T,                // "escaped horizontal tab"
-    tSLASH_F,                // "escaped form feed"
-    tSLASH_R,                // "escaped carriage return"
-    tVTAB,                   // "escaped vertical tab"
-    tUPLUS,                  // "unary+"
-    tUMINUS,                 // "unary-"
-    tUMINUS_NUM,             // "unary-" before number literal
-    tCMP,                    // "<=>"
-    tNEQ,                    // "!="
-    tGEQ,                    // ">="
-    tLEQ,                    // "<="
-    tANDOP,                  // "&&"
-    tOROP,                   // "||"
-    tMATCH,                  // "=~"
-    tNMATCH,                 // "!~"
-    tDOT2,                   // ".."
-    tDOT3,                   // "..."
-    tBDOT2,                  // "(.."
-    tBDOT3,                  // "(..."
-    tAREF,                   // "[]"
-    tASET,                   // "[]="
-    tLSHFT,                  // "<<"
-    tRSHFT,                  // ">>"
-    tANDDOT,                 // "&."
-    tCOLON,                  // ":"
-    tCOLON2,                 // "::"
-    tOP_ASGN(&'a [u8]),      // "operator-assignment" /* +=, -=  etc. */
-    tASSOC,                  // "=>"
-    tLPAREN,                 // "("
-    tRPAREN,                 // ")"
-    tLBRACK,                 // "["
-    tRBRACK,                 // "]"
-    tDSTAR,                  // "**arg"
-    tAMPER,                  // "&"
-    tLAMBDA,                 // "->"
-    tSYMBEG(&'a [u8]),       // "symbol literal start"
-    tDSYMBEG,                // "dynamic symbol literal start"
-    tSTRING_BEG(&'a [u8]),   // "string begin"
-    tXSTRING_BEG(&'a [u8]),  // "backtick literal"
-    tREGEXP_BEG(&'a [u8]),   // "regexp literal"
-    tWORDS_BEG(&'a [u8]),    // "word list"
-    tQWORDS_BEG(&'a [u8]),   // "verbatim word list"
-    tSYMBOLS_BEG(&'a [u8]),  // "symbol list"
-    tQSYMBOLS_BEG(&'a [u8]), // "verbatim symbol list"
-    tSTRING_END(&'a [u8]),   // "string end"
-    tSTRING_DBEG,            // "#{"
-    tSTRING_DEND,            // "tRCURLY"
-    tSTRING_DVAR,            // "#" (in case of #@var / #@@var / #$var)
-    tLAMBEG(&'a [u8]),       //
-    tLABEL_END(&'a [u8]),    //
+    tBACKSLASH,    // "backslash"
+    tSP,           // "escaped space"
+    tSLASH_T,      // "escaped horizontal tab"
+    tSLASH_F,      // "escaped form feed"
+    tSLASH_R,      // "escaped carriage return"
+    tVTAB,         // "escaped vertical tab"
+    tUPLUS,        // "unary+"
+    tUMINUS,       // "unary-"
+    tUMINUS_NUM,   // "unary-" before number literal
+    tCMP,          // "<=>"
+    tNEQ,          // "!="
+    tGEQ,          // ">="
+    tLEQ,          // "<="
+    tANDOP,        // "&&"
+    tOROP,         // "||"
+    tMATCH,        // "=~"
+    tNMATCH,       // "!~"
+    tDOT2,         // ".."
+    tDOT3,         // "..."
+    tBDOT2,        // "(.."
+    tBDOT3,        // "(..."
+    tAREF,         // "[]"
+    tASET,         // "[]="
+    tLSHFT,        // "<<"
+    tRSHFT,        // ">>"
+    tANDDOT,       // "&."
+    tCOLON,        // ":"
+    tCOLON2,       // "::"
+    tOP_ASGN,      // "operator-assignment" /* +=, -=  etc. */
+    tASSOC,        // "=>"
+    tLPAREN,       // "("
+    tRPAREN,       // ")"
+    tLBRACK,       // "["
+    tRBRACK,       // "]"
+    tDSTAR,        // "**arg"
+    tAMPER,        // "&"
+    tLAMBDA,       // "->"
+    tSYMBEG,       // "symbol literal start"
+    tDSYMBEG,      // "dynamic symbol literal start"
+    tSTRING_BEG,   // "string begin"
+    tXSTRING_BEG,  // "backtick literal"
+    tREGEXP_BEG,   // "regexp literal"
+    tWORDS_BEG,    // "word list"
+    tQWORDS_BEG,   // "verbatim word list"
+    tSYMBOLS_BEG,  // "symbol list"
+    tQSYMBOLS_BEG, // "verbatim symbol list"
+    tSTRING_END,   // "string end"
+    tSTRING_DBEG,  // "#{"
+    tSTRING_DEND,  // "tRCURLY"
+    tSTRING_DVAR,  // "#" (in case of #@var / #@@var / #$var)
+    tLAMBEG,       //
+    tLABEL_END,    //
 
     tCOMMA,   // ","
     tLCURLY,  // "{"
@@ -180,7 +180,7 @@ pub enum TokenValue<'a> {
     tTEST_TOKEN,
 }
 
-impl Default for TokenValue<'_> {
+impl Default for TokenValue {
     fn default() -> Self {
         Self::tUNINITIALIZED
     }
@@ -197,4 +197,18 @@ impl Loc {
     pub fn end(&self) -> usize {
         self.1
     }
+}
+
+pub(crate) fn token0<'a, F>(f: F, begin: usize, end: usize) -> Token
+where
+    F: FnOnce() -> TokenValue,
+{
+    Token(f(), Loc(begin, end))
+}
+
+pub(crate) fn token1<'a, F>(f: F, slice: &'a [u8], begin: usize, end: usize) -> Token
+where
+    F: FnOnce(&'a [u8]) -> TokenValue,
+{
+    Token(f(slice), Loc(begin, end))
 }
