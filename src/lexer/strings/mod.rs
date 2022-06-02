@@ -1,3 +1,5 @@
+use std::ops::ControlFlow;
+
 pub(crate) mod action;
 pub(crate) mod handlers;
 pub(crate) mod literal;
@@ -14,8 +16,8 @@ pub(crate) fn parse_string<'a>(
     current_curly_nest: usize,
 ) -> StringExtendAction {
     match literal.extend(buffer, current_curly_nest) {
-        std::ops::ControlFlow::Continue(_) => unreachable!("literal.extend always return Break(_)"),
-        std::ops::ControlFlow::Break(action) => action,
+        ControlFlow::Continue(_) => unreachable!("literal.extend always return Break(_)"),
+        ControlFlow::Break(action) => action,
     }
 }
 

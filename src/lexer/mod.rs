@@ -108,9 +108,7 @@ impl<'a> Lexer<'a> {
                 token
             }
             StringExtendAction::FoundInterpolation { token } => {
-                // mark current literal as "in interpolation mode"
-                literal.start_interpolation();
-                // and dispatch dynamic string begin token
+                // dispatch dynamic string begin token
                 token
             }
             StringExtendAction::ReadInterpolatedContent => {

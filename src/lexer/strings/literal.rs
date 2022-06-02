@@ -84,20 +84,6 @@ impl<'a> StringLiteral<'a> {
         Self::WordArray(WordArray::default())
     }
 
-    pub(crate) fn stop_interpolation(&mut self) {
-        let currently_in_interpolation =
-            for_each_branch_pick_attribute!(self, currently_in_interpolation);
-
-        *currently_in_interpolation = false;
-    }
-
-    pub(crate) fn start_interpolation(&mut self) {
-        let currently_in_interpolation =
-            for_each_branch_pick_attribute!(self, currently_in_interpolation);
-
-        *currently_in_interpolation = true;
-    }
-
     pub(crate) fn with_interpolation_support(mut self, value: bool) -> Self {
         let supports_interpolation =
             for_each_branch_pick_attribute!(&mut self, supports_interpolation);

@@ -54,6 +54,8 @@ where
     };
     let string_content = string_content_to_emit(start, buffer.pos());
     buffer.set_pos(buffer.pos() + 2);
+    // start interpolation
+    *literal.currently_in_interpolation_mut() = true;
 
     if let Some(token) = string_content {
         literal.next_action_mut().add(action);
