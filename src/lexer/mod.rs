@@ -18,10 +18,7 @@ use numbers::parse_number;
 use percent::parse_percent;
 use strings::parse_string;
 
-use strings::{
-    literal::{StringExtendAction, StringLiteral},
-    stack::StringLiteralStack,
-};
+use strings::{action::StringExtendAction, literal::StringLiteral, stack::StringLiteralStack};
 
 pub struct Lexer<'a> {
     pub(crate) buffer: Buffer<'a>,
@@ -112,7 +109,7 @@ impl<'a> Lexer<'a> {
             }
             StringExtendAction::FoundInterpolation { token } => {
                 // mark current literal as "in interpolation mode"
-                literal.currently_in_interpolation = true;
+                literal.start_interpolation();
                 // and dispatch dynamic string begin token
                 token
             }

@@ -70,26 +70,26 @@ pub(crate) fn parse_percent<'a>(
 
         b'W' => {
             token = token!(tWORDS_BEG, start, end);
-            literal = StringLiteral::array()
+            literal = StringLiteral::word_array()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'w' => {
             token = token!(tWORDS_BEG, start, end);
-            literal = StringLiteral::array()
+            literal = StringLiteral::word_array()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
 
         b'I' => {
             token = token!(tSYMBOLS_BEG, start, end);
-            literal = StringLiteral::array()
+            literal = StringLiteral::sym_array()
                 .with_ending(ends_with)
                 .with_interpolation_support(true);
         }
         b'i' => {
             token = token!(tSYMBOLS_BEG, start, end);
-            literal = StringLiteral::array()
+            literal = StringLiteral::sym_array()
                 .with_ending(ends_with)
                 .with_interpolation_support(false);
         }
@@ -228,7 +228,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_w_upper,
         input = b"%W{",
-        type = array,
+        type = word_array,
         token = tWORDS_BEG,
         ends_with = b"}",
         with_interpolation_support = true
@@ -238,7 +238,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_w_lower,
         input = b"%w{",
-        type = array,
+        type = word_array,
         token = tWORDS_BEG,
         ends_with = b"}",
         with_interpolation_support = false
@@ -248,7 +248,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_i_upper,
         input = b"%I{",
-        type = array,
+        type = sym_array,
         token = tSYMBOLS_BEG,
         ends_with = b"}",
         with_interpolation_support = true
@@ -258,7 +258,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_i_lower,
         input = b"%i{",
-        type = array,
+        type = sym_array,
         token = tSYMBOLS_BEG,
         ends_with = b"}",
         with_interpolation_support = false
