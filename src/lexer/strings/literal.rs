@@ -6,7 +6,7 @@ use crate::{
         buffer::Buffer,
         gvar::{lookahead_gvar, LookaheadGvarResult},
     },
-    token::{Loc, Token, TokenValue},
+    token::{token, Loc, Token, TokenValue},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -222,7 +222,7 @@ impl<'a> StringLiteral<'a> {
 
     #[must_use]
     fn handle_eof(&self, buffer: &Buffer<'a>, start: usize) -> ControlFlow<StringExtendAction> {
-        if let Some(token) = string_content_to_emit(buffer, start, buffer.pos()) {
+        if let Some(token) = string_content_to_emit(start, buffer.pos()) {
             ControlFlow::Break(StringExtendAction::EmitToken { token })
         } else {
             ControlFlow::Break(StringExtendAction::EmitEOF)
@@ -242,7 +242,7 @@ impl<'a> StringLiteral<'a> {
                 Loc(buffer.pos(), buffer.pos() + 2),
             ),
         };
-        let string_content = string_content_to_emit(buffer, start, buffer.pos());
+        let string_content = string_content_to_emit(start, buffer.pos());
         buffer.set_pos(buffer.pos() + 2);
 
         if let Some(token) = string_content {
@@ -268,7 +268,7 @@ impl<'a> StringLiteral<'a> {
                 ),
             };
             let var_action = StringExtendAction::EmitToken { token };
-            let string_content = string_content_to_emit(buffer, start, buffer.pos());
+            let string_content = string_content_to_emit(start, buffer.pos());
             buffer.set_pos(token.loc().end());
 
             if let Some(token) = string_content {
@@ -301,7 +301,7 @@ impl<'a> StringLiteral<'a> {
                 ),
             };
             let var_action = StringExtendAction::EmitToken { token };
-            let string_content = string_content_to_emit(buffer, start, buffer.pos());
+            let string_content = string_content_to_emit(start, buffer.pos());
             buffer.set_pos(token.loc().end());
 
             if let Some(token) = string_content {
@@ -331,7 +331,7 @@ impl<'a> StringLiteral<'a> {
                 Loc(buffer.pos(), buffer.pos() + self.ends_with.len()),
             ),
         };
-        let string_content = string_content_to_emit(buffer, start, buffer.pos());
+        let string_content = string_content_to_emit(start, buffer.pos());
         buffer.set_pos(buffer.pos() + self.ends_with.len());
 
         if let Some(token) = string_content {
@@ -351,7 +351,7 @@ impl<'a> StringLiteral<'a> {
         // just emit what we've got so far
         // parser will merge two consectuive string literals
         let action = StringExtendAction::EmitToken {
-            token: Token(TokenValue::tSTRING_CONTENT, Loc(start, buffer.pos())),
+            token: token!(tSTRING_CONTENT, start, buffer.pos()),
         };
         // and skip escaped NL
         buffer.set_pos(buffer.pos() + 2);
@@ -361,10 +361,10 @@ impl<'a> StringLiteral<'a> {
 
 // Utility helper: checks whether there's recorded string content,
 // returns a tSTRING_CONTENT is there's any
-fn string_content_to_emit<'a>(buffer: &Buffer<'a>, start: usize, end: usize) -> Option<Token> {
+fn string_content_to_emit<'a>(start: usize, end: usize) -> Option<Token> {
     if start == end {
         None
     } else {
-        Some(Token(TokenValue::tSTRING_CONTENT, Loc(start, end)))
+        Some(token!(tSTRING_CONTENT, start, end))
     }
 }

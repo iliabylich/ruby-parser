@@ -1,5 +1,5 @@
 use crate::lexer::buffer::Buffer;
-use crate::token::{Loc, Token, TokenValue};
+use crate::token::{token, Token};
 
 pub(crate) mod read;
 pub(crate) mod try_to_extend_with;
@@ -191,14 +191,13 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token {
 
     let begin = number.begin;
     let end = number.end;
-    let slice = buffer.slice(begin, end);
 
     let token = match number.kind {
         NumberKind::Uninitialized(_) => unreachable!("ExtendNumber made no transition"),
-        NumberKind::Integer(_) => Token(TokenValue::tINTEGER, Loc(begin, end)),
-        NumberKind::Rational(_) => Token(TokenValue::tRATIONAL, Loc(begin, end)),
-        NumberKind::Imaginary(_) => Token(TokenValue::tIMAGINARY, Loc(begin, end)),
-        NumberKind::Float(_) => Token(TokenValue::tFLOAT, Loc(begin, end)),
+        NumberKind::Integer(_) => token!(tINTEGER, begin, end),
+        NumberKind::Rational(_) => token!(tRATIONAL, begin, end),
+        NumberKind::Imaginary(_) => token!(tIMAGINARY, begin, end),
+        NumberKind::Float(_) => token!(tFLOAT, begin, end),
     };
     println!("{:?}", token);
     token

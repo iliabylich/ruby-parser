@@ -1,7 +1,4 @@
-use crate::{
-    lexer::Lexer,
-    token::{Loc, Token, TokenValue},
-};
+use crate::{lexer::Lexer, token::token};
 
 #[test]
 fn test_string_plain_non_interp() {
@@ -9,10 +6,10 @@ fn test_string_plain_non_interp() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(1, 4)),
-            Token(TokenValue::tSTRING_END, Loc(4, 5)),
-            Token(TokenValue::tEOF, Loc(5, 5))
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_CONTENT, 1, 4),
+            token!(tSTRING_END, 4, 5),
+            token!(tEOF, 5, 5)
         ]
     );
 }
@@ -23,14 +20,14 @@ fn test_string_plain_interp() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(1, 4)),
-            Token(TokenValue::tSTRING_DBEG, Loc(4, 6)),
-            Token(TokenValue::tTEST_TOKEN, Loc(6, 16)),
-            Token(TokenValue::tSTRING_DEND, Loc(16, 17)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(17, 20)),
-            Token(TokenValue::tSTRING_END, Loc(20, 21)),
-            Token(TokenValue::tEOF, Loc(21, 21))
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_CONTENT, 1, 4),
+            token!(tSTRING_DBEG, 4, 6),
+            token!(tTEST_TOKEN, 6, 16),
+            token!(tSTRING_DEND, 16, 17),
+            token!(tSTRING_CONTENT, 17, 20),
+            token!(tSTRING_END, 20, 21),
+            token!(tEOF, 21, 21)
         ]
     );
 }
@@ -41,16 +38,16 @@ fn test_string_interp_braces() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_DBEG, Loc(1, 3)),
-            Token(TokenValue::tLCURLY, Loc(3, 4)),
-            Token(TokenValue::tRCURLY, Loc(4, 5)),
-            Token(TokenValue::tPLUS, Loc(6, 7)),
-            Token(TokenValue::tLCURLY, Loc(8, 9)),
-            Token(TokenValue::tRCURLY, Loc(9, 10)),
-            Token(TokenValue::tSTRING_DEND, Loc(10, 11)),
-            Token(TokenValue::tSTRING_END, Loc(11, 12)),
-            Token(TokenValue::tEOF, Loc(12, 12)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_DBEG, 1, 3),
+            token!(tLCURLY, 3, 4),
+            token!(tRCURLY, 4, 5),
+            token!(tPLUS, 6, 7),
+            token!(tLCURLY, 8, 9),
+            token!(tRCURLY, 9, 10),
+            token!(tSTRING_DEND, 10, 11),
+            token!(tSTRING_END, 11, 12),
+            token!(tEOF, 12, 12),
         ]
     );
 }
@@ -61,11 +58,11 @@ fn test_string_iterp_raw_cvar() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_DVAR, Loc(1, 2)),
-            Token(TokenValue::tCVAR, Loc(2, 7)),
-            Token(TokenValue::tSTRING_END, Loc(7, 8)),
-            Token(TokenValue::tEOF, Loc(8, 8)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_DVAR, 1, 2),
+            token!(tCVAR, 2, 7),
+            token!(tSTRING_END, 7, 8),
+            token!(tEOF, 8, 8),
         ]
     );
 }
@@ -76,11 +73,11 @@ fn test_string_iterp_raw_ivar() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_DVAR, Loc(1, 2)),
-            Token(TokenValue::tIVAR, Loc(2, 6)),
-            Token(TokenValue::tSTRING_END, Loc(6, 7)),
-            Token(TokenValue::tEOF, Loc(7, 7)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_DVAR, 1, 2),
+            token!(tIVAR, 2, 6),
+            token!(tSTRING_END, 6, 7),
+            token!(tEOF, 7, 7),
         ]
     );
 }
@@ -91,11 +88,11 @@ fn test_string_iterp_raw_gvar() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_DVAR, Loc(1, 2)),
-            Token(TokenValue::tGVAR, Loc(2, 6)),
-            Token(TokenValue::tSTRING_END, Loc(6, 7)),
-            Token(TokenValue::tEOF, Loc(7, 7)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_DVAR, 1, 2),
+            token!(tGVAR, 2, 6),
+            token!(tSTRING_END, 6, 7),
+            token!(tEOF, 7, 7),
         ]
     );
 }
@@ -106,10 +103,10 @@ fn test_string_interp_raw_cvar_invalid() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(1, 5)),
-            Token(TokenValue::tSTRING_END, Loc(5, 6)),
-            Token(TokenValue::tEOF, Loc(6, 6)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_CONTENT, 1, 5),
+            token!(tSTRING_END, 5, 6),
+            token!(tEOF, 6, 6),
         ]
     );
 }
@@ -120,10 +117,10 @@ fn test_string_interp_raw_ivar_invalid() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(1, 4)),
-            Token(TokenValue::tSTRING_END, Loc(4, 5)),
-            Token(TokenValue::tEOF, Loc(5, 5)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_CONTENT, 1, 4),
+            token!(tSTRING_END, 4, 5),
+            token!(tEOF, 5, 5),
         ]
     );
 }
@@ -134,10 +131,10 @@ fn test_string_interp_raw_cvar_no_id() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(1, 4)),
-            Token(TokenValue::tSTRING_END, Loc(4, 5)),
-            Token(TokenValue::tEOF, Loc(5, 5)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_CONTENT, 1, 4),
+            token!(tSTRING_END, 4, 5),
+            token!(tEOF, 5, 5),
         ]
     );
 }
@@ -148,10 +145,10 @@ fn test_string_interp_raw_ivar_no_id() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            Token(TokenValue::tSTRING_BEG, Loc(0, 1)),
-            Token(TokenValue::tSTRING_CONTENT, Loc(1, 3)),
-            Token(TokenValue::tSTRING_END, Loc(3, 4)),
-            Token(TokenValue::tEOF, Loc(4, 4)),
+            token!(tSTRING_BEG, 0, 1),
+            token!(tSTRING_CONTENT, 1, 3),
+            token!(tSTRING_END, 3, 4),
+            token!(tEOF, 4, 4),
         ]
     );
 }

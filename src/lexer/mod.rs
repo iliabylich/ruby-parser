@@ -9,7 +9,7 @@ pub(crate) mod punctuation;
 pub(crate) mod skip_ws;
 pub(crate) mod strings;
 
-use crate::token::{Loc, Token, TokenValue};
+use crate::token::{token, Token};
 use atmark::parse_atmark;
 use buffer::Buffer;
 use gvar::parse_gvar;
@@ -84,7 +84,7 @@ impl<'a> Lexer<'a> {
         loop {
             let token = self.next_token();
             tokens.push(token);
-            if token.value() == TokenValue::tEOF {
+            if token.value() == crate::token::TokenValue::tEOF {
                 break;
             }
         }
@@ -125,7 +125,7 @@ impl<'a> Lexer<'a> {
                 // close current literal
                 self.string_literals.pop();
                 // and emit EOF
-                Token(TokenValue::tEOF, Loc(self.buffer.pos(), self.buffer.pos()))
+                token!(tEOF, self.buffer.pos(), self.buffer.pos())
             }
         }
     }
@@ -144,7 +144,7 @@ impl<'a> Lexer<'a> {
         if self.buffer.const_lookahead(b"TEST_TOKEN") {
             let end = start + "TEST_TOKEN".len();
             self.buffer.set_pos(end);
-            return Token(TokenValue::tTEST_TOKEN, Loc(start, end));
+            return token!(tTEST_TOKEN, start, end);
         }
 
         // SAFETY: None (i.e. EOF) has been handled above in `handle_eof`.

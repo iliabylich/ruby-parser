@@ -199,16 +199,12 @@ impl Loc {
     }
 }
 
-pub(crate) fn token0<'a, F>(f: F, begin: usize, end: usize) -> Token
-where
-    F: FnOnce() -> TokenValue,
-{
-    Token(f(), Loc(begin, end))
+macro_rules! token {
+    ($kind:ident, $begin:expr, $end:expr) => {
+        crate::token::Token(
+            crate::token::TokenValue::$kind,
+            crate::token::Loc($begin, $end),
+        )
+    };
 }
-
-pub(crate) fn token1<'a, F>(f: F, slice: &'a [u8], begin: usize, end: usize) -> Token
-where
-    F: FnOnce(&'a [u8]) -> TokenValue,
-{
-    Token(f(slice), Loc(begin, end))
-}
+pub(crate) use token;

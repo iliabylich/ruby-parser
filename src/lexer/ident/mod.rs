@@ -2,7 +2,7 @@ use crate::lexer::{
     assert_lex,
     buffer::{utf8::Utf8Char, Buffer},
 };
-use crate::token::{Loc, Token, TokenValue};
+use crate::token::{token, Loc, Token};
 
 mod reserved_words;
 
@@ -33,7 +33,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token {
             } else {
                 // append `!` or `?`
                 buffer.skip_byte();
-                return Token(TokenValue::tFID, Loc(start, buffer.pos()));
+                return token!(tFID, start, buffer.pos());
             }
         }
         Some(b'=') => {
@@ -50,7 +50,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token {
                 _ => {
                     // `foo=` setter, consume `'='
                     buffer.skip_byte();
-                    return Token(TokenValue::tIDENTIFIER, Loc(start, buffer.pos()));
+                    return token!(tIDENTIFIER, start, buffer.pos());
                 }
             }
         }
@@ -64,7 +64,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token {
     // are handled on the parser level
     if buffer.current_byte() == Some(b':') {
         buffer.skip_byte();
-        return Token(TokenValue::tLABEL, Loc(start, buffer.pos()));
+        return token!(tLABEL, start, buffer.pos());
     }
 
     let end = buffer.pos();
@@ -76,7 +76,7 @@ pub(crate) fn parse_ident<'a>(buffer: &mut Buffer<'a>) -> Token {
     }
 
     // otherwise it's just a plain identifier
-    Token(TokenValue::tIDENTIFIER, Loc(start, end))
+    token!(tIDENTIFIER, start, end)
 }
 
 // Returns None / Some(ident_length)
