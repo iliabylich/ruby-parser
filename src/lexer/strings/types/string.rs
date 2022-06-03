@@ -34,6 +34,8 @@ impl<'a> StringLiteralExtend<'a> for String<'a> {
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<crate::lexer::strings::action::StringExtendAction> {
+        debug_assert!(!self.ends_with.is_empty());
+
         handle_next_action(self)?;
         handle_interpolation_end(self, buffer, current_curly_nest)?;
 
@@ -70,20 +72,20 @@ impl<'a> StringLiteralExtend<'a> for String<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::lexer::strings::test_helpers::*;
+    use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    assert_emits_scheduled_string_action!(StringLiteral::string());
-    assert_emits_eof_string_action!(StringLiteral::string());
+    fn literal() -> StringLiteral<'static> {
+        StringLiteral::string().with_ending(b"\"")
+    }
+
+    assert_emits_scheduled_string_action!(literal());
+    assert_emits_eof_string_action!(literal());
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(StringLiteral::string()
-        .with_ending(b"\"")
-        .with_interpolation_support(true));
+    assert_emits_interpolation_end_action!(literal().with_interpolation_support(true));
     assert_emits_token!(
         test = test_rcurly_with_no_interp_support,
-        literal = StringLiteral::string()
-            .with_ending(b"'")
-            .with_interpolation_support(false),
+        literal = literal().with_interpolation_support(false),
         input = b"}",
         token = token!(tSTRING_CONTENT, 0, 1),
         pre = |_| {},
@@ -91,9 +93,7 @@ mod tests {
     );
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::string()
-        .with_ending(b"\"")
-        .with_interpolation_support(true));
+    assert_emits_interpolated_value!(literal().with_interpolation_support(true));
 
     #[test]
     fn test_string_plain_non_interp() {

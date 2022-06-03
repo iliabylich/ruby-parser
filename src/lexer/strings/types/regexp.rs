@@ -34,7 +34,13 @@ impl<'a> StringLiteralExtend<'a> for Regexp<'a> {
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
-        let mut action = dbg!(self._extend(buffer, current_curly_nest));
+        debug_assert!(
+            self.supports_interpolation,
+            "regexes must support interpolation"
+        );
+        debug_assert!(!self.ends_with.is_empty());
+
+        let mut action = self._extend(buffer, current_curly_nest);
 
         // Regexp has a special handling of string end
         // There can be regexp options after trailing `/`
@@ -106,26 +112,28 @@ fn lookahead_regexp_options(buffer: &mut Buffer, start: usize) -> Option<usize> 
 
 #[cfg(test)]
 mod tests {
-    use crate::lexer::strings::test_helpers::*;
+    use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    assert_emits_scheduled_string_action!(StringLiteral::regexp());
-    assert_emits_eof_string_action!(StringLiteral::regexp());
+    fn literal() -> StringLiteral<'static> {
+        StringLiteral::regexp()
+            .with_ending(b"/")
+            .with_interpolation_support(true)
+    }
+
+    assert_emits_scheduled_string_action!(literal());
+    assert_emits_eof_string_action!(literal());
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(StringLiteral::regexp()
-        .with_ending(b"/")
-        .with_interpolation_support(true));
+    assert_emits_interpolation_end_action!(literal());
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::regexp()
-        .with_ending(b"/")
-        .with_interpolation_support(true));
+    assert_emits_interpolated_value!(literal());
 
-    assert_emits_string_end!(StringLiteral::regexp());
+    assert_emits_string_end!(literal());
 
     assert_emits_extend_action!(
         test = test_regexp_options,
-        literal = StringLiteral::regexp().with_ending(b"/"),
+        literal = literal(),
         input = b"/ox foo",
         action = StringExtendAction::FoundStringEnd {
             token: token!(tSTRING_END, 0, 3)
