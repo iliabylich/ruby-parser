@@ -67,3 +67,48 @@ impl<'a> StringLiteralExtend<'a> for String<'a> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::lexer::strings::test_helpers::*;
+
+    assert_emits_scheduled_string_action!(StringLiteral::string());
+    assert_emits_eof_string_action!(StringLiteral::string());
+
+    // interpolation END handling
+    assert_emits_interpolation_end_action!(StringLiteral::string()
+        .with_ending(b"\"")
+        .with_interpolation_support(true));
+    assert_emits_token!(
+        test = test_rcurly_with_no_interp_support,
+        literal = StringLiteral::string()
+            .with_ending(b"'")
+            .with_interpolation_support(false),
+        input = b"}",
+        token = token!(tSTRING_CONTENT, 0, 1),
+        pre = |_| {},
+        post = |_| {}
+    );
+
+    // interpolation VALUE handling
+    assert_emits_interpolated_value!(StringLiteral::string()
+        .with_ending(b"\"")
+        .with_interpolation_support(true));
+
+    #[test]
+    fn test_string_plain_non_interp() {
+        use crate::{lexer::Lexer, token::token};
+        let mut lexer = Lexer::new(b"'foo'");
+        assert_eq!(
+            lexer.tokenize_until_eof(),
+            vec![
+                token!(tSTRING_BEG, 0, 1),
+                token!(tSTRING_CONTENT, 1, 4),
+                token!(tSTRING_END, 4, 5),
+                token!(tEOF, 5, 5)
+            ]
+        );
+    }
+
+    assert_emits_string_end!(StringLiteral::string());
+}

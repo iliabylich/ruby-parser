@@ -4,7 +4,7 @@ use crate::lexer::{
     buffer::Buffer,
     strings::{
         action::StringExtendAction,
-        types::{Heredoc, Regexp, String, SymArray, Symbol, WordArray},
+        types::{Heredoc, Regexp, String, StringLiteralAttributes, SymArray, Symbol, WordArray},
     },
 };
 
@@ -102,5 +102,17 @@ impl<'a> StringLiteral<'a> {
             for_each_branch_pick_attribute!(&mut self, interpolation_started_with_curly_level);
         *interpolation_started_with_curly_level = value;
         self
+    }
+
+    #[cfg(test)]
+    pub(crate) fn inner_mut(&mut self) -> &mut dyn StringLiteralAttributes<'a> {
+        match self {
+            StringLiteral::String(inner) => inner,
+            StringLiteral::Symbol(inner) => inner,
+            StringLiteral::Heredoc(inner) => inner,
+            StringLiteral::Regexp(inner) => inner,
+            StringLiteral::SymArray(inner) => inner,
+            StringLiteral::WordArray(inner) => inner,
+        }
     }
 }

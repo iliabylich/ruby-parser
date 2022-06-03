@@ -25,8 +25,10 @@ pub(crate) trait StringLiteralAttributes<'a> {
     fn currently_in_interpolation_mut(&mut self) -> &mut bool;
 
     fn interpolation_started_with_curly_level(&self) -> usize;
+    fn interpolation_started_with_curly_level_mut(&mut self) -> &mut usize;
 
     fn ends_with(&self) -> &'a [u8];
+    fn ends_with_mut(&mut self) -> &mut &'a [u8];
 
     fn next_action(&self) -> NextAction;
     fn next_action_mut(&mut self) -> &mut NextAction;
@@ -51,8 +53,16 @@ macro_rules! generate_default_string_literal_impl {
                 self.interpolation_started_with_curly_level
             }
 
+            fn interpolation_started_with_curly_level_mut(&mut self) -> &mut usize {
+                &mut self.interpolation_started_with_curly_level
+            }
+
             fn ends_with(&self) -> &'a [u8] {
                 self.ends_with
+            }
+
+            fn ends_with_mut(&mut self) -> &mut &'a [u8] {
+                &mut self.ends_with
             }
 
             fn next_action(&self) -> NextAction {
