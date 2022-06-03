@@ -6,8 +6,9 @@ use crate::{
         buffer::Buffer,
         gvar::{lookahead_gvar, LookaheadGvarResult},
         strings::{
-            action::StringExtendAction, handlers::string_content_to_emit,
-            types::StringLiteralAttributes,
+            action::StringExtendAction,
+            handlers::contracts::{HasInterpolation, HasNextAction},
+            handlers::string_content_to_emit,
         },
     },
     token::token,
@@ -19,19 +20,19 @@ pub(crate) fn handle_interpolation<'a, T>(
     start: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    T: StringLiteralAttributes<'a>,
+    T: HasInterpolation + HasNextAction,
 {
-    if buffer.const_lookahead(b"#{") {
+    if buffer.lookahead(b"#{") {
         // handle #{ interpolation
         handle_common_interpolation(literal, buffer, start)?;
     }
 
-    if buffer.const_lookahead(b"#@") {
+    if buffer.lookahead(b"#@") {
         // handle #@foo / #@@foo interpolation
         handle_raw_atmark_interpolation(literal, buffer, start)?;
     }
 
-    if buffer.const_lookahead(b"#$") {
+    if buffer.lookahead(b"#$") {
         // handle #$foo interpolation
         handle_raw_gvar_interpolation(literal, buffer, start)?;
     }
@@ -46,7 +47,7 @@ fn handle_common_interpolation<'a, T>(
     start: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    T: StringLiteralAttributes<'a>,
+    T: HasInterpolation + HasNextAction,
 {
     // #{ interpolation
     let action = StringExtendAction::FoundInterpolation {
@@ -72,7 +73,7 @@ fn handle_raw_atmark_interpolation<'a, T>(
     start: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    T: StringLiteralAttributes<'a>,
+    T: HasNextAction,
 {
     if let LookaheadAtMarkResult::Ok(token) = lookahead_atmark(buffer, buffer.pos() + 1) {
         // #@foo interpolation
@@ -105,7 +106,7 @@ fn handle_raw_gvar_interpolation<'a, T>(
     start: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    T: StringLiteralAttributes<'a>,
+    T: HasNextAction,
 {
     if let LookaheadGvarResult::Ok(token) = lookahead_gvar(buffer, buffer.pos() + 1) {
         // #$foo interpolation

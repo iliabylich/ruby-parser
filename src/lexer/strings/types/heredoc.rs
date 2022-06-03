@@ -5,23 +5,20 @@ use crate::lexer::{
     strings::{
         action::{NextAction, StringExtendAction},
         literal::StringLiteralExtend,
-        types::generate_default_string_literal_impl,
     },
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub(crate) struct Heredoc<'a> {
-    pub(crate) supports_interpolation: bool,
-    pub(crate) currently_in_interpolation: bool,
-    pub(crate) ends_with: &'a [u8],
-    pub(crate) interpolation_started_with_curly_level: usize,
+    supports_interpolation: bool,
+    currently_in_interpolation: bool,
+    ends_with: &'a [u8],
+    interpolation_started_with_curly_level: usize,
 
-    pub(crate) next_action: NextAction,
+    next_action: NextAction,
 
-    pub(crate) heredoc_id_ended_at: usize,
+    heredoc_id_ended_at: usize,
 }
-
-generate_default_string_literal_impl!(Heredoc);
 
 impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
     fn extend(

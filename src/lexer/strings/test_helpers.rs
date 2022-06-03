@@ -13,7 +13,7 @@ macro_rules! assert_emits_extend_action {
             use crate::{
                 lexer::{
                     buffer::Buffer,
-                    strings::{StringExtendAction, StringLiteral, StringLiteralExtend},
+                    strings::{StringExtendAction, StringLiteralExtend},
                 },
                 token::token,
             };
@@ -83,12 +83,20 @@ macro_rules! assert_emits_scheduled_string_action {
             input = b"",
             token = token!(tINTEGER, 0, 1),
             pre = |literal: &mut StringLiteral| {
-                literal
-                    .inner_mut()
-                    .next_action_mut()
-                    .add(StringExtendAction::EmitToken {
-                        token: token!(tINTEGER, 0, 1),
-                    });
+                use crate::lexer::strings::handlers::contracts::HasNextAction;
+
+                let next_action = match literal {
+                    StringLiteral::String(string) => string.next_action_mut(),
+                    StringLiteral::Regexp(regexp) => regexp.next_action_mut(),
+                    _ => panic!(
+                        "String literal {:?} doesn't implement HasNextAction",
+                        literal
+                    ),
+                };
+
+                next_action.add(StringExtendAction::EmitToken {
+                    token: token!(tINTEGER, 0, 1),
+                });
             },
             post = |_| {}
         );
@@ -106,7 +114,17 @@ macro_rules! assert_emits_interpolation_end_action {
                 token: token!(tSTRING_DEND, 0, 1)
             },
             pre = |literal: &mut StringLiteral| {
-                *literal.inner_mut().currently_in_interpolation_mut() = true;
+                use crate::lexer::strings::handlers::contracts::HasInterpolation;
+
+                let currently_in_interpolation = match literal {
+                    StringLiteral::String(string) => string.currently_in_interpolation_mut(),
+                    StringLiteral::Regexp(regexp) => regexp.currently_in_interpolation_mut(),
+                    _ => panic!(
+                        "String literal {:?} doesn't implement HasInterpolation",
+                        literal
+                    ),
+                };
+                *currently_in_interpolation = true;
             },
             post = |_| {}
         );
@@ -306,18 +324,18 @@ macro_rules! assert_emits_interpolated_value {
 pub(crate) use assert_emits_interpolated_value;
 
 macro_rules! assert_emits_string_end {
-    ($literal:expr) => {
+    (
+        literal = $literal:expr,
+        input = $input:expr
+    ) => {
         assert_emits_extend_action!(
             test = test_string_end,
             literal = $literal,
-            input = b"END",
+            input = $input,
             action = StringExtendAction::FoundStringEnd {
-                token: token!(tSTRING_END, 0, 3)
+                token: token!(tSTRING_END, 0, 1)
             },
-            pre = |literal: &mut StringLiteral| {
-                let inner = literal.inner_mut();
-                *inner.ends_with_mut() = b"END";
-            },
+            pre = |_| {},
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,

@@ -2,33 +2,31 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::{Buffer, Pattern},
         strings::{
-            action::StringExtendAction, handlers::string_content_to_emit,
-            types::StringLiteralAttributes,
+            action::StringExtendAction, handlers::contracts::HasNextAction,
+            handlers::string_content_to_emit,
         },
     },
     token::token,
 };
 
-pub(crate) fn handle_string_end<'a, T>(
-    literal: &mut T,
+pub(crate) fn handle_string_end<'a, L, P>(
+    literal: &mut L,
+    ends_with: P,
     buffer: &mut Buffer<'a>,
     start: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    T: StringLiteralAttributes<'a>,
+    L: HasNextAction,
+    P: Pattern,
 {
-    if buffer.lookahead(literal.ends_with()) {
+    if buffer.lookahead(&ends_with) {
         let string_end_action = StringExtendAction::FoundStringEnd {
-            token: token!(
-                tSTRING_END,
-                buffer.pos(),
-                buffer.pos() + literal.ends_with().len()
-            ),
+            token: token!(tSTRING_END, buffer.pos(), buffer.pos() + ends_with.length()),
         };
         let string_content = string_content_to_emit(start, buffer.pos());
-        buffer.set_pos(buffer.pos() + literal.ends_with().len());
+        buffer.set_pos(buffer.pos() + ends_with.length());
 
         if let Some(token) = string_content {
             literal.next_action_mut().add(string_end_action);

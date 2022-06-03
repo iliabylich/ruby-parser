@@ -1,5 +1,8 @@
 mod lexer_proxy;
+mod pattern;
 pub(crate) mod utf8;
+
+pub(crate) use pattern::Pattern;
 
 pub struct Buffer<'a> {
     input: &'a [u8],
@@ -57,21 +60,11 @@ impl<'a> Buffer<'a> {
         self.current_byte().is_none()
     }
 
-    pub(crate) fn lookahead(&self, pattern: &[u8]) -> bool {
-        if let Some(slice) = self.input.get(self.pos..self.pos + pattern.len()) {
-            slice == pattern
-        } else {
-            false
-        }
-    }
-
-    pub(crate) fn const_lookahead<const N: usize>(&self, pattern: &[u8; N]) -> bool {
-        for i in 0..N {
-            if self.byte_at(self.pos + i) != Some(pattern[i]) {
-                return false;
-            }
-        }
-        true
+    pub(crate) fn lookahead<P>(&self, pattern: &P) -> bool
+    where
+        P: Pattern,
+    {
+        pattern.is_lookahead_of(self)
     }
 }
 
@@ -82,13 +75,4 @@ fn test_lookahead() {
     assert!(buffer.lookahead(b"fo"));
     assert!(buffer.lookahead(b"foo"));
     assert!(!buffer.lookahead(b"fooo"));
-}
-
-#[test]
-fn test_const_lookahead() {
-    let buffer = Buffer::new(b"foo");
-    assert!(buffer.const_lookahead(b"f"));
-    assert!(buffer.const_lookahead(b"fo"));
-    assert!(buffer.const_lookahead(b"foo"));
-    assert!(!buffer.const_lookahead(b"fooo"));
 }

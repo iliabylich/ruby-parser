@@ -10,26 +10,28 @@ use crate::lexer::{
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-pub(crate) struct Symbol {
+pub(crate) struct Array {
     supports_interpolation: bool,
     currently_in_interpolation: bool,
+    ends_with: u8,
     interpolation_started_with_curly_level: usize,
 
     next_action: NextAction,
 }
 
-impl Symbol {
-    pub(crate) fn new(interp: bool, curly_level: usize) -> Self {
+impl Array {
+    pub(crate) fn new(interp: bool, ends_with: u8, curly_level: usize) -> Self {
         Self {
             supports_interpolation: interp,
             currently_in_interpolation: false,
+            ends_with,
             interpolation_started_with_curly_level: curly_level,
             next_action: NextAction::NoAction,
         }
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for Symbol {
+impl<'a> StringLiteralExtend<'a> for Array {
     fn extend(
         &mut self,
         buffer: &mut Buffer<'a>,
@@ -38,7 +40,6 @@ impl<'a> StringLiteralExtend<'a> for Symbol {
         let start = buffer.pos();
 
         handle_eof(buffer, start)?;
-
-        todo!("implement symbol.extend")
+        todo!("implement word_array.extend")
     }
 }

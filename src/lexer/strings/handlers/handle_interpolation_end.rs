@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::Buffer,
-        strings::{action::StringExtendAction, types::StringLiteralAttributes},
+        strings::{action::StringExtendAction, handlers::contracts::HasInterpolation},
     },
     token::token,
 };
@@ -14,7 +14,7 @@ pub(crate) fn handle_interpolation_end<'a, T>(
     current_curly_nest: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    T: StringLiteralAttributes<'a>,
+    T: HasInterpolation,
 {
     if literal.supports_interpolation() && literal.currently_in_interpolation() {
         if buffer.current_byte() == Some(b'}')

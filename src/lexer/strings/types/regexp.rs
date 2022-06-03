@@ -6,40 +6,66 @@ use crate::{
         strings::{
             action::{NextAction, StringExtendAction},
             handlers::{
+                contracts::{HasInterpolation, HasNextAction},
                 handle_eof, handle_interpolation, handle_interpolation_end, handle_next_action,
                 handle_string_end,
             },
             literal::StringLiteralExtend,
-            types::generate_default_string_literal_impl,
         },
     },
     token::{token, Loc, Token},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-pub(crate) struct Regexp<'a> {
-    pub(crate) supports_interpolation: bool,
-    pub(crate) currently_in_interpolation: bool,
-    pub(crate) ends_with: &'a [u8],
-    pub(crate) interpolation_started_with_curly_level: usize,
+pub(crate) struct Regexp {
+    currently_in_interpolation: bool,
+    ends_with: u8,
+    interpolation_started_with_curly_level: usize,
 
-    pub(crate) next_action: NextAction,
+    next_action: NextAction,
 }
 
-generate_default_string_literal_impl!(Regexp);
+impl Regexp {
+    pub(crate) fn new(ends_with: u8, curly_level: usize) -> Self {
+        Self {
+            currently_in_interpolation: false,
+            ends_with,
+            interpolation_started_with_curly_level: curly_level,
+            next_action: NextAction::NoAction,
+        }
+    }
+}
 
-impl<'a> StringLiteralExtend<'a> for Regexp<'a> {
+impl HasNextAction for Regexp {
+    fn next_action_mut(&mut self) -> &mut NextAction {
+        &mut self.next_action
+    }
+}
+
+impl HasInterpolation for Regexp {
+    fn currently_in_interpolation(&self) -> bool {
+        self.currently_in_interpolation
+    }
+
+    fn currently_in_interpolation_mut(&mut self) -> &mut bool {
+        &mut self.currently_in_interpolation
+    }
+
+    fn supports_interpolation(&self) -> bool {
+        true
+    }
+
+    fn interpolation_started_with_curly_level(&self) -> usize {
+        self.interpolation_started_with_curly_level
+    }
+}
+
+impl<'a> StringLiteralExtend<'a> for Regexp {
     fn extend(
         &mut self,
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
-        debug_assert!(
-            self.supports_interpolation,
-            "regexes must support interpolation"
-        );
-        debug_assert!(!self.ends_with.is_empty());
-
         let mut action = self._extend(buffer, current_curly_nest);
 
         // Regexp has a special handling of string end
@@ -49,7 +75,7 @@ impl<'a> StringLiteralExtend<'a> for Regexp<'a> {
         match &mut action {
             ControlFlow::Break(StringExtendAction::FoundStringEnd {
                 token: Token(_, Loc(_, end)),
-            }) if self.ends_with == b"/" => {
+            }) if self.ends_with == b'/' => {
                 if let Some(regexp_options_end_at) = lookahead_regexp_options(buffer, *end) {
                     *end = regexp_options_end_at;
                     buffer.set_pos(regexp_options_end_at);
@@ -62,11 +88,11 @@ impl<'a> StringLiteralExtend<'a> for Regexp<'a> {
     }
 }
 
-impl<'a> Regexp<'a> {
+impl Regexp {
     #[must_use]
     fn _extend(
         &mut self,
-        buffer: &mut Buffer<'a>,
+        buffer: &mut Buffer,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
         handle_next_action(self)?;
@@ -77,9 +103,9 @@ impl<'a> Regexp<'a> {
         loop {
             handle_eof(buffer, start)?;
             handle_interpolation(self, buffer, start)?;
-            handle_string_end(self, buffer, start)?;
+            handle_string_end(self, self.ends_with, buffer, start)?;
 
-            if buffer.const_lookahead(b"\\\n") {
+            if buffer.lookahead(b"\\\n") {
                 // just emit what we've got so far
                 // parser will merge two consectuive string literals
                 let action = StringExtendAction::EmitToken {
@@ -112,28 +138,25 @@ fn lookahead_regexp_options(buffer: &mut Buffer, start: usize) -> Option<usize> 
 
 #[cfg(test)]
 mod tests {
-    use crate::lexer::strings::{test_helpers::*, StringLiteral};
+    use crate::lexer::strings::{test_helpers::*, types::Regexp, StringLiteral};
 
-    fn literal() -> StringLiteral<'static> {
-        StringLiteral::regexp()
-            .with_ending(b"/")
-            .with_interpolation_support(true)
-    }
-
-    assert_emits_scheduled_string_action!(literal());
-    assert_emits_eof_string_action!(literal());
+    assert_emits_scheduled_string_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
+    assert_emits_eof_string_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(literal());
+    assert_emits_interpolation_end_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(literal());
+    assert_emits_interpolated_value!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
 
-    assert_emits_string_end!(literal());
+    assert_emits_string_end!(
+        literal = StringLiteral::Regexp(Regexp::new(b'/', 0)),
+        input = b"/"
+    );
 
     assert_emits_extend_action!(
         test = test_regexp_options,
-        literal = literal(),
+        literal = StringLiteral::Regexp(Regexp::new(b'/', 0)),
         input = b"/ox foo",
         action = StringExtendAction::FoundStringEnd {
             token: token!(tSTRING_END, 0, 3)

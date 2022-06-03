@@ -1,4 +1,8 @@
-use crate::lexer::{assert_lex, Lexer, OnByte, StringLiteral};
+use crate::lexer::{
+    assert_lex,
+    strings::types::{String, Symbol},
+    Lexer, OnByte, StringLiteral,
+};
 use crate::token::{token, Token};
 
 use crate::lexer::ident::parse_ident;
@@ -70,7 +74,7 @@ impl<'a> OnByte<'a, b'='> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
 
-        if self.buffer.const_lookahead(b"begin") {
+        if self.buffer.lookahead(b"begin") {
             self.buffer.set_pos(self.pos() + 5);
             return token!(tEMBEDDED_COMMENT_START, start, start + 6);
         }
@@ -192,12 +196,11 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
-        self.string_literals.push(
-            StringLiteral::string()
-                .with_ending(b"\"")
-                .with_curly_level(self.curly_nest)
-                .with_interpolation_support(true),
-        );
+        self.string_literals.push(StringLiteral::String(String::new(
+            true,
+            b'"',
+            self.curly_nest,
+        )));
         token
     }
 }
@@ -211,18 +214,12 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::{action::NextAction, types::String};
+        use crate::lexer::strings::types::String;
         assert_eq!(lexer.string_literals.size(), 1);
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::String(String {
-                supports_interpolation: true,
-                currently_in_interpolation: false,
-                ends_with: b"\"",
-                interpolation_started_with_curly_level: 42,
-                next_action: NextAction::NoAction,
-            }))
+            Some(StringLiteral::String(String::new(true, b'"', 42)))
         );
     }
 );
@@ -238,12 +235,8 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
-        self.string_literals.push(
-            StringLiteral::string()
-                .with_interpolation_support(false)
-                .with_ending(b"'")
-                .with_curly_level(0),
-        );
+        self.string_literals
+            .push(StringLiteral::String(String::new(false, b'\'', 0)));
         token
     }
 }
@@ -257,18 +250,12 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::{action::NextAction, types::String};
+        use crate::lexer::strings::types::String;
 
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::String(String {
-                supports_interpolation: false,
-                currently_in_interpolation: false,
-                ends_with: b"'",
-                interpolation_started_with_curly_level: 0,
-                next_action: NextAction::NoAction,
-            }))
+            Some(StringLiteral::String(String::new(false, b'\'', 0)))
         )
     }
 );
@@ -499,24 +486,16 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
                 // :"..." symbol
                 self.skip_byte();
                 let token = token!(tDSYMBEG, start, start + 2);
-                self.string_literals.push(
-                    StringLiteral::symbol()
-                        .with_interpolation_support(true)
-                        .with_ending(b" ")
-                        .with_curly_level(self.curly_nest),
-                );
+                self.string_literals
+                    .push(StringLiteral::Symbol(Symbol::new(true, self.curly_nest)));
                 token
             }
             Some(b'\'') => {
                 // :'...' symbol
                 self.skip_byte();
                 let token = token!(tSYMBEG, start, start + 2);
-                self.string_literals.push(
-                    StringLiteral::symbol()
-                        .with_interpolation_support(false)
-                        .with_ending(b" ")
-                        .with_curly_level(0),
-                );
+                self.string_literals
+                    .push(StringLiteral::Symbol(Symbol::new(false, self.curly_nest)));
                 token
             }
             _ => token!(tCOLON, start, start + 1),
@@ -534,18 +513,12 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::{action::NextAction, types::Symbol};
+        use crate::lexer::strings::types::Symbol;
 
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Symbol(Symbol {
-                supports_interpolation: true,
-                currently_in_interpolation: false,
-                ends_with: b" ",
-                interpolation_started_with_curly_level: 42,
-                next_action: NextAction::NoAction,
-            }))
+            Some(StringLiteral::Symbol(Symbol::new(true, 42)))
         )
     }
 );
@@ -559,18 +532,12 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::{action::NextAction, types::Symbol};
+        use crate::lexer::strings::types::Symbol;
 
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Symbol(Symbol {
-                supports_interpolation: false,
-                currently_in_interpolation: false,
-                ends_with: b" ",
-                interpolation_started_with_curly_level: 0,
-                next_action: NextAction::NoAction,
-            }))
+            Some(StringLiteral::Symbol(Symbol::new(false, 42)))
         )
     }
 );
@@ -727,7 +694,7 @@ impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
             //   + None (i.e. it's the first byte of the file)
             //   + Some(b'\n')
             // AND it's "__END__" sequence
-            None | Some(b'\n') if self.buffer.const_lookahead(b"__END__") => {
+            None | Some(b'\n') if self.buffer.lookahead(b"__END__") => {
                 return token!(tEOF, start, start);
             }
             _ => {}
