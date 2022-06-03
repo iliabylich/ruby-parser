@@ -104,24 +104,33 @@ fn lookahead_regexp_options(buffer: &mut Buffer, start: usize) -> Option<usize> 
     }
 }
 
-#[test]
-fn test_tokenize_regexp_options() {
-    use crate::{
-        lexer::{strings::StringLiteral, Lexer},
-        token::token,
-    };
-    let mut lexer = Lexer::new(b"foo/ox");
+#[cfg(test)]
+mod tests {
+    use crate::lexer::strings::test_helpers::*;
 
-    lexer
-        .string_literals
-        .push(StringLiteral::regexp().with_ending(b"/"));
+    assert_emits_scheduled_string_action!(StringLiteral::regexp());
+    assert_emits_eof_string_action!(StringLiteral::regexp());
 
-    assert_eq!(
-        lexer.tokenize_until_eof(),
-        vec![
-            token!(tSTRING_CONTENT, 0, 3),
-            token!(tSTRING_END, 3, 6),
-            token!(tEOF, 6, 6)
-        ]
+    // interpolation END handling
+    assert_emits_interpolation_end_action!(StringLiteral::regexp()
+        .with_ending(b"/")
+        .with_interpolation_support(true));
+
+    // interpolation VALUE handling
+    assert_emits_interpolated_value!(StringLiteral::regexp()
+        .with_ending(b"/")
+        .with_interpolation_support(true));
+
+    assert_emits_string_end!(StringLiteral::regexp());
+
+    assert_emits_extend_action!(
+        test = test_regexp_options,
+        literal = StringLiteral::regexp().with_ending(b"/"),
+        input = b"/ox foo",
+        action = StringExtendAction::FoundStringEnd {
+            token: token!(tSTRING_END, 0, 3)
+        },
+        pre = |_| {},
+        post = |_| {}
     );
 }
