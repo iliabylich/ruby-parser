@@ -22,20 +22,3 @@ fn string_content_to_emit(start: usize, end: usize) -> Option<Token> {
         Some(token!(tSTRING_CONTENT, start, end))
     }
 }
-
-pub(crate) mod contracts {
-    use crate::lexer::strings::action::NextAction;
-
-    pub(crate) trait HasNextAction {
-        fn next_action_mut(&mut self) -> &mut NextAction;
-    }
-
-    pub(crate) trait HasInterpolation {
-        fn currently_in_interpolation(&self) -> bool;
-        fn currently_in_interpolation_mut(&mut self) -> &mut bool;
-
-        fn supports_interpolation(&self) -> bool;
-
-        fn interpolation_started_with_curly_level(&self) -> usize;
-    }
-}

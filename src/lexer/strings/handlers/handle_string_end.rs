@@ -4,8 +4,7 @@ use crate::{
     lexer::{
         buffer::{Buffer, Pattern},
         strings::{
-            action::StringExtendAction, handlers::contracts::HasNextAction,
-            handlers::string_content_to_emit,
+            action::StringExtendAction, handlers::string_content_to_emit, types::HasNextAction,
         },
     },
     token::token,

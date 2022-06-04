@@ -1,6 +1,6 @@
 use std::ops::ControlFlow;
 
-use crate::lexer::strings::{action::StringExtendAction, handlers::contracts::HasNextAction};
+use crate::lexer::strings::{action::StringExtendAction, types::HasNextAction};
 
 pub(crate) fn handle_next_action<'a, T>(literal: &mut T) -> ControlFlow<StringExtendAction>
 where

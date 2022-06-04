@@ -6,11 +6,11 @@ use crate::{
         strings::{
             action::{NextAction, StringExtendAction},
             handlers::{
-                contracts::{HasInterpolation, HasNextAction},
                 handle_eof, handle_interpolation, handle_interpolation_end, handle_next_action,
                 handle_string_end,
             },
             literal::StringLiteralExtend,
+            types::{HasInterpolation, HasNextAction},
         },
     },
     token::token,

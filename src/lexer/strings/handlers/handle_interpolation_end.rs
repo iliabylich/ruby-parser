@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::Buffer,
-        strings::{action::StringExtendAction, handlers::contracts::HasInterpolation},
+        strings::{action::StringExtendAction, types::HasInterpolation},
     },
     token::token,
 };

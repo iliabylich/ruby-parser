@@ -83,7 +83,7 @@ macro_rules! assert_emits_scheduled_string_action {
             input = b"",
             token = token!(tINTEGER, 0, 1),
             pre = |literal: &mut StringLiteral| {
-                use crate::lexer::strings::handlers::contracts::HasNextAction;
+                use crate::lexer::strings::types::HasNextAction;
 
                 let next_action = match literal {
                     StringLiteral::String(string) => string.next_action_mut(),
@@ -114,7 +114,7 @@ macro_rules! assert_emits_interpolation_end_action {
                 token: token!(tSTRING_DEND, 0, 1)
             },
             pre = |literal: &mut StringLiteral| {
-                use crate::lexer::strings::handlers::contracts::HasInterpolation;
+                use crate::lexer::strings::types::HasInterpolation;
 
                 let currently_in_interpolation = match literal {
                     StringLiteral::String(string) => string.currently_in_interpolation_mut(),

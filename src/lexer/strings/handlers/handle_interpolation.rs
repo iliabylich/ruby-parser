@@ -7,8 +7,8 @@ use crate::{
         gvar::{lookahead_gvar, LookaheadGvarResult},
         strings::{
             action::StringExtendAction,
-            handlers::contracts::{HasInterpolation, HasNextAction},
             handlers::string_content_to_emit,
+            types::{HasInterpolation, HasNextAction},
         },
     },
     token::token,
