@@ -4,13 +4,12 @@ use crate::{
     lexer::{
         buffer::Buffer,
         strings::{
-            action::{NextAction, StringExtendAction},
+            action::StringExtendAction,
             handlers::{
-                handle_eof, handle_interpolation, handle_interpolation_end, handle_next_action,
-                handle_string_end,
+                handle_eof, handle_interpolation, handle_interpolation_end, handle_string_end,
             },
             literal::StringLiteralExtend,
-            types::{HasInterpolation, HasNextAction, Interpolation},
+            types::{HasInterpolation, Interpolation},
         },
     },
     token::{token, Loc, Token},
@@ -20,8 +19,6 @@ use crate::{
 pub(crate) struct Regexp {
     interpolation: Interpolation,
     ends_with: u8,
-
-    next_action: NextAction,
 }
 
 impl Regexp {
@@ -32,15 +29,7 @@ impl Regexp {
                 curly_nest: curly_level,
             },
             ends_with,
-
-            next_action: NextAction::NoAction,
         }
-    }
-}
-
-impl HasNextAction for Regexp {
-    fn next_action_mut(&mut self) -> &mut NextAction {
-        &mut self.next_action
     }
 }
 
@@ -89,7 +78,6 @@ impl Regexp {
         buffer: &mut Buffer,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
-        handle_next_action(self)?;
         handle_interpolation_end(self, buffer, current_curly_nest)?;
 
         let start = buffer.pos();
@@ -97,7 +85,7 @@ impl Regexp {
         loop {
             handle_eof(buffer, start)?;
             handle_interpolation(self, buffer, start)?;
-            handle_string_end(self, self.ends_with, buffer, start)?;
+            handle_string_end(self.ends_with, buffer, start)?;
 
             if buffer.lookahead(b"\\\n") {
                 // just emit what we've got so far
@@ -134,7 +122,6 @@ fn lookahead_regexp_options(buffer: &mut Buffer, start: usize) -> Option<usize> 
 mod tests {
     use crate::lexer::strings::{test_helpers::*, types::Regexp, StringLiteral};
 
-    assert_emits_scheduled_string_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
     assert_emits_eof_string_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
 
     // interpolation END handling

@@ -2,10 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::lexer::{
     buffer::Buffer,
-    strings::{
-        action::{NextAction, StringExtendAction},
-        literal::StringLiteralExtend,
-    },
+    strings::{action::StringExtendAction, literal::StringLiteralExtend},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -14,8 +11,6 @@ pub(crate) struct Heredoc<'a> {
     currently_in_interpolation: bool,
     ends_with: &'a [u8],
     interpolation_started_with_curly_level: usize,
-
-    next_action: NextAction,
 
     heredoc_id_ended_at: usize,
 }

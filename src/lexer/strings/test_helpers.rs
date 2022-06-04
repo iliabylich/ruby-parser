@@ -75,35 +75,6 @@ macro_rules! assert_emits_eof_string_action {
 }
 pub(crate) use assert_emits_eof_string_action;
 
-macro_rules! assert_emits_scheduled_string_action {
-    ($literal:expr) => {
-        assert_emits_token!(
-            test = test_scheduled_action,
-            literal = $literal,
-            input = b"",
-            token = token!(tINTEGER, 0, 1),
-            pre = |literal: &mut StringLiteral| {
-                use crate::lexer::strings::types::HasNextAction;
-
-                let next_action = match literal {
-                    StringLiteral::StringInterp(string) => string.next_action_mut(),
-                    StringLiteral::Regexp(regexp) => regexp.next_action_mut(),
-                    _ => panic!(
-                        "String literal {:?} doesn't implement HasNextAction",
-                        literal
-                    ),
-                };
-
-                next_action.add(StringExtendAction::EmitToken {
-                    token: token!(tINTEGER, 0, 1),
-                });
-            },
-            post = |_| {}
-        );
-    };
-}
-pub(crate) use assert_emits_scheduled_string_action;
-
 macro_rules! assert_emits_interpolation_end_action {
     ($literal:expr) => {
         assert_emits_extend_action!(

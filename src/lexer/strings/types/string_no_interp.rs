@@ -3,33 +3,19 @@ use std::ops::ControlFlow;
 use crate::lexer::{
     buffer::Buffer,
     strings::{
-        action::NextAction,
-        handlers::{handle_eof, handle_next_action, handle_string_end},
+        handlers::{handle_eof, handle_string_end},
         literal::StringLiteralExtend,
-        types::HasNextAction,
     },
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct StringNoInterp {
     ends_with: u8,
-
-    next_action: NextAction,
 }
 
 impl StringNoInterp {
     pub(crate) fn new(ends_with: u8) -> Self {
-        Self {
-            ends_with,
-
-            next_action: NextAction::NoAction,
-        }
-    }
-}
-
-impl HasNextAction for StringNoInterp {
-    fn next_action_mut(&mut self) -> &mut NextAction {
-        &mut self.next_action
+        Self { ends_with }
     }
 }
 
@@ -39,13 +25,11 @@ impl<'a> StringLiteralExtend<'a> for StringNoInterp {
         buffer: &mut Buffer<'a>,
         _current_curly_nest: usize,
     ) -> ControlFlow<crate::lexer::strings::action::StringExtendAction> {
-        handle_next_action(self)?;
-
         let start = buffer.pos();
 
         loop {
             handle_eof(buffer, start)?;
-            handle_string_end(self, self.ends_with, buffer, start)?;
+            handle_string_end(self.ends_with, buffer, start)?;
             buffer.skip_byte()
         }
     }

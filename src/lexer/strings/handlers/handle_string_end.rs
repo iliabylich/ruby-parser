@@ -3,36 +3,29 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::{Buffer, Pattern},
-        strings::{
-            action::StringExtendAction, handlers::string_content_to_emit, types::HasNextAction,
-        },
+        strings::{action::StringExtendAction, handlers::handle_processed_string_content},
     },
     token::token,
 };
 
-pub(crate) fn handle_string_end<'a, L, P>(
-    literal: &mut L,
+pub(crate) fn handle_string_end<'a, P>(
     ends_with: P,
     buffer: &mut Buffer<'a>,
     start: usize,
 ) -> ControlFlow<StringExtendAction>
 where
-    L: HasNextAction,
     P: Pattern,
 {
     if buffer.lookahead(&ends_with) {
-        let string_end_action = StringExtendAction::FoundStringEnd {
-            token: token!(tSTRING_END, buffer.pos(), buffer.pos() + ends_with.length()),
-        };
-        let string_content = string_content_to_emit(start, buffer.pos());
-        buffer.set_pos(buffer.pos() + ends_with.length());
+        handle_processed_string_content(start, buffer.pos())?;
 
-        if let Some(token) = string_content {
-            literal.next_action_mut().add(string_end_action);
-            ControlFlow::Break(StringExtendAction::EmitToken { token })
-        } else {
-            ControlFlow::Break(string_end_action)
-        }
+        let start = buffer.pos();
+        let end = start + ends_with.length();
+        buffer.set_pos(end);
+
+        ControlFlow::Break(StringExtendAction::FoundStringEnd {
+            token: token!(tSTRING_END, start, end),
+        })
     } else {
         ControlFlow::Continue(())
     }

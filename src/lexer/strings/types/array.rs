@@ -2,11 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::lexer::{
     buffer::Buffer,
-    strings::{
-        action::{NextAction, StringExtendAction},
-        handlers::handle_eof,
-        literal::StringLiteralExtend,
-    },
+    strings::{action::StringExtendAction, handlers::handle_eof, literal::StringLiteralExtend},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -15,8 +11,6 @@ pub(crate) struct Array {
     currently_in_interpolation: bool,
     ends_with: u8,
     interpolation_started_with_curly_level: usize,
-
-    next_action: NextAction,
 }
 
 impl Array {
@@ -26,7 +20,6 @@ impl Array {
             currently_in_interpolation: false,
             ends_with,
             interpolation_started_with_curly_level: curly_level,
-            next_action: NextAction::NoAction,
         }
     }
 }

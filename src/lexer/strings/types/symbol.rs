@@ -2,11 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::lexer::{
     buffer::Buffer,
-    strings::{
-        action::{NextAction, StringExtendAction},
-        handlers::handle_eof,
-        literal::StringLiteralExtend,
-    },
+    strings::{action::StringExtendAction, handlers::handle_eof, literal::StringLiteralExtend},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
@@ -14,8 +10,6 @@ pub(crate) struct Symbol {
     supports_interpolation: bool,
     currently_in_interpolation: bool,
     interpolation_started_with_curly_level: usize,
-
-    next_action: NextAction,
 }
 
 impl Symbol {
@@ -24,7 +18,6 @@ impl Symbol {
             supports_interpolation: interp,
             currently_in_interpolation: false,
             interpolation_started_with_curly_level: curly_level,
-            next_action: NextAction::NoAction,
         }
     }
 }

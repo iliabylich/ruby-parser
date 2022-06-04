@@ -4,13 +4,12 @@ use crate::{
     lexer::{
         buffer::Buffer,
         strings::{
-            action::{NextAction, StringExtendAction},
+            action::StringExtendAction,
             handlers::{
-                handle_eof, handle_interpolation, handle_interpolation_end, handle_next_action,
-                handle_string_end,
+                handle_eof, handle_interpolation, handle_interpolation_end, handle_string_end,
             },
             literal::StringLiteralExtend,
-            types::{HasInterpolation, HasNextAction, Interpolation},
+            types::{HasInterpolation, Interpolation},
         },
     },
     token::token,
@@ -20,8 +19,6 @@ use crate::{
 pub(crate) struct StringInterp {
     interpolation: Interpolation,
     ends_with: u8,
-
-    next_action: NextAction,
 }
 
 impl StringInterp {
@@ -29,15 +26,7 @@ impl StringInterp {
         Self {
             interpolation,
             ends_with,
-
-            next_action: NextAction::NoAction,
         }
-    }
-}
-
-impl HasNextAction for StringInterp {
-    fn next_action_mut(&mut self) -> &mut NextAction {
-        &mut self.next_action
     }
 }
 
@@ -57,9 +46,6 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<crate::lexer::strings::action::StringExtendAction> {
-        // debug_assert!(!self.ends_with.is_empty());
-
-        handle_next_action(self)?;
         handle_interpolation_end(self, buffer, current_curly_nest)?;
 
         let start = buffer.pos();
@@ -67,7 +53,7 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         loop {
             handle_eof(buffer, start)?;
             handle_interpolation(self, buffer, start)?;
-            handle_string_end(self, self.ends_with, buffer, start)?;
+            handle_string_end(self.ends_with, buffer, start)?;
 
             if buffer.lookahead(b"\\\n") {
                 // just emit what we've got so far
@@ -90,10 +76,6 @@ mod tests {
     use super::*;
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    assert_emits_scheduled_string_action!(StringLiteral::StringInterp(StringInterp::new(
-        Interpolation::new(0),
-        b'"'
-    )));
     assert_emits_eof_string_action!(StringLiteral::StringInterp(StringInterp::new(
         Interpolation::new(0),
         b'"'
