@@ -16,8 +16,5 @@ pub(crate) use regexp::Regexp;
 mod array;
 pub(crate) use array::Array;
 
-mod has_interpolation;
-pub(crate) use has_interpolation::HasInterpolation;
-
 mod interpolation;
 pub(crate) use interpolation::Interpolation;

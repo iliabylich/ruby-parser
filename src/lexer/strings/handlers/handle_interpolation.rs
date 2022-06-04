@@ -7,22 +7,19 @@ use crate::{
         gvar::{lookahead_gvar, LookaheadGvarResult},
         strings::{
             action::StringExtendAction, handlers::handle_processed_string_content,
-            types::HasInterpolation,
+            types::Interpolation,
         },
     },
     token::token,
 };
 
-pub(crate) fn handle_interpolation<T>(
-    literal: &mut T,
+pub(crate) fn handle_interpolation(
+    interpolation: &mut Interpolation,
     buffer: &mut Buffer,
     start: usize,
-) -> ControlFlow<StringExtendAction>
-where
-    T: HasInterpolation,
-{
+) -> ControlFlow<StringExtendAction> {
     // handle #{ interpolation
-    handle_regular_interpolation(literal, buffer, start)?;
+    handle_regular_interpolation(interpolation, buffer, start)?;
 
     // handle "#@foo" / "#@@foo" interpolation
     handle_raw_ivar_or_cvar_interpolation(buffer, start)?;
@@ -34,14 +31,11 @@ where
 }
 
 #[must_use]
-fn handle_regular_interpolation<'a, T>(
-    literal: &mut T,
-    buffer: &mut Buffer<'a>,
+fn handle_regular_interpolation(
+    interpolation: &mut Interpolation,
+    buffer: &mut Buffer,
     start: usize,
-) -> ControlFlow<StringExtendAction>
-where
-    T: HasInterpolation,
-{
+) -> ControlFlow<StringExtendAction> {
     if buffer.lookahead(b"#{") {
         handle_processed_string_content(start, buffer.pos())?;
 
@@ -49,7 +43,7 @@ where
         // consume `#{`
         buffer.set_pos(token.loc().end());
         // start interpolation
-        literal.interpolation_mut().enabled = true;
+        interpolation.enabled = true;
 
         return ControlFlow::Break(StringExtendAction::FoundInterpolation { token });
     }

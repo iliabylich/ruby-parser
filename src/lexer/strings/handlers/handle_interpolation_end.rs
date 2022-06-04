@@ -3,23 +3,17 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::Buffer,
-        strings::{
-            action::StringExtendAction,
-            types::{HasInterpolation, Interpolation},
-        },
+        strings::{action::StringExtendAction, types::Interpolation},
     },
     token::token,
 };
 
-pub(crate) fn handle_interpolation_end<'a, T>(
-    literal: &mut T,
-    buffer: &mut Buffer<'a>,
+pub(crate) fn handle_interpolation_end(
+    interpolation: &mut Interpolation,
+    buffer: &mut Buffer,
     current_curly_nest: usize,
-) -> ControlFlow<StringExtendAction>
-where
-    T: HasInterpolation,
-{
-    match literal.interpolation_mut() {
+) -> ControlFlow<StringExtendAction> {
+    match interpolation {
         Interpolation {
             enabled,
             curly_nest,

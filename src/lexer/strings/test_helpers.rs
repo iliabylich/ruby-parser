@@ -85,18 +85,11 @@ macro_rules! assert_emits_interpolation_end_action {
                 token: token!(tSTRING_DEND, 0, 1)
             },
             pre = |literal: &mut StringLiteral| {
-                use crate::lexer::strings::types::HasInterpolation;
-
-                let interpolation = match literal {
-                    StringLiteral::StringInterp(string) => string.interpolation_mut(),
-                    StringLiteral::Regexp(regexp) => regexp.interpolation_mut(),
-                    _ => panic!(
-                        "String literal {:?} doesn't implement HasInterpolation",
-                        literal
-                    ),
+                match literal {
+                    StringLiteral::StringInterp(string) => string.enable_interpolation(),
+                    StringLiteral::Regexp(regexp) => regexp.enable_interpolation(),
+                    _ => panic!("String literal {:?} doesn't embed Interpolation", literal),
                 };
-
-                interpolation.enabled = true;
             },
             post = |_| {}
         );

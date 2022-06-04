@@ -9,7 +9,7 @@ use crate::{
                 handle_eof, handle_interpolation, handle_interpolation_end, handle_string_end,
             },
             literal::StringLiteralExtend,
-            types::{HasInterpolation, Interpolation},
+            types::Interpolation,
         },
     },
     token::{token, Loc, Token},
@@ -31,15 +31,10 @@ impl Regexp {
             ends_with,
         }
     }
-}
 
-impl HasInterpolation for Regexp {
-    fn interpolation(&self) -> &Interpolation {
-        &self.interpolation
-    }
-
-    fn interpolation_mut(&mut self) -> &mut Interpolation {
-        &mut self.interpolation
+    #[cfg(test)]
+    pub(crate) fn enable_interpolation(&mut self) {
+        self.interpolation.enabled = true;
     }
 }
 
@@ -78,13 +73,13 @@ impl Regexp {
         buffer: &mut Buffer,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
-        handle_interpolation_end(self, buffer, current_curly_nest)?;
+        handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;
 
         let start = buffer.pos();
 
         loop {
             handle_eof(buffer, start)?;
-            handle_interpolation(self, buffer, start)?;
+            handle_interpolation(&mut self.interpolation, buffer, start)?;
             handle_string_end(self.ends_with, buffer, start)?;
 
             if buffer.lookahead(b"\\\n") {
