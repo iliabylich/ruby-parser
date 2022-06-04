@@ -20,7 +20,7 @@ where
     T: HasInterpolation,
 {
     match literal.interpolation_mut() {
-        Interpolation::Available {
+        Interpolation {
             enabled,
             curly_nest,
         } if *enabled => {

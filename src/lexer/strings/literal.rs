@@ -4,7 +4,7 @@ use crate::lexer::{
     buffer::Buffer,
     strings::{
         action::StringExtendAction,
-        types::{Array, Heredoc, Regexp, String, Symbol},
+        types::{Array, Heredoc, Regexp, StringInterp, StringNoInterp, Symbol},
     },
 };
 
@@ -18,7 +18,9 @@ pub(crate) trait StringLiteralExtend<'a> {
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum StringLiteral<'a> {
-    String(String),
+    StringInterp(StringInterp),
+    StringNoInterp(StringNoInterp),
+
     Symbol(Symbol),
     Heredoc(Heredoc<'a>),
     Regexp(Regexp),
@@ -32,7 +34,8 @@ impl<'a> StringLiteralExtend<'a> for StringLiteral<'a> {
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
         match self {
-            Self::String(string) => string.extend(buffer, current_curly_nest),
+            Self::StringInterp(string) => string.extend(buffer, current_curly_nest),
+            Self::StringNoInterp(string) => string.extend(buffer, current_curly_nest),
             Self::Symbol(symbol) => symbol.extend(buffer, current_curly_nest),
             Self::Heredoc(heredoc) => heredoc.extend(buffer, current_curly_nest),
             Self::Regexp(regexp) => regexp.extend(buffer, current_curly_nest),

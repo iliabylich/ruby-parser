@@ -1,5 +1,8 @@
-mod string;
-pub(crate) use string::String;
+mod string_interp;
+pub(crate) use string_interp::StringInterp;
+
+mod string_no_interp;
+pub(crate) use string_no_interp::StringNoInterp;
 
 mod symbol;
 pub(crate) use symbol::Symbol;

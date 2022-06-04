@@ -86,7 +86,7 @@ macro_rules! assert_emits_scheduled_string_action {
                 use crate::lexer::strings::types::HasNextAction;
 
                 let next_action = match literal {
-                    StringLiteral::String(string) => string.next_action_mut(),
+                    StringLiteral::StringInterp(string) => string.next_action_mut(),
                     StringLiteral::Regexp(regexp) => regexp.next_action_mut(),
                     _ => panic!(
                         "String literal {:?} doesn't implement HasNextAction",
@@ -114,20 +114,18 @@ macro_rules! assert_emits_interpolation_end_action {
                 token: token!(tSTRING_DEND, 0, 1)
             },
             pre = |literal: &mut StringLiteral| {
-                use crate::lexer::strings::types::{HasInterpolation, Interpolation};
+                use crate::lexer::strings::types::HasInterpolation;
 
                 let interpolation = match literal {
-                    StringLiteral::String(string) => string.interpolation_mut(),
+                    StringLiteral::StringInterp(string) => string.interpolation_mut(),
                     StringLiteral::Regexp(regexp) => regexp.interpolation_mut(),
                     _ => panic!(
                         "String literal {:?} doesn't implement HasInterpolation",
                         literal
                     ),
                 };
-                match interpolation {
-                    Interpolation::Available { enabled, .. } => *enabled = true,
-                    _ => panic!("interpolation must be Available, got Disabled"),
-                }
+
+                interpolation.enabled = true;
             },
             post = |_| {}
         );

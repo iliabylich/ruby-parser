@@ -8,7 +8,7 @@ use crate::{
         strings::{
             action::StringExtendAction,
             handlers::string_content_to_emit,
-            types::{HasInterpolation, HasNextAction, Interpolation},
+            types::{HasInterpolation, HasNextAction},
         },
     },
     token::token,
@@ -56,12 +56,7 @@ where
     let string_content = string_content_to_emit(start, buffer.pos());
     buffer.set_pos(buffer.pos() + 2);
     // start interpolation
-    match literal.interpolation_mut() {
-        Interpolation::Available { enabled, .. } => {
-            *enabled = true;
-        }
-        Interpolation::Disabled => unreachable!("literal must have interpolation = Available"),
-    }
+    literal.interpolation_mut().enabled = true;
 
     if let Some(token) = string_content {
         literal.next_action_mut().add(action);

@@ -27,7 +27,7 @@ pub(crate) struct Regexp {
 impl Regexp {
     pub(crate) fn new(ends_with: u8, curly_level: usize) -> Self {
         Self {
-            interpolation: Interpolation::Available {
+            interpolation: Interpolation {
                 enabled: false,
                 curly_nest: curly_level,
             },

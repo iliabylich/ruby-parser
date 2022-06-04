@@ -17,14 +17,14 @@ use crate::{
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) struct String {
+pub(crate) struct StringInterp {
     interpolation: Interpolation,
     ends_with: u8,
 
     next_action: NextAction,
 }
 
-impl String {
+impl StringInterp {
     pub(crate) fn new(interpolation: Interpolation, ends_with: u8) -> Self {
         Self {
             interpolation,
@@ -35,13 +35,13 @@ impl String {
     }
 }
 
-impl HasNextAction for String {
+impl HasNextAction for StringInterp {
     fn next_action_mut(&mut self) -> &mut NextAction {
         &mut self.next_action
     }
 }
 
-impl HasInterpolation for String {
+impl HasInterpolation for StringInterp {
     fn interpolation(&self) -> &Interpolation {
         &self.interpolation
     }
@@ -51,7 +51,7 @@ impl HasInterpolation for String {
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for String {
+impl<'a> StringLiteralExtend<'a> for StringInterp {
     fn extend(
         &mut self,
         buffer: &mut Buffer<'a>,
@@ -64,30 +64,23 @@ impl<'a> StringLiteralExtend<'a> for String {
 
         let start = buffer.pos();
 
-        match self.interpolation {
-            Interpolation::Available { .. } => loop {
-                handle_eof(buffer, start)?;
-                handle_interpolation(self, buffer, start)?;
-                handle_string_end(self, self.ends_with, buffer, start)?;
+        loop {
+            handle_eof(buffer, start)?;
+            handle_interpolation(self, buffer, start)?;
+            handle_string_end(self, self.ends_with, buffer, start)?;
 
-                if buffer.lookahead(b"\\\n") {
-                    // just emit what we've got so far
-                    // parser will merge two consectuive string literals
-                    let action = StringExtendAction::EmitToken {
-                        token: token!(tSTRING_CONTENT, start, buffer.pos()),
-                    };
-                    // and skip escaped NL
-                    buffer.set_pos(buffer.pos() + 2);
-                    return ControlFlow::Break(action);
-                }
+            if buffer.lookahead(b"\\\n") {
+                // just emit what we've got so far
+                // parser will merge two consectuive string literals
+                let action = StringExtendAction::EmitToken {
+                    token: token!(tSTRING_CONTENT, start, buffer.pos()),
+                };
+                // and skip escaped NL
+                buffer.set_pos(buffer.pos() + 2);
+                return ControlFlow::Break(action);
+            }
 
-                buffer.skip_byte();
-            },
-            Interpolation::Disabled => loop {
-                handle_eof(buffer, start)?;
-                handle_string_end(self, self.ends_with, buffer, start)?;
-                buffer.skip_byte()
-            },
+            buffer.skip_byte();
         }
     }
 }
@@ -97,32 +90,24 @@ mod tests {
     use super::*;
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    assert_emits_scheduled_string_action!(StringLiteral::String(String::new(
-        Interpolation::available(0),
+    assert_emits_scheduled_string_action!(StringLiteral::StringInterp(StringInterp::new(
+        Interpolation::new(0),
         b'"'
     )));
-    assert_emits_eof_string_action!(StringLiteral::String(String::new(
-        Interpolation::available(0),
+    assert_emits_eof_string_action!(StringLiteral::StringInterp(StringInterp::new(
+        Interpolation::new(0),
         b'"'
     )));
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(StringLiteral::String(String::new(
-        Interpolation::available(0),
+    assert_emits_interpolation_end_action!(StringLiteral::StringInterp(StringInterp::new(
+        Interpolation::new(0),
         b'"'
     )));
-    assert_emits_token!(
-        test = test_rcurly_with_no_interp_support,
-        literal = StringLiteral::String(String::new(Interpolation::Disabled, b'\'')),
-        input = b"}",
-        token = token!(tSTRING_CONTENT, 0, 1),
-        pre = |_| {},
-        post = |_| {}
-    );
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::String(String::new(
-        Interpolation::available(0),
+    assert_emits_interpolated_value!(StringLiteral::StringInterp(StringInterp::new(
+        Interpolation::new(0),
         b'"'
     )));
 
@@ -142,7 +127,7 @@ mod tests {
     }
 
     assert_emits_string_end!(
-        literal = StringLiteral::String(String::new(Interpolation::available(0), b'"')),
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'"')),
         input = b"\""
     );
 }

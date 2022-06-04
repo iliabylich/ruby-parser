@@ -1,6 +1,6 @@
 use crate::lexer::{
     assert_lex,
-    strings::types::{Interpolation, String, Symbol},
+    strings::types::{Interpolation, StringInterp, StringNoInterp, Symbol},
     Lexer, OnByte, StringLiteral,
 };
 use crate::token::{token, Token};
@@ -196,10 +196,11 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
-        self.string_literals.push(StringLiteral::String(String::new(
-            Interpolation::available(self.curly_nest),
-            b'"',
-        )));
+        self.string_literals
+            .push(StringLiteral::StringInterp(StringInterp::new(
+                Interpolation::new(self.curly_nest),
+                b'"',
+            )));
         token
     }
 }
@@ -213,13 +214,13 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::types::String;
+        use crate::lexer::strings::types::StringInterp;
         assert_eq!(lexer.string_literals.size(), 1);
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::String(String::new(
-                Interpolation::available(42),
+            Some(StringLiteral::StringInterp(StringInterp::new(
+                Interpolation::new(42),
                 b'"'
             )))
         );
@@ -237,10 +238,8 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
-        self.string_literals.push(StringLiteral::String(String::new(
-            Interpolation::Disabled,
-            b'\'',
-        )));
+        self.string_literals
+            .push(StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')));
         token
     }
 }
@@ -254,15 +253,10 @@ assert_lex!(
         lexer.curly_nest = 42;
     },
     assert = |lexer: &Lexer| {
-        use crate::lexer::strings::types::String;
-
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::String(String::new(
-                Interpolation::Disabled,
-                b'\''
-            )))
+            Some(StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')))
         )
     }
 );

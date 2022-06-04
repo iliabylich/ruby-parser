@@ -1,12 +1,12 @@
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) enum Interpolation {
-    Available { enabled: bool, curly_nest: usize },
-    Disabled,
+pub(crate) struct Interpolation {
+    pub(crate) enabled: bool,
+    pub(crate) curly_nest: usize,
 }
 
 impl Interpolation {
-    pub(crate) fn available(curly_nest: usize) -> Self {
-        Self::Available {
+    pub(crate) fn new(curly_nest: usize) -> Self {
+        Self {
             enabled: false,
             curly_nest,
         }
