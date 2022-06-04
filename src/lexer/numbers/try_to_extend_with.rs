@@ -18,14 +18,14 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
     buffer.skip_byte();
 
     match read::decimal(buffer) {
-        0 => {
+        None => {
             // rollback
             buffer.set_pos(start);
             false
         }
-        mut len => {
+        Some(len) => {
             // track leading '.'
-            len += 1;
+            let len = usize::from(len) + 1;
             buffer.set_pos(start + len);
             // extend to float
             number.end += len;
@@ -63,14 +63,14 @@ pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
     }
 
     match read::decimal(buffer) {
-        0 => {
+        None => {
             // rollback
             buffer.set_pos(start);
             false
         }
-        mut len => {
+        Some(len) => {
             // track leading sign and 'e'
-            len += 1 + sign_length;
+            let len = usize::from(len) + 1 + sign_length;
             buffer.set_pos(start + len);
             // extend to float
             number.end += len;

@@ -217,7 +217,7 @@ impl<'a> Lexer<'a> {
     }
 }
 
-pub(crate) trait OnByte<'a, const BYTE: u8> {
+pub(crate) trait OnByte<const BYTE: u8> {
     fn on_byte(&mut self) -> Token;
 }
 

@@ -23,26 +23,26 @@ macro_rules! grab_integer_with_numbers {
     };
 }
 
-pub(crate) fn hexadecimal(buffer: &mut Buffer) -> usize {
+pub(crate) fn hexadecimal(buffer: &mut Buffer) -> Option<std::num::NonZeroUsize> {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F');
-    buffer.pos() - start
+    std::num::NonZeroUsize::new(buffer.pos() - start)
 }
 
-pub(crate) fn binary(buffer: &mut Buffer) -> usize {
+pub(crate) fn binary(buffer: &mut Buffer) -> Option<std::num::NonZeroUsize> {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0' | b'1');
-    buffer.pos() - start
+    std::num::NonZeroUsize::new(buffer.pos() - start)
 }
 
-pub(crate) fn decimal(buffer: &mut Buffer) -> usize {
+pub(crate) fn decimal(buffer: &mut Buffer) -> Option<std::num::NonZeroUsize> {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0'..=b'9');
-    buffer.pos() - start
+    std::num::NonZeroUsize::new(buffer.pos() - start)
 }
 
-pub(crate) fn octal(buffer: &mut Buffer) -> usize {
+pub(crate) fn octal(buffer: &mut Buffer) -> Option<std::num::NonZeroUsize> {
     let start = buffer.pos();
     grab_integer_with_numbers!(buffer, b'0'..=b'7');
-    buffer.pos() - start
+    std::num::NonZeroUsize::new(buffer.pos() - start)
 }

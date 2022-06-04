@@ -67,37 +67,49 @@ impl ExtendNumber for Uninitialized {
             match buffer.byte_at(start + 1) {
                 Some(b'x' | b'X') => {
                     buffer.skip_byte();
-                    number.end += read::hexadecimal(buffer) + 1;
+                    number.end += usize::from(
+                        read::hexadecimal(buffer).expect("numeric literal without digits"),
+                    ) + 1;
                     number.kind = NumberKind::Integer(Integer);
                     return NumberExtendAction::Continue;
                 }
                 Some(b'b' | b'B') => {
                     buffer.skip_byte();
-                    number.end += read::binary(buffer) + 1;
+                    number.end +=
+                        usize::from(read::binary(buffer).expect("numeric literal without digits"))
+                            + 1;
                     number.kind = NumberKind::Integer(Integer);
                     return NumberExtendAction::Continue;
                 }
                 Some(b'd' | b'D') => {
                     buffer.skip_byte();
-                    number.end += read::decimal(buffer) + 1;
+                    number.end +=
+                        usize::from(read::decimal(buffer).expect("numeric literal without digits"))
+                            + 1;
                     number.kind = NumberKind::Integer(Integer);
                     return NumberExtendAction::Continue;
                 }
                 Some(b'_') => {
                     buffer.skip_byte();
-                    number.end += read::octal(buffer) + 1;
+                    number.end +=
+                        usize::from(read::octal(buffer).expect("numeric literal without digits"))
+                            + 1;
                     number.kind = NumberKind::Integer(Integer);
                     return NumberExtendAction::Continue;
                 }
                 Some(b'o' | b'O') => {
                     buffer.skip_byte();
-                    number.end += read::octal(buffer) + 1;
+                    number.end +=
+                        usize::from(read::octal(buffer).expect("numeric literal without digits"))
+                            + 1;
                     number.kind = NumberKind::Integer(Integer);
                     return NumberExtendAction::Continue;
                 }
                 Some(b'0'..=b'7') => {
                     buffer.skip_byte();
-                    number.end += read::octal(buffer) + 1;
+                    number.end +=
+                        usize::from(read::octal(buffer).expect("numeric literal without digits"))
+                            + 1;
                     number.kind = NumberKind::Integer(Integer);
                     return NumberExtendAction::Continue;
                 }
@@ -123,7 +135,7 @@ impl ExtendNumber for Uninitialized {
         }
 
         // Definitely decimal prefix
-        number.end += read::decimal(buffer);
+        number.end += usize::from(read::decimal(buffer).expect("numeric literal without digits"));
         number.kind = NumberKind::Integer(Integer);
         NumberExtendAction::Continue
     }
