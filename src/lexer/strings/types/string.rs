@@ -10,29 +10,26 @@ use crate::{
                 handle_string_end,
             },
             literal::StringLiteralExtend,
-            types::{HasInterpolation, HasNextAction},
+            types::{HasInterpolation, HasNextAction, Interpolation},
         },
     },
     token::token,
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct String {
-    supports_interpolation: bool,
-    currently_in_interpolation: bool,
+    interpolation: Interpolation,
     ends_with: u8,
-    interpolation_started_with_curly_level: usize,
 
     next_action: NextAction,
 }
 
 impl String {
-    pub(crate) fn new(interp: bool, ends_with: u8, curly_level: usize) -> Self {
+    pub(crate) fn new(interpolation: Interpolation, ends_with: u8) -> Self {
         Self {
-            supports_interpolation: interp,
-            currently_in_interpolation: false,
+            interpolation,
             ends_with,
-            interpolation_started_with_curly_level: curly_level,
+
             next_action: NextAction::NoAction,
         }
     }
@@ -45,20 +42,12 @@ impl HasNextAction for String {
 }
 
 impl HasInterpolation for String {
-    fn currently_in_interpolation(&self) -> bool {
-        self.currently_in_interpolation
+    fn interpolation(&self) -> &Interpolation {
+        &self.interpolation
     }
 
-    fn currently_in_interpolation_mut(&mut self) -> &mut bool {
-        &mut self.currently_in_interpolation
-    }
-
-    fn supports_interpolation(&self) -> bool {
-        self.supports_interpolation
-    }
-
-    fn interpolation_started_with_curly_level(&self) -> usize {
-        self.interpolation_started_with_curly_level
+    fn interpolation_mut(&mut self) -> &mut Interpolation {
+        &mut self.interpolation
     }
 }
 
@@ -75,8 +64,8 @@ impl<'a> StringLiteralExtend<'a> for String {
 
         let start = buffer.pos();
 
-        if self.supports_interpolation {
-            loop {
+        match self.interpolation {
+            Interpolation::Available { .. } => loop {
                 handle_eof(buffer, start)?;
                 handle_interpolation(self, buffer, start)?;
                 handle_string_end(self, self.ends_with, buffer, start)?;
@@ -93,29 +82,38 @@ impl<'a> StringLiteralExtend<'a> for String {
                 }
 
                 buffer.skip_byte();
-            }
-        } else {
-            loop {
+            },
+            Interpolation::Disabled => loop {
                 handle_eof(buffer, start)?;
                 handle_string_end(self, self.ends_with, buffer, start)?;
                 buffer.skip_byte()
-            }
+            },
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::lexer::strings::{test_helpers::*, types::String, StringLiteral};
+    use super::*;
+    use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    assert_emits_scheduled_string_action!(StringLiteral::String(String::new(true, b'"', 0)));
-    assert_emits_eof_string_action!(StringLiteral::String(String::new(true, b'"', 0)));
+    assert_emits_scheduled_string_action!(StringLiteral::String(String::new(
+        Interpolation::available(0),
+        b'"'
+    )));
+    assert_emits_eof_string_action!(StringLiteral::String(String::new(
+        Interpolation::available(0),
+        b'"'
+    )));
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(StringLiteral::String(String::new(true, b'"', 0)));
+    assert_emits_interpolation_end_action!(StringLiteral::String(String::new(
+        Interpolation::available(0),
+        b'"'
+    )));
     assert_emits_token!(
         test = test_rcurly_with_no_interp_support,
-        literal = StringLiteral::String(String::new(false, b'\'', 0)),
+        literal = StringLiteral::String(String::new(Interpolation::Disabled, b'\'')),
         input = b"}",
         token = token!(tSTRING_CONTENT, 0, 1),
         pre = |_| {},
@@ -123,7 +121,10 @@ mod tests {
     );
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::String(String::new(true, b'"', 0)));
+    assert_emits_interpolated_value!(StringLiteral::String(String::new(
+        Interpolation::available(0),
+        b'"'
+    )));
 
     #[test]
     fn test_string_plain_non_interp() {
@@ -141,7 +142,7 @@ mod tests {
     }
 
     assert_emits_string_end!(
-        literal = StringLiteral::String(String::new(true, b'"', 0)),
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b'"')),
         input = b"\""
     );
 }

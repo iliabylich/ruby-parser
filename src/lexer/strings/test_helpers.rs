@@ -114,17 +114,20 @@ macro_rules! assert_emits_interpolation_end_action {
                 token: token!(tSTRING_DEND, 0, 1)
             },
             pre = |literal: &mut StringLiteral| {
-                use crate::lexer::strings::types::HasInterpolation;
+                use crate::lexer::strings::types::{HasInterpolation, Interpolation};
 
-                let currently_in_interpolation = match literal {
-                    StringLiteral::String(string) => string.currently_in_interpolation_mut(),
-                    StringLiteral::Regexp(regexp) => regexp.currently_in_interpolation_mut(),
+                let interpolation = match literal {
+                    StringLiteral::String(string) => string.interpolation_mut(),
+                    StringLiteral::Regexp(regexp) => regexp.interpolation_mut(),
                     _ => panic!(
                         "String literal {:?} doesn't implement HasInterpolation",
                         literal
                     ),
                 };
-                *currently_in_interpolation = true;
+                match interpolation {
+                    Interpolation::Available { enabled, .. } => *enabled = true,
+                    _ => panic!("interpolation must be Available, got Disabled"),
+                }
             },
             post = |_| {}
         );

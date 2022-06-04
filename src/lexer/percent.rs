@@ -57,11 +57,14 @@ pub(crate) fn parse_percent<'a>(
     match literal_type {
         b'Q' => {
             token = token!(tSTRING_BEG, start, end);
-            literal = StringLiteral::String(String::new(true, ends_with, curly_level));
+            literal = StringLiteral::String(String::new(
+                Interpolation::available(curly_level),
+                ends_with,
+            ));
         }
         b'q' => {
             token = token!(tSTRING_BEG, start, end);
-            literal = StringLiteral::String(String::new(false, ends_with, curly_level));
+            literal = StringLiteral::String(String::new(Interpolation::Disabled, ends_with));
         }
 
         b'W' => {
@@ -84,7 +87,10 @@ pub(crate) fn parse_percent<'a>(
 
         b'x' => {
             token = token!(tXSTRING_BEG, start, end);
-            literal = StringLiteral::String(String::new(true, ends_with, curly_level));
+            literal = StringLiteral::String(String::new(
+                Interpolation::available(curly_level),
+                ends_with,
+            ));
         }
 
         b'r' => {
@@ -93,7 +99,7 @@ pub(crate) fn parse_percent<'a>(
         }
         b's' => {
             token = token!(tSYMBEG, start, end);
-            literal = StringLiteral::String(String::new(false, ends_with, curly_level));
+            literal = StringLiteral::String(String::new(Interpolation::Disabled, ends_with));
         }
 
         _ => todo!("percent_unknown"),
@@ -141,31 +147,31 @@ mod tests {
         name = test_tPERCENT_tLPAREN,
         input = b"%(",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b')', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b')'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tLBRACK,
         input = b"%[",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b']', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b']'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tLCURLY,
         input = b"%{",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b'}', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b'}'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tLT,
         input = b"%<",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b'>', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b'>'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tPIPE,
         input = b"%|",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b'|', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b'|'))
     );
 
     // %Q
@@ -173,7 +179,7 @@ mod tests {
         name = test_tPERCENT_q_upper,
         input = b"%Q{",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b'}', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b'}'))
     );
 
     // %q
@@ -181,7 +187,7 @@ mod tests {
         name = test_tPERCENT_q_lower,
         input = b"%q{",
         token = tSTRING_BEG,
-        literal = StringLiteral::String(String::new(false, b'}', 0))
+        literal = StringLiteral::String(String::new(Interpolation::Disabled, b'}'))
     );
 
     // %W
@@ -221,7 +227,7 @@ mod tests {
         name = test_tPERCENT_x_lower,
         input = b"%x{",
         token = tXSTRING_BEG,
-        literal = StringLiteral::String(String::new(true, b'}', 0))
+        literal = StringLiteral::String(String::new(Interpolation::available(0), b'}'))
     );
 
     // %r
@@ -237,6 +243,6 @@ mod tests {
         name = test_tPERCENT_s_lower,
         input = b"%s{",
         token = tSYMBEG,
-        literal = StringLiteral::String(String::new(false, b'}', 0))
+        literal = StringLiteral::String(String::new(Interpolation::Disabled, b'}'))
     );
 }

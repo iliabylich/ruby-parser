@@ -1,6 +1,6 @@
 use crate::lexer::{
     assert_lex,
-    strings::types::{String, Symbol},
+    strings::types::{Interpolation, String, Symbol},
     Lexer, OnByte, StringLiteral,
 };
 use crate::token::{token, Token};
@@ -197,9 +197,8 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
         self.string_literals.push(StringLiteral::String(String::new(
-            true,
+            Interpolation::available(self.curly_nest),
             b'"',
-            self.curly_nest,
         )));
         token
     }
@@ -219,7 +218,10 @@ assert_lex!(
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::String(String::new(true, b'"', 42)))
+            Some(StringLiteral::String(String::new(
+                Interpolation::available(42),
+                b'"'
+            )))
         );
     }
 );
@@ -235,8 +237,10 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
-        self.string_literals
-            .push(StringLiteral::String(String::new(false, b'\'', 0)));
+        self.string_literals.push(StringLiteral::String(String::new(
+            Interpolation::Disabled,
+            b'\'',
+        )));
         token
     }
 }
@@ -255,7 +259,10 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::String(String::new(false, b'\'', 0)))
+            Some(StringLiteral::String(String::new(
+                Interpolation::Disabled,
+                b'\''
+            )))
         )
     }
 );

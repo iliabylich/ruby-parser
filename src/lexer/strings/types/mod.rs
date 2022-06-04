@@ -18,3 +18,6 @@ pub(crate) use has_next_action::HasNextAction;
 
 mod has_interpolation;
 pub(crate) use has_interpolation::HasInterpolation;
+
+mod interpolation;
+pub(crate) use interpolation::Interpolation;

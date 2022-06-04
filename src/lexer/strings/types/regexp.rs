@@ -10,17 +10,16 @@ use crate::{
                 handle_string_end,
             },
             literal::StringLiteralExtend,
-            types::{HasInterpolation, HasNextAction},
+            types::{HasInterpolation, HasNextAction, Interpolation},
         },
     },
     token::{token, Loc, Token},
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct Regexp {
-    currently_in_interpolation: bool,
+    interpolation: Interpolation,
     ends_with: u8,
-    interpolation_started_with_curly_level: usize,
 
     next_action: NextAction,
 }
@@ -28,9 +27,12 @@ pub(crate) struct Regexp {
 impl Regexp {
     pub(crate) fn new(ends_with: u8, curly_level: usize) -> Self {
         Self {
-            currently_in_interpolation: false,
+            interpolation: Interpolation::Available {
+                enabled: false,
+                curly_nest: curly_level,
+            },
             ends_with,
-            interpolation_started_with_curly_level: curly_level,
+
             next_action: NextAction::NoAction,
         }
     }
@@ -43,20 +45,12 @@ impl HasNextAction for Regexp {
 }
 
 impl HasInterpolation for Regexp {
-    fn currently_in_interpolation(&self) -> bool {
-        self.currently_in_interpolation
+    fn interpolation(&self) -> &Interpolation {
+        &self.interpolation
     }
 
-    fn currently_in_interpolation_mut(&mut self) -> &mut bool {
-        &mut self.currently_in_interpolation
-    }
-
-    fn supports_interpolation(&self) -> bool {
-        true
-    }
-
-    fn interpolation_started_with_curly_level(&self) -> usize {
-        self.interpolation_started_with_curly_level
+    fn interpolation_mut(&mut self) -> &mut Interpolation {
+        &mut self.interpolation
     }
 }
 
