@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::lexer::{
     buffer::Buffer,
-    strings::{action::StringExtendAction, handlers::string_content_to_emit},
+    strings::{action::StringExtendAction, handlers::handle_processed_string_content},
 };
 
 pub(crate) fn handle_eof<'a>(
@@ -10,11 +10,9 @@ pub(crate) fn handle_eof<'a>(
     start: usize,
 ) -> ControlFlow<StringExtendAction> {
     if buffer.is_eof() {
-        if let Some(token) = string_content_to_emit(start, buffer.pos()) {
-            ControlFlow::Break(StringExtendAction::EmitToken { token })
-        } else {
-            ControlFlow::Break(StringExtendAction::EmitEOF)
-        }
+        handle_processed_string_content(start, buffer.pos())?;
+
+        ControlFlow::Break(StringExtendAction::EmitEOF)
     } else {
         ControlFlow::Continue(())
     }
