@@ -18,7 +18,7 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
         }
         Some(len) => {
             // track leading '.'
-            let len = usize::from(len) + 1;
+            let len = len.get() + 1;
             buffer.set_pos(start + len);
             // extend to float
             number.end += len;
@@ -51,7 +51,7 @@ pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
         }
         Some(len) => {
             // track leading sign and 'e'
-            let len = usize::from(len) + 1 + sign_length;
+            let len = len.get() + 1 + sign_length;
             buffer.set_pos(start + len);
             // extend to float
             number.end += len;
