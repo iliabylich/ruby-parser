@@ -68,6 +68,28 @@ impl<'a> Buffer<'a> {
     }
 }
 
+macro_rules! scan_while_matches_pattern {
+    ($buffer:expr, $start:expr, $pattern:pat) => {{
+        let mut end = $start;
+        loop {
+            match $buffer.byte_at(end) {
+                Some($pattern) => {
+                    end += 1;
+                }
+                _ => {
+                    break;
+                }
+            }
+        }
+        if ($start == end) {
+            None
+        } else {
+            Some(end)
+        }
+    }};
+}
+pub(crate) use scan_while_matches_pattern;
+
 #[test]
 fn test_lookahead() {
     let buffer = Buffer::new(b"foo");
@@ -75,4 +97,15 @@ fn test_lookahead() {
     assert!(buffer.lookahead(b"fo"));
     assert!(buffer.lookahead(b"foo"));
     assert!(!buffer.lookahead(b"fooo"));
+}
+
+#[test]
+fn test_scan_while_matches_pattern() {
+    let buffer = Buffer::new(b"abcdefghijk");
+    assert_eq!(scan_while_matches_pattern!(buffer, 0, b'a'..=b'd'), Some(4));
+    assert_eq!(
+        scan_while_matches_pattern!(buffer, 0, b'a'..=b'z'),
+        Some(11)
+    );
+    assert_eq!(scan_while_matches_pattern!(buffer, 0, b'0'..=b'9'), None);
 }
