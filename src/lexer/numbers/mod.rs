@@ -1,13 +1,23 @@
 use std::ops::ControlFlow;
 
 use crate::lexer::buffer::{scan_while_matches_pattern, Buffer};
-use crate::token::{token, Token};
+use crate::token::{Loc, Token, TokenValue};
 
 pub(crate) mod scan;
 pub(crate) mod try_to_extend_with;
 
 #[derive(Clone, Copy, Debug)]
 struct Uninitialized;
+
+#[derive(Clone, Copy, Debug)]
+struct HexadecimalPrefix;
+#[derive(Clone, Copy, Debug)]
+struct BinaryPrefix;
+#[derive(Clone, Copy, Debug)]
+struct OctalPrefix;
+#[derive(Clone, Copy, Debug)]
+struct DecimalPrefix;
+
 #[derive(Clone, Copy, Debug)]
 struct Integer;
 #[derive(Clone, Copy, Debug)]
@@ -22,6 +32,12 @@ struct FloatWithESuffix;
 #[derive(Clone, Copy, Debug)]
 enum NumberKind {
     Uninitialized(Uninitialized),
+
+    HexadecimalPrefix(HexadecimalPrefix),
+    BinaryPrefix(BinaryPrefix),
+    OctalPrefix(OctalPrefix),
+    DecimalPrefix(DecimalPrefix),
+
     Integer(Integer),
     Rational(Rational),
     Imaginary(Imaginary),
@@ -29,7 +45,7 @@ enum NumberKind {
     FloatWithESuffix(FloatWithESuffix),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct Number {
     kind: NumberKind,
     begin: usize,
@@ -77,68 +93,26 @@ impl ExtendNumber for Uninitialized {
                 Some(b'x' | b'X') => {
                     buffer.skip_byte();
                     number.end += 1;
-
-                    if try_sub_parser!(scan::hexadecimal, buffer, start + 2, number) {
-                        number.kind = NumberKind::Integer(Integer);
-                        return ControlFlow::Continue(());
-                    } else {
-                        panic!("numeric literal without digits")
-                    }
+                    number.kind = NumberKind::HexadecimalPrefix(HexadecimalPrefix);
+                    return ControlFlow::Continue(());
                 }
                 Some(b'b' | b'B') => {
                     buffer.skip_byte();
                     number.end += 1;
-
-                    if try_sub_parser!(scan::binary, buffer, start + 2, number) {
-                        number.kind = NumberKind::Integer(Integer);
-                        return ControlFlow::Continue(());
-                    } else {
-                        panic!("numeric literal without digits")
-                    }
+                    number.kind = NumberKind::BinaryPrefix(BinaryPrefix);
+                    return ControlFlow::Continue(());
                 }
                 Some(b'd' | b'D') => {
                     buffer.skip_byte();
                     number.end += 1;
-
-                    if try_sub_parser!(scan::decimal, buffer, start + 2, number) {
-                        number.kind = NumberKind::Integer(Integer);
-                        return ControlFlow::Continue(());
-                    } else {
-                        panic!("numeric literal without digits")
-                    }
+                    number.kind = NumberKind::DecimalPrefix(DecimalPrefix);
+                    return ControlFlow::Continue(());
                 }
-                Some(b'_') => {
+                Some(b'_' | b'o' | b'O' | b'0'..=b'7') => {
                     buffer.skip_byte();
                     number.end += 1;
-
-                    if try_sub_parser!(scan::octal, buffer, start + 2, number) {
-                        number.kind = NumberKind::Integer(Integer);
-                        return ControlFlow::Continue(());
-                    } else {
-                        panic!("numeric literal without digits")
-                    }
-                }
-                Some(b'o' | b'O') => {
-                    buffer.skip_byte();
-                    number.end += 1;
-
-                    if try_sub_parser!(scan::octal, buffer, start + 2, number) {
-                        number.kind = NumberKind::Integer(Integer);
-                        return ControlFlow::Continue(());
-                    } else {
-                        panic!("numeric literal without digits")
-                    }
-                }
-                Some(b'0'..=b'7') => {
-                    buffer.skip_byte();
-                    number.end += 1;
-
-                    if try_sub_parser!(scan::octal, buffer, start + 2, number) {
-                        number.kind = NumberKind::Integer(Integer);
-                        return ControlFlow::Continue(());
-                    } else {
-                        panic!("numeric literal without digits")
-                    }
+                    number.kind = NumberKind::OctalPrefix(OctalPrefix);
+                    return ControlFlow::Continue(());
                 }
                 Some(b'8'..=b'9') => {
                     // TODO: report an error here
@@ -163,9 +137,94 @@ impl ExtendNumber for Uninitialized {
         }
 
         // Definitely a decimal prefix
-        try_sub_parser!(scan::decimal, buffer, start, number);
-        number.kind = NumberKind::Integer(Integer);
-        return ControlFlow::Continue(());
+        number.kind = NumberKind::DecimalPrefix(DecimalPrefix);
+        ControlFlow::Continue(())
+    }
+}
+
+impl Into<TokenValue> for Uninitialized {
+    fn into(self) -> TokenValue {
+        unreachable!("ExtendNumber made no transition")
+    }
+}
+
+// Runs after consuming `0x` hexadecimal prefix
+impl ExtendNumber for HexadecimalPrefix {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        let start = buffer.pos();
+
+        if try_sub_parser!(scan::hexadecimal, buffer, start, number) {
+            number.kind = NumberKind::Integer(Integer);
+            ControlFlow::Continue(())
+        } else {
+            panic!("numeric literal without digits")
+        }
+    }
+}
+
+impl Into<TokenValue> for HexadecimalPrefix {
+    fn into(self) -> TokenValue {
+        unreachable!("ExtendNumber made an incomplete transition to {:?}", self)
+    }
+}
+
+// Runs after consuming `0b` binary prefix
+impl ExtendNumber for BinaryPrefix {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        let start = buffer.pos();
+
+        if try_sub_parser!(scan::binary, buffer, start, number) {
+            number.kind = NumberKind::Integer(Integer);
+            ControlFlow::Continue(())
+        } else {
+            panic!("numeric literal without digits")
+        }
+    }
+}
+
+impl Into<TokenValue> for BinaryPrefix {
+    fn into(self) -> TokenValue {
+        unreachable!("ExtendNumber made an incomplete transition to {:?}", self)
+    }
+}
+
+// Runs after consuming octal prefix (`0`)
+impl ExtendNumber for OctalPrefix {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        let start = buffer.pos();
+
+        if try_sub_parser!(scan::octal, buffer, start, number) {
+            number.kind = NumberKind::Integer(Integer);
+            ControlFlow::Continue(())
+        } else {
+            panic!("numeric literal without digits")
+        }
+    }
+}
+
+impl Into<TokenValue> for OctalPrefix {
+    fn into(self) -> TokenValue {
+        unreachable!("ExtendNumber made an incomplete transition to {:?}", self)
+    }
+}
+
+// Runs after consuming decimal prefix (`0d` or no prefix)
+impl ExtendNumber for DecimalPrefix {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        let start = buffer.pos();
+
+        if try_sub_parser!(scan::decimal, buffer, start, number) {
+            number.kind = NumberKind::Integer(Integer);
+            return ControlFlow::Continue(());
+        } else {
+            panic!("numeric literal without digits")
+        }
+    }
+}
+
+impl Into<TokenValue> for DecimalPrefix {
+    fn into(self) -> TokenValue {
+        unreachable!("ExtendNumber made an incomplete transition to {:?}", self)
     }
 }
 
@@ -197,6 +256,12 @@ impl ExtendNumber for Integer {
     }
 }
 
+impl Into<TokenValue> for Integer {
+    fn into(self) -> TokenValue {
+        TokenValue::tINTEGER
+    }
+}
+
 impl ExtendNumber for Rational {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         let start = buffer.pos();
@@ -210,10 +275,22 @@ impl ExtendNumber for Rational {
     }
 }
 
+impl Into<TokenValue> for Rational {
+    fn into(self) -> TokenValue {
+        TokenValue::tRATIONAL
+    }
+}
+
 impl ExtendNumber for Imaginary {
     fn extend(_number: &mut Number, _buffer: &mut Buffer) -> ControlFlow<()> {
         // Imaginary numbers can't be extended to anything bigger
         ControlFlow::Break(())
+    }
+}
+
+impl Into<TokenValue> for Imaginary {
+    fn into(self) -> TokenValue {
+        TokenValue::tIMAGINARY
     }
 }
 
@@ -240,6 +317,12 @@ impl ExtendNumber for FloatWithDotNumber {
     }
 }
 
+impl Into<TokenValue> for FloatWithDotNumber {
+    fn into(self) -> TokenValue {
+        TokenValue::tFLOAT
+    }
+}
+
 impl ExtendNumber for FloatWithESuffix {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         let start = buffer.pos();
@@ -258,16 +341,49 @@ impl ExtendNumber for FloatWithESuffix {
     }
 }
 
+impl Into<TokenValue> for FloatWithESuffix {
+    fn into(self) -> TokenValue {
+        TokenValue::tFLOAT
+    }
+}
+
 impl ExtendNumber for Number {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         match number.kind {
             NumberKind::Uninitialized(_) => Uninitialized::extend(number, buffer),
+            NumberKind::HexadecimalPrefix(_) => HexadecimalPrefix::extend(number, buffer),
+            NumberKind::BinaryPrefix(_) => BinaryPrefix::extend(number, buffer),
+            NumberKind::OctalPrefix(_) => OctalPrefix::extend(number, buffer),
+            NumberKind::DecimalPrefix(_) => DecimalPrefix::extend(number, buffer),
             NumberKind::Integer(_) => Integer::extend(number, buffer),
             NumberKind::Rational(_) => Rational::extend(number, buffer),
             NumberKind::Imaginary(_) => Imaginary::extend(number, buffer),
             NumberKind::FloatWithDotNumber(_) => FloatWithDotNumber::extend(number, buffer),
             NumberKind::FloatWithESuffix(_) => FloatWithESuffix::extend(number, buffer),
         }
+    }
+}
+
+impl Into<TokenValue> for Number {
+    fn into(self) -> TokenValue {
+        match self.kind {
+            NumberKind::Uninitialized(inner) => inner.into(),
+            NumberKind::HexadecimalPrefix(inner) => inner.into(),
+            NumberKind::BinaryPrefix(inner) => inner.into(),
+            NumberKind::OctalPrefix(inner) => inner.into(),
+            NumberKind::DecimalPrefix(inner) => inner.into(),
+            NumberKind::Integer(inner) => inner.into(),
+            NumberKind::Rational(inner) => inner.into(),
+            NumberKind::Imaginary(inner) => inner.into(),
+            NumberKind::FloatWithDotNumber(inner) => inner.into(),
+            NumberKind::FloatWithESuffix(inner) => inner.into(),
+        }
+    }
+}
+
+impl Into<Token> for Number {
+    fn into(self) -> Token {
+        Token(self.into(), Loc(self.begin, self.end))
     }
 }
 
@@ -282,17 +398,7 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token {
         }
     }
 
-    let begin = number.begin;
-    let end = number.end;
-
-    let token = match number.kind {
-        NumberKind::Uninitialized(_) => unreachable!("ExtendNumber made no transition"),
-        NumberKind::Integer(_) => token!(tINTEGER, begin, end),
-        NumberKind::Rational(_) => token!(tRATIONAL, begin, end),
-        NumberKind::Imaginary(_) => token!(tIMAGINARY, begin, end),
-        NumberKind::FloatWithDotNumber(_) => token!(tFLOAT, begin, end),
-        NumberKind::FloatWithESuffix(_) => token!(tFLOAT, begin, end),
-    };
+    let token = number.into();
     println!("{:?}", token);
     token
 }
