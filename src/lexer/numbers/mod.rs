@@ -50,6 +50,19 @@ trait ExtendNumber {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()>;
 }
 
+macro_rules! try_sub_parser {
+    ($fn:expr, $buffer:expr, $start:expr, $number:expr) => {
+        if let Some(len) = $fn($buffer, $start) {
+            $buffer.set_pos($buffer.pos() + len.get());
+
+            $number.end += len.get();
+            true
+        } else {
+            false
+        }
+    };
+}
+
 impl ExtendNumber for Uninitialized {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         let start = buffer.pos();
@@ -65,92 +78,74 @@ impl ExtendNumber for Uninitialized {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    match scan::hexadecimal(buffer) {
-                        Some(len) => {
-                            number.end += len.get();
-                            buffer.set_pos(number.end)
-                        }
-                        None => panic!("numeric literal without digits"),
+                    if try_sub_parser!(scan::hexadecimal, buffer, start + 2, number) {
+                        number.kind = NumberKind::Integer(Integer);
+                        return ControlFlow::Continue(());
+                    } else {
+                        panic!("numeric literal without digits")
                     }
-                    number.kind = NumberKind::Integer(Integer);
-                    return ControlFlow::Continue(());
                 }
                 Some(b'b' | b'B') => {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    match scan::binary(buffer) {
-                        Some(len) => {
-                            number.end += len.get();
-                            buffer.set_pos(number.end);
-                        }
-                        None => panic!("numeric literal without digits"),
+                    if try_sub_parser!(scan::binary, buffer, start + 2, number) {
+                        number.kind = NumberKind::Integer(Integer);
+                        return ControlFlow::Continue(());
+                    } else {
+                        panic!("numeric literal without digits")
                     }
-                    number.kind = NumberKind::Integer(Integer);
-                    return ControlFlow::Continue(());
                 }
                 Some(b'd' | b'D') => {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    match scan::decimal(buffer) {
-                        Some(len) => {
-                            number.end += len.get();
-                            buffer.set_pos(number.end);
-                        }
-                        None => panic!("numeric literal without digits"),
+                    if try_sub_parser!(scan::decimal, buffer, start + 2, number) {
+                        number.kind = NumberKind::Integer(Integer);
+                        return ControlFlow::Continue(());
+                    } else {
+                        panic!("numeric literal without digits")
                     }
-                    number.kind = NumberKind::Integer(Integer);
-                    return ControlFlow::Continue(());
                 }
                 Some(b'_') => {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    match scan::octal(buffer) {
-                        Some(len) => {
-                            number.end += len.get();
-                            buffer.set_pos(number.end);
-                        }
-                        None => panic!("numeric literal without digits"),
+                    if try_sub_parser!(scan::octal, buffer, start + 2, number) {
+                        number.kind = NumberKind::Integer(Integer);
+                        return ControlFlow::Continue(());
+                    } else {
+                        panic!("numeric literal without digits")
                     }
-                    number.kind = NumberKind::Integer(Integer);
-                    return ControlFlow::Continue(());
                 }
                 Some(b'o' | b'O') => {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    match scan::octal(buffer) {
-                        Some(len) => {
-                            number.end += len.get();
-                            buffer.set_pos(number.end);
-                        }
-                        None => panic!("numeric literal without digits"),
+                    if try_sub_parser!(scan::octal, buffer, start + 2, number) {
+                        number.kind = NumberKind::Integer(Integer);
+                        return ControlFlow::Continue(());
+                    } else {
+                        panic!("numeric literal without digits")
                     }
-                    number.kind = NumberKind::Integer(Integer);
-                    return ControlFlow::Continue(());
                 }
                 Some(b'0'..=b'7') => {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    match scan::octal(buffer) {
-                        Some(len) => {
-                            number.end += len.get();
-                            buffer.set_pos(number.end);
-                        }
-                        None => panic!("numeric literal without digits"),
+                    if try_sub_parser!(scan::octal, buffer, start + 2, number) {
+                        number.kind = NumberKind::Integer(Integer);
+                        return ControlFlow::Continue(());
+                    } else {
+                        panic!("numeric literal without digits")
                     }
-                    number.kind = NumberKind::Integer(Integer);
-                    return ControlFlow::Continue(());
                 }
                 Some(b'8'..=b'9') => {
                     // TODO: report an error here
                     buffer.skip_byte();
                     number.end += 1;
 
-                    let end = scan_while_matches_pattern!(buffer, buffer.pos(), b'_' | b'0'..=b'9')
+                    let end = scan_while_matches_pattern!(buffer, start + 2, b'_' | b'0'..=b'9')
                         .unwrap_or(0);
 
                     number.end = end;
@@ -167,26 +162,34 @@ impl ExtendNumber for Uninitialized {
             }
         }
 
-        // Definitely decimal prefix
-        match scan::decimal(buffer) {
-            Some(len) => {
-                number.end += len.get();
-                buffer.set_pos(number.end);
-            }
-            None => panic!("numeric literal without digits"),
-        }
+        // Definitely a decimal prefix
+        try_sub_parser!(scan::decimal, buffer, start, number);
         number.kind = NumberKind::Integer(Integer);
-        ControlFlow::Continue(())
+        return ControlFlow::Continue(());
     }
 }
 
 impl ExtendNumber for Integer {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
-        if try_to_extend_with::dot_number_suffix(number, buffer)
-            || try_to_extend_with::e_suffix(number, buffer)
-            || try_to_extend_with::r_suffix(number, buffer)
-            || try_to_extend_with::i_suffix(number, buffer)
-        {
+        let start = buffer.pos();
+
+        if try_sub_parser!(try_to_extend_with::dot_number_suffix, buffer, start, number) {
+            number.kind = NumberKind::FloatWithDotNumber(FloatWithDotNumber);
+            return ControlFlow::Continue(());
+        }
+
+        if try_sub_parser!(try_to_extend_with::e_suffix, buffer, start, number) {
+            number.kind = NumberKind::FloatWithESuffix(FloatWithESuffix);
+            return ControlFlow::Continue(());
+        }
+
+        if try_sub_parser!(try_to_extend_with::r_suffix, buffer, start, number) {
+            number.kind = NumberKind::Rational(Rational);
+            return ControlFlow::Continue(());
+        }
+
+        if try_sub_parser!(try_to_extend_with::i_suffix, buffer, start, number) {
+            number.kind = NumberKind::Imaginary(Imaginary);
             return ControlFlow::Continue(());
         }
 
@@ -196,7 +199,10 @@ impl ExtendNumber for Integer {
 
 impl ExtendNumber for Rational {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
-        if try_to_extend_with::i_suffix(number, buffer) {
+        let start = buffer.pos();
+
+        if try_sub_parser!(try_to_extend_with::i_suffix, buffer, start, number) {
+            number.kind = NumberKind::Imaginary(Imaginary);
             return ControlFlow::Continue(());
         }
 
@@ -213,22 +219,38 @@ impl ExtendNumber for Imaginary {
 
 impl ExtendNumber for FloatWithDotNumber {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
-        if try_to_extend_with::e_suffix(number, buffer)
-            || try_to_extend_with::r_suffix(number, buffer)
-            || try_to_extend_with::i_suffix(number, buffer)
-        {
-            ControlFlow::Continue(())
-        } else {
-            ControlFlow::Break(())
+        let start = buffer.pos();
+
+        if try_sub_parser!(try_to_extend_with::e_suffix, buffer, start, number) {
+            number.kind = NumberKind::FloatWithESuffix(FloatWithESuffix);
+            return ControlFlow::Continue(());
         }
+
+        if try_sub_parser!(try_to_extend_with::r_suffix, buffer, start, number) {
+            number.kind = NumberKind::Rational(Rational);
+            return ControlFlow::Continue(());
+        }
+
+        if try_sub_parser!(try_to_extend_with::i_suffix, buffer, start, number) {
+            number.kind = NumberKind::Imaginary(Imaginary);
+            return ControlFlow::Continue(());
+        }
+
+        ControlFlow::Break(())
     }
 }
 
 impl ExtendNumber for FloatWithESuffix {
     fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
-        if try_to_extend_with::r_suffix(number, buffer)
-            || try_to_extend_with::i_suffix(number, buffer)
-        {
+        let start = buffer.pos();
+
+        if try_sub_parser!(try_to_extend_with::r_suffix, buffer, start, number) {
+            number.kind = NumberKind::Rational(Rational);
+            return ControlFlow::Continue(());
+        }
+
+        if try_sub_parser!(try_to_extend_with::i_suffix, buffer, start, number) {
+            number.kind = NumberKind::Imaginary(Imaginary);
             return ControlFlow::Continue(());
         }
 

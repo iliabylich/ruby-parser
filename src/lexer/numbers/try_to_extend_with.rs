@@ -1,76 +1,53 @@
-use crate::lexer::numbers::{
-    scan, Buffer, FloatWithDotNumber, FloatWithESuffix, Imaginary, Number, NumberKind, Rational,
-};
+use std::num::NonZeroUsize;
 
-pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
-    let start = buffer.pos();
+use crate::lexer::numbers::{scan, Buffer};
 
+pub(crate) fn dot_number_suffix(buffer: &Buffer, start: usize) -> Option<NonZeroUsize> {
     if buffer.byte_at(start) != Some(b'.') {
-        return false;
+        return None;
     }
-    buffer.skip_byte();
 
-    match scan::decimal(buffer) {
-        None => false,
+    match scan::decimal(buffer, start + 1) {
+        None => None,
         Some(len) => {
             // track leading '.'
-            let len = len.get() + 1;
-            buffer.set_pos(start + len);
-            // extend to float
-            number.end += len;
-            number.kind = NumberKind::FloatWithDotNumber(FloatWithDotNumber);
-            true
+            NonZeroUsize::new(len.get() + 1)
         }
     }
 }
 
-pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
-    let start = buffer.pos();
-
+pub(crate) fn e_suffix(buffer: &Buffer, start: usize) -> Option<NonZeroUsize> {
     if !matches!(buffer.byte_at(start), Some(b'e' | b'E')) {
-        return false;
+        return None;
     }
-    buffer.skip_byte();
 
     // consume optional sign
     let mut sign_length = 0;
     if matches!(buffer.byte_at(start + 1), Some(b'-' | b'+')) {
         sign_length = 1;
-        buffer.skip_byte();
     }
 
-    match scan::decimal(buffer) {
-        None => false,
+    match scan::decimal(buffer, start + 1 + sign_length) {
+        None => None,
         Some(len) => {
             // track leading sign and 'e'
-            let len = len.get() + 1 + sign_length;
-            buffer.set_pos(start + len);
-            // extend to float
-            number.end += len;
-            number.kind = NumberKind::FloatWithESuffix(FloatWithESuffix);
-            true
+            NonZeroUsize::new(len.get() + 1 + sign_length)
         }
     }
 }
 
-pub(crate) fn r_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
-    if buffer.current_byte() != Some(b'r') {
-        return false;
+pub(crate) fn r_suffix(buffer: &Buffer, start: usize) -> Option<NonZeroUsize> {
+    if buffer.byte_at(start) != Some(b'r') {
+        return None;
     }
     // TODO: check lookahead (like 'rescue')
-    buffer.skip_byte();
-    number.end += 1;
-    number.kind = NumberKind::Rational(Rational);
-    return true;
+    NonZeroUsize::new(1)
 }
 
-pub(crate) fn i_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
-    if buffer.current_byte() != Some(b'i') {
-        return false;
+pub(crate) fn i_suffix(buffer: &Buffer, start: usize) -> Option<NonZeroUsize> {
+    if buffer.byte_at(start) != Some(b'i') {
+        return None;
     }
     // TODO: check lookahead (like 'if')
-    buffer.skip_byte();
-    number.end += 1;
-    number.kind = NumberKind::Imaginary(Imaginary);
-    return true;
+    NonZeroUsize::new(1)
 }
