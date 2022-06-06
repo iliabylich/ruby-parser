@@ -21,7 +21,7 @@ pub(crate) fn parse_percent<'a>(
                 literal_type = b'Q';
                 buffer.skip_byte();
             } else {
-                todo!("percent_unknown")
+                panic!("percent_unknown")
             }
         } else {
             literal_type = c;
@@ -29,16 +29,16 @@ pub(crate) fn parse_percent<'a>(
 
             if let Some(c) = buffer.current_byte() {
                 if c.is_ascii_alphabetic() {
-                    todo!("percent_unknown")
+                    panic!("percent_unknown")
                 }
                 ends_with = c; // buffer.slice(buffer.pos(), buffer.pos() + 1);
                 buffer.skip_byte();
             } else {
-                todo!("percent_unterminated")
+                panic!("percent_unterminated")
             }
         }
     } else {
-        todo!("percent_unterminated")
+        panic!("percent_unterminated")
     }
 
     match ends_with {
@@ -102,7 +102,7 @@ pub(crate) fn parse_percent<'a>(
             literal = StringLiteral::StringNoInterp(StringNoInterp::new(ends_with));
         }
 
-        _ => todo!("percent_unknown"),
+        _ => panic!("percent_unknown"),
     };
 
     (Some(literal), token)

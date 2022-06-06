@@ -408,7 +408,7 @@ impl OnByte<b')'> for Lexer<'_> {
         if self.paren_nest > 0 {
             self.paren_nest -= 1;
         } else {
-            todo!("Report paren_nest error");
+            panic!("negative paren_nest");
         }
 
         token!(tRPAREN, start, start + 1)
@@ -433,7 +433,7 @@ impl OnByte<b']'> for Lexer<'_> {
         if self.brack_nest > 0 {
             self.brack_nest -= 1;
         } else {
-            todo!("Report brack_nest error");
+            panic!("negative brack_nest");
         }
         token!(tRBRACK, start, start + 1)
     }
@@ -457,7 +457,7 @@ impl OnByte<b'}'> for Lexer<'_> {
         if self.curly_nest > 0 {
             self.curly_nest -= 1;
         } else {
-            todo!("Report curly_nest error");
+            panic!("negative curly_nest");
         }
         token!(tRCURLY, start, start + 1)
     }
