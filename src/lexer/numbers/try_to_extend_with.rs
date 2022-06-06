@@ -1,5 +1,5 @@
 use crate::lexer::numbers::{
-    read, Buffer, FloatWithDotNumber, FloatWithESuffix, Imaginary, Number, NumberKind, Rational,
+    scan, Buffer, FloatWithDotNumber, FloatWithESuffix, Imaginary, Number, NumberKind, Rational,
 };
 
 pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
@@ -10,12 +10,8 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
     }
     buffer.skip_byte();
 
-    match read::decimal(buffer) {
-        None => {
-            // rollback
-            buffer.set_pos(start);
-            false
-        }
+    match scan::decimal(buffer) {
+        None => false,
         Some(len) => {
             // track leading '.'
             let len = len.get() + 1;
@@ -43,12 +39,8 @@ pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
         buffer.skip_byte();
     }
 
-    match read::decimal(buffer) {
-        None => {
-            // rollback
-            buffer.set_pos(start);
-            false
-        }
+    match scan::decimal(buffer) {
+        None => false,
         Some(len) => {
             // track leading sign and 'e'
             let len = len.get() + 1 + sign_length;

@@ -1,9 +1,9 @@
 use std::ops::ControlFlow;
 
-use crate::lexer::buffer::Buffer;
+use crate::lexer::buffer::{scan_while_matches_pattern, Buffer};
 use crate::token::{token, Token};
 
-pub(crate) mod read;
+pub(crate) mod scan;
 pub(crate) mod try_to_extend_with;
 
 #[derive(Clone, Copy, Debug)]
@@ -63,67 +63,98 @@ impl ExtendNumber for Uninitialized {
             match buffer.byte_at(start + 1) {
                 Some(b'x' | b'X') => {
                     buffer.skip_byte();
-                    number.end += read::hexadecimal(buffer)
-                        .expect("numeric literal without digits")
-                        .get()
-                        + 1;
+                    number.end += 1;
+
+                    match scan::hexadecimal(buffer) {
+                        Some(len) => {
+                            number.end += len.get();
+                            buffer.set_pos(number.end)
+                        }
+                        None => panic!("numeric literal without digits"),
+                    }
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Continue(());
                 }
                 Some(b'b' | b'B') => {
                     buffer.skip_byte();
-                    number.end += read::binary(buffer)
-                        .expect("numeric literal without digits")
-                        .get()
-                        + 1;
+                    number.end += 1;
+
+                    match scan::binary(buffer) {
+                        Some(len) => {
+                            number.end += len.get();
+                            buffer.set_pos(number.end);
+                        }
+                        None => panic!("numeric literal without digits"),
+                    }
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Continue(());
                 }
                 Some(b'd' | b'D') => {
                     buffer.skip_byte();
-                    number.end += read::decimal(buffer)
-                        .expect("numeric literal without digits")
-                        .get()
-                        + 1;
+                    number.end += 1;
+
+                    match scan::decimal(buffer) {
+                        Some(len) => {
+                            number.end += len.get();
+                            buffer.set_pos(number.end);
+                        }
+                        None => panic!("numeric literal without digits"),
+                    }
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Continue(());
                 }
                 Some(b'_') => {
                     buffer.skip_byte();
-                    number.end += read::octal(buffer)
-                        .expect("numeric literal without digits")
-                        .get()
-                        + 1;
+                    number.end += 1;
+
+                    match scan::octal(buffer) {
+                        Some(len) => {
+                            number.end += len.get();
+                            buffer.set_pos(number.end);
+                        }
+                        None => panic!("numeric literal without digits"),
+                    }
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Continue(());
                 }
                 Some(b'o' | b'O') => {
                     buffer.skip_byte();
-                    number.end += read::octal(buffer)
-                        .expect("numeric literal without digits")
-                        .get()
-                        + 1;
+                    number.end += 1;
+
+                    match scan::octal(buffer) {
+                        Some(len) => {
+                            number.end += len.get();
+                            buffer.set_pos(number.end);
+                        }
+                        None => panic!("numeric literal without digits"),
+                    }
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Continue(());
                 }
                 Some(b'0'..=b'7') => {
                     buffer.skip_byte();
-                    number.end += read::octal(buffer)
-                        .expect("numeric literal without digits")
-                        .get()
-                        + 1;
+                    number.end += 1;
+
+                    match scan::octal(buffer) {
+                        Some(len) => {
+                            number.end += len.get();
+                            buffer.set_pos(number.end);
+                        }
+                        None => panic!("numeric literal without digits"),
+                    }
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Continue(());
                 }
                 Some(b'8'..=b'9') => {
+                    // TODO: report an error here
                     buffer.skip_byte();
-                    loop {
-                        match buffer.current_byte() {
-                            Some(b'_' | b'0'..=b'9') => buffer.skip_byte(),
-                            _ => break,
-                        }
-                    }
-                    number.end = buffer.pos();
+                    number.end += 1;
+
+                    let end = scan_while_matches_pattern!(buffer, buffer.pos(), b'_' | b'0'..=b'9')
+                        .unwrap_or(0);
+
+                    number.end = end;
+                    buffer.set_pos(end);
                     number.kind = NumberKind::Integer(Integer);
                     return ControlFlow::Break(());
                 }
@@ -137,9 +168,13 @@ impl ExtendNumber for Uninitialized {
         }
 
         // Definitely decimal prefix
-        number.end += read::decimal(buffer)
-            .expect("numeric literal without digits")
-            .get();
+        match scan::decimal(buffer) {
+            Some(len) => {
+                number.end += len.get();
+                buffer.set_pos(number.end);
+            }
+            None => panic!("numeric literal without digits"),
+        }
         number.kind = NumberKind::Integer(Integer);
         ControlFlow::Continue(())
     }
