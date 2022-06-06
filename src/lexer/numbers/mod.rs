@@ -1,3 +1,5 @@
+use std::ops::ControlFlow;
+
 use crate::lexer::buffer::Buffer;
 use crate::token::{token, Token};
 
@@ -13,10 +15,9 @@ struct Rational;
 #[derive(Clone, Copy, Debug)]
 struct Imaginary;
 #[derive(Clone, Copy, Debug)]
-struct Float {
-    has_dot_number_suffix: bool,
-    has_e_suffix: bool,
-}
+struct FloatWithDotNumber;
+#[derive(Clone, Copy, Debug)]
+struct FloatWithESuffix;
 
 #[derive(Clone, Copy, Debug)]
 enum NumberKind {
@@ -24,7 +25,8 @@ enum NumberKind {
     Integer(Integer),
     Rational(Rational),
     Imaginary(Imaginary),
-    Float(Float),
+    FloatWithDotNumber(FloatWithDotNumber),
+    FloatWithESuffix(FloatWithESuffix),
 }
 
 #[derive(Debug)]
@@ -44,18 +46,12 @@ impl Number {
     }
 }
 
-#[derive(PartialEq, Eq)]
-enum NumberExtendAction {
-    Continue,
-    Stop,
-}
-
 trait ExtendNumber {
-    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction;
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()>;
 }
 
 impl ExtendNumber for Uninitialized {
-    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         let start = buffer.pos();
 
         let byte = buffer.current_byte().unwrap();
@@ -67,51 +63,57 @@ impl ExtendNumber for Uninitialized {
             match buffer.byte_at(start + 1) {
                 Some(b'x' | b'X') => {
                     buffer.skip_byte();
-                    number.end += usize::from(
-                        read::hexadecimal(buffer).expect("numeric literal without digits"),
-                    ) + 1;
+                    number.end += read::hexadecimal(buffer)
+                        .expect("numeric literal without digits")
+                        .get()
+                        + 1;
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Continue;
+                    return ControlFlow::Continue(());
                 }
                 Some(b'b' | b'B') => {
                     buffer.skip_byte();
-                    number.end +=
-                        usize::from(read::binary(buffer).expect("numeric literal without digits"))
-                            + 1;
+                    number.end += read::binary(buffer)
+                        .expect("numeric literal without digits")
+                        .get()
+                        + 1;
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Continue;
+                    return ControlFlow::Continue(());
                 }
                 Some(b'd' | b'D') => {
                     buffer.skip_byte();
-                    number.end +=
-                        usize::from(read::decimal(buffer).expect("numeric literal without digits"))
-                            + 1;
+                    number.end += read::decimal(buffer)
+                        .expect("numeric literal without digits")
+                        .get()
+                        + 1;
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Continue;
+                    return ControlFlow::Continue(());
                 }
                 Some(b'_') => {
                     buffer.skip_byte();
-                    number.end +=
-                        usize::from(read::octal(buffer).expect("numeric literal without digits"))
-                            + 1;
+                    number.end += read::octal(buffer)
+                        .expect("numeric literal without digits")
+                        .get()
+                        + 1;
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Continue;
+                    return ControlFlow::Continue(());
                 }
                 Some(b'o' | b'O') => {
                     buffer.skip_byte();
-                    number.end +=
-                        usize::from(read::octal(buffer).expect("numeric literal without digits"))
-                            + 1;
+                    number.end += read::octal(buffer)
+                        .expect("numeric literal without digits")
+                        .get()
+                        + 1;
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Continue;
+                    return ControlFlow::Continue(());
                 }
                 Some(b'0'..=b'7') => {
                     buffer.skip_byte();
-                    number.end +=
-                        usize::from(read::octal(buffer).expect("numeric literal without digits"))
-                            + 1;
+                    number.end += read::octal(buffer)
+                        .expect("numeric literal without digits")
+                        .get()
+                        + 1;
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Continue;
+                    return ControlFlow::Continue(());
                 }
                 Some(b'8'..=b'9') => {
                     buffer.skip_byte();
@@ -123,80 +125,102 @@ impl ExtendNumber for Uninitialized {
                     }
                     number.end = buffer.pos();
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Stop;
+                    return ControlFlow::Break(());
                 }
 
                 _other => {
                     // Sole "0" digit
                     number.kind = NumberKind::Integer(Integer);
-                    return NumberExtendAction::Stop;
+                    return ControlFlow::Break(());
                 }
             }
         }
 
         // Definitely decimal prefix
-        number.end += usize::from(read::decimal(buffer).expect("numeric literal without digits"));
+        number.end += read::decimal(buffer)
+            .expect("numeric literal without digits")
+            .get();
         number.kind = NumberKind::Integer(Integer);
-        NumberExtendAction::Continue
+        ControlFlow::Continue(())
     }
 }
 
 impl ExtendNumber for Integer {
-    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         if try_to_extend_with::dot_number_suffix(number, buffer)
             || try_to_extend_with::e_suffix(number, buffer)
             || try_to_extend_with::r_suffix(number, buffer)
             || try_to_extend_with::i_suffix(number, buffer)
         {
-            return NumberExtendAction::Continue;
+            return ControlFlow::Continue(());
         }
 
-        NumberExtendAction::Stop
+        ControlFlow::Break(())
     }
 }
 
 impl ExtendNumber for Rational {
-    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
         if try_to_extend_with::i_suffix(number, buffer) {
-            return NumberExtendAction::Continue;
+            return ControlFlow::Continue(());
         }
 
-        NumberExtendAction::Stop
+        ControlFlow::Break(())
     }
 }
 
 impl ExtendNumber for Imaginary {
-    fn extend(self, _number: &mut Number, _buffer: &mut Buffer) -> NumberExtendAction {
+    fn extend(_number: &mut Number, _buffer: &mut Buffer) -> ControlFlow<()> {
         // Imaginary numbers can't be extended to anything bigger
-        NumberExtendAction::Stop
+        ControlFlow::Break(())
     }
 }
 
-impl ExtendNumber for Float {
-    fn extend(self, number: &mut Number, buffer: &mut Buffer) -> NumberExtendAction {
-        if (!self.has_e_suffix && try_to_extend_with::e_suffix(number, buffer))
+impl ExtendNumber for FloatWithDotNumber {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        if try_to_extend_with::e_suffix(number, buffer)
             || try_to_extend_with::r_suffix(number, buffer)
             || try_to_extend_with::i_suffix(number, buffer)
         {
-            return NumberExtendAction::Continue;
+            ControlFlow::Continue(())
+        } else {
+            ControlFlow::Break(())
+        }
+    }
+}
+
+impl ExtendNumber for FloatWithESuffix {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        if try_to_extend_with::r_suffix(number, buffer)
+            || try_to_extend_with::i_suffix(number, buffer)
+        {
+            return ControlFlow::Continue(());
         }
 
-        NumberExtendAction::Stop
+        ControlFlow::Break(())
+    }
+}
+
+impl ExtendNumber for Number {
+    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+        match number.kind {
+            NumberKind::Uninitialized(_) => Uninitialized::extend(number, buffer),
+            NumberKind::Integer(_) => Integer::extend(number, buffer),
+            NumberKind::Rational(_) => Rational::extend(number, buffer),
+            NumberKind::Imaginary(_) => Imaginary::extend(number, buffer),
+            NumberKind::FloatWithDotNumber(_) => FloatWithDotNumber::extend(number, buffer),
+            NumberKind::FloatWithESuffix(_) => FloatWithESuffix::extend(number, buffer),
+        }
     }
 }
 
 pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token {
     let mut number = Number::new(buffer.pos());
-    loop {
-        let action = match number.kind {
-            NumberKind::Uninitialized(parser) => parser.extend(&mut number, buffer),
-            NumberKind::Integer(parser) => parser.extend(&mut number, buffer),
-            NumberKind::Rational(parser) => parser.extend(&mut number, buffer),
-            NumberKind::Imaginary(parser) => parser.extend(&mut number, buffer),
-            NumberKind::Float(parser) => parser.extend(&mut number, buffer),
-        };
 
-        if action == NumberExtendAction::Stop {
+    loop {
+        let action = Number::extend(&mut number, buffer);
+
+        if action == ControlFlow::Break(()) {
             break;
         }
     }
@@ -209,7 +233,8 @@ pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token {
         NumberKind::Integer(_) => token!(tINTEGER, begin, end),
         NumberKind::Rational(_) => token!(tRATIONAL, begin, end),
         NumberKind::Imaginary(_) => token!(tIMAGINARY, begin, end),
-        NumberKind::Float(_) => token!(tFLOAT, begin, end),
+        NumberKind::FloatWithDotNumber(_) => token!(tFLOAT, begin, end),
+        NumberKind::FloatWithESuffix(_) => token!(tFLOAT, begin, end),
     };
     println!("{:?}", token);
     token

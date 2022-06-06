@@ -1,15 +1,8 @@
-use crate::lexer::numbers::{read, Buffer, Float, Imaginary, Number, NumberKind, Rational};
+use crate::lexer::numbers::{
+    read, Buffer, FloatWithDotNumber, FloatWithESuffix, Imaginary, Number, NumberKind, Rational,
+};
 
 pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
-    // Do not let it to be parsed twice
-    debug_assert!(!matches!(
-        number.kind,
-        NumberKind::Float(Float {
-            has_dot_number_suffix: true,
-            ..
-        })
-    ));
-
     let start = buffer.pos();
 
     if buffer.byte_at(start) != Some(b'.') {
@@ -29,25 +22,13 @@ pub(crate) fn dot_number_suffix(number: &mut Number, buffer: &mut Buffer) -> boo
             buffer.set_pos(start + len);
             // extend to float
             number.end += len;
-            number.kind = NumberKind::Float(Float {
-                has_dot_number_suffix: true,
-                has_e_suffix: false,
-            });
+            number.kind = NumberKind::FloatWithDotNumber(FloatWithDotNumber);
             true
         }
     }
 }
 
 pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
-    // Do not let it to be parsed twice
-    debug_assert!(!matches!(
-        number.kind,
-        NumberKind::Float(Float {
-            has_e_suffix: true,
-            ..
-        })
-    ));
-
     let start = buffer.pos();
 
     if !matches!(buffer.byte_at(start), Some(b'e' | b'E')) {
@@ -74,10 +55,7 @@ pub(crate) fn e_suffix(number: &mut Number, buffer: &mut Buffer) -> bool {
             buffer.set_pos(start + len);
             // extend to float
             number.end += len;
-            number.kind = NumberKind::Float(Float {
-                has_dot_number_suffix: false,
-                has_e_suffix: true,
-            });
+            number.kind = NumberKind::FloatWithESuffix(FloatWithESuffix);
             true
         }
     }
