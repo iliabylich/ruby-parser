@@ -7,6 +7,7 @@ use crate::token::{token, Token};
 
 use crate::lexer::ident::parse_ident;
 use crate::lexer::numbers::parse_number;
+use crate::lexer::qmark::parse_qmark;
 
 impl OnByte<b'#'> for Lexer<'_> {
     fn on_byte(&mut self) -> Token {
@@ -263,7 +264,7 @@ assert_lex!(
 
 impl OnByte<b'?'> for Lexer<'_> {
     fn on_byte(&mut self) -> Token {
-        todo!("parse_qmark")
+        parse_qmark(&mut self.buffer)
     }
 }
 

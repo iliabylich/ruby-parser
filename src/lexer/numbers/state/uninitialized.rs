@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{scan_while_matches_pattern, Buffer},
+        buffer::{scan_while_matches_pattern, Buffer, LookaheadResult},
         numbers::{
             state::{integer_prefix::*, Integer, IntegerPrefix, State},
             ExtendNumber, Number,
@@ -54,8 +54,11 @@ impl ExtendNumber for Uninitialized {
                     buffer.skip_byte();
                     number.end += 1;
 
-                    let end = scan_while_matches_pattern!(buffer, start + 2, b'_' | b'0'..=b'9')
-                        .unwrap_or(0);
+                    let end =
+                        match scan_while_matches_pattern!(buffer, start + 2, b'_' | b'0'..=b'9') {
+                            LookaheadResult::None => 0,
+                            LookaheadResult::Some { length } => start + length,
+                        };
 
                     number.end = end;
                     buffer.set_pos(end);

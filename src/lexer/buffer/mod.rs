@@ -70,6 +70,8 @@ impl<'a> Buffer<'a> {
 
 macro_rules! scan_while_matches_pattern {
     ($buffer:expr, $start:expr, $pattern:pat) => {{
+        use crate::lexer::buffer::LookaheadResult;
+
         let mut end = $start;
         loop {
             match $buffer.byte_at(end) {
@@ -82,13 +84,25 @@ macro_rules! scan_while_matches_pattern {
             }
         }
         if ($start == end) {
-            None
+            LookaheadResult::None
         } else {
-            Some(end)
+            LookaheadResult::Some {
+                length: end - $start,
+            }
         }
     }};
 }
 pub(crate) use scan_while_matches_pattern;
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub(crate) enum LookaheadResult {
+    None,
+    Some { length: usize },
+}
+
+pub(crate) trait Lookahead {
+    fn lookahead(buffer: &Buffer, start: usize) -> LookaheadResult;
+}
 
 #[test]
 fn test_lookahead() {
@@ -102,10 +116,16 @@ fn test_lookahead() {
 #[test]
 fn test_scan_while_matches_pattern() {
     let buffer = Buffer::new(b"abcdefghijk");
-    assert_eq!(scan_while_matches_pattern!(buffer, 0, b'a'..=b'd'), Some(4));
+    assert_eq!(
+        scan_while_matches_pattern!(buffer, 0, b'a'..=b'd'),
+        LookaheadResult::Some { length: 4 }
+    );
     assert_eq!(
         scan_while_matches_pattern!(buffer, 0, b'a'..=b'z'),
-        Some(11)
+        LookaheadResult::Some { length: 11 }
     );
-    assert_eq!(scan_while_matches_pattern!(buffer, 0, b'0'..=b'9'), None);
+    assert_eq!(
+        scan_while_matches_pattern!(buffer, 0, b'0'..=b'9'),
+        LookaheadResult::None
+    );
 }

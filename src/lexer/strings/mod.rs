@@ -1,6 +1,7 @@
 use std::ops::ControlFlow;
 
 pub(crate) mod action;
+pub(crate) mod escapes;
 pub(crate) mod handlers;
 pub(crate) mod literal;
 pub(crate) mod stack;
