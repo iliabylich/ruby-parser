@@ -11,10 +11,10 @@ pub(crate) mod skip_ws;
 pub(crate) mod strings;
 
 use crate::token::{token, Token};
-use atmark::parse_atmark;
+use atmark::AtMark;
 use buffer::Buffer;
-use gvar::parse_gvar;
-use ident::parse_ident;
+use gvar::Gvar;
+use ident::Ident;
 use numbers::parse_number;
 use percent::parse_percent;
 use strings::parse_string;
@@ -198,17 +198,17 @@ impl<'a> Lexer<'a> {
             }
             b'$' => {
                 self.buffer.set_pos(start);
-                parse_gvar(&mut self.buffer)
+                Gvar::parse(&mut self.buffer)
             }
             b'@' => {
                 self.buffer.set_pos(start);
-                parse_atmark(&mut self.buffer)
+                AtMark::parse(&mut self.buffer)
             }
             b'_' => OnByte::<b'_'>::on_byte(self),
 
             _ident_start => {
                 self.buffer.set_pos(start);
-                parse_ident(&mut self.buffer)
+                Ident::parse(&mut self.buffer)
             }
         }
     }

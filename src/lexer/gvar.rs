@@ -1,26 +1,11 @@
 use crate::lexer::{
     assert_lex,
-    buffer::{utf8::Utf8Char, Buffer},
-    ident::{is_identchar, lookahead_ident},
+    buffer::{utf8::Utf8Char, Buffer, Lookahead, LookaheadResult},
+    ident::Ident,
 };
 use crate::token::{token, Token};
 
-pub(crate) fn parse_gvar<'a>(buffer: &mut Buffer<'a>) -> Token {
-    let token = match lookahead_gvar(buffer, buffer.pos()) {
-        LookaheadGvarResult::Ok(token) => token,
-        LookaheadGvarResult::InvalidVarName(token) => {
-            // TODO: report __invalid__ ivar/cvar name
-            token
-        }
-        LookaheadGvarResult::EmptyVarName(token) => {
-            // TODO: report __empty__ ivar/cvar name
-            token
-        }
-    };
-
-    buffer.set_pos(token.loc().end());
-    token
-}
+pub(crate) struct Gvar;
 
 pub(crate) enum LookaheadGvarResult {
     Ok(Token),
@@ -28,100 +13,123 @@ pub(crate) enum LookaheadGvarResult {
     EmptyVarName(Token),
 }
 
-pub(crate) fn lookahead_gvar<'a>(buffer: &Buffer<'a>, start: usize) -> LookaheadGvarResult {
-    let mut ident_start = start + 1;
+impl Lookahead for Gvar {
+    type Output = LookaheadGvarResult;
 
-    let empty_gvar_name = || LookaheadGvarResult::EmptyVarName(token!(tGVAR, start, start + 1));
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+        let mut ident_start = start + 1;
 
-    let invalid_gvar_name =
-        |end: usize| LookaheadGvarResult::InvalidVarName(token!(tGVAR, start, end));
+        let empty_gvar_name = || LookaheadGvarResult::EmptyVarName(token!(tGVAR, start, start + 1));
 
-    match buffer.byte_at(start + 1) {
-        Some(b'_') => {
-            /* $_: last read line string */
-            match buffer.byte_at(start + 2) {
-                Some(byte) if is_identchar(byte) => {
-                    ident_start += 1;
+        let invalid_gvar_name =
+            |end: usize| LookaheadGvarResult::InvalidVarName(token!(tGVAR, start, end));
+
+        match buffer.byte_at(start + 1) {
+            Some(b'_') => {
+                /* $_: last read line string */
+                match buffer.byte_at(start + 2) {
+                    Some(byte) if Ident::is_identchar(byte) => {
+                        ident_start += 1;
+                    }
+                    _ => {
+                        // emit $_
+                        return LookaheadGvarResult::Ok(token!(tGVAR, start, start + 2));
+                    }
                 }
-                _ => {
-                    // emit $_
-                    return LookaheadGvarResult::Ok(token!(tGVAR, start, start + 2));
+            }
+
+            // $~: match-data
+            // $*: argv
+            // $$: pid
+            // $?: last status
+            // $!: error string
+            // $@: error position
+            // $/: input record separator
+            // $\: output record separator
+            // $;: field separator
+            // $,: output field separator
+            // $.: last read line number
+            // $=: ignorecase
+            // $:: load path
+            // $<: reading filename
+            // $>: default output handle
+            // $": already loaded files
+            Some(b'~') | Some(b'*') | Some(b'$') | Some(b'?') | Some(b'!') | Some(b'@')
+            | Some(b'/') | Some(b'\\') | Some(b';') | Some(b',') | Some(b'.') | Some(b'=')
+            | Some(b':') | Some(b'<') | Some(b'>') | Some(b'\"') => {
+                return LookaheadGvarResult::Ok(token!(tGVAR, start, start + 2));
+            }
+
+            Some(b'-') => {
+                match buffer.utf8_char_at(start + 2) {
+                    Utf8Char::Valid(size) => {
+                        // $-<UTF-8 char>
+                        let end = start + 2 + size;
+                        return LookaheadGvarResult::Ok(token!(tGVAR, start, end));
+                    }
+                    _ => {
+                        // return just $-
+                        return invalid_gvar_name(start + 2);
+                    }
                 }
+            }
+
+            // $&: last match
+            // $`: string before last match
+            // $': string after last match
+            // $+: string matches last paren
+            Some(b'&') | Some(b'`') | Some(b'\'') | Some(b'+') => {
+                return LookaheadGvarResult::Ok(token!(tBACK_REF, start, start + 2));
+            }
+
+            Some(b'1'..=b'9') => {
+                // $NNNN
+                let mut end = start + 2;
+                while buffer.byte_at(end).map(|byte| byte.is_ascii_digit()) == Some(true) {
+                    end += 1;
+                }
+                return LookaheadGvarResult::Ok(token!(tNTH_REF, start, end));
+            }
+
+            Some(b' ') | None => {
+                // Emit just `$`
+                return empty_gvar_name();
+            }
+
+            _ => {
+                // $<ident>
             }
         }
 
-        // $~: match-data
-        // $*: argv
-        // $$: pid
-        // $?: last status
-        // $!: error string
-        // $@: error position
-        // $/: input record separator
-        // $\: output record separator
-        // $;: field separator
-        // $,: output field separator
-        // $.: last read line number
-        // $=: ignorecase
-        // $:: load path
-        // $<: reading filename
-        // $>: default output handle
-        // $": already loaded files
-        Some(b'~') | Some(b'*') | Some(b'$') | Some(b'?') | Some(b'!') | Some(b'@')
-        | Some(b'/') | Some(b'\\') | Some(b';') | Some(b',') | Some(b'.') | Some(b'=')
-        | Some(b':') | Some(b'<') | Some(b'>') | Some(b'\"') => {
-            return LookaheadGvarResult::Ok(token!(tGVAR, start, start + 2));
-        }
-
-        Some(b'-') => {
-            match buffer.utf8_char_at(start + 2) {
-                Utf8Char::Valid(size) => {
-                    // $-<UTF-8 char>
-                    let end = start + 2 + size;
-                    return LookaheadGvarResult::Ok(token!(tGVAR, start, end));
-                }
-                _ => {
-                    // return just $-
-                    return invalid_gvar_name(start + 2);
-                }
+        match Ident::lookahead(buffer, ident_start) {
+            LookaheadResult::Some { length } => {
+                let end = ident_start + length;
+                LookaheadGvarResult::Ok(token!(tGVAR, start, end))
             }
-        }
-
-        // $&: last match
-        // $`: string before last match
-        // $': string after last match
-        // $+: string matches last paren
-        Some(b'&') | Some(b'`') | Some(b'\'') | Some(b'+') => {
-            return LookaheadGvarResult::Ok(token!(tBACK_REF, start, start + 2));
-        }
-
-        Some(b'1'..=b'9') => {
-            // $NNNN
-            let mut end = start + 2;
-            while buffer.byte_at(end).map(|byte| byte.is_ascii_digit()) == Some(true) {
-                end += 1;
+            LookaheadResult::None => {
+                // $ (or $_) followed by invalid byte sequence
+                invalid_gvar_name(ident_start)
             }
-            return LookaheadGvarResult::Ok(token!(tNTH_REF, start, end));
-        }
-
-        Some(b' ') | None => {
-            // Emit just `$`
-            return empty_gvar_name();
-        }
-
-        _ => {
-            // $<ident>
         }
     }
+}
 
-    match lookahead_ident(buffer, ident_start) {
-        Some(ident_size) => {
-            let end = ident_start + ident_size;
-            LookaheadGvarResult::Ok(token!(tGVAR, start, end))
-        }
-        None => {
-            // $ (or $_) followed by invalid byte sequence
-            invalid_gvar_name(ident_start)
-        }
+impl Gvar {
+    pub(crate) fn parse(buffer: &mut Buffer) -> Token {
+        let token = match Gvar::lookahead(buffer, buffer.pos()) {
+            LookaheadGvarResult::Ok(token) => token,
+            LookaheadGvarResult::InvalidVarName(token) => {
+                // TODO: report __invalid__ ivar/cvar name
+                token
+            }
+            LookaheadGvarResult::EmptyVarName(token) => {
+                // TODO: report __empty__ ivar/cvar name
+                token
+            }
+        };
+
+        buffer.set_pos(token.loc().end());
+        token
     }
 }
 

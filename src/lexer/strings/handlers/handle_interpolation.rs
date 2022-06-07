@@ -2,9 +2,9 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        atmark::{lookahead_atmark, LookaheadAtMarkResult},
-        buffer::Buffer,
-        gvar::{lookahead_gvar, LookaheadGvarResult},
+        atmark::{AtMark, LookaheadAtMarkResult},
+        buffer::{Buffer, Lookahead},
+        gvar::{Gvar, LookaheadGvarResult},
         strings::{
             action::StringExtendAction, handlers::handle_processed_string_content,
             types::Interpolation,
@@ -60,7 +60,7 @@ fn handle_raw_ivar_or_cvar_interpolation(
         handle_processed_string_content(start, buffer.pos())?;
 
         // here we (possibly) handle only `#` of "#@foo" / "#@@foo" interpolation
-        if let LookaheadAtMarkResult::Ok(_) = lookahead_atmark(buffer, buffer.pos() + 1) {
+        if let LookaheadAtMarkResult::Ok(_) = AtMark::lookahead(buffer, buffer.pos() + 1) {
             let token = token!(tSTRING_DVAR, buffer.pos(), buffer.pos() + 1);
 
             // consume `#`
@@ -75,7 +75,7 @@ fn handle_raw_ivar_or_cvar_interpolation(
         && buffer.current_byte() == Some(b'@')
     {
         // here we (possibly) have already dipsatched `#` of "#@foo" / "#@@foo" interpolation
-        if let LookaheadAtMarkResult::Ok(token) = lookahead_atmark(buffer, buffer.pos()) {
+        if let LookaheadAtMarkResult::Ok(token) = AtMark::lookahead(buffer, buffer.pos()) {
             // consume variable
             buffer.set_pos(token.loc().end());
             return ControlFlow::Break(StringExtendAction::EmitToken { token });
@@ -94,7 +94,7 @@ fn handle_raw_gvar_interpolation(
         handle_processed_string_content(start, buffer.pos())?;
 
         // here we (possibly) handle only `#` of "#$foo" interpolation
-        if let LookaheadGvarResult::Ok(_) = lookahead_gvar(buffer, buffer.pos() + 1) {
+        if let LookaheadGvarResult::Ok(_) = Gvar::lookahead(buffer, buffer.pos() + 1) {
             let token = token!(tSTRING_DVAR, buffer.pos(), buffer.pos() + 1);
 
             // consume `#`
@@ -109,7 +109,7 @@ fn handle_raw_gvar_interpolation(
         && buffer.current_byte() == Some(b'$')
     {
         // here we (possibly) have already dipsatched `#` of "#@foo" / "#@@foo" interpolation
-        if let LookaheadGvarResult::Ok(token) = lookahead_gvar(buffer, buffer.pos()) {
+        if let LookaheadGvarResult::Ok(token) = Gvar::lookahead(buffer, buffer.pos()) {
             // consume variable
             buffer.set_pos(token.loc().end());
             return ControlFlow::Break(StringExtendAction::EmitToken { token });

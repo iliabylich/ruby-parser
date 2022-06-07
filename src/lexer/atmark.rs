@@ -1,26 +1,11 @@
 use crate::lexer::{
     assert_lex,
-    buffer::Buffer,
-    ident::{is_identchar, lookahead_ident},
+    buffer::{Buffer, Lookahead, LookaheadResult},
+    ident::Ident,
 };
 use crate::token::{Loc, Token, TokenValue};
 
-pub(crate) fn parse_atmark<'a>(buffer: &mut Buffer<'a>) -> Token {
-    let token = match lookahead_atmark(buffer, buffer.pos()) {
-        LookaheadAtMarkResult::Ok(token) => token,
-        LookaheadAtMarkResult::InvalidVarName(token) => {
-            // TODO: report __invalid__ ivar/cvar name
-            token
-        }
-        LookaheadAtMarkResult::EmptyVarName(token) => {
-            // TODO: report __empty__ ivar/cvar name
-            token
-        }
-    };
-
-    buffer.set_pos(token.loc().end());
-    token
-}
+pub(crate) struct AtMark;
 
 pub(crate) enum LookaheadAtMarkResult {
     Ok(Token),
@@ -28,53 +13,75 @@ pub(crate) enum LookaheadAtMarkResult {
     EmptyVarName(Token),
 }
 
-// Returns Ok(Token) or Err(Token with only '@' / '@@')
-pub(crate) fn lookahead_atmark<'a>(buffer: &Buffer<'a>, start: usize) -> LookaheadAtMarkResult {
-    let mut ident_start = start + 1;
+impl Lookahead for AtMark {
+    type Output = LookaheadAtMarkResult;
 
-    let mut token_value = TokenValue::tIVAR;
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+        let mut ident_start = start + 1;
 
-    match buffer.byte_at(start + 1) {
-        Some(b'@') => {
-            // @@
-            token_value = TokenValue::tCVAR;
-            ident_start += 1;
+        let mut token_value = TokenValue::tIVAR;
+
+        match buffer.byte_at(start + 1) {
+            Some(b'@') => {
+                // @@
+                token_value = TokenValue::tCVAR;
+                ident_start += 1;
+            }
+            _ => {}
         }
-        _ => {}
-    }
 
-    let empty_var_name =
-        || LookaheadAtMarkResult::EmptyVarName(Token(token_value, Loc(start, ident_start)));
+        let empty_var_name =
+            || LookaheadAtMarkResult::EmptyVarName(Token(token_value, Loc(start, ident_start)));
 
-    let invalid_var_name =
-        || LookaheadAtMarkResult::InvalidVarName(Token(token_value, Loc(start, ident_start)));
+        let invalid_var_name =
+            || LookaheadAtMarkResult::InvalidVarName(Token(token_value, Loc(start, ident_start)));
 
-    match buffer.byte_at(ident_start) {
-        None => {
-            return empty_var_name();
-        }
-        Some(byte) if !is_identchar(byte) => {
-            // ditto
-            return empty_var_name();
-        }
-        Some(byte) if byte.is_ascii_digit() => {
-            return invalid_var_name();
-        }
-        Some(_) => {
-            // read while possible
-            match lookahead_ident(buffer, ident_start) {
-                Some(length) => {
-                    let ident_end = ident_start + length;
-                    let token = Token(token_value, Loc(start, ident_end));
+        match buffer.byte_at(ident_start) {
+            None => {
+                return empty_var_name();
+            }
+            Some(byte) if !Ident::is_identchar(byte) => {
+                // ditto
+                return empty_var_name();
+            }
+            Some(byte) if byte.is_ascii_digit() => {
+                return invalid_var_name();
+            }
+            Some(_) => {
+                // read while possible
+                match Ident::lookahead(buffer, ident_start) {
+                    LookaheadResult::Some { length } => {
+                        let ident_end = ident_start + length;
+                        let token = Token(token_value, Loc(start, ident_end));
 
-                    return LookaheadAtMarkResult::Ok(token);
-                }
-                None => {
-                    // something like "@\xFF"
-                    return invalid_var_name();
+                        return LookaheadAtMarkResult::Ok(token);
+                    }
+                    LookaheadResult::None => {
+                        // something like "@\xFF"
+                        return invalid_var_name();
+                    }
                 }
             }
         }
+    }
+}
+
+impl AtMark {
+    pub(crate) fn parse(buffer: &mut Buffer) -> Token {
+        let token = match AtMark::lookahead(buffer, buffer.pos()) {
+            LookaheadAtMarkResult::Ok(token) => token,
+            LookaheadAtMarkResult::InvalidVarName(token) => {
+                // TODO: report __invalid__ ivar/cvar name
+                token
+            }
+            LookaheadAtMarkResult::EmptyVarName(token) => {
+                // TODO: report __empty__ ivar/cvar name
+                token
+            }
+        };
+
+        buffer.set_pos(token.loc().end());
+        token
     }
 }
 

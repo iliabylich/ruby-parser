@@ -101,7 +101,9 @@ pub(crate) enum LookaheadResult {
 }
 
 pub(crate) trait Lookahead {
-    fn lookahead(buffer: &Buffer, start: usize) -> LookaheadResult;
+    type Output;
+
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output;
 }
 
 #[test]

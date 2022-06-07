@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::{Buffer, Lookahead, LookaheadResult},
         strings::{
             action::StringExtendAction,
             handlers::{
@@ -54,9 +54,9 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
             ControlFlow::Break(StringExtendAction::FoundStringEnd {
                 token: Token(_, Loc(_, end)),
             }) if self.ends_with == b'/' => {
-                if let Some(regexp_options_end_at) = lookahead_regexp_options(buffer, *end) {
-                    *end = regexp_options_end_at;
-                    buffer.set_pos(regexp_options_end_at);
+                if let LookaheadResult::Some { length } = RegexpOptions::lookahead(buffer, *end) {
+                    *end += length;
+                    buffer.set_pos(*end);
                 }
             }
             _ => {}
@@ -98,18 +98,26 @@ impl Regexp {
     }
 }
 
-fn lookahead_regexp_options(buffer: &mut Buffer, start: usize) -> Option<usize> {
-    let mut end = start;
-    while matches!(
-        buffer.byte_at(end),
-        Some(b'o' | b'n' | b'e' | b's' | b'u' | b'i' | b'x' | b'm')
-    ) {
-        end += 1;
-    }
-    if start == end {
-        None
-    } else {
-        Some(end)
+struct RegexpOptions;
+
+impl Lookahead for RegexpOptions {
+    type Output = LookaheadResult;
+
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+        let mut end = start;
+        while matches!(
+            buffer.byte_at(end),
+            Some(b'o' | b'n' | b'e' | b's' | b'u' | b'i' | b'x' | b'm')
+        ) {
+            end += 1;
+        }
+        if start == end {
+            LookaheadResult::None
+        } else {
+            LookaheadResult::Some {
+                length: end - start,
+            }
+        }
     }
 }
 

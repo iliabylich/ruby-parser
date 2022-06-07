@@ -5,7 +5,7 @@ use crate::lexer::{
 };
 use crate::token::{token, Token};
 
-use crate::lexer::ident::parse_ident;
+use crate::lexer::ident::Ident;
 use crate::lexer::numbers::parse_number;
 use crate::lexer::qmark::parse_qmark;
 
@@ -703,7 +703,7 @@ impl OnByte<b'_'> for Lexer<'_> {
         }
 
         self.buffer.set_pos(start);
-        parse_ident(&mut self.buffer)
+        Ident::parse(&mut self.buffer)
     }
 }
 assert_lex!(test_tEOF_at__END__, b"__END__", tEOF, b"", 0..0);
