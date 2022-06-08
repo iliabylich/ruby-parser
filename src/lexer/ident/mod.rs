@@ -28,9 +28,9 @@ impl Lookahead for Ident {
             }
 
             match buffer.utf8_char_at(end) {
-                Utf8Char::Valid(size) => {
+                Utf8Char::Valid { length } => {
                     // keep consuming
-                    end += size
+                    end += length;
                 }
                 Utf8Char::Invalid => {
                     break;

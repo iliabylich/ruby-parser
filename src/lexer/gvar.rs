@@ -62,9 +62,9 @@ impl Lookahead for Gvar {
 
             Some(b'-') => {
                 match buffer.utf8_char_at(start + 2) {
-                    Utf8Char::Valid(size) => {
+                    Utf8Char::Valid { length } => {
                         // $-<UTF-8 char>
-                        let end = start + 2 + size;
+                        let end = start + 2 + length;
                         return LookaheadGvarResult::Ok(token!(tGVAR, start, end));
                     }
                     _ => {
