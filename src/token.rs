@@ -80,7 +80,7 @@ pub enum TokenValue {
     tFLOAT,          // "float literal"
     tRATIONAL,       // "rational literal"
     tIMAGINARY,      // "imaginary literal"
-    tCHAR,           // "char literal"
+    tCHAR(char),     // "char literal"
     tNTH_REF,        // "numbered reference"
     tBACK_REF,       // "back reference"
     tSTRING_CONTENT, // "literal content"
@@ -200,11 +200,9 @@ impl Loc {
 }
 
 macro_rules! token {
-    ($kind:ident, $begin:expr, $end:expr) => {
-        crate::token::Token(
-            crate::token::TokenValue::$kind,
-            crate::token::Loc($begin, $end),
-        )
-    };
+    ($kind:expr, $begin:expr, $end:expr) => {{
+        use crate::token::TokenValue::*;
+        crate::token::Token($kind, crate::token::Loc($begin, $end))
+    }};
 }
 pub(crate) use token;

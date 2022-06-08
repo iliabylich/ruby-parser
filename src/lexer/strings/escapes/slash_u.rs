@@ -5,7 +5,7 @@ pub(crate) struct SlashU;
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum LooakeadhSlashUResult {
     Short {
-        codepoint: Option<u32>,
+        codepoint: u32,
         length: usize,
     },
     Wide {
@@ -120,7 +120,7 @@ impl Lookahead for SlashU {
                 }
             }
 
-            if errors.is_empty() {
+            if let Some(codepoint) = codepoint {
                 return LooakeadhSlashUResult::Short {
                     codepoint,
                     length: pos - start,
@@ -243,7 +243,7 @@ assert_scans!(
     test = test_slash_u_short_valid,
     input = b"\\u123456",
     output = LooakeadhSlashUResult::Short {
-        codepoint: Some(4660),
+        codepoint: 4660,
         length: 6
     }
 );

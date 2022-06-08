@@ -28,7 +28,11 @@ impl Lookahead for QMark {
                 } else if byte == b'\\' {
                     match dbg!(SlashU::lookahead(buffer, start + 1)) {
                         LooakeadhSlashUResult::Short { codepoint, length } => {
-                            return token!(tCHAR, start, start + length);
+                            return token!(
+                                tCHAR(char::from_u32(codepoint).unwrap()),
+                                start,
+                                start + length
+                            );
                         }
                         LooakeadhSlashUResult::Wide { codepoints, length } => {
                             panic!(
@@ -58,7 +62,12 @@ impl Lookahead for QMark {
         match buffer.utf8_char_at(start + 1) {
             Utf8Char::Valid { length } => {
                 let end = start + 1 + length;
-                token!(tCHAR, start, end)
+                let codepoint = std::str::from_utf8(buffer.slice(start + 1, end))
+                    .unwrap()
+                    .chars()
+                    .next()
+                    .unwrap();
+                token!(tCHAR(codepoint), start, end)
             }
             _ => {
                 token!(tEH, start, start + 1)
@@ -76,11 +85,11 @@ impl QMark {
 }
 
 assert_lex!(test_tEH, b"?", tEH, b"?", 0..1);
-assert_lex!(test_tCHAR_ascii, b"?a", tCHAR, b"?a", 0..2);
+assert_lex!(test_tCHAR_ascii, b"?a", tCHAR('a'), b"?a", 0..2);
 assert_lex!(
     test_tCHAR_multibyte,
     "?字".as_bytes(),
-    tCHAR,
+    tCHAR('字'),
     "?字".as_bytes(),
     0..4
 );
