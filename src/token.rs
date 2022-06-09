@@ -129,6 +129,7 @@ pub enum TokenValue {
     tSYMBEG,       // "symbol literal start"
     tDSYMBEG,      // "dynamic symbol literal start"
     tSTRING_BEG,   // "string begin"
+    tDSTRING_BEG,  // "dynamic string begin"
     tXSTRING_BEG,  // "backtick literal"
     tREGEXP_BEG,   // "regexp literal"
     tWORDS_BEG,    // "word list"

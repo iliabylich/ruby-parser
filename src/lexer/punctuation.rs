@@ -1,6 +1,7 @@
 use crate::lexer::{
     assert_lex,
-    strings::types::{Interpolation, StringInterp, StringNoInterp, Symbol},
+    heredoc_id::HeredocId,
+    strings::types::{Heredoc, Interpolation, StringInterp, StringNoInterp, Symbol},
     Lexer, OnByte, StringLiteral,
 };
 use crate::token::{token, Token};
@@ -128,17 +129,35 @@ assert_lex!(test_tEQL, b"=", tEQL, b"=", 0..1);
 impl OnByte<b'<'> for Lexer<'_> {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
-        self.skip_byte();
+
         // Check if heredoc id
-        if let Some(b'<') = self.current_byte() {
-            if let Some(prev_idx) = start.checked_sub(1) {
-                if self.buffer.byte_at(prev_idx) == Some(b' ') {
-                    if let Some(_here_id) = self.tokenize_heredoc_id() {
-                        todo!("heredoc_id");
-                    }
+        if let Some(b'<') = self.buffer.byte_at(start + 1) {
+            if self.required_new_expr {
+                if let Some(HeredocId {
+                    token,
+                    id: (id_start, id_end),
+                    indent,
+                    interp,
+                }) = HeredocId::parse(&mut self.buffer)
+                {
+                    let interp = if interp {
+                        Some(Interpolation::new(self.curly_nest))
+                    } else {
+                        None
+                    };
+                    self.string_literals
+                        .push(StringLiteral::Heredoc(Heredoc::new(
+                            interp,
+                            self.buffer.slice(id_start, id_end),
+                            id_end,
+                            indent,
+                        )));
+                    return token;
                 }
             }
         }
+
+        self.skip_byte();
 
         // Otherwise just an operator
         match self.current_byte() {
@@ -166,7 +185,30 @@ impl OnByte<b'<'> for Lexer<'_> {
         }
     }
 }
-// assert_lex!(test_tSTRING_BEG_HEREDOC, b"<<-HERE", 0..5);
+assert_lex!(
+    test_tSTRING_BEG_HEREDOC,
+    b"<<-HERE",
+    tDSTRING_BEG,
+    b"<<-HERE",
+    0..7,
+    setup = |lexer: &mut Lexer| {
+        lexer.curly_nest = 42;
+        lexer.require_new_expr();
+    },
+    assert = |lexer: &Lexer| {
+        assert_eq!(lexer.string_literals.size(), 1);
+
+        assert_eq!(
+            lexer.string_literals.last(),
+            Some(StringLiteral::Heredoc(Heredoc::new(
+                Some(Interpolation::new(42)),
+                b"HERE",
+                7,
+                false
+            )))
+        );
+    }
+);
 assert_lex!(test_tCMP, b"<=>", tCMP, b"<=>", 0..3);
 assert_lex!(test_tLEQ, b"<=", tLEQ, b"<=", 0..2);
 assert_lex!(test_tOP_ASGN_LSHIFT, b"<<=", tOP_ASGN, b"<<=", 0..3);
@@ -205,7 +247,7 @@ impl OnByte<b'"'> for Lexer<'_> {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        let token = token!(tSTRING_BEG, start, start + 1);
+        let token = token!(tDSTRING_BEG, start, start + 1);
         self.string_literals
             .push(StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(self.curly_nest),
@@ -217,7 +259,7 @@ impl OnByte<b'"'> for Lexer<'_> {
 assert_lex!(
     test_tSTRING_BEG_DQUOTE,
     b"\"",
-    tSTRING_BEG,
+    tDSTRING_BEG,
     b"\"",
     0..1,
     setup = |lexer: &mut Lexer| {

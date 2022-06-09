@@ -6,7 +6,7 @@ fn test_string_interp_braces() {
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![
-            token!(tSTRING_BEG, 0, 1),
+            token!(tDSTRING_BEG, 0, 1),
             token!(tSTRING_DBEG, 1, 3),
             token!(tLCURLY, 3, 4),
             token!(tRCURLY, 4, 5),

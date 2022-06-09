@@ -2,17 +2,16 @@ use std::ops::ControlFlow;
 
 use crate::lexer::{
     buffer::Buffer,
-    strings::{action::StringExtendAction, literal::StringLiteralExtend},
+    strings::{action::StringExtendAction, literal::StringLiteralExtend, types::Interpolation},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub(crate) struct Heredoc<'a> {
-    supports_interpolation: bool,
-    currently_in_interpolation: bool,
+    interpolation: Option<Interpolation>,
     ends_with: &'a [u8],
-    interpolation_started_with_curly_level: usize,
 
     heredoc_id_ended_at: usize,
+    indent: bool,
 }
 
 impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
@@ -22,5 +21,21 @@ impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
         _current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction> {
         todo!()
+    }
+}
+
+impl<'a> Heredoc<'a> {
+    pub(crate) fn new(
+        interpolation: Option<Interpolation>,
+        ends_with: &'a [u8],
+        heredoc_id_ended_at: usize,
+        indent: bool,
+    ) -> Self {
+        Self {
+            interpolation,
+            ends_with,
+            heredoc_id_ended_at,
+            indent,
+        }
     }
 }

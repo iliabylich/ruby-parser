@@ -2,6 +2,7 @@ pub(crate) mod atmark;
 pub(crate) mod buffer;
 pub(crate) mod gvar;
 pub(crate) mod handle_eof;
+pub(crate) mod heredoc_id;
 pub(crate) mod ident;
 pub(crate) mod numbers;
 pub(crate) mod percent;
@@ -24,6 +25,7 @@ use strings::{action::StringExtendAction, literal::StringLiteral, stack::StringL
 pub struct Lexer<'a> {
     pub(crate) buffer: Buffer<'a>,
     debug: bool,
+    required_new_expr: bool,
 
     string_literals: StringLiteralStack<'a>,
 
@@ -39,6 +41,7 @@ impl<'a> Lexer<'a> {
         Self {
             buffer: Buffer::new(input),
             debug: false,
+            required_new_expr: false,
 
             string_literals: StringLiteralStack::new(),
 
@@ -73,6 +76,10 @@ impl<'a> Lexer<'a> {
         if self.debug {
             println!("Returning token {:?}", token);
         }
+
+        // Reset one-time flag
+        self.required_new_expr = false;
+
         token
     }
 
@@ -87,6 +94,10 @@ impl<'a> Lexer<'a> {
             }
         }
         tokens
+    }
+
+    pub(crate) fn require_new_expr(&mut self) {
+        self.required_new_expr = true;
     }
 
     pub(crate) fn skip_token(&mut self) {
@@ -211,10 +222,6 @@ impl<'a> Lexer<'a> {
                 Ident::parse(&mut self.buffer)
             }
         }
-    }
-
-    pub(crate) fn tokenize_heredoc_id(&mut self) -> Option<&'a [u8]> {
-        None
     }
 }
 
