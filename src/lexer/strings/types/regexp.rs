@@ -100,10 +100,10 @@ impl Regexp {
 
 struct RegexpOptions;
 
-impl Lookahead for RegexpOptions {
+impl<'a> Lookahead<'a> for RegexpOptions {
     type Output = LookaheadResult;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut end = start;
         while matches!(
             buffer.byte_at(end),

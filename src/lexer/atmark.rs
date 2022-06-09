@@ -13,10 +13,10 @@ pub(crate) enum LookaheadAtMarkResult {
     EmptyVarName(Token),
 }
 
-impl Lookahead for AtMark {
+impl<'a> Lookahead<'a> for AtMark {
     type Output = LookaheadAtMarkResult;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
         let mut token_value = TokenValue::tIVAR;

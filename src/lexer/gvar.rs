@@ -13,10 +13,10 @@ pub(crate) enum LookaheadGvarResult {
     EmptyVarName(Token),
 }
 
-impl Lookahead for Gvar {
+impl<'a> Lookahead<'a> for Gvar {
     type Output = LookaheadGvarResult;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
         let empty_gvar_name = || LookaheadGvarResult::EmptyVarName(token!(tGVAR, start, start + 1));

@@ -27,10 +27,10 @@ pub(crate) enum SlashUError {
     NoRCurly { start: usize },
 }
 
-impl Lookahead for SlashU {
+impl<'a> Lookahead<'a> for SlashU {
     type Output = LooakeadhSlashUResult;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         if !buffer.lookahead(b"\\u") {
             return LooakeadhSlashUResult::Err {
                 codepoints: None,
@@ -147,10 +147,10 @@ enum LookaheadCodepointWideResult {
     TooLong { length: usize },
 }
 
-impl Lookahead for CodepointWide {
+impl<'a> Lookahead<'a> for CodepointWide {
     type Output = LookaheadCodepointWideResult;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         dbg!(start);
         let mut end = start;
         let mut valid = true;
@@ -192,10 +192,10 @@ enum LookaheadCodepointShort {
     Expected4GotErr { length: usize },
 }
 
-impl Lookahead for CodepointShort {
+impl<'a> Lookahead<'a> for CodepointShort {
     type Output = LookaheadCodepointShort;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut length = 0;
         for i in 1..=4 {
             match buffer.byte_at(start + i - 1) {

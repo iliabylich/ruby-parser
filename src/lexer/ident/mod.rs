@@ -10,10 +10,10 @@ use reserved_words::find_reserved_word;
 
 pub(crate) struct Ident;
 
-impl Lookahead for Ident {
+impl<'a> Lookahead<'a> for Ident {
     type Output = LookaheadResult;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut end = start;
 
         loop {

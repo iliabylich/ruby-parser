@@ -10,10 +10,10 @@ use crate::{
 
 pub(crate) struct QMark;
 
-impl Lookahead for QMark {
+impl<'a> Lookahead<'a> for QMark {
     type Output = Token;
 
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         match buffer.byte_at(start + 1) {
             Some(byte) => {
                 if (byte.is_ascii_alphanumeric() || byte == b'_')
