@@ -11,12 +11,21 @@ use crate::lexer::qmark::QMark;
 
 impl OnByte<b'#'> for Lexer<'_> {
     fn on_byte(&mut self) -> Token {
-        let _start = self.pos();
+        let start = self.pos();
 
-        todo!("parse_comment");
+        // simply read until EOL
+        loop {
+            match self.buffer.current_byte() {
+                None | Some(b'\n') => break,
+                _ => self.buffer.skip_byte(),
+            }
+        }
+        // Multiple consecutive comments are merged on the parser level
+
+        token!(tCOMMENT, start, self.buffer.pos())
     }
 }
-// assert_lex!(test_tCOMMENT_INLINE, "# foo", tCOMMENT(b"# foo"), 0..6);
+assert_lex!(test_tCOMMENT_INLINE, b"# foo", tCOMMENT, b"# foo", 0..5);
 
 impl OnByte<b'*'> for Lexer<'_> {
     fn on_byte(&mut self) -> Token {
