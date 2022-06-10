@@ -28,11 +28,7 @@ impl<'a> Lookahead<'a> for QMark {
                 } else if byte == b'\\' {
                     match dbg!(SlashU::lookahead(buffer, start + 1)) {
                         LooakeadhSlashUResult::Short { codepoint, length } => {
-                            return token!(
-                                tCHAR(char::from_u32(codepoint).unwrap()),
-                                start,
-                                start + length
-                            );
+                            return token!(tCHAR(codepoint), start, start + length);
                         }
                         LooakeadhSlashUResult::Wide { codepoints, length } => {
                             panic!(

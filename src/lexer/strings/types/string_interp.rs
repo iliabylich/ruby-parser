@@ -49,7 +49,7 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         loop {
             handle_eof(buffer, start)?;
 
-            handle_slash_u(buffer, start)?;
+            // handle_slash_u(buffer, start)?;
 
             handle_interpolation(&mut self.interpolation, buffer, start)?;
             handle_string_end(self.ends_with, buffer, start)?;

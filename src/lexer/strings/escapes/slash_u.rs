@@ -5,15 +5,15 @@ pub(crate) struct SlashU;
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum LooakeadhSlashUResult {
     Short {
-        codepoint: u32,
+        codepoint: char,
         length: usize,
     },
     Wide {
-        codepoints: Box<[u32]>,
+        codepoints: Box<[char]>,
         length: usize,
     },
     Err {
-        codepoints: Option<Box<[u32]>>,
+        codepoints: Option<Box<[char]>>,
         errors: Box<[SlashUError]>,
         length: usize,
     },
@@ -64,8 +64,7 @@ impl<'a> Lookahead<'a> for SlashU {
                         break;
                     }
                     LookaheadCodepointWideResult::Ok { length } => {
-                        let codepoint = read_codepoint(buffer.slice(pos, pos + length));
-                        codepoints.push(codepoint);
+                        read_codepoint(buffer.slice(pos, pos + length), &mut codepoints);
                         pos += length;
                     }
                     LookaheadCodepointWideResult::NonHexErr { length } => {
@@ -105,13 +104,13 @@ impl<'a> Lookahead<'a> for SlashU {
             }
         } else {
             // short
-            let mut codepoint = None;
+            let mut codepoints = vec![];
 
             match CodepointShort::lookahead(buffer, pos) {
                 LookaheadCodepointShort::Ok { length } => {
                     debug_assert_eq!(length, 4);
 
-                    codepoint = Some(read_codepoint(buffer.slice(pos, pos + length)));
+                    read_codepoint(buffer.slice(pos, pos + length), &mut codepoints);
                     pos += length;
                 }
                 LookaheadCodepointShort::Expected4GotErr { length } => {
@@ -120,16 +119,14 @@ impl<'a> Lookahead<'a> for SlashU {
                 }
             }
 
-            if let Some(codepoint) = codepoint {
+            if let Some(codepoint) = codepoints.into_iter().next() {
                 return LooakeadhSlashUResult::Short {
                     codepoint,
                     length: pos - start,
                 };
             } else {
-                let codepoints = codepoint.map(|c| vec![c].into_boxed_slice());
-
                 return LooakeadhSlashUResult::Err {
-                    codepoints,
+                    codepoints: None,
                     errors: errors.into_boxed_slice(),
                     length: pos - start,
                 };
@@ -212,10 +209,19 @@ impl<'a> Lookahead<'a> for CodepointShort {
     }
 }
 
-fn read_codepoint(bytes: &[u8]) -> u32 {
-    dbg!(bytes);
-    let s = std::str::from_utf8(bytes).unwrap();
-    u32::from_str_radix(s, 16).unwrap()
+fn read_codepoint(hex_bytes: &[u8], dest: &mut Vec<char>) {
+    dbg!(hex_bytes);
+    let s = std::str::from_utf8(hex_bytes).unwrap();
+    let codepoint = u32::from_str_radix(s, 16).unwrap();
+    let c = char::from_u32(codepoint).unwrap();
+    dest.push(c)
+    // dbg!(c.len_utf8());
+    // let start = dest.len();
+    // for _ in 0..c.len_utf8() {
+    //     dest.push(0);
+    // }
+    // dbg!(start);
+    // c.encode_utf8(&mut dest[start..]);
 }
 
 macro_rules! assert_scans {
@@ -243,7 +249,7 @@ assert_scans!(
     test = test_slash_u_short_valid,
     input = b"\\u123456",
     output = LooakeadhSlashUResult::Short {
-        codepoint: 4660,
+        codepoint: '\u{1234}',
         length: 6
     }
 );
@@ -265,7 +271,7 @@ assert_scans!(
     test = test_slash_u_wide_single_codepoint_valid,
     input = b"\\u{1234}",
     output = LooakeadhSlashUResult::Wide {
-        codepoints: Box::new([4660]),
+        codepoints: Box::new(['\u{1234}']),
         length: 8
     }
 );
@@ -273,7 +279,7 @@ assert_scans!(
     test = test_slash_u_wide_multiple_codepoint_valid,
     input = b"\\u{ 1234   4321  }",
     output = LooakeadhSlashUResult::Wide {
-        codepoints: Box::new([4660, 17185]),
+        codepoints: Box::new(['\u{1234}', '\u{4321}']),
         length: 18
     }
 );
