@@ -36,7 +36,7 @@ impl<'a> Parser<'a> {
             TokenValue::tLPAREN => {
                 self.lexer.skip_token();
                 let inner = self.parse_expression();
-                if self.lexer.current_token().value() != TokenValue::tRPAREN {
+                if self.lexer.current_token().value() != &TokenValue::tRPAREN {
                     panic!("parse error: expected )")
                 }
                 self.lexer.skip_token();

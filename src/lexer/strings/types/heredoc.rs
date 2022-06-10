@@ -19,7 +19,7 @@ impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
         &mut self,
         _buffer: &mut Buffer<'a>,
         _current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         todo!()
     }
 }

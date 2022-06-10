@@ -56,7 +56,7 @@ impl Ident {
         byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
     }
 
-    pub(crate) fn parse(buffer: &mut Buffer) -> Token {
+    pub(crate) fn parse<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
         let start = buffer.pos();
 
         let length = match Ident::lookahead(buffer, start) {

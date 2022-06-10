@@ -13,11 +13,11 @@ use crate::{
     token::token,
 };
 
-pub(crate) fn handle_interpolation(
+pub(crate) fn handle_interpolation<'a>(
     interpolation: &mut Interpolation,
-    buffer: &mut Buffer,
+    buffer: &mut Buffer<'a>,
     start: usize,
-) -> ControlFlow<StringExtendAction> {
+) -> ControlFlow<StringExtendAction<'a>> {
     // handle #{ interpolation
     handle_regular_interpolation(interpolation, buffer, start)?;
 
@@ -31,13 +31,13 @@ pub(crate) fn handle_interpolation(
 }
 
 #[must_use]
-fn handle_regular_interpolation(
+fn handle_regular_interpolation<'a>(
     interpolation: &mut Interpolation,
-    buffer: &mut Buffer,
+    buffer: &mut Buffer<'a>,
     start: usize,
-) -> ControlFlow<StringExtendAction> {
+) -> ControlFlow<StringExtendAction<'a>> {
     if buffer.lookahead(b"#{") {
-        handle_processed_string_content(start, buffer.pos())?;
+        handle_processed_string_content(buffer, start, buffer.pos())?;
 
         let token = token!(tSTRING_DBEG, buffer.pos(), buffer.pos() + 2);
         // consume `#{`
@@ -52,12 +52,12 @@ fn handle_regular_interpolation(
 }
 
 #[must_use]
-fn handle_raw_ivar_or_cvar_interpolation(
-    buffer: &mut Buffer,
+fn handle_raw_ivar_or_cvar_interpolation<'a>(
+    buffer: &mut Buffer<'a>,
     start: usize,
-) -> ControlFlow<StringExtendAction> {
+) -> ControlFlow<StringExtendAction<'a>> {
     if buffer.lookahead(b"#@") {
-        handle_processed_string_content(start, buffer.pos())?;
+        handle_processed_string_content(buffer, start, buffer.pos())?;
 
         // here we (possibly) handle only `#` of "#@foo" / "#@@foo" interpolation
         if let LookaheadAtMarkResult::Ok(_) = AtMark::lookahead(buffer, buffer.pos() + 1) {
@@ -86,12 +86,12 @@ fn handle_raw_ivar_or_cvar_interpolation(
 }
 
 #[must_use]
-fn handle_raw_gvar_interpolation(
-    buffer: &mut Buffer,
+fn handle_raw_gvar_interpolation<'a>(
+    buffer: &mut Buffer<'a>,
     start: usize,
-) -> ControlFlow<StringExtendAction> {
+) -> ControlFlow<StringExtendAction<'a>> {
     if buffer.lookahead(b"#$") {
-        handle_processed_string_content(start, buffer.pos())?;
+        handle_processed_string_content(buffer, start, buffer.pos())?;
 
         // here we (possibly) handle only `#` of "#$foo" interpolation
         if let LookaheadGvarResult::Ok(_) = Gvar::lookahead(buffer, buffer.pos() + 1) {

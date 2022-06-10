@@ -42,8 +42,8 @@ impl ExtendNumber for Integer {
     }
 }
 
-impl Into<TokenValue> for Integer {
-    fn into(self) -> TokenValue {
+impl<'a> Into<TokenValue<'a>> for Integer {
+    fn into(self) -> TokenValue<'a> {
         TokenValue::tINTEGER
     }
 }

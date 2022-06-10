@@ -7,14 +7,14 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) struct HeredocId {
-    pub(crate) token: Token,
+pub(crate) struct HeredocId<'a> {
+    pub(crate) token: Token<'a>,
     pub(crate) id: (usize, usize),
     pub(crate) interp: bool,
     pub(crate) indent: bool,
 }
 
-impl<'a> Lookahead<'a> for HeredocId {
+impl<'a> Lookahead<'a> for HeredocId<'a> {
     type Output = Option<Self>;
 
     fn lookahead(buffer: &Buffer<'a>, mut start: usize) -> Self::Output {
@@ -117,8 +117,8 @@ impl<'a> Lookahead<'a> for HeredocId {
     }
 }
 
-impl HeredocId {
-    pub(crate) fn parse(buffer: &mut Buffer) -> Option<Self> {
+impl<'a> HeredocId<'a> {
+    pub(crate) fn parse(buffer: &mut Buffer<'a>) -> Option<Self> {
         let mut heredoc_id = Self::lookahead(buffer, buffer.pos());
         if let Some(heredoc_id) = heredoc_id.as_mut() {
             buffer.set_pos(heredoc_id.token.loc().end());

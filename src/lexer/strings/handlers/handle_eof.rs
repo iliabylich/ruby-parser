@@ -8,9 +8,9 @@ use crate::lexer::{
 pub(crate) fn handle_eof<'a>(
     buffer: &mut Buffer<'a>,
     start: usize,
-) -> ControlFlow<StringExtendAction> {
+) -> ControlFlow<StringExtendAction<'a>> {
     if buffer.is_eof() {
-        handle_processed_string_content(start, buffer.pos())?;
+        handle_processed_string_content(buffer, start, buffer.pos())?;
 
         ControlFlow::Break(StringExtendAction::EmitEOF)
     } else {

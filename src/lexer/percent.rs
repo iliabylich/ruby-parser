@@ -6,7 +6,7 @@ use crate::lexer::strings::{literal::StringLiteral, types::*};
 pub(crate) fn parse_percent<'a>(
     buffer: &mut Buffer<'a>,
     curly_level: usize,
-) -> (Option<StringLiteral<'a>>, Token) {
+) -> (Option<StringLiteral<'a>>, Token<'a>) {
     let start = buffer.pos();
     buffer.skip_byte();
 

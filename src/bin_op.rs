@@ -91,10 +91,10 @@ pub enum BinOp {
     tUPLUS,
 }
 
-impl std::convert::TryFrom<TokenValue> for BinOp {
+impl std::convert::TryFrom<&TokenValue<'_>> for BinOp {
     type Error = ();
 
-    fn try_from(token: TokenValue) -> Result<Self, Self::Error> {
+    fn try_from(token: &TokenValue) -> Result<Self, Self::Error> {
         match token {
             TokenValue::kIF_MOD => Ok(BinOp::kIF_MOD),
             TokenValue::kUNLESS_MOD => Ok(BinOp::kUNLESS_MOD),

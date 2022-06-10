@@ -1,4 +1,4 @@
-use std::ops::ControlFlow;
+use std::{borrow::Cow, ops::ControlFlow};
 
 use crate::{
     lexer::{
@@ -6,7 +6,8 @@ use crate::{
         strings::{
             action::StringExtendAction,
             handlers::{
-                handle_eof, handle_interpolation, handle_interpolation_end, handle_string_end,
+                handle_eof, handle_interpolation, handle_interpolation_end, handle_slash_u,
+                handle_string_end,
             },
             literal::StringLiteralExtend,
             types::Interpolation,
@@ -40,21 +41,29 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         &mut self,
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
-    ) -> ControlFlow<crate::lexer::strings::action::StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;
 
         let start = buffer.pos();
 
         loop {
             handle_eof(buffer, start)?;
+
+            handle_slash_u(buffer, start)?;
+
             handle_interpolation(&mut self.interpolation, buffer, start)?;
             handle_string_end(self.ends_with, buffer, start)?;
 
             if buffer.lookahead(b"\\\n") {
                 // just emit what we've got so far
                 // parser will merge two consectuive string literals
+                let end = buffer.pos();
                 let action = StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT, start, buffer.pos()),
+                    token: token!(
+                        tSTRING_CONTENT(Cow::Borrowed(buffer.slice(start, end))),
+                        start,
+                        end
+                    ),
                 };
                 // and skip escaped NL
                 buffer.set_pos(buffer.pos() + 2);
@@ -96,7 +105,7 @@ mod tests {
             lexer.tokenize_until_eof(),
             vec![
                 token!(tSTRING_BEG, 0, 1),
-                token!(tSTRING_CONTENT, 1, 4),
+                token!(tSTRING_CONTENT(Cow::Borrowed(b"foo")), 1, 4),
                 token!(tSTRING_END, 4, 5),
                 token!(tEOF, 5, 5)
             ]

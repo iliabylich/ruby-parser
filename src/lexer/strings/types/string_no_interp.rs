@@ -3,6 +3,7 @@ use std::ops::ControlFlow;
 use crate::lexer::{
     buffer::Buffer,
     strings::{
+        action::StringExtendAction,
         handlers::{handle_eof, handle_string_end},
         literal::StringLiteralExtend,
     },
@@ -24,7 +25,7 @@ impl<'a> StringLiteralExtend<'a> for StringNoInterp {
         &mut self,
         buffer: &mut Buffer<'a>,
         _current_curly_nest: usize,
-    ) -> ControlFlow<crate::lexer::strings::action::StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         let start = buffer.pos();
 
         loop {
@@ -37,14 +38,17 @@ impl<'a> StringLiteralExtend<'a> for StringNoInterp {
 
 #[cfg(test)]
 mod tests {
+    use std::borrow::Cow;
+
     use super::*;
+
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
     assert_emits_token!(
         test = test_rcurly_with_no_interp_support,
         literal = StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')),
         input = b"}",
-        token = token!(tSTRING_CONTENT, 0, 1),
+        token = token!(tSTRING_CONTENT(Cow::Borrowed(b"}")), 0, 1),
         pre = |_| {},
         post = |_| {}
     );
@@ -57,7 +61,7 @@ mod tests {
             lexer.tokenize_until_eof(),
             vec![
                 token!(tSTRING_BEG, 0, 1),
-                token!(tSTRING_CONTENT, 1, 4),
+                token!(tSTRING_CONTENT(Cow::Borrowed(b"foo")), 1, 4),
                 token!(tSTRING_END, 4, 5),
                 token!(tEOF, 5, 5)
             ]

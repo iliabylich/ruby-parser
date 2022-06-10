@@ -15,7 +15,7 @@ pub(crate) fn parse_string<'a>(
     literal: &mut StringLiteral<'a>,
     buffer: &mut Buffer<'a>,
     current_curly_nest: usize,
-) -> StringExtendAction {
+) -> StringExtendAction<'a> {
     match literal.extend(buffer, current_curly_nest) {
         ControlFlow::Continue(_) => unreachable!("literal.extend always return Break(_)"),
         ControlFlow::Break(action) => action,

@@ -1,9 +1,9 @@
 use crate::token::TokenValue;
 
-#[derive(Clone, Copy)]
-pub(crate) struct ReservedWord {
+#[derive(Clone)]
+pub(crate) struct ReservedWord<'a> {
     name: &'static [u8],
-    pub(crate) token_value: TokenValue,
+    pub(crate) token_value: TokenValue<'a>,
 }
 
 pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[
@@ -208,5 +208,5 @@ pub(crate) fn find_reserved_word(tok: &[u8]) -> Option<ReservedWord> {
     let bucket = RESERVED_WORDS.get(tok.len())?;
     let idx = bucket.binary_search_by(|e| e.name.cmp(tok)).ok()?;
 
-    Some(bucket[idx])
+    Some(bucket[idx].clone())
 }

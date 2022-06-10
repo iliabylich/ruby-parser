@@ -27,7 +27,7 @@ impl<'a> StringLiteralExtend<'a> for Symbol {
         &mut self,
         buffer: &mut Buffer<'a>,
         _current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         let start = buffer.pos();
 
         handle_eof(buffer, start)?;

@@ -1,9 +1,11 @@
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub struct Token(pub TokenValue, pub Loc);
+use std::borrow::Cow;
 
-impl Token {
-    pub fn value(&self) -> TokenValue {
-        self.0
+#[derive(Debug, PartialEq, Eq, Default)]
+pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
+
+impl<'a> Token<'a> {
+    pub fn value(&self) -> &TokenValue<'a> {
+        &self.0
     }
 
     pub fn loc(&self) -> Loc {
@@ -12,8 +14,8 @@ impl Token {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum TokenValue {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TokenValue<'a> {
     // Keyword tokens.
     // They are always represented by the same word in code,
     // so they have no attached value, it can be easily inferred
@@ -76,14 +78,14 @@ pub enum TokenValue {
     tCVAR,       // "class variable"
     tLABEL,      // "label"
 
-    tINTEGER,        // "integer literal"
-    tFLOAT,          // "float literal"
-    tRATIONAL,       // "rational literal"
-    tIMAGINARY,      // "imaginary literal"
-    tCHAR(char),     // "char literal"
-    tNTH_REF,        // "numbered reference"
-    tBACK_REF,       // "back reference"
-    tSTRING_CONTENT, // "literal content"
+    tINTEGER,                       // "integer literal"
+    tFLOAT,                         // "float literal"
+    tRATIONAL,                      // "rational literal"
+    tIMAGINARY,                     // "imaginary literal"
+    tCHAR(char),                    // "char literal"
+    tNTH_REF,                       // "numbered reference"
+    tBACK_REF,                      // "back reference"
+    tSTRING_CONTENT(Cow<'a, [u8]>), // "literal content"
     tREGEXP_END,
 
     // Punctuation/operators
@@ -181,7 +183,7 @@ pub enum TokenValue {
     tTEST_TOKEN,
 }
 
-impl Default for TokenValue {
+impl Default for TokenValue<'_> {
     fn default() -> Self {
         Self::tUNINITIALIZED
     }

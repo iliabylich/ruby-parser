@@ -11,7 +11,7 @@ use crate::{
 pub(crate) struct QMark;
 
 impl<'a> Lookahead<'a> for QMark {
-    type Output = Token;
+    type Output = Token<'a>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         match buffer.byte_at(start + 1) {
@@ -77,7 +77,7 @@ impl<'a> Lookahead<'a> for QMark {
 }
 
 impl QMark {
-    pub(crate) fn parse(buffer: &mut Buffer) -> Token {
+    pub(crate) fn parse<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
         let token = Self::lookahead(buffer, buffer.pos());
         buffer.set_pos(token.loc().end());
         token

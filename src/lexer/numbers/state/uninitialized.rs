@@ -80,8 +80,8 @@ impl ExtendNumber for Uninitialized {
     }
 }
 
-impl Into<TokenValue> for Uninitialized {
-    fn into(self) -> TokenValue {
+impl<'a> Into<TokenValue<'a>> for Uninitialized {
+    fn into(self) -> TokenValue<'a> {
         unreachable!("ExtendNumber made no transition")
     }
 }

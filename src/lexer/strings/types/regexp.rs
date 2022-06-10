@@ -1,4 +1,4 @@
-use std::ops::ControlFlow;
+use std::{borrow::Cow, ops::ControlFlow};
 
 use crate::{
     lexer::{
@@ -43,7 +43,7 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
         &mut self,
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         let mut action = self._extend(buffer, current_curly_nest);
 
         // Regexp has a special handling of string end
@@ -68,11 +68,11 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
 
 impl Regexp {
     #[must_use]
-    fn _extend(
+    fn _extend<'a>(
         &mut self,
-        buffer: &mut Buffer,
+        buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;
 
         let start = buffer.pos();
@@ -85,8 +85,13 @@ impl Regexp {
             if buffer.lookahead(b"\\\n") {
                 // just emit what we've got so far
                 // parser will merge two consectuive string literals
+                let end = buffer.pos();
                 let action = StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT, start, buffer.pos()),
+                    token: token!(
+                        tSTRING_CONTENT(Cow::Borrowed(buffer.slice(start, end))),
+                        start,
+                        end
+                    ),
                 };
                 // and skip escaped NL
                 buffer.set_pos(buffer.pos() + 2);

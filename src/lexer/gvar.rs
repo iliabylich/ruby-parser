@@ -7,14 +7,14 @@ use crate::token::{token, Token};
 
 pub(crate) struct Gvar;
 
-pub(crate) enum LookaheadGvarResult {
-    Ok(Token),
-    InvalidVarName(Token),
-    EmptyVarName(Token),
+pub(crate) enum LookaheadGvarResult<'a> {
+    Ok(Token<'a>),
+    InvalidVarName(Token<'a>),
+    EmptyVarName(Token<'a>),
 }
 
 impl<'a> Lookahead<'a> for Gvar {
-    type Output = LookaheadGvarResult;
+    type Output = LookaheadGvarResult<'a>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
@@ -115,7 +115,7 @@ impl<'a> Lookahead<'a> for Gvar {
 }
 
 impl Gvar {
-    pub(crate) fn parse(buffer: &mut Buffer) -> Token {
+    pub(crate) fn parse<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
         let token = match Gvar::lookahead(buffer, buffer.pos()) {
             LookaheadGvarResult::Ok(token) => token,
             LookaheadGvarResult::InvalidVarName(token) => {

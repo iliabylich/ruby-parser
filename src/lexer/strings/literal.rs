@@ -13,7 +13,7 @@ pub(crate) trait StringLiteralExtend<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction>;
+    ) -> ControlFlow<StringExtendAction<'a>>;
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -32,7 +32,7 @@ impl<'a> StringLiteralExtend<'a> for StringLiteral<'a> {
         &mut self,
         buffer: &mut Buffer<'a>,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction> {
+    ) -> ControlFlow<StringExtendAction<'a>> {
         match self {
             Self::StringInterp(string) => string.extend(buffer, current_curly_nest),
             Self::StringNoInterp(string) => string.extend(buffer, current_curly_nest),

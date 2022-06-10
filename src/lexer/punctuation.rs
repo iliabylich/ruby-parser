@@ -10,8 +10,8 @@ use crate::lexer::ident::Ident;
 use crate::lexer::numbers::parse_number;
 use crate::lexer::qmark::QMark;
 
-impl OnByte<b'#'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
 
         // simply read until EOL
@@ -28,8 +28,8 @@ impl OnByte<b'#'> for Lexer<'_> {
 }
 assert_lex!(test_tCOMMENT_INLINE, b"# foo", tCOMMENT, b"# foo", 0..5);
 
-impl OnByte<b'*'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'*'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
 
@@ -57,8 +57,8 @@ assert_lex!(test_tOP_ASGN_STAR, b"*=", tOP_ASGN, b"*=", 0..2);
 assert_lex!(test_tPOW, b"**", tPOW, b"**", 0..2);
 assert_lex!(test_tOP_ASGN_DSTAR, b"**=", tOP_ASGN, b"**=", 0..3);
 
-impl OnByte<b'!'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'!'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
 
@@ -80,8 +80,8 @@ assert_lex!(test_tNEQ, b"!=", tNEQ, b"!=", 0..2);
 assert_lex!(test_tNMATCH, b"!~", tNMATCH, b"!~", 0..2);
 assert_lex!(test_tBANG, b"!", tBANG, b"!", 0..1);
 
-impl OnByte<b'='> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'='> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
 
@@ -126,8 +126,8 @@ assert_lex!(test_tMATCH, b"=~", tMATCH, b"=~", 0..2);
 assert_lex!(test_tASSOC, b"=>", tASSOC, b"=>", 0..2);
 assert_lex!(test_tEQL, b"=", tEQL, b"=", 0..1);
 
-impl OnByte<b'<'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
 
         // Check if heredoc id
@@ -215,8 +215,8 @@ assert_lex!(test_tOP_ASGN_LSHIFT, b"<<=", tOP_ASGN, b"<<=", 0..3);
 assert_lex!(test_tLSHFT, b"<<", tLSHFT, b"<<", 0..2);
 assert_lex!(test_tLT, b"<", tLT, b"<", 0..1);
 
-impl OnByte<b'>'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'>'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         match self.current_byte() {
@@ -243,8 +243,8 @@ assert_lex!(test_tOP_ASGN_RSHIFT, b">>=", tOP_ASGN, b">>=", 0..3);
 assert_lex!(test_tRSHFT, b">>", tRSHFT, b">>", 0..2);
 assert_lex!(test_tGT, b">", tGT, b">", 0..1);
 
-impl OnByte<b'"'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tDSTRING_BEG, start, start + 1);
@@ -279,14 +279,14 @@ assert_lex!(
     }
 );
 
-impl OnByte<b'`'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'`'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         todo!("unclear what to do here?? MRI does state-dependent analysis")
     }
 }
 
-impl OnByte<b'\''> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
@@ -313,14 +313,14 @@ assert_lex!(
     }
 );
 
-impl OnByte<b'?'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'?'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         QMark::parse(&mut self.buffer)
     }
 }
 
-impl OnByte<b'&'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'&'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         match self.current_byte() {
@@ -352,8 +352,8 @@ assert_lex!(test_tOP_ASGN_AMPER, b"&=", tOP_ASGN, b"&=", 0..2);
 assert_lex!(test_tANDDOT, b"&.", tANDDOT, b"&.", 0..2);
 assert_lex!(test_tAMPER, b"&", tAMPER, b"&", 0..1);
 
-impl OnByte<b'|'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'|'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         match self.current_byte() {
@@ -380,8 +380,8 @@ assert_lex!(test_tOROP, b"||", tOROP, b"||", 0..2);
 assert_lex!(test_tOP_ASGN_PIPE, b"|=", tOP_ASGN, b"|=", 0..2);
 assert_lex!(test_tPIPE, b"|", tPIPE, b"|", 0..1);
 
-impl OnByte<b'+'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'+'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         // +@ is handled on the parser level
@@ -403,8 +403,8 @@ assert_lex!(test_tOP_ASGN_PLUS, b"+=", tOP_ASGN, b"+=", 0..2);
 assert_lex!(test_tPLUS_NUMBER, b"+1", tINTEGER, b"+1", 0..2);
 assert_lex!(test_tPLUS, b"+", tPLUS, b"+", 0..1);
 
-impl OnByte<b'-'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'-'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         // -@ is handled on the parser level
@@ -427,8 +427,8 @@ assert_lex!(test_tLAMBDA, b"->", tLAMBDA, b"->", 0..2);
 assert_lex!(test_tMINUS, b"-", tMINUS, b"-", 0..1);
 assert_lex!(test_tUMINUS, b"-5", tUMINUS, b"-", 0..1);
 
-impl OnByte<b'.'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'.'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         match self.current_byte() {
@@ -453,8 +453,8 @@ assert_lex!(test_tDOT3, b"...", tDOT3, b"...", 0..3);
 assert_lex!(test_tDOT2, b"..", tDOT2, b"..", 0..2);
 assert_lex!(test_tDOT, b".", tDOT, b".", 0..1);
 
-impl OnByte<b')'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b')'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         if self.paren_nest > 0 {
@@ -478,8 +478,8 @@ assert_lex!(
     assert = |_lexer: &Lexer| {}
 );
 
-impl OnByte<b']'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b']'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         if self.brack_nest > 0 {
@@ -502,8 +502,8 @@ assert_lex!(
     assert = |_lexer: &Lexer| {}
 );
 
-impl OnByte<b'}'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'}'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         if self.curly_nest > 0 {
@@ -526,8 +526,8 @@ assert_lex!(
     assert = |_lexer: &Lexer| {}
 );
 
-impl OnByte<b':'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b':'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         match self.current_byte() {
@@ -596,8 +596,8 @@ assert_lex!(
 );
 assert_lex!(test_tCOLON, b":", tCOLON, b":", 0..1);
 
-impl OnByte<b'/'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         // Regexp begin is handled on the parser level
@@ -614,8 +614,8 @@ impl OnByte<b'/'> for Lexer<'_> {
 assert_lex!(test_tOP_ASGN_DIV, b"/=", tOP_ASGN, b"/=", 0..2);
 assert_lex!(test_tDIVIDE, b"/", tDIVIDE, b"/", 0..1);
 
-impl OnByte<b'^'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'^'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
 
@@ -631,8 +631,8 @@ impl OnByte<b'^'> for Lexer<'_> {
 assert_lex!(test_tOP_ASGN_CARET, b"^=", tOP_ASGN, b"^=", 0..2);
 assert_lex!(test_tCARET, b"^", tCARET, b"^", 0..1);
 
-impl OnByte<b';'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b';'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         token!(tSEMI, start, start + 1)
@@ -640,8 +640,8 @@ impl OnByte<b';'> for Lexer<'_> {
 }
 assert_lex!(test_tSEMI, b";", tSEMI, b";", 0..1);
 
-impl OnByte<b','> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b','> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         token!(tCOMMA, start, start + 1)
@@ -649,8 +649,8 @@ impl OnByte<b','> for Lexer<'_> {
 }
 assert_lex!(test_tCOMMA, b",", tCOMMA, b",", 0..1);
 
-impl OnByte<b'~'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'~'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         // ~@ is handled on the parser level
@@ -659,8 +659,8 @@ impl OnByte<b'~'> for Lexer<'_> {
 }
 assert_lex!(test_tTILDE, b"~", tTILDE, b"~", 0..1);
 
-impl OnByte<b'('> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'('> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         self.paren_nest += 1;
@@ -669,8 +669,8 @@ impl OnByte<b'('> for Lexer<'_> {
 }
 assert_lex!(test_tLPAREN, b"(", tLPAREN, b"(", 0..1);
 
-impl OnByte<b'['> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'['> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         self.brack_nest += 1;
@@ -679,8 +679,8 @@ impl OnByte<b'['> for Lexer<'_> {
 }
 assert_lex!(test_tLBRACK, b"[", tLBRACK, b"[", 0..1);
 
-impl OnByte<b'{'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'{'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         self.curly_nest += 1;
@@ -688,8 +688,8 @@ impl OnByte<b'{'> for Lexer<'_> {
     }
 }
 
-impl OnByte<b'\\'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'\\'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
         match self.current_byte() {
@@ -734,8 +734,8 @@ assert_lex!(test_tESCAPED_LF, b"\\\x0c", tSLASH_F, b"\\\x0c", 0..2);
 assert_lex!(test_tESCAPED_CR, b"\\\r", tSLASH_R, b"\\\r", 0..2);
 assert_lex!(test_tESCAPED_VTAB, b"\\\x0b", tVTAB, b"\\\x0b", 0..2);
 
-impl OnByte<b'_'> for Lexer<'_> {
-    fn on_byte(&mut self) -> Token {
+impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
+    fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
 
         match start

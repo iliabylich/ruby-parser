@@ -29,7 +29,7 @@ pub struct Lexer<'a> {
 
     string_literals: StringLiteralStack<'a>,
 
-    current_token: Option<Token>,
+    current_token: Option<Token<'a>>,
 
     curly_nest: usize,
     paren_nest: usize,
@@ -58,16 +58,18 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    pub fn current_token(&mut self) -> Token {
+    pub fn current_token(&mut self) -> &Token<'a> {
         if self.current_token.is_none() {
             self.current_token = Some(self.next_token());
         }
-        // SAFETY: we've filled in current_token above
-        //         it's guaranteed to hold Some(Token)
-        unsafe { self.current_token.unwrap_unchecked() }
+
+        match self.current_token.as_ref() {
+            Some(token) => token,
+            None => unreachable!("token has been filled"),
+        }
     }
 
-    fn next_token(&mut self) -> Token {
+    fn next_token(&mut self) -> Token<'a> {
         let token = if self.string_literals.last().is_some() {
             self.tokenize_while_in_string()
         } else {
@@ -84,12 +86,13 @@ impl<'a> Lexer<'a> {
     }
 
     #[cfg(test)]
-    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token> {
+    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
+            let is_eof = token.value() == &crate::token::TokenValue::tEOF;
             tokens.push(token);
-            if token.value() == crate::token::TokenValue::tEOF {
+            if is_eof {
                 break;
             }
         }
@@ -104,7 +107,7 @@ impl<'a> Lexer<'a> {
         self.current_token = None;
     }
 
-    fn tokenize_while_in_string(&mut self) -> Token {
+    fn tokenize_while_in_string(&mut self) -> Token<'a> {
         // SAFETY: this method is called only if `string_literals` has at least 1 item
         let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
 
@@ -137,7 +140,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn tokenize_normally(&mut self) -> Token {
+    pub fn tokenize_normally(&mut self) -> Token<'a> {
         if let Some(eof_t) = self.handle_eof() {
             return eof_t;
         }
@@ -225,8 +228,8 @@ impl<'a> Lexer<'a> {
     }
 }
 
-pub(crate) trait OnByte<const BYTE: u8> {
-    fn on_byte(&mut self) -> Token;
+pub(crate) trait OnByte<'a, const BYTE: u8> {
+    fn on_byte(&mut self) -> Token<'a>;
 }
 
 macro_rules! assert_lex {
@@ -249,7 +252,7 @@ macro_rules! assert_lex {
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
             let token = lexer.current_token();
-            assert_eq!(token.value(), $tok);
+            assert_eq!(token.value(), &$tok);
             assert_eq!(token.loc(), Loc($loc.start, $loc.end));
             assert_eq!(token.loc().end(), lexer.buffer.pos());
             assert_eq!(&$input[$loc.start..$loc.end], $value);
