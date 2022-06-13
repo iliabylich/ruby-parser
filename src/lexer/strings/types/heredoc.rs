@@ -1,7 +1,7 @@
 use std::ops::ControlFlow;
 
 use crate::lexer::{
-    buffer::Buffer,
+    buffer::BufferWithCursor,
     strings::{action::StringExtendAction, literal::StringLiteralExtend, types::Interpolation},
 };
 
@@ -17,7 +17,7 @@ pub(crate) struct Heredoc<'a> {
 impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
     fn extend(
         &mut self,
-        _buffer: &mut Buffer<'a>,
+        _buffer: &mut BufferWithCursor<'a>,
         _current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
         todo!()

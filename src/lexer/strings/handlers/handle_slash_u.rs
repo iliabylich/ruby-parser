@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{Buffer, Lookahead},
+        buffer::{BufferWithCursor, Lookahead},
         string_content::StringContent,
         strings::{
             action::StringExtendAction,
@@ -14,10 +14,10 @@ use crate::{
 
 #[must_use]
 pub(crate) fn handle_slash_u<'a>(
-    buffer: &mut Buffer<'a>,
+    buffer: &mut BufferWithCursor<'a>,
     start: usize,
 ) -> ControlFlow<StringExtendAction<'a>> {
-    let (string_content, length) = match SlashU::lookahead(buffer, start) {
+    let (string_content, length) = match SlashU::lookahead(buffer.for_lookahead(), start) {
         LooakeadhSlashUResult::Short { codepoint, length } => {
             (StringContent::from(codepoint), length)
         }

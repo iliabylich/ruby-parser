@@ -4,27 +4,56 @@ pub(crate) mod utf8;
 
 pub(crate) use pattern::Pattern;
 
+#[derive(Debug)]
 pub struct Buffer<'a> {
-    input: &'a [u8],
-    pos: usize,
-}
-
-impl std::fmt::Debug for Buffer<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let input = &self.input[self.pos..];
-        let input = &input[..std::cmp::min(input.len(), 10)];
-        let input = std::str::from_utf8(input).unwrap();
-
-        f.debug_struct("Buffer")
-            .field("input", &input)
-            .field("pos", &self.pos)
-            .finish()
-    }
+    bytes: &'a [u8],
 }
 
 impl<'a> Buffer<'a> {
+    pub(crate) fn new(bytes: &'a [u8]) -> Self {
+        Self { bytes }
+    }
+
+    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
+        self.bytes.get(start..end).unwrap_or_else(|| {
+            panic!(
+                "wrong start/end given: {}..{} (lenth = {})",
+                start,
+                end,
+                self.bytes.len()
+            )
+        })
+    }
+
+    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
+        self.bytes.get(idx).map(|byte| *byte)
+    }
+}
+
+pub struct BufferWithCursor<'a> {
+    buffer: Buffer<'a>,
+    pos: usize,
+}
+
+impl<'a> BufferWithCursor<'a> {
     pub(crate) fn new(input: &'a [u8]) -> Self {
-        Self { input, pos: 0 }
+        Self {
+            buffer: Buffer::new(input),
+            pos: 0,
+        }
+    }
+
+    // Delegators
+    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
+        self.buffer.slice(start, end)
+    }
+    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
+        self.buffer.byte_at(idx)
+    }
+
+    // Getter for lookahead
+    pub(crate) fn for_lookahead(&self) -> &Buffer<'a> {
+        &self.buffer
     }
 
     pub(crate) fn skip_byte(&mut self) {
@@ -39,21 +68,8 @@ impl<'a> Buffer<'a> {
         self.pos
     }
 
-    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
-        self.input.get(start..end).unwrap_or_else(|| {
-            panic!(
-                "wrong start/end given: {}..{} (lenth = {})",
-                start, end, self.pos
-            )
-        })
-    }
-
-    pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
-        self.input.get(idx).map(|byte| *byte)
-    }
-
     pub(crate) fn current_byte(&self) -> Option<u8> {
-        self.byte_at(self.pos)
+        self.buffer.byte_at(self.pos)
     }
 
     pub(crate) fn is_eof(&self) -> bool {
@@ -67,6 +83,21 @@ impl<'a> Buffer<'a> {
         pattern.is_lookahead_of(self)
     }
 }
+
+impl std::fmt::Debug for BufferWithCursor<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let input = &self.buffer.bytes[self.pos..];
+        let input = &input[..std::cmp::min(input.len(), 10)];
+        let input = std::str::from_utf8(input).unwrap();
+
+        f.debug_struct("BufferWithCursor")
+            .field("input", &input)
+            .field("pos", &self.pos)
+            .finish()
+    }
+}
+
+impl<'a> BufferWithCursor<'a> {}
 
 macro_rules! scan_while_matches_pattern {
     ($buffer:expr, $start:expr, $pattern:pat) => {{
@@ -121,7 +152,7 @@ pub(crate) trait Lookahead<'a> {
 
 #[test]
 fn test_lookahead() {
-    let buffer = Buffer::new(b"foo");
+    let buffer = BufferWithCursor::new(b"foo");
     assert!(buffer.lookahead(b"f"));
     assert!(buffer.lookahead(b"fo"));
     assert!(buffer.lookahead(b"foo"));

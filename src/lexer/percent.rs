@@ -1,10 +1,10 @@
-use crate::lexer::buffer::Buffer;
+use crate::lexer::buffer::BufferWithCursor;
 use crate::token::{token, Token};
 
 use crate::lexer::strings::{literal::StringLiteral, types::*};
 
 pub(crate) fn parse_percent<'a>(
-    buffer: &mut Buffer<'a>,
+    buffer: &mut BufferWithCursor<'a>,
     curly_level: usize,
 ) -> (Option<StringLiteral<'a>>, Token<'a>) {
     let start = buffer.pos();

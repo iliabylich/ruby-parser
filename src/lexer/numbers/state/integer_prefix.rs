@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::BufferWithCursor,
         numbers::{
             scan,
             state::{try_sub_parser, Integer, State},
@@ -21,7 +21,7 @@ pub(crate) enum IntegerPrefix {
 }
 
 impl ExtendNumber for IntegerPrefix {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         if let State::IntegerPrefix(prefix) = number.state {
             match prefix {
                 IntegerPrefix::Hexadecimal(_) => Hexadecimal::extend(number, buffer),
@@ -46,7 +46,7 @@ pub(crate) struct Hexadecimal;
 
 // Runs after consuming `0x` hexadecimal prefix
 impl ExtendNumber for Hexadecimal {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(scan::hexadecimal, buffer, start, number) {
@@ -63,7 +63,7 @@ pub(crate) struct Binary;
 
 // Runs after consuming `0b` binary prefix
 impl ExtendNumber for Binary {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(scan::binary, buffer, start, number) {
@@ -80,7 +80,7 @@ pub(crate) struct Octal;
 
 // Runs after consuming octal prefix (`0`)
 impl ExtendNumber for Octal {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(scan::octal, buffer, start, number) {
@@ -97,7 +97,7 @@ pub(crate) struct Decimal;
 
 // Runs after consuming decimal prefix (`0d` or no prefix)
 impl ExtendNumber for Decimal {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(scan::decimal, buffer, start, number) {

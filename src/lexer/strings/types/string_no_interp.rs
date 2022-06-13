@@ -1,7 +1,7 @@
 use std::ops::ControlFlow;
 
 use crate::lexer::{
-    buffer::Buffer,
+    buffer::BufferWithCursor,
     strings::{
         action::StringExtendAction,
         handlers::{handle_eof, handle_string_end},
@@ -23,7 +23,7 @@ impl StringNoInterp {
 impl<'a> StringLiteralExtend<'a> for StringNoInterp {
     fn extend(
         &mut self,
-        buffer: &mut Buffer<'a>,
+        buffer: &mut BufferWithCursor<'a>,
         _current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
         let start = buffer.pos();

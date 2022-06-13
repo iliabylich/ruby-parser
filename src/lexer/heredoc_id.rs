@@ -1,6 +1,6 @@
 use crate::{
     lexer::{
-        buffer::{Buffer, Lookahead, LookaheadResult},
+        buffer::{Buffer, BufferWithCursor, Lookahead, LookaheadResult},
         ident::Ident,
     },
     token::{Loc, Token, TokenValue},
@@ -118,8 +118,8 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
 }
 
 impl<'a> HeredocId<'a> {
-    pub(crate) fn parse(buffer: &mut Buffer<'a>) -> Option<Self> {
-        let mut heredoc_id = Self::lookahead(buffer, buffer.pos());
+    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Option<Self> {
+        let mut heredoc_id = Self::lookahead(buffer.for_lookahead(), buffer.pos());
         if let Some(heredoc_id) = heredoc_id.as_mut() {
             buffer.set_pos(heredoc_id.token.loc().end());
         }
@@ -140,7 +140,7 @@ mod tests {
         ) => {
             #[test]
             fn $test() {
-                let mut buffer = Buffer::new($input);
+                let mut buffer = BufferWithCursor::new($input);
                 let output = HeredocId::parse(&mut buffer);
                 assert_eq!(output, $output);
             }

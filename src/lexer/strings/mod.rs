@@ -7,13 +7,13 @@ pub(crate) mod literal;
 pub(crate) mod stack;
 pub(crate) mod types;
 
-use crate::lexer::buffer::Buffer;
+use crate::lexer::buffer::BufferWithCursor;
 use action::StringExtendAction;
 use literal::{StringLiteral, StringLiteralExtend};
 
 pub(crate) fn parse_string<'a>(
     literal: &mut StringLiteral<'a>,
-    buffer: &mut Buffer<'a>,
+    buffer: &mut BufferWithCursor<'a>,
     current_curly_nest: usize,
 ) -> StringExtendAction<'a> {
     match literal.extend(buffer, current_curly_nest) {

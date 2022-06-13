@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::BufferWithCursor,
         strings::{action::StringExtendAction, types::Interpolation},
     },
     token::token,
@@ -10,7 +10,7 @@ use crate::{
 
 pub(crate) fn handle_interpolation_end<'a>(
     interpolation: &mut Interpolation,
-    buffer: &mut Buffer<'a>,
+    buffer: &mut BufferWithCursor<'a>,
     current_curly_nest: usize,
 ) -> ControlFlow<StringExtendAction<'a>> {
     match interpolation {

@@ -1,6 +1,6 @@
 use std::ops::ControlFlow;
 
-use crate::lexer::buffer::Buffer;
+use crate::lexer::buffer::{Buffer, BufferWithCursor};
 use crate::token::{Loc, Token, TokenValue};
 
 pub(crate) mod scan;
@@ -27,11 +27,11 @@ impl Number {
 }
 
 trait ExtendNumber {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()>;
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()>;
 }
 
 impl ExtendNumber for Number {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         match number.state {
             State::Uninitialized(_) => Uninitialized::extend(number, buffer),
             State::IntegerPrefix(_) => IntegerPrefix::extend(number, buffer),
@@ -62,7 +62,7 @@ impl<'a> Into<Token<'a>> for Number {
     }
 }
 
-pub(crate) fn parse_number<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
+pub(crate) fn parse_number<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
     let mut number = Number::new(buffer.pos());
 
     loop {

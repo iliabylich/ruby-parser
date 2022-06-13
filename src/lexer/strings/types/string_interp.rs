@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::BufferWithCursor,
         string_content::StringContent,
         strings::{
             action::StringExtendAction,
@@ -40,7 +40,7 @@ impl StringInterp {
 impl<'a> StringLiteralExtend<'a> for StringInterp {
     fn extend(
         &mut self,
-        buffer: &mut Buffer<'a>,
+        buffer: &mut BufferWithCursor<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
         handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;

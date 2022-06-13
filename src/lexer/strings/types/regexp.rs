@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{Buffer, Lookahead, LookaheadResult},
+        buffer::{Buffer, BufferWithCursor, Lookahead, LookaheadResult},
         string_content::StringContent,
         strings::{
             action::StringExtendAction,
@@ -42,7 +42,7 @@ impl Regexp {
 impl<'a> StringLiteralExtend<'a> for Regexp {
     fn extend(
         &mut self,
-        buffer: &mut Buffer<'a>,
+        buffer: &mut BufferWithCursor<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
         let mut action = self._extend(buffer, current_curly_nest);
@@ -55,7 +55,9 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
             ControlFlow::Break(StringExtendAction::FoundStringEnd {
                 token: Token(_, Loc(_, end)),
             }) if self.ends_with == b'/' => {
-                if let LookaheadResult::Some { length } = RegexpOptions::lookahead(buffer, *end) {
+                if let LookaheadResult::Some { length } =
+                    RegexpOptions::lookahead(buffer.for_lookahead(), *end)
+                {
                     *end += length;
                     buffer.set_pos(*end);
                 }
@@ -71,7 +73,7 @@ impl Regexp {
     #[must_use]
     fn _extend<'a>(
         &mut self,
-        buffer: &mut Buffer<'a>,
+        buffer: &mut BufferWithCursor<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
         handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;

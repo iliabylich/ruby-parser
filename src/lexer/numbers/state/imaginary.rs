@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::BufferWithCursor,
         numbers::{ExtendNumber, Number},
     },
     token::TokenValue,
@@ -12,7 +12,7 @@ use crate::{
 pub(crate) struct Imaginary;
 
 impl ExtendNumber for Imaginary {
-    fn extend(_number: &mut Number, _buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(_number: &mut Number, _buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         // Imaginary numbers can't be extended to anything bigger
         ControlFlow::Break(())
     }

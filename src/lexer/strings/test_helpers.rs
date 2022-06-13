@@ -12,7 +12,7 @@ macro_rules! assert_emits_extend_action {
         fn $test() {
             use crate::{
                 lexer::{
-                    buffer::Buffer,
+                    buffer::BufferWithCursor,
                     string_content::StringContent,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
@@ -20,7 +20,7 @@ macro_rules! assert_emits_extend_action {
             };
             use std::borrow::Cow;
             let mut literal = $literal;
-            let mut buffer = Buffer::new($input);
+            let mut buffer = BufferWithCursor::new($input);
 
             $pre(&mut literal);
 

@@ -1,6 +1,6 @@
 use crate::lexer::{
     assert_lex,
-    buffer::{utf8::Utf8Char, Buffer, Lookahead, LookaheadResult},
+    buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
 };
 use crate::token::{token, Loc, Token};
 
@@ -56,10 +56,10 @@ impl Ident {
         byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
     }
 
-    pub(crate) fn parse<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
+    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
         let start = buffer.pos();
 
-        let length = match Ident::lookahead(buffer, start) {
+        let length = match Ident::lookahead(buffer.for_lookahead(), start) {
             LookaheadResult::Some { length } => length,
             LookaheadResult::None => {
                 todo!("handle ident that start with non-UTF-8 byte")

@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{scan_while_matches_pattern, Buffer, LookaheadResult},
+        buffer::{scan_while_matches_pattern, BufferWithCursor, LookaheadResult},
         numbers::{
             state::{integer_prefix::*, Integer, IntegerPrefix, State},
             ExtendNumber, Number,
@@ -15,7 +15,7 @@ use crate::{
 pub(crate) struct Uninitialized;
 
 impl ExtendNumber for Uninitialized {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         let byte = buffer.current_byte().unwrap();

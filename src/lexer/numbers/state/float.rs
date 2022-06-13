@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::BufferWithCursor,
         numbers::{
             state::{try_sub_parser, Imaginary, Rational, State},
             try_to_extend_with, ExtendNumber, Number,
@@ -18,7 +18,7 @@ pub(crate) enum Float {
 }
 
 impl ExtendNumber for Float {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         if let State::Float(float) = number.state {
             match float {
                 Float::WithDotNumber(_) => FloatWithDotNumber::extend(number, buffer),
@@ -40,7 +40,7 @@ impl<'a> Into<TokenValue<'a>> for Float {
 pub(crate) struct FloatWithDotNumber;
 
 impl ExtendNumber for FloatWithDotNumber {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(try_to_extend_with::e_suffix, buffer, start, number) {
@@ -66,7 +66,7 @@ impl ExtendNumber for FloatWithDotNumber {
 pub(crate) struct FloatWithESuffix;
 
 impl ExtendNumber for FloatWithESuffix {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(try_to_extend_with::r_suffix, buffer, start, number) {

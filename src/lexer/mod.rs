@@ -14,7 +14,7 @@ pub(crate) mod strings;
 
 use crate::token::{token, Token};
 use atmark::AtMark;
-use buffer::Buffer;
+use buffer::BufferWithCursor;
 use gvar::Gvar;
 use ident::Ident;
 use numbers::parse_number;
@@ -24,7 +24,7 @@ use strings::parse_string;
 use strings::{action::StringExtendAction, literal::StringLiteral, stack::StringLiteralStack};
 
 pub struct Lexer<'a> {
-    pub(crate) buffer: Buffer<'a>,
+    pub(crate) buffer: BufferWithCursor<'a>,
     debug: bool,
     required_new_expr: bool,
 
@@ -40,7 +40,7 @@ pub struct Lexer<'a> {
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a [u8]) -> Self {
         Self {
-            buffer: Buffer::new(input),
+            buffer: BufferWithCursor::new(input),
             debug: false,
             required_new_expr: false,
 

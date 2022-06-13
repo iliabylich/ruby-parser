@@ -18,7 +18,7 @@ pub(crate) use rational::Rational;
 
 macro_rules! try_sub_parser {
     ($fn:expr, $buffer:expr, $start:expr, $number:expr) => {
-        if let Some(len) = $fn($buffer, $start) {
+        if let Some(len) = $fn($buffer.for_lookahead(), $start) {
             $buffer.set_pos($buffer.pos() + len.get());
 
             $number.end += len.get();

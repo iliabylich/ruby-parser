@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::Buffer,
+        buffer::BufferWithCursor,
         numbers::{
             state::{try_sub_parser, Imaginary, State},
             try_to_extend_with, ExtendNumber, Number,
@@ -15,7 +15,7 @@ use crate::{
 pub(crate) struct Rational;
 
 impl ExtendNumber for Rational {
-    fn extend(number: &mut Number, buffer: &mut Buffer) -> ControlFlow<()> {
+    fn extend(number: &mut Number, buffer: &mut BufferWithCursor) -> ControlFlow<()> {
         let start = buffer.pos();
 
         if try_sub_parser!(try_to_extend_with::i_suffix, buffer, start, number) {

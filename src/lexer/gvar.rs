@@ -1,6 +1,6 @@
 use crate::lexer::{
     assert_lex,
-    buffer::{utf8::Utf8Char, Buffer, Lookahead, LookaheadResult},
+    buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
     ident::Ident,
 };
 use crate::token::{token, Token};
@@ -115,8 +115,8 @@ impl<'a> Lookahead<'a> for Gvar {
 }
 
 impl Gvar {
-    pub(crate) fn parse<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
-        let token = match Gvar::lookahead(buffer, buffer.pos()) {
+    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+        let token = match Gvar::lookahead(buffer.for_lookahead(), buffer.pos()) {
             LookaheadGvarResult::Ok(token) => token,
             LookaheadGvarResult::InvalidVarName(token) => {
                 // TODO: report __invalid__ ivar/cvar name

@@ -1,7 +1,7 @@
 use crate::{
     lexer::{
         assert_lex,
-        buffer::{utf8::Utf8Char, Buffer, Lookahead, LookaheadResult},
+        buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
         ident::Ident,
         strings::escapes::{LooakeadhSlashUResult, SlashU},
     },
@@ -74,8 +74,8 @@ impl<'a> Lookahead<'a> for QMark {
 }
 
 impl QMark {
-    pub(crate) fn parse<'a>(buffer: &mut Buffer<'a>) -> Token<'a> {
-        let token = Self::lookahead(buffer, buffer.pos());
+    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+        let token = Self::lookahead(buffer.for_lookahead(), buffer.pos());
         buffer.set_pos(token.loc().end());
         token
     }
