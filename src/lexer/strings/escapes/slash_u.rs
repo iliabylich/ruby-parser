@@ -53,7 +53,7 @@ impl<'a> Lookahead<'a> for SlashU {
             let mut codepoints = vec![];
             loop {
                 if let LookaheadResult::Some { length } =
-                    scan_while_matches_pattern!(buffer, pos, b' ')
+                    scan_while_matches_pattern!(buffer, pos, b' ' | b'\t')
                 {
                     pos += length;
                 }
@@ -152,7 +152,7 @@ impl<'a> Lookahead<'a> for CodepointWide {
         let mut valid = true;
         loop {
             match buffer.byte_at(end) {
-                Some(b' ') => break,
+                Some(b' ' | b'\t') => break,
                 Some(b'0'..=b'9' | b'a'..=b'f' | b'A'..=b'F') => {
                     end += 1;
                 }
@@ -272,6 +272,14 @@ assert_scans!(
     output = LooakeadhSlashUResult::Wide {
         codepoints: Box::new(['\u{1234}', '\u{4321}']),
         length: 18
+    }
+);
+assert_scans!(
+    test = test_slash_u_wide_with_tabs,
+    input = b"\\u{ 1234\t\t4321\t}",
+    output = LooakeadhSlashUResult::Wide {
+        codepoints: Box::new(['\u{1234}', '\u{4321}']),
+        length: 16 // there are 20 chars - 4 slashes
     }
 );
 assert_scans!(
