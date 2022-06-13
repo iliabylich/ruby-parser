@@ -1,8 +1,9 @@
-use std::{borrow::Cow, ops::ControlFlow};
+use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
         buffer::{Buffer, Lookahead, LookaheadResult},
+        string_content::StringContent,
         strings::{
             action::StringExtendAction,
             handlers::{
@@ -88,7 +89,7 @@ impl Regexp {
                 let end = buffer.pos();
                 let action = StringExtendAction::EmitToken {
                     token: token!(
-                        tSTRING_CONTENT(Cow::Borrowed(buffer.slice(start, end))),
+                        tSTRING_CONTENT(StringContent::from(buffer.slice(start, end))),
                         start,
                         end
                     ),

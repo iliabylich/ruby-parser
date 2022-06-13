@@ -1,4 +1,4 @@
-use std::borrow::Cow;
+use crate::lexer::string_content::StringContent;
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
@@ -78,14 +78,14 @@ pub enum TokenValue<'a> {
     tCVAR,       // "class variable"
     tLABEL,      // "label"
 
-    tINTEGER,                       // "integer literal"
-    tFLOAT,                         // "float literal"
-    tRATIONAL,                      // "rational literal"
-    tIMAGINARY,                     // "imaginary literal"
-    tCHAR(char),                    // "char literal"
-    tNTH_REF,                       // "numbered reference"
-    tBACK_REF,                      // "back reference"
-    tSTRING_CONTENT(Cow<'a, [u8]>), // "literal content"
+    tINTEGER,                           // "integer literal"
+    tFLOAT,                             // "float literal"
+    tRATIONAL,                          // "rational literal"
+    tIMAGINARY,                         // "imaginary literal"
+    tCHAR(char),                        // "char literal"
+    tNTH_REF,                           // "numbered reference"
+    tBACK_REF,                          // "back reference"
+    tSTRING_CONTENT(StringContent<'a>), // "literal content"
     tREGEXP_END,
 
     // Punctuation/operators

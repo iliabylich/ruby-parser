@@ -1,8 +1,7 @@
-use std::borrow::Cow;
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{buffer::Buffer, strings::action::StringExtendAction},
+    lexer::{buffer::Buffer, string_content::StringContent, strings::action::StringExtendAction},
     token::token,
 };
 
@@ -17,7 +16,7 @@ pub(crate) fn handle_processed_string_content<'a>(
     } else {
         ControlFlow::Break(StringExtendAction::EmitToken {
             token: token!(
-                tSTRING_CONTENT(Cow::Borrowed(buffer.slice(start, end))),
+                tSTRING_CONTENT(StringContent::from(buffer.slice(start, end))),
                 start,
                 end
             ),

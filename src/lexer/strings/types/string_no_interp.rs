@@ -38,17 +38,18 @@ impl<'a> StringLiteralExtend<'a> for StringNoInterp {
 
 #[cfg(test)]
 mod tests {
-    use std::borrow::Cow;
-
     use super::*;
 
-    use crate::lexer::strings::{test_helpers::*, StringLiteral};
+    use crate::lexer::{
+        string_content::StringContent,
+        strings::{test_helpers::*, StringLiteral},
+    };
 
     assert_emits_token!(
         test = test_rcurly_with_no_interp_support,
         literal = StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')),
         input = b"}",
-        token = token!(tSTRING_CONTENT(Cow::Borrowed(b"}")), 0, 1),
+        token = token!(tSTRING_CONTENT(StringContent::from(b"}")), 0, 1),
         pre = |_| {},
         post = |_| {}
     );
@@ -61,7 +62,7 @@ mod tests {
             lexer.tokenize_until_eof(),
             vec![
                 token!(tSTRING_BEG, 0, 1),
-                token!(tSTRING_CONTENT(Cow::Borrowed(b"foo")), 1, 4),
+                token!(tSTRING_CONTENT(StringContent::from(b"foo")), 1, 4),
                 token!(tSTRING_END, 4, 5),
                 token!(tEOF, 5, 5)
             ]

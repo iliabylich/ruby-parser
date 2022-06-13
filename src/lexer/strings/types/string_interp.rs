@@ -1,8 +1,9 @@
-use std::{borrow::Cow, ops::ControlFlow};
+use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
         buffer::Buffer,
+        string_content::StringContent,
         strings::{
             action::StringExtendAction,
             handlers::{
@@ -49,7 +50,7 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         loop {
             handle_eof(buffer, start)?;
 
-            // handle_slash_u(buffer, start)?;
+            handle_slash_u(buffer, start)?;
 
             handle_interpolation(&mut self.interpolation, buffer, start)?;
             handle_string_end(self.ends_with, buffer, start)?;
@@ -60,7 +61,7 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
                 let end = buffer.pos();
                 let action = StringExtendAction::EmitToken {
                     token: token!(
-                        tSTRING_CONTENT(Cow::Borrowed(buffer.slice(start, end))),
+                        tSTRING_CONTENT(StringContent::from(buffer.slice(start, end))),
                         start,
                         end
                     ),
@@ -105,7 +106,7 @@ mod tests {
             lexer.tokenize_until_eof(),
             vec![
                 token!(tSTRING_BEG, 0, 1),
-                token!(tSTRING_CONTENT(Cow::Borrowed(b"foo")), 1, 4),
+                token!(tSTRING_CONTENT(StringContent::from(b"foo")), 1, 4),
                 token!(tSTRING_END, 4, 5),
                 token!(tEOF, 5, 5)
             ]
@@ -115,5 +116,9 @@ mod tests {
     assert_emits_string_end!(
         literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'"')),
         input = b"\""
+    );
+
+    assert_emits_escaped_slash_u!(
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'"'))
     );
 }

@@ -148,7 +148,6 @@ impl<'a> Lookahead<'a> for CodepointWide {
     type Output = LookaheadCodepointWideResult;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
-        dbg!(start);
         let mut end = start;
         let mut valid = true;
         loop {
@@ -210,18 +209,10 @@ impl<'a> Lookahead<'a> for CodepointShort {
 }
 
 fn read_codepoint(hex_bytes: &[u8], dest: &mut Vec<char>) {
-    dbg!(hex_bytes);
     let s = std::str::from_utf8(hex_bytes).unwrap();
     let codepoint = u32::from_str_radix(s, 16).unwrap();
     let c = char::from_u32(codepoint).unwrap();
     dest.push(c)
-    // dbg!(c.len_utf8());
-    // let start = dest.len();
-    // for _ in 0..c.len_utf8() {
-    //     dest.push(0);
-    // }
-    // dbg!(start);
-    // c.encode_utf8(&mut dest[start..]);
 }
 
 macro_rules! assert_scans {

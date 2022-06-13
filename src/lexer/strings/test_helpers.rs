@@ -13,6 +13,7 @@ macro_rules! assert_emits_extend_action {
             use crate::{
                 lexer::{
                     buffer::Buffer,
+                    string_content::StringContent,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
                 token::token,
@@ -184,7 +185,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#@@1",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(Cow::Borrowed(b"#@@1")), 0, 4)
+                token: token!(tSTRING_CONTENT(StringContent::from(b"#@@1")), 0, 4)
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -202,7 +203,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#@1",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(Cow::Borrowed(b"#@1")), 0, 3)
+                token: token!(tSTRING_CONTENT(StringContent::from(b"#@1")), 0, 3)
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -220,7 +221,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#$(",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(Cow::Borrowed(b"#$(")), 0, 3)
+                token: token!(tSTRING_CONTENT(StringContent::from(b"#$(")), 0, 3)
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -238,7 +239,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#@@",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(Cow::Borrowed(b"#@@")), 0, 3)
+                token: token!(tSTRING_CONTENT(StringContent::from(b"#@@")), 0, 3)
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -256,7 +257,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#@",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(Cow::Borrowed(b"#@")), 0, 2)
+                token: token!(tSTRING_CONTENT(StringContent::from(b"#@")), 0, 2)
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -274,7 +275,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#$ ",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(Cow::Borrowed(b"#$ ")), 0, 3)
+                token: token!(tSTRING_CONTENT(StringContent::from(b"#$ ")), 0, 3)
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -313,3 +314,27 @@ macro_rules! assert_emits_string_end {
     };
 }
 pub(crate) use assert_emits_string_end;
+
+macro_rules! assert_emits_escaped_slash_u {
+    (
+        literal = $literal:expr
+    ) => {
+        assert_emits_extend_action!(
+            test = test_escaped_slash_u,
+            literal = $literal,
+            input = b"\\u1234",
+            action = StringExtendAction::EmitToken {
+                token: token!(tSTRING_CONTENT(StringContent::from("\u{1234}")), 0, 6)
+            },
+            pre = |_| {},
+            post = |action: StringExtendAction| {
+                assert_eq!(
+                    action,
+                    StringExtendAction::EmitEOF,
+                    "2nd action daction doesn't match"
+                )
+            }
+        );
+    };
+}
+pub(crate) use assert_emits_escaped_slash_u;
