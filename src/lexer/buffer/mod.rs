@@ -14,15 +14,8 @@ impl<'a> Buffer<'a> {
         Self { bytes }
     }
 
-    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
-        self.bytes.get(start..end).unwrap_or_else(|| {
-            panic!(
-                "wrong start/end given: {}..{} (lenth = {})",
-                start,
-                end,
-                self.bytes.len()
-            )
-        })
+    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&'a [u8]> {
+        self.bytes.get(start..end)
     }
 
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
@@ -44,7 +37,7 @@ impl<'a> BufferWithCursor<'a> {
     }
 
     // Delegators
-    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
+    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&'a [u8]> {
         self.buffer.slice(start, end)
     }
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {

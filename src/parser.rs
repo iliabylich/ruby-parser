@@ -48,7 +48,12 @@ impl<'a> Parser<'a> {
 
             TokenValue::tINTEGER => {
                 let loc = self.lexer.current_token().loc();
-                let node = Node::Number(self.lexer.buffer.slice(loc.begin(), loc.end()));
+                let node = Node::Number(
+                    self.lexer
+                        .buffer
+                        .slice(loc.begin(), loc.end())
+                        .expect("bug"),
+                );
                 self.lexer.skip_token();
                 node
             }

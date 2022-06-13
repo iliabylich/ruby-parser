@@ -26,7 +26,10 @@ impl<'a> Buffer<'a> {
                 return Utf8Char::Invalid;
             };
 
-            let slice = self.slice(idx, idx + length);
+            let slice = match self.slice(idx, idx + length) {
+                Some(slice) => slice,
+                None => return Utf8Char::Invalid,
+            };
             match std::str::from_utf8(slice) {
                 Ok(_) => Utf8Char::Valid { length },
                 Err(_) => Utf8Char::Invalid,

@@ -61,7 +61,9 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
                 let end = buffer.pos();
                 let action = StringExtendAction::EmitToken {
                     token: token!(
-                        tSTRING_CONTENT(StringContent::from(buffer.slice(start, end))),
+                        tSTRING_CONTENT(StringContent::from(
+                            buffer.slice(start, end).expect("bug")
+                        )),
                         start,
                         end
                     ),

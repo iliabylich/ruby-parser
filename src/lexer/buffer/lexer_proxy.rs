@@ -11,7 +11,7 @@ impl<'a> Lexer<'a> {
         self.buffer.pos()
     }
     #[allow(dead_code)]
-    pub(crate) fn slice(&self, start: usize, end: usize) -> &'a [u8] {
+    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&'a [u8]> {
         self.buffer.slice(start, end)
     }
 }

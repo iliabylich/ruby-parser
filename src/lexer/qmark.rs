@@ -59,7 +59,7 @@ impl<'a> Lookahead<'a> for QMark {
         match buffer.utf8_char_at(start + 1) {
             Utf8Char::Valid { length } => {
                 let end = start + 1 + length;
-                let codepoint = std::str::from_utf8(buffer.slice(start + 1, end))
+                let codepoint = std::str::from_utf8(buffer.slice(start + 1, end).expect("bug"))
                     .unwrap()
                     .chars()
                     .next()

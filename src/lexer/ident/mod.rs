@@ -112,7 +112,7 @@ impl Ident {
         }
 
         let end = buffer.pos();
-        let slice = buffer.slice(start, end);
+        let slice = buffer.slice(start, end).expect("bug");
 
         // there's a chance that it's a keyword
         if let Some(reserved_word) = find_reserved_word(slice) {

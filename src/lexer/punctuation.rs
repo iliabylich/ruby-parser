@@ -148,7 +148,7 @@ impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
                     self.string_literals
                         .push(StringLiteral::Heredoc(Heredoc::new(
                             interp,
-                            self.buffer.slice(id_start, id_end),
+                            self.buffer.slice(id_start, id_end).expect("bug"),
                             id_end,
                             indent,
                         )));

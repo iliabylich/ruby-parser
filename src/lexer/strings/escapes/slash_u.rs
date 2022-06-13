@@ -61,7 +61,10 @@ impl<'a> Lookahead<'a> for SlashU {
                         break;
                     }
                     LookaheadCodepointWideResult::Ok { length } => {
-                        read_codepoint(buffer.slice(pos, pos + length), &mut codepoints);
+                        read_codepoint(
+                            buffer.slice(pos, pos + length).expect("bug"),
+                            &mut codepoints,
+                        );
                         pos += length;
                     }
                     LookaheadCodepointWideResult::NonHexErr { length } => {
@@ -107,7 +110,10 @@ impl<'a> Lookahead<'a> for SlashU {
                 LookaheadCodepointShort::Ok { length } => {
                     debug_assert_eq!(length, 4);
 
-                    read_codepoint(buffer.slice(pos, pos + length), &mut codepoints);
+                    read_codepoint(
+                        buffer.slice(pos, pos + length).expect("bug"),
+                        &mut codepoints,
+                    );
                     pos += length;
                 }
                 LookaheadCodepointShort::Expected4GotErr { length } => {

@@ -16,7 +16,7 @@ pub(crate) fn handle_processed_string_content<'a>(
     } else {
         ControlFlow::Break(StringExtendAction::EmitToken {
             token: token!(
-                tSTRING_CONTENT(StringContent::from(buffer.slice(start, end))),
+                tSTRING_CONTENT(StringContent::from(buffer.slice(start, end).expect("bug"))),
                 start,
                 end
             ),
