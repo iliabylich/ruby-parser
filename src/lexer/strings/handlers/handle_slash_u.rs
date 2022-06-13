@@ -30,15 +30,14 @@ pub(crate) fn handle_slash_u<'a>(
 
             (StringContent::from(codepoints), length)
         }
+        LooakeadhSlashUResult::Nothing => {
+            return ControlFlow::Continue(());
+        }
         LooakeadhSlashUResult::Err {
             codepoints,
             errors,
             length,
         } => {
-            if length == 0 {
-                return ControlFlow::Continue(());
-            }
-
             let codepoints = if let Some(codepoints) = codepoints {
                 codepoints
                     .into_iter()

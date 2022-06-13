@@ -26,7 +26,7 @@ impl<'a> Lookahead<'a> for QMark {
                     // TODO: warn about ambiguity
                     return token!(tEH, start, start + 1);
                 } else if byte == b'\\' {
-                    match dbg!(SlashU::lookahead(buffer, start + 1)) {
+                    match SlashU::lookahead(buffer, start + 1) {
                         LooakeadhSlashUResult::Short { codepoint, length } => {
                             return token!(tCHAR(codepoint), start, start + length);
                         }
@@ -36,6 +36,7 @@ impl<'a> Lookahead<'a> for QMark {
                                 codepoints, length
                             );
                         }
+                        LooakeadhSlashUResult::Nothing => {}
                         LooakeadhSlashUResult::Err {
                             codepoints,
                             errors,

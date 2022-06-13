@@ -12,6 +12,7 @@ pub(crate) enum LooakeadhSlashUResult {
         codepoints: Box<[char]>,
         length: usize,
     },
+    Nothing,
     Err {
         codepoints: Option<Box<[char]>>,
         errors: Box<[SlashUError]>,
@@ -32,11 +33,7 @@ impl<'a> Lookahead<'a> for SlashU {
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         if !buffer.lookahead(b"\\u") {
-            return LooakeadhSlashUResult::Err {
-                codepoints: None,
-                errors: Box::new([]),
-                length: 0,
-            };
+            return LooakeadhSlashUResult::Nothing;
         }
 
         let mut wide = false;
@@ -228,11 +225,7 @@ macro_rules! assert_scans {
 assert_scans!(
     test = test_slash_u_nothing,
     input = b"foobar",
-    output = LooakeadhSlashUResult::Err {
-        codepoints: None,
-        errors: Box::new([]),
-        length: 0
-    }
+    output = LooakeadhSlashUResult::Nothing
 );
 
 // short
