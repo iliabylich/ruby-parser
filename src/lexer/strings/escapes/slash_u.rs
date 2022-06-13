@@ -222,28 +222,8 @@ macro_rules! assert_lookahead {
     (test = $test:ident, input = $input:expr, output = $output:expr) => {
         #[test]
         fn $test() {
-            use crate::lexer::buffer::input_for_lookahead;
-
-            let (extra_start, input) = input_for_lookahead!($input);
-            let buffer = Buffer::new(&input);
-            let mut lookahead = SlashU::lookahead(&buffer, extra_start);
-
-            // subtract `start` from all loc markers
-            match &mut lookahead {
-                LooakeadhSlashUResult::Err { errors, .. } => {
-                    for error in errors.iter_mut() {
-                        match error {
-                            SlashUError::Expected4Got { start, .. }
-                            | SlashUError::TooLong { start, .. }
-                            | SlashUError::NonHex { start, .. }
-                            | SlashUError::NoRCurly { start } => {
-                                *start -= extra_start;
-                            }
-                        }
-                    }
-                }
-                _ => {}
-            }
+            let buffer = Buffer::new($input);
+            let lookahead = SlashU::lookahead(&buffer, 0);
 
             assert_eq!(lookahead, $output);
         }

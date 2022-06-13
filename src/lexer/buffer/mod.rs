@@ -118,19 +118,6 @@ macro_rules! scan_while_matches_pattern {
 }
 pub(crate) use scan_while_matches_pattern;
 
-#[cfg(test)]
-macro_rules! input_for_lookahead {
-    ($input:expr) => {{
-        let start = 3;
-        let mut input: Vec<u8> = $input.to_vec();
-        let mut actual_input: Vec<u8> = vec![0; start];
-        actual_input.append(&mut input);
-        (start, actual_input)
-    }};
-}
-#[cfg(test)]
-pub(crate) use input_for_lookahead;
-
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum LookaheadResult {
     None,
