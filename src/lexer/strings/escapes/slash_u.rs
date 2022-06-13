@@ -32,7 +32,7 @@ impl<'a> Lookahead<'a> for SlashU {
     type Output = LooakeadhSlashUResult;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
-        if !buffer.lookahead(b"\\u") {
+        if buffer.byte_at(start) != Some(b'\\') || buffer.byte_at(start + 1) != Some(b'u') {
             return LooakeadhSlashUResult::Nothing;
         }
 
@@ -212,24 +212,46 @@ fn read_codepoint(hex_bytes: &[u8], dest: &mut Vec<char>) {
     dest.push(c)
 }
 
-macro_rules! assert_scans {
+macro_rules! assert_lookahead {
     (test = $test:ident, input = $input:expr, output = $output:expr) => {
         #[test]
         fn $test() {
-            let buffer = Buffer::new($input);
-            assert_eq!(SlashU::lookahead(&buffer, 0), $output);
+            use crate::lexer::buffer::input_for_lookahead;
+
+            let (extra_start, input) = input_for_lookahead!($input);
+            let buffer = Buffer::new(&input);
+            let mut lookahead = SlashU::lookahead(&buffer, extra_start);
+
+            // subtract `start` from all loc markers
+            match &mut lookahead {
+                LooakeadhSlashUResult::Err { errors, .. } => {
+                    for error in errors.iter_mut() {
+                        match error {
+                            SlashUError::Expected4Got { start, .. }
+                            | SlashUError::TooLong { start, .. }
+                            | SlashUError::NonHex { start, .. }
+                            | SlashUError::NoRCurly { start } => {
+                                *start -= extra_start;
+                            }
+                        }
+                    }
+                }
+                _ => {}
+            }
+
+            assert_eq!(lookahead, $output);
         }
     };
 }
 
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_nothing,
     input = b"foobar",
     output = LooakeadhSlashUResult::Nothing
 );
 
 // short
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_short_valid,
     input = b"\\u123456",
     output = LooakeadhSlashUResult::Short {
@@ -237,7 +259,7 @@ assert_scans!(
         length: 6
     }
 );
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_short_invalid,
     input = b"\\uxxxxxx",
     output = LooakeadhSlashUResult::Err {
@@ -251,7 +273,7 @@ assert_scans!(
 );
 
 // wide
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_wide_single_codepoint_valid,
     input = b"\\u{1234}",
     output = LooakeadhSlashUResult::Wide {
@@ -259,7 +281,7 @@ assert_scans!(
         length: 8
     }
 );
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_wide_multiple_codepoint_valid,
     input = b"\\u{ 1234   4321  }",
     output = LooakeadhSlashUResult::Wide {
@@ -267,7 +289,7 @@ assert_scans!(
         length: 18
     }
 );
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_wide_with_tabs,
     input = b"\\u{ 1234\t\t4321\t}",
     output = LooakeadhSlashUResult::Wide {
@@ -275,7 +297,7 @@ assert_scans!(
         length: 16 // there are 20 chars - 4 slashes
     }
 );
-assert_scans!(
+assert_lookahead!(
     test = test_slash_u_curly_unterminated,
     input = b"\\u{foo123",
     output = LooakeadhSlashUResult::Err {
