@@ -21,6 +21,13 @@ impl<'a> Buffer<'a> {
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
         self.bytes.get(idx).map(|byte| *byte)
     }
+
+    pub(crate) fn lookahead<P: Pattern>(&self, start: usize, pattern: &P) -> bool {
+        match self.bytes.get(start..) {
+            Some(bytes) => pattern.is_lookahead_of(bytes),
+            None => false,
+        }
+    }
 }
 
 pub struct BufferWithCursor<'a> {
@@ -73,7 +80,7 @@ impl<'a> BufferWithCursor<'a> {
     where
         P: Pattern,
     {
-        pattern.is_lookahead_of(self)
+        self.buffer.lookahead(self.pos, pattern)
     }
 }
 

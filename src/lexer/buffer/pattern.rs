@@ -1,8 +1,6 @@
-use super::BufferWithCursor;
-
 pub(crate) trait Pattern {
     fn length(&self) -> usize;
-    fn is_lookahead_of(&self, buffer: &BufferWithCursor) -> bool;
+    fn is_lookahead_of(&self, bytes: &[u8]) -> bool;
 }
 
 impl Pattern for u8 {
@@ -10,8 +8,8 @@ impl Pattern for u8 {
         1
     }
 
-    fn is_lookahead_of(&self, buffer: &BufferWithCursor) -> bool {
-        buffer.current_byte() == Some(*self)
+    fn is_lookahead_of(&self, bytes: &[u8]) -> bool {
+        bytes.get(0) == Some(self)
     }
 }
 
@@ -20,12 +18,8 @@ impl Pattern for &[u8] {
         self.len()
     }
 
-    fn is_lookahead_of(&self, buffer: &BufferWithCursor) -> bool {
-        if let Some(next) = buffer
-            .buffer
-            .bytes
-            .get(buffer.pos..buffer.pos + self.length())
-        {
+    fn is_lookahead_of(&self, bytes: &[u8]) -> bool {
+        if let Some(next) = bytes.get(0..self.length()) {
             self == &next
         } else {
             false
@@ -38,9 +32,9 @@ impl<const N: usize> Pattern for [u8; N] {
         N
     }
 
-    fn is_lookahead_of(&self, buffer: &BufferWithCursor) -> bool {
+    fn is_lookahead_of(&self, bytes: &[u8]) -> bool {
         for i in 0..N {
-            if buffer.byte_at(buffer.pos() + i) != Some(self[i]) {
+            if bytes.get(i) != Some(&self[i]) {
                 return false;
             }
         }
