@@ -48,6 +48,12 @@ impl From<char> for StringContent<'_> {
     }
 }
 
+impl From<u8> for StringContent<'_> {
+    fn from(byte: u8) -> Self {
+        Self::from(vec![byte])
+    }
+}
+
 impl<'a> StringContent<'a> {
     fn into_bytes(self) -> Vec<u8> {
         match self {

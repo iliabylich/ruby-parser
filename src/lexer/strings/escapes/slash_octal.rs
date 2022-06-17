@@ -12,7 +12,7 @@ pub(crate) struct SlashOctalError {
     // Found only `\`, but no octal number(s)
     // In this case length is always `1`
     // but we want it to be explicit
-    pub(crate) length: u8,
+    pub(crate) length: usize,
 }
 
 impl<'a> Lookahead<'a> for SlashOctal {

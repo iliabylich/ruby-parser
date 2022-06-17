@@ -7,7 +7,7 @@ use crate::{
         strings::{
             action::StringExtendAction,
             handlers::{
-                handle_eof, handle_interpolation, handle_interpolation_end, handle_slash_u,
+                handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
                 handle_string_end,
             },
             literal::StringLiteralExtend,
@@ -50,7 +50,7 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         loop {
             handle_eof(buffer, start)?;
 
-            handle_slash_u(buffer, start)?;
+            handle_escape(buffer, start)?;
 
             handle_interpolation(&mut self.interpolation, buffer, start)?;
             handle_string_end(self.ends_with, buffer, start)?;
