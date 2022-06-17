@@ -3,7 +3,7 @@ use crate::{
         assert_lex,
         buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
         ident::Ident,
-        strings::escapes::{LooakeadhSlashUResult, SlashU},
+        strings::escapes::{SlashU, SlashUError},
     },
     token::{token, Token},
 };
@@ -27,21 +27,23 @@ impl<'a> Lookahead<'a> for QMark {
                     return token!(tEH, start, start + 1);
                 } else if byte == b'\\' {
                     match SlashU::lookahead(buffer, start + 1) {
-                        LooakeadhSlashUResult::Short { codepoint, length } => {
+                        Ok(Some(SlashU::Short { codepoint, length })) => {
                             return token!(tCHAR(codepoint), start, start + length);
                         }
-                        LooakeadhSlashUResult::Wide { codepoints, length } => {
+                        Ok(Some(SlashU::Wide { codepoints, length })) => {
                             panic!(
                                 "wide codepoint in ?\\u syntax: {:?}, {}",
                                 codepoints, length
                             );
                         }
-                        LooakeadhSlashUResult::Nothing => {}
-                        LooakeadhSlashUResult::Err {
+                        Ok(None) => {
+                            // no match
+                        }
+                        Err(SlashUError {
                             codepoints,
                             errors,
                             length,
-                        } => {
+                        }) => {
                             panic!(
                             "got errors {:?} during parsing ?\\u syntax (codepoints = {:?}, length = {})",
                             errors,

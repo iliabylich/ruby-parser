@@ -6,7 +6,7 @@ use crate::{
         string_content::StringContent,
         strings::{
             action::StringExtendAction,
-            escapes::{LooakeadhSlashUResult, SlashU},
+            escapes::{SlashU, SlashUError},
         },
     },
     token::token,
@@ -18,10 +18,8 @@ pub(crate) fn handle_slash_u<'a>(
     start: usize,
 ) -> ControlFlow<StringExtendAction<'a>> {
     let (string_content, length) = match SlashU::lookahead(buffer.for_lookahead(), start) {
-        LooakeadhSlashUResult::Short { codepoint, length } => {
-            (StringContent::from(codepoint), length)
-        }
-        LooakeadhSlashUResult::Wide { codepoints, length } => {
+        Ok(Some(SlashU::Short { codepoint, length })) => (StringContent::from(codepoint), length),
+        Ok(Some(SlashU::Wide { codepoints, length })) => {
             let codepoints = codepoints
                 .into_iter()
                 .cloned()
@@ -30,14 +28,14 @@ pub(crate) fn handle_slash_u<'a>(
 
             (StringContent::from(codepoints), length)
         }
-        LooakeadhSlashUResult::Nothing => {
+        Ok(None) => {
             return ControlFlow::Continue(());
         }
-        LooakeadhSlashUResult::Err {
+        Err(SlashUError {
             codepoints,
             errors,
             length,
-        } => {
+        }) => {
             let codepoints = if let Some(codepoints) = codepoints {
                 codepoints
                     .into_iter()

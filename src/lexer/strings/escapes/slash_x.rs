@@ -1,23 +1,26 @@
 use crate::lexer::buffer::{Buffer, Lookahead};
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) enum SlashX {
+pub(crate) struct SlashX {
     // Found `\xff`
-    Ok { codepoint: u8, length: usize },
-    // Found nothing
-    Nothing,
+    codepoint: u8,
+    length: usize,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct SlashXError {
     // Found only `\x` but no hex digits
     // In this case length is always `2`
     // but we want it to be explicit
-    Err { length: usize },
+    length: usize,
 }
 
 impl<'a> Lookahead<'a> for SlashX {
-    type Output = Self;
+    type Output = Result<Option<Self>, SlashXError>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         if buffer.byte_at(start) != Some(b'\\') && buffer.byte_at(start) != Some(b'x') {
-            return SlashX::Nothing;
+            return Ok(None);
         }
 
         let codepoint_start = start + 2;
@@ -31,7 +34,7 @@ impl<'a> Lookahead<'a> for SlashX {
         }
 
         if length == 0 {
-            return SlashX::Err { length: 2 };
+            return Err(SlashXError { length: 2 });
         }
 
         let bytes = buffer
@@ -40,10 +43,10 @@ impl<'a> Lookahead<'a> for SlashX {
         let s = std::str::from_utf8(bytes).expect("bug");
         let n = u8::from_str_radix(s, 16).expect("bug");
 
-        SlashX::Ok {
+        Ok(Some(SlashX {
             codepoint: n,
             length: length + 2, // track leading `\x`
-        }
+        }))
     }
 }
 
@@ -61,35 +64,35 @@ macro_rules! assert_lookahead {
 assert_lookahead!(
     test = test_lookahead_nothing,
     input = b"foobar",
-    output = SlashX::Nothing
+    output = Ok(None)
 );
 
 assert_lookahead!(
     test = test_lookahead_valid_1_digit,
     input = b"\\xF",
-    output = SlashX::Ok {
+    output = Ok(Some(SlashX {
         codepoint: 0xF,
         length: 3
-    }
+    }))
 );
 
 assert_lookahead!(
     test = test_lookahead_valid_2_digits,
     input = b"\\xFF",
-    output = SlashX::Ok {
+    output = Ok(Some(SlashX {
         codepoint: 0xFF,
         length: 4
-    }
+    }))
 );
 
 assert_lookahead!(
     test = test_lookahead_invalid_non_hex,
     input = b"\\xI",
-    output = SlashX::Err { length: 2 }
+    output = Err(SlashXError { length: 2 })
 );
 
 assert_lookahead!(
     test = test_lookahead_invalid_eof,
     input = b"\\x",
-    output = SlashX::Err { length: 2 }
+    output = Err(SlashXError { length: 2 })
 );
