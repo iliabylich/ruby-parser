@@ -7,12 +7,12 @@ pub(crate) struct SlashMetaCtrl {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) struct SlashMetaCtrlErr {
+pub(crate) struct SlashMetaCtrlError {
     length: usize,
 }
 
 impl<'a> Lookahead<'a> for SlashMetaCtrl {
-    type Output = Result<Option<Self>, SlashMetaCtrlErr>;
+    type Output = Result<Option<Self>, SlashMetaCtrlError>;
 
     // \C-\M-f
     // \C-\f
@@ -95,8 +95,8 @@ impl<'a> Lookahead<'a> for SlashMetaCtrl {
     }
 }
 
-fn emit_err(length: usize) -> SlashMetaCtrlErr {
-    SlashMetaCtrlErr { length }
+fn emit_err(length: usize) -> SlashMetaCtrlError {
+    SlashMetaCtrlError { length }
 }
 
 fn unescape_byte(byte: u8) -> u8 {
@@ -174,7 +174,7 @@ macro_rules! assert_lookahead {
             #[allow(unused_imports)]
             use crate::lexer::{
                 buffer::{Buffer, Lookahead},
-                strings::escapes::{SlashMetaCtrl, SlashMetaCtrlErr},
+                strings::escapes::{SlashMetaCtrl, SlashMetaCtrlError},
             };
             let buffer = Buffer::new($input);
             let lookahead = SlashMetaCtrl::lookahead(&buffer, 0);
@@ -231,7 +231,7 @@ mod slash_big_c {
     assert_lookahead!(
         test = test_invalid_eof,
         input = b"\\C-",
-        output = Err(SlashMetaCtrlErr { length: 3 })
+        output = Err(SlashMetaCtrlError { length: 3 })
     );
 }
 
@@ -277,7 +277,7 @@ mod slash_low_c {
     assert_lookahead!(
         test = test_invalid_eof,
         input = b"\\c",
-        output = Err(SlashMetaCtrlErr { length: 2 })
+        output = Err(SlashMetaCtrlError { length: 2 })
     );
 }
 
@@ -323,6 +323,6 @@ mod slash_big_m {
     assert_lookahead!(
         test = test_invalid_eof,
         input = b"\\M-",
-        output = Err(SlashMetaCtrlErr { length: 3 })
+        output = Err(SlashMetaCtrlError { length: 3 })
     );
 }
