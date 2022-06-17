@@ -2,13 +2,13 @@ use crate::lexer::buffer::{Buffer, Lookahead};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashMetaCtrl {
-    codepoint: u8,
-    length: usize,
+    pub(crate) codepoint: u8,
+    pub(crate) length: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashMetaCtrlError {
-    length: usize,
+    pub(crate) length: usize,
 }
 
 impl<'a> Lookahead<'a> for SlashMetaCtrl {

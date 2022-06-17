@@ -3,8 +3,8 @@ use crate::lexer::buffer::{Buffer, Lookahead};
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashX {
     // Found `\xff`
-    codepoint: u8,
-    length: usize,
+    pub(crate) codepoint: u8,
+    pub(crate) length: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -12,7 +12,7 @@ pub(crate) struct SlashXError {
     // Found only `\x` but no hex digits
     // In this case length is always `2`
     // but we want it to be explicit
-    length: usize,
+    pub(crate) length: usize,
 }
 
 impl<'a> Lookahead<'a> for SlashX {

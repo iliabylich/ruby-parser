@@ -3,8 +3,8 @@ use crate::lexer::buffer::{Buffer, Lookahead};
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashOctal {
     // Found `\XXX`
-    codepoint: u8,
-    length: usize,
+    pub(crate) codepoint: u8,
+    pub(crate) length: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -12,7 +12,7 @@ pub(crate) struct SlashOctalError {
     // Found only `\`, but no octal number(s)
     // In this case length is always `1`
     // but we want it to be explicit
-    length: u8,
+    pub(crate) length: u8,
 }
 
 impl<'a> Lookahead<'a> for SlashOctal {

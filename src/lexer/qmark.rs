@@ -3,7 +3,10 @@ use crate::{
         assert_lex,
         buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
         ident::Ident,
-        strings::escapes::{SlashU, SlashUError},
+        strings::escapes::{
+            Escape, EscapeError, SlashMetaCtrl, SlashMetaCtrlError, SlashOctal, SlashOctalError,
+            SlashU, SlashUError, SlashX, SlashXError,
+        },
     },
     token::{token, Token},
 };
@@ -26,31 +29,51 @@ impl<'a> Lookahead<'a> for QMark {
                     // TODO: warn about ambiguity
                     return token!(tEH, start, start + 1);
                 } else if byte == b'\\' {
-                    match SlashU::lookahead(buffer, start + 1) {
-                        Ok(Some(SlashU::Short { codepoint, length })) => {
-                            return token!(tCHAR(codepoint), start, start + length);
-                        }
-                        Ok(Some(SlashU::Wide { codepoints, length })) => {
-                            panic!(
-                                "wide codepoint in ?\\u syntax: {:?}, {}",
-                                codepoints, length
-                            );
-                        }
+                    match Escape::lookahead(buffer, start + 1) {
                         Ok(None) => {
                             // no match
                         }
-                        Err(SlashUError {
-                            codepoints,
-                            errors,
-                            length,
-                        }) => {
-                            panic!(
-                            "got errors {:?} during parsing ?\\u syntax (codepoints = {:?}, length = {})",
-                            errors,
-                            codepoints,
-                            length
-                        );
-                        }
+                        Ok(Some(escape)) => match escape {
+                            // single char `?f` syntax doesn't support wide \u escapes
+                            // because they may have multiple codepoints
+                            Escape::SlashU(SlashU::Wide { codepoints, length }) => {
+                                panic!(
+                                    "wide codepoint in ?\\u syntax: {:?}, {}",
+                                    codepoints, length
+                                );
+                            }
+
+                            Escape::SlashU(SlashU::Short { codepoint, length }) => {
+                                return token!(tCHAR(codepoint), start, start + length);
+                            }
+
+                            Escape::SlashOctal(SlashOctal { codepoint, length })
+                            | Escape::SlashX(SlashX { codepoint, length })
+                            | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length }) => {
+                                return token!(tCHAR(codepoint as char), start, start + length);
+                            }
+                        },
+                        Err(err) => match err {
+                            EscapeError::SlashUError(SlashUError {
+                                codepoints,
+                                errors,
+                                length,
+                            }) => {
+                                panic!(
+                                    "SlashUError {:?} / {:?} / {:?}",
+                                    codepoints, errors, length
+                                );
+                            }
+                            EscapeError::SlashOctalError(SlashOctalError { length }) => {
+                                panic!("SlashOctalError {:?}", length);
+                            }
+                            EscapeError::SlashXError(SlashXError { length }) => {
+                                panic!("SlashXError {:?}", length);
+                            }
+                            EscapeError::SlashMetaCtrlError(SlashMetaCtrlError { length }) => {
+                                panic!("SlashMetaCtrlError {:?}", length)
+                            }
+                        },
                     }
                 }
             }
