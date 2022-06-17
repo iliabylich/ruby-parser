@@ -6,3 +6,6 @@ pub(crate) use slash_octal::SlashOctal;
 
 mod slash_x;
 pub(crate) use slash_x::SlashX;
+
+mod slash_meta_ctrl;
+pub(crate) use slash_meta_ctrl::{SlashMetaCtrl, SlashMetaCtrlErr};
