@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{Buffer, BufferWithCursor, Lookahead, LookaheadResult},
+        buffer::{Buffer, BufferWithCursor, Lookahead},
         string_content::StringContent,
         strings::{
             action::StringExtendAction,
@@ -55,7 +55,7 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
             ControlFlow::Break(StringExtendAction::FoundStringEnd {
                 token: Token(_, Loc(_, end)),
             }) if self.ends_with == b'/' => {
-                if let LookaheadResult::Some { length } =
+                if let Some(RegexpOptions { length }) =
                     RegexpOptions::lookahead(buffer.for_lookahead(), *end)
                 {
                     *end += length;
@@ -108,10 +108,12 @@ impl Regexp {
     }
 }
 
-struct RegexpOptions;
+struct RegexpOptions {
+    length: usize,
+}
 
 impl<'a> Lookahead<'a> for RegexpOptions {
-    type Output = LookaheadResult;
+    type Output = Option<Self>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut end = start;
@@ -122,11 +124,11 @@ impl<'a> Lookahead<'a> for RegexpOptions {
             end += 1;
         }
         if start == end {
-            LookaheadResult::None
+            None
         } else {
-            LookaheadResult::Some {
+            Some(RegexpOptions {
                 length: end - start,
-            }
+            })
         }
     }
 }

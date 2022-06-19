@@ -1,6 +1,6 @@
 use crate::{
     lexer::{
-        buffer::{Buffer, BufferWithCursor, Lookahead, LookaheadResult},
+        buffer::{Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
     },
     token::{Loc, Token, TokenValue},
@@ -14,8 +14,12 @@ pub(crate) struct HeredocId<'a> {
     pub(crate) indent: bool,
 }
 
+pub(crate) enum HeredocIdError {
+    UnterminatedHeredocId,
+}
+
 impl<'a> Lookahead<'a> for HeredocId<'a> {
-    type Output = Option<Self>;
+    type Output = Result<Option<Self>, HeredocIdError>;
 
     fn lookahead(buffer: &Buffer<'a>, mut start: usize) -> Self::Output {
         // We are at `<<`
@@ -80,8 +84,7 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
             loop {
                 match buffer.byte_at(pos) {
                     None | Some(b'\r') | Some(b'\n') => {
-                        // TODO: report unterminated heredoc id
-                        return None;
+                        return Err(HeredocIdError::UnterminatedHeredocId);
                     }
                     Some(byte) if byte == quote => {
                         id_end = pos;
@@ -94,12 +97,12 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
         } else {
             // no quote, so read an identifier
             match Ident::lookahead(buffer, id_start) {
-                LookaheadResult::None => {
+                None => {
                     // No valid chars to construct a heredoc ID,
                     // so this is probably just an tLSHIFT that is dispatched by a Lexer
-                    return None;
+                    return Ok(None);
                 }
-                LookaheadResult::Some { length } => {
+                Some(Ident { length }) => {
                     heredoc_end = id_start + length;
                     id_end = heredoc_end;
                 }
@@ -108,22 +111,29 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
 
         let token = Token(token_value, Loc(heredoc_start, heredoc_end));
 
-        Some(Self {
+        Ok(Some(Self {
             token,
             id: (id_start, id_end),
             indent,
             interp,
-        })
+        }))
     }
 }
 
 impl<'a> HeredocId<'a> {
     pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Option<Self> {
-        let mut heredoc_id = Self::lookahead(buffer.for_lookahead(), buffer.pos());
-        if let Some(heredoc_id) = heredoc_id.as_mut() {
-            buffer.set_pos(heredoc_id.token.loc().end());
+        let heredoc_id = Self::lookahead(buffer.for_lookahead(), buffer.pos());
+        match heredoc_id {
+            Ok(heredoc_id) => {
+                let heredoc_id = heredoc_id?;
+                buffer.set_pos(heredoc_id.token.loc().end());
+                Some(heredoc_id)
+            }
+            Err(HeredocIdError::UnterminatedHeredocId) => {
+                // TODO: report unterminated heredoc ID
+                None
+            }
         }
-        heredoc_id
     }
 }
 

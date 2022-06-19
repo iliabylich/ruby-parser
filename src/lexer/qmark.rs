@@ -1,7 +1,7 @@
 use crate::{
     lexer::{
         assert_lex,
-        buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
+        buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
         strings::escapes::{
             Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
@@ -11,10 +11,12 @@ use crate::{
     token::{token, Token},
 };
 
-pub(crate) struct QMark;
+pub(crate) struct QMark<'a> {
+    token: Token<'a>,
+}
 
-impl<'a> Lookahead<'a> for QMark {
-    type Output = Token<'a>;
+impl<'a> Lookahead<'a> for QMark<'a> {
+    type Output = Self;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         match buffer.byte_at(start + 1) {
@@ -22,12 +24,14 @@ impl<'a> Lookahead<'a> for QMark {
                 if (byte.is_ascii_alphanumeric() || byte == b'_')
                     && matches!(
                         Ident::lookahead(buffer, start + 1),
-                        LookaheadResult::Some { length: 2.. }
+                        Some(Ident { length: 2.. })
                     )
                 {
                     // split ?ident into `?` + `ident`
                     // TODO: warn about ambiguity
-                    return token!(tEH, start, start + 1);
+                    return QMark {
+                        token: token!(tEH, start, start + 1),
+                    };
                 } else if byte == b'\\' {
                     match Escape::lookahead(buffer, start + 1) {
                         Ok(None) => {
@@ -44,14 +48,18 @@ impl<'a> Lookahead<'a> for QMark {
                             }
 
                             Escape::SlashU(SlashU::Short { codepoint, length }) => {
-                                return token!(tCHAR(codepoint), start, start + length);
+                                return QMark {
+                                    token: token!(tCHAR(codepoint), start, start + length),
+                                };
                             }
 
                             Escape::SlashOctal(SlashOctal { codepoint, length })
                             | Escape::SlashX(SlashX { codepoint, length })
                             | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length })
                             | Escape::SlashByte(SlashByte { codepoint, length }) => {
-                                return token!(tCHAR(codepoint as char), start, start + length);
+                                return QMark {
+                                    token: token!(tCHAR(codepoint as char), start, start + length),
+                                };
                             }
                         },
                         Err(err) => match err {
@@ -93,18 +101,20 @@ impl<'a> Lookahead<'a> for QMark {
                     .chars()
                     .next()
                     .unwrap();
-                token!(tCHAR(codepoint), start, end)
+                QMark {
+                    token: token!(tCHAR(codepoint), start, end),
+                }
             }
-            _ => {
-                token!(tEH, start, start + 1)
-            }
+            _ => QMark {
+                token: token!(tEH, start, start + 1),
+            },
         }
     }
 }
 
-impl QMark {
-    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
-        let token = Self::lookahead(buffer.for_lookahead(), buffer.pos());
+impl<'a> QMark<'a> {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+        let QMark { token } = QMark::lookahead(buffer.for_lookahead(), buffer.pos());
         buffer.set_pos(token.loc().end());
         token
     }

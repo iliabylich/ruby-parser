@@ -1,20 +1,21 @@
 use crate::lexer::{
     assert_lex,
-    buffer::{Buffer, BufferWithCursor, Lookahead, LookaheadResult},
+    buffer::{Buffer, BufferWithCursor, Lookahead},
     ident::Ident,
 };
 use crate::token::{Loc, Token, TokenValue};
 
-pub(crate) struct AtMark;
+pub(crate) struct AtMark<'a> {
+    pub(crate) token: Token<'a>,
+}
 
-pub(crate) enum LookaheadAtMarkResult<'a> {
-    Ok(Token<'a>),
+pub(crate) enum AtMarkError<'a> {
     InvalidVarName(Token<'a>),
     EmptyVarName(Token<'a>),
 }
 
-impl<'a> Lookahead<'a> for AtMark {
-    type Output = LookaheadAtMarkResult<'a>;
+impl<'a> Lookahead<'a> for AtMark<'a> {
+    type Output = Result<AtMark<'a>, AtMarkError<'a>>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
@@ -31,11 +32,17 @@ impl<'a> Lookahead<'a> for AtMark {
         }
 
         let empty_var_name = |token_value: TokenValue<'a>| {
-            LookaheadAtMarkResult::EmptyVarName(Token(token_value, Loc(start, ident_start)))
+            Err(AtMarkError::EmptyVarName(Token(
+                token_value,
+                Loc(start, ident_start),
+            )))
         };
 
         let invalid_var_name = |token_value: TokenValue<'a>| {
-            LookaheadAtMarkResult::InvalidVarName(Token(token_value, Loc(start, ident_start)))
+            Err(AtMarkError::InvalidVarName(Token(
+                token_value,
+                Loc(start, ident_start),
+            )))
         };
 
         match buffer.byte_at(ident_start) {
@@ -52,13 +59,13 @@ impl<'a> Lookahead<'a> for AtMark {
             Some(_) => {
                 // read while possible
                 match Ident::lookahead(buffer, ident_start) {
-                    LookaheadResult::Some { length } => {
+                    Some(Ident { length }) => {
                         let ident_end = ident_start + length;
                         let token = Token(token_value, Loc(start, ident_end));
 
-                        return LookaheadAtMarkResult::Ok(token);
+                        return Ok(AtMark { token });
                     }
-                    LookaheadResult::None => {
+                    None => {
                         // something like "@\xFF"
                         return invalid_var_name(token_value);
                     }
@@ -68,15 +75,15 @@ impl<'a> Lookahead<'a> for AtMark {
     }
 }
 
-impl AtMark {
-    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+impl<'a> AtMark<'a> {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
         let token = match AtMark::lookahead(buffer.for_lookahead(), buffer.pos()) {
-            LookaheadAtMarkResult::Ok(token) => token,
-            LookaheadAtMarkResult::InvalidVarName(token) => {
+            Ok(AtMark { token }) => token,
+            Err(AtMarkError::InvalidVarName(token)) => {
                 // TODO: report __invalid__ ivar/cvar name
                 token
             }
-            LookaheadAtMarkResult::EmptyVarName(token) => {
+            Err(AtMarkError::EmptyVarName(token)) => {
                 // TODO: report __empty__ ivar/cvar name
                 token
             }

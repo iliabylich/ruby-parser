@@ -1,28 +1,29 @@
 use crate::lexer::{
     assert_lex,
-    buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
+    buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
     ident::Ident,
 };
 use crate::token::{token, Token};
 
-pub(crate) struct Gvar;
+pub(crate) struct Gvar<'a> {
+    pub(crate) token: Token<'a>,
+}
 
-pub(crate) enum LookaheadGvarResult<'a> {
-    Ok(Token<'a>),
+pub(crate) enum GvarError<'a> {
     InvalidVarName(Token<'a>),
     EmptyVarName(Token<'a>),
 }
 
-impl<'a> Lookahead<'a> for Gvar {
-    type Output = LookaheadGvarResult<'a>;
+impl<'a> Lookahead<'a> for Gvar<'a> {
+    type Output = Result<Gvar<'a>, GvarError<'a>>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
-        let empty_gvar_name = || LookaheadGvarResult::EmptyVarName(token!(tGVAR, start, start + 1));
+        let empty_gvar_name = || Err(GvarError::EmptyVarName(token!(tGVAR, start, start + 1)));
 
         let invalid_gvar_name =
-            |end: usize| LookaheadGvarResult::InvalidVarName(token!(tGVAR, start, end));
+            |end: usize| Err(GvarError::InvalidVarName(token!(tGVAR, start, end)));
 
         match buffer.byte_at(start + 1) {
             Some(b'_') => {
@@ -33,7 +34,9 @@ impl<'a> Lookahead<'a> for Gvar {
                     }
                     _ => {
                         // emit $_
-                        return LookaheadGvarResult::Ok(token!(tGVAR, start, start + 2));
+                        return Ok(Gvar {
+                            token: token!(tGVAR, start, start + 2),
+                        });
                     }
                 }
             }
@@ -57,7 +60,9 @@ impl<'a> Lookahead<'a> for Gvar {
             Some(b'~') | Some(b'*') | Some(b'$') | Some(b'?') | Some(b'!') | Some(b'@')
             | Some(b'/') | Some(b'\\') | Some(b';') | Some(b',') | Some(b'.') | Some(b'=')
             | Some(b':') | Some(b'<') | Some(b'>') | Some(b'\"') => {
-                return LookaheadGvarResult::Ok(token!(tGVAR, start, start + 2));
+                return Ok(Gvar {
+                    token: token!(tGVAR, start, start + 2),
+                });
             }
 
             Some(b'-') => {
@@ -65,7 +70,9 @@ impl<'a> Lookahead<'a> for Gvar {
                     Utf8Char::Valid { length } => {
                         // $-<UTF-8 char>
                         let end = start + 2 + length;
-                        return LookaheadGvarResult::Ok(token!(tGVAR, start, end));
+                        return Ok(Gvar {
+                            token: token!(tGVAR, start, end),
+                        });
                     }
                     _ => {
                         // return just $-
@@ -79,7 +86,9 @@ impl<'a> Lookahead<'a> for Gvar {
             // $': string after last match
             // $+: string matches last paren
             Some(b'&') | Some(b'`') | Some(b'\'') | Some(b'+') => {
-                return LookaheadGvarResult::Ok(token!(tBACK_REF, start, start + 2));
+                return Ok(Gvar {
+                    token: token!(tBACK_REF, start, start + 2),
+                });
             }
 
             Some(b'1'..=b'9') => {
@@ -88,7 +97,9 @@ impl<'a> Lookahead<'a> for Gvar {
                 while buffer.byte_at(end).map(|byte| byte.is_ascii_digit()) == Some(true) {
                     end += 1;
                 }
-                return LookaheadGvarResult::Ok(token!(tNTH_REF, start, end));
+                return Ok(Gvar {
+                    token: token!(tNTH_REF, start, end),
+                });
             }
 
             Some(b' ') | None => {
@@ -102,11 +113,13 @@ impl<'a> Lookahead<'a> for Gvar {
         }
 
         match Ident::lookahead(buffer, ident_start) {
-            LookaheadResult::Some { length } => {
+            Some(Ident { length }) => {
                 let end = ident_start + length;
-                LookaheadGvarResult::Ok(token!(tGVAR, start, end))
+                Ok(Gvar {
+                    token: token!(tGVAR, start, end),
+                })
             }
-            LookaheadResult::None => {
+            None => {
                 // $ (or $_) followed by invalid byte sequence
                 invalid_gvar_name(ident_start)
             }
@@ -114,15 +127,15 @@ impl<'a> Lookahead<'a> for Gvar {
     }
 }
 
-impl Gvar {
-    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+impl<'a> Gvar<'a> {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
         let token = match Gvar::lookahead(buffer.for_lookahead(), buffer.pos()) {
-            LookaheadGvarResult::Ok(token) => token,
-            LookaheadGvarResult::InvalidVarName(token) => {
+            Ok(Gvar { token }) => token,
+            Err(GvarError::InvalidVarName(token)) => {
                 // TODO: report __invalid__ ivar/cvar name
                 token
             }
-            LookaheadGvarResult::EmptyVarName(token) => {
+            Err(GvarError::EmptyVarName(token)) => {
                 // TODO: report __empty__ ivar/cvar name
                 token
             }
