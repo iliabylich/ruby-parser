@@ -19,7 +19,7 @@ impl<'a> Lookahead<'a> for SlashX {
     type Output = Result<Option<Self>, SlashXError>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
-        if buffer.byte_at(start) != Some(b'\\') && buffer.byte_at(start) != Some(b'x') {
+        if !buffer.lookahead(start, b"\\x") {
             return Ok(None);
         }
 

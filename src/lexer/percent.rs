@@ -135,7 +135,7 @@ mod tests {
                     "expected a string literal to be pushed"
                 );
                 let literal = lexer.string_literals.last().unwrap();
-                assert_eq!(literal, $literal);
+                assert_eq!(literal, &$literal);
 
                 assert_eq!(lexer.next_token(), token!(tEOF, len, len));
             }

@@ -2,7 +2,7 @@ mod slash_u;
 pub(crate) use slash_u::{SlashU, SlashUError, SlashUPerCodepointError};
 
 mod slash_octal;
-pub(crate) use slash_octal::{SlashOctal, SlashOctalError};
+pub(crate) use slash_octal::SlashOctal;
 
 mod slash_x;
 pub(crate) use slash_x::{SlashX, SlashXError};
@@ -13,6 +13,7 @@ pub(crate) use slash_meta_ctrl::{SlashMetaCtrl, SlashMetaCtrlError};
 mod slash_byte;
 pub(crate) use slash_byte::{SlashByte, SlashByteError};
 
+#[derive(Debug)]
 pub(crate) enum Escape {
     SlashU(SlashU),
     SlashOctal(SlashOctal),
@@ -21,9 +22,9 @@ pub(crate) enum Escape {
     SlashByte(SlashByte),
 }
 
+#[derive(Debug)]
 pub(crate) enum EscapeError {
     SlashUError(SlashUError),
-    SlashOctalError(SlashOctalError),
     SlashXError(SlashXError),
     SlashMetaCtrlError(SlashMetaCtrlError),
     SlashByteError(SlashByteError),
@@ -42,8 +43,7 @@ impl<'a> Lookahead<'a> for Escape {
         }
 
         // check \777
-        let maybe_slash_octal =
-            SlashOctal::lookahead(buffer, start).map_err(EscapeError::SlashOctalError)?;
+        let maybe_slash_octal = SlashOctal::lookahead(buffer, start);
         if let Some(slash_octal) = maybe_slash_octal {
             return Ok(Some(Escape::SlashOctal(slash_octal)));
         }

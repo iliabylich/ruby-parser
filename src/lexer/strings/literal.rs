@@ -16,7 +16,7 @@ pub(crate) trait StringLiteralExtend<'a> {
     ) -> ControlFlow<StringExtendAction<'a>>;
 }
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) enum StringLiteral<'a> {
     StringInterp(StringInterp),
     StringPlain(StringPlain),

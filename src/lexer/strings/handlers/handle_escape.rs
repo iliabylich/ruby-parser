@@ -8,8 +8,9 @@ use crate::{
             action::StringExtendAction,
             escapes::{
                 Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
-                SlashOctal, SlashOctalError, SlashU, SlashUError, SlashX, SlashXError,
+                SlashOctal, SlashU, SlashUError, SlashX, SlashXError,
             },
+            handlers::handle_processed_string_content,
         },
     },
     token::token,
@@ -20,10 +21,14 @@ pub(crate) fn handle_escape<'a>(
     buffer: &mut BufferWithCursor<'a>,
     start: usize,
 ) -> ControlFlow<StringExtendAction<'a>> {
-    let string_content;
+    let escape_content;
     let escape_length;
 
-    match Escape::lookahead(buffer.for_lookahead(), start) {
+    if buffer.current_byte() == Some(b'\\') {
+        handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
+    }
+
+    match Escape::lookahead(buffer.for_lookahead(), buffer.pos()) {
         Ok(None) => {
             return ControlFlow::Continue(());
         }
@@ -35,18 +40,18 @@ pub(crate) fn handle_escape<'a>(
                     .map(|c| *c)
                     .collect::<String>()
                     .into_bytes();
-                string_content = StringContent::from(codepoints);
+                escape_content = StringContent::from(codepoints);
                 escape_length = length;
             }
             Escape::SlashU(SlashU::Short { codepoint, length }) => {
-                string_content = StringContent::from(codepoint);
+                escape_content = StringContent::from(codepoint);
                 escape_length = length;
             }
             Escape::SlashOctal(SlashOctal { codepoint, length })
             | Escape::SlashX(SlashX { codepoint, length })
             | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length })
             | Escape::SlashByte(SlashByte { codepoint, length }) => {
-                string_content = StringContent::from(codepoint);
+                escape_content = StringContent::from(codepoint);
                 escape_length = length;
             }
         },
@@ -71,11 +76,10 @@ pub(crate) fn handle_escape<'a>(
             }
             // 2. TODO: report `err`
 
-            string_content = StringContent::from(codepoints);
+            escape_content = StringContent::from(codepoints);
 
             escape_length = match err {
                 EscapeError::SlashUError(SlashUError { length, .. })
-                | EscapeError::SlashOctalError(SlashOctalError { length })
                 | EscapeError::SlashXError(SlashXError { length })
                 | EscapeError::SlashMetaCtrlError(SlashMetaCtrlError { length })
                 | EscapeError::SlashByteError(SlashByteError { length }) => length,
@@ -83,10 +87,11 @@ pub(crate) fn handle_escape<'a>(
         }
     };
 
-    buffer.set_pos(start + escape_length);
+    buffer.set_pos(buffer.pos() + escape_length);
+
     ControlFlow::Break(StringExtendAction::EmitToken {
         token: token!(
-            tSTRING_CONTENT(string_content),
+            tSTRING_CONTENT(escape_content),
             start,
             start + escape_length
         ),

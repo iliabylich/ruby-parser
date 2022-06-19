@@ -10,8 +10,8 @@ impl<'a> StringLiteralStack<'a> {
         Self { stack: vec![] }
     }
 
-    pub(crate) fn last(&self) -> Option<StringLiteral<'a>> {
-        self.stack.last().map(|literal| *literal)
+    pub(crate) fn last(&self) -> Option<&StringLiteral<'a>> {
+        self.stack.last()
     }
 
     pub(crate) fn last_mut(&mut self) -> Option<&mut StringLiteral<'a>> {

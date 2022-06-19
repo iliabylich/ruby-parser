@@ -5,7 +5,7 @@ use crate::{
         ident::Ident,
         strings::escapes::{
             Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
-            SlashOctal, SlashOctalError, SlashU, SlashUError, SlashX, SlashXError,
+            SlashOctal, SlashU, SlashUError, SlashX, SlashXError,
         },
     },
     token::{token, Token},
@@ -72,9 +72,6 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                                     "SlashUError {:?} / {:?} / {:?}",
                                     codepoints, errors, length
                                 );
-                            }
-                            EscapeError::SlashOctalError(SlashOctalError { length }) => {
-                                panic!("SlashOctalError {:?}", length);
                             }
                             EscapeError::SlashXError(SlashXError { length }) => {
                                 panic!("SlashXError {:?}", length);

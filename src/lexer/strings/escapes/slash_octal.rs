@@ -7,20 +7,12 @@ pub(crate) struct SlashOctal {
     pub(crate) length: usize,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) struct SlashOctalError {
-    // Found only `\`, but no octal number(s)
-    // In this case length is always `1`
-    // but we want it to be explicit
-    pub(crate) length: usize,
-}
-
 impl<'a> Lookahead<'a> for SlashOctal {
-    type Output = Result<Option<Self>, SlashOctalError>;
+    type Output = Option<Self>;
 
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
-        if buffer.byte_at(start) != Some(b'\\') {
-            return Ok(None);
+        if !buffer.lookahead(start, b"\\") {
+            return None;
         }
 
         let codepoint_start = start + 1;
@@ -34,7 +26,8 @@ impl<'a> Lookahead<'a> for SlashOctal {
         }
 
         if length == 0 {
-            return Err(SlashOctalError { length: 1 });
+            // just a `\`, possible a different escape sequence
+            return None;
         }
 
         let bytes = buffer
@@ -44,10 +37,10 @@ impl<'a> Lookahead<'a> for SlashOctal {
         let n = u16::from_str_radix(s, 8).expect("bug");
         let n = (n % 256) as u8;
 
-        Ok(Some(SlashOctal {
+        Some(SlashOctal {
             codepoint: n,
             length: length + 1, // track leading `\`
-        }))
+        })
     }
 }
 
@@ -62,45 +55,41 @@ macro_rules! assert_lookahead {
     };
 }
 
-assert_lookahead!(
-    test = test_lookahead_nothing,
-    input = b"foo",
-    output = Ok(None)
-);
+assert_lookahead!(test = test_lookahead_nothing, input = b"foo", output = None);
 
 assert_lookahead!(
     test = test_lookahead_valid_3_digits,
     input = b"\\111",
-    output = Ok(Some(SlashOctal {
+    output = Some(SlashOctal {
         codepoint: 73,
         length: 4
-    }))
+    })
 );
 assert_lookahead!(
     test = test_lookahead_valid_2_digits,
     input = b"\\33",
-    output = Ok(Some(SlashOctal {
+    output = Some(SlashOctal {
         codepoint: 27,
         length: 3
-    }))
+    })
 );
 assert_lookahead!(
     test = test_lookahead_valid_1_digit,
     input = b"\\7",
-    output = Ok(Some(SlashOctal {
+    output = Some(SlashOctal {
         codepoint: 7,
         length: 2
-    }))
+    })
 );
 
 assert_lookahead!(
     test = test_lookahead_invalid_nonoctal,
     input = b"\\9",
-    output = Err(SlashOctalError { length: 1 })
+    output = None
 );
 
 assert_lookahead!(
     test = test_lookahead_invalid_eof,
     input = b"\\",
-    output = Err(SlashOctalError { length: 1 })
+    output = None
 );

@@ -200,7 +200,7 @@ assert_lex!(
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Heredoc(Heredoc::new(
+            Some(&StringLiteral::Heredoc(Heredoc::new(
                 Some(Interpolation::new(42)),
                 b"HERE",
                 7,
@@ -271,7 +271,7 @@ assert_lex!(
 
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::StringInterp(StringInterp::new(
+            Some(&StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(42),
                 b'"'
             )))
@@ -308,7 +308,7 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::StringPlain(StringPlain::new(b'\'')))
+            Some(&StringLiteral::StringPlain(StringPlain::new(b'\'')))
         )
     }
 );
@@ -571,7 +571,7 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Symbol(Symbol::new(true, 42)))
+            Some(&StringLiteral::Symbol(Symbol::new(true, 42)))
         )
     }
 );
@@ -590,7 +590,7 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::Symbol(Symbol::new(false, 42)))
+            Some(&StringLiteral::Symbol(Symbol::new(false, 42)))
         )
     }
 );

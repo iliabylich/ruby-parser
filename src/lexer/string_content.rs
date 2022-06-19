@@ -76,7 +76,7 @@ impl PartialEq for StringContent<'_> {
     }
 }
 
-use std::ops::Add;
+use std::ops::{Add, AddAssign};
 
 impl<'a> Add for StringContent<'a> {
     type Output = Self;
@@ -86,5 +86,17 @@ impl<'a> Add for StringContent<'a> {
         let mut rhs = rhs.into_bytes();
         lhs.append(&mut rhs);
         Self::Owned(lhs)
+    }
+}
+
+impl<'a> AddAssign for StringContent<'a> {
+    fn add_assign(&mut self, rhs: Self) {
+        let mut bytes = match self {
+            StringContent::Borrowed(borrowed) => borrowed.to_vec(),
+            StringContent::Owned(bytes) => std::mem::take(bytes),
+        };
+
+        bytes.extend_from_slice(rhs.as_bytes());
+        *self = StringContent::Owned(bytes)
     }
 }

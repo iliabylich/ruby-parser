@@ -13,7 +13,7 @@ use crate::lexer::{
     },
 };
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) struct StringInterp {
     interpolation: Interpolation,
     ends_with: u8,
@@ -61,29 +61,22 @@ mod tests {
     use super::*;
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    assert_emits_eof_string_action!(StringLiteral::StringInterp(StringInterp::new(
-        Interpolation::new(0),
-        b'"'
-    )));
+    fn literal(ends_with: u8) -> StringLiteral<'static> {
+        StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), ends_with))
+    }
+
+    // EOF handling
+    assert_emits_eof!(literal(b'"'));
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(StringLiteral::StringInterp(StringInterp::new(
-        Interpolation::new(0),
-        b'"'
-    )));
+    assert_emits_interpolation_end!(literal(b'"'));
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::StringInterp(StringInterp::new(
-        Interpolation::new(0),
-        b'"'
-    )));
+    assert_emits_interpolated_value!(literal(b'"'));
 
-    assert_emits_string_end!(
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'"')),
-        input = b"\""
-    );
+    // literal end handling
+    assert_emits_string_end!(literal = literal(b'"'), input = b"\"");
 
-    assert_emits_escaped_slash_u!(
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'"'))
-    );
+    // escape sequences handling
+    assert_emits_escape_sequence!(literal = literal(b'"'));
 }

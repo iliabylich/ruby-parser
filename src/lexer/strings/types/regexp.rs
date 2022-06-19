@@ -137,10 +137,10 @@ impl<'a> Lookahead<'a> for RegexpOptions {
 mod tests {
     use crate::lexer::strings::{test_helpers::*, types::Regexp, StringLiteral};
 
-    assert_emits_eof_string_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
+    assert_emits_eof!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
 
     // interpolation END handling
-    assert_emits_interpolation_end_action!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
+    assert_emits_interpolation_end!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
 
     // interpolation VALUE handling
     assert_emits_interpolated_value!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
