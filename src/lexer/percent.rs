@@ -64,7 +64,7 @@ pub(crate) fn parse_percent<'a>(
         }
         b'q' => {
             token = token!(tSTRING_BEG, start, end);
-            literal = StringLiteral::StringNoInterp(StringNoInterp::new(ends_with));
+            literal = StringLiteral::StringPlain(StringPlain::new(ends_with));
         }
 
         b'W' => {
@@ -99,7 +99,7 @@ pub(crate) fn parse_percent<'a>(
         }
         b's' => {
             token = token!(tSYMBEG, start, end);
-            literal = StringLiteral::StringNoInterp(StringNoInterp::new(ends_with));
+            literal = StringLiteral::StringPlain(StringPlain::new(ends_with));
         }
 
         _ => panic!("percent_unknown"),
@@ -187,7 +187,7 @@ mod tests {
         name = test_tPERCENT_q_lower,
         input = b"%q{",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringNoInterp(StringNoInterp::new(b'}'))
+        literal = StringLiteral::StringPlain(StringPlain::new(b'}'))
     );
 
     // %W
@@ -243,6 +243,6 @@ mod tests {
         name = test_tPERCENT_s_lower,
         input = b"%s{",
         token = tSYMBEG,
-        literal = StringLiteral::StringNoInterp(StringNoInterp::new(b'}'))
+        literal = StringLiteral::StringPlain(StringPlain::new(b'}'))
     );
 }

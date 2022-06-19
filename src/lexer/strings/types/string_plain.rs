@@ -10,17 +10,17 @@ use crate::lexer::{
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub(crate) struct StringNoInterp {
+pub(crate) struct StringPlain {
     ends_with: u8,
 }
 
-impl StringNoInterp {
+impl StringPlain {
     pub(crate) fn new(ends_with: u8) -> Self {
         Self { ends_with }
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for StringNoInterp {
+impl<'a> StringLiteralExtend<'a> for StringPlain {
     fn extend(
         &mut self,
         buffer: &mut BufferWithCursor<'a>,
@@ -47,7 +47,7 @@ mod tests {
 
     assert_emits_token!(
         test = test_rcurly_with_no_interp_support,
-        literal = StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')),
+        literal = StringLiteral::StringPlain(StringPlain::new(b'\'')),
         input = b"}",
         token = token!(tSTRING_CONTENT(StringContent::from(b"}")), 0, 1),
         pre = |_| {},
@@ -70,7 +70,7 @@ mod tests {
     }
 
     assert_emits_string_end!(
-        literal = StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')),
+        literal = StringLiteral::StringPlain(StringPlain::new(b'\'')),
         input = b"'"
     );
 }

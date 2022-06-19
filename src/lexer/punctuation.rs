@@ -1,7 +1,7 @@
 use crate::lexer::{
     assert_lex,
     heredoc_id::HeredocId,
-    strings::types::{Heredoc, Interpolation, StringInterp, StringNoInterp, Symbol},
+    strings::types::{Heredoc, Interpolation, StringInterp, StringPlain, Symbol},
     Lexer, OnByte, StringLiteral,
 };
 use crate::token::{token, Token};
@@ -291,7 +291,7 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
         self.string_literals
-            .push(StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')));
+            .push(StringLiteral::StringPlain(StringPlain::new(b'\'')));
         token
     }
 }
@@ -308,7 +308,7 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(StringLiteral::StringNoInterp(StringNoInterp::new(b'\'')))
+            Some(StringLiteral::StringPlain(StringPlain::new(b'\'')))
         )
     }
 );
