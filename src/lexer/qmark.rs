@@ -4,8 +4,8 @@ use crate::{
         buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead, LookaheadResult},
         ident::Ident,
         strings::escapes::{
-            Escape, EscapeError, SlashMetaCtrl, SlashMetaCtrlError, SlashOctal, SlashOctalError,
-            SlashU, SlashUError, SlashX, SlashXError,
+            Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
+            SlashOctal, SlashOctalError, SlashU, SlashUError, SlashX, SlashXError,
         },
     },
     token::{token, Token},
@@ -49,7 +49,8 @@ impl<'a> Lookahead<'a> for QMark {
 
                             Escape::SlashOctal(SlashOctal { codepoint, length })
                             | Escape::SlashX(SlashX { codepoint, length })
-                            | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length }) => {
+                            | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length })
+                            | Escape::SlashByte(SlashByte { codepoint, length }) => {
                                 return token!(tCHAR(codepoint as char), start, start + length);
                             }
                         },
@@ -72,6 +73,9 @@ impl<'a> Lookahead<'a> for QMark {
                             }
                             EscapeError::SlashMetaCtrlError(SlashMetaCtrlError { length }) => {
                                 panic!("SlashMetaCtrlError {:?}", length)
+                            }
+                            EscapeError::SlashByteError(SlashByteError { length }) => {
+                                panic!("SlashByteError {:?}", length)
                             }
                         },
                     }

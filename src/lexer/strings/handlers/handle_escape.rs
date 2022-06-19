@@ -7,8 +7,8 @@ use crate::{
         strings::{
             action::StringExtendAction,
             escapes::{
-                Escape, EscapeError, SlashMetaCtrl, SlashMetaCtrlError, SlashOctal,
-                SlashOctalError, SlashU, SlashUError, SlashX, SlashXError,
+                Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
+                SlashOctal, SlashOctalError, SlashU, SlashUError, SlashX, SlashXError,
             },
         },
     },
@@ -32,7 +32,7 @@ pub(crate) fn handle_escape<'a>(
             Escape::SlashU(SlashU::Wide { codepoints, length }) => {
                 let codepoints = codepoints
                     .into_iter()
-                    .cloned()
+                    .map(|c| *c)
                     .collect::<String>()
                     .into_bytes();
                 string_content = StringContent::from(codepoints);
@@ -44,7 +44,8 @@ pub(crate) fn handle_escape<'a>(
             }
             Escape::SlashOctal(SlashOctal { codepoint, length })
             | Escape::SlashX(SlashX { codepoint, length })
-            | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length }) => {
+            | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length })
+            | Escape::SlashByte(SlashByte { codepoint, length }) => {
                 string_content = StringContent::from(codepoint);
                 escape_length = length;
             }
@@ -62,7 +63,7 @@ pub(crate) fn handle_escape<'a>(
                 }) => {
                     codepoints = captured_codepoints
                         .iter()
-                        .cloned()
+                        .map(|c| *c)
                         .collect::<String>()
                         .into_bytes();
                 }
@@ -76,7 +77,8 @@ pub(crate) fn handle_escape<'a>(
                 EscapeError::SlashUError(SlashUError { length, .. })
                 | EscapeError::SlashOctalError(SlashOctalError { length })
                 | EscapeError::SlashXError(SlashXError { length })
-                | EscapeError::SlashMetaCtrlError(SlashMetaCtrlError { length }) => length,
+                | EscapeError::SlashMetaCtrlError(SlashMetaCtrlError { length })
+                | EscapeError::SlashByteError(SlashByteError { length }) => length,
             };
         }
     };

@@ -10,11 +10,15 @@ pub(crate) use slash_x::{SlashX, SlashXError};
 mod slash_meta_ctrl;
 pub(crate) use slash_meta_ctrl::{SlashMetaCtrl, SlashMetaCtrlError};
 
+mod slash_byte;
+pub(crate) use slash_byte::{SlashByte, SlashByteError};
+
 pub(crate) enum Escape {
     SlashU(SlashU),
     SlashOctal(SlashOctal),
     SlashX(SlashX),
     SlashMetaCtrl(SlashMetaCtrl),
+    SlashByte(SlashByte),
 }
 
 pub(crate) enum EscapeError {
@@ -22,6 +26,7 @@ pub(crate) enum EscapeError {
     SlashOctalError(SlashOctalError),
     SlashXError(SlashXError),
     SlashMetaCtrlError(SlashMetaCtrlError),
+    SlashByteError(SlashByteError),
 }
 
 use crate::lexer::buffer::{Buffer, Lookahead};
@@ -56,6 +61,29 @@ impl<'a> Lookahead<'a> for Escape {
             return Ok(Some(Escape::SlashMetaCtrl(slash_meta_ctrl)));
         }
 
+        // check \<byte>
+        let maybe_slash_byte =
+            SlashByte::lookahead(buffer, start).map_err(EscapeError::SlashByteError)?;
+        if let Some(slash_byte) = maybe_slash_byte {
+            return Ok(Some(Escape::SlashByte(slash_byte)));
+        }
+
         Ok(None)
+    }
+}
+
+pub(crate) fn unescape_byte(byte: u8) -> u8 {
+    match byte {
+        b'a' => 7,      // ?\a
+        b'b' => 8,      // ?\b
+        b'e' => 27,     // ?\e
+        b'f' => 12,     // ?\f
+        b'n' => 10,     // ?\n
+        b'r' => 13,     // ?\r
+        b's' => 32,     // ?\s
+        b't' => 9,      // ?\t
+        b'v' => 11,     // ?\v
+        b'\\' => b'\\', // ?\\,
+        _ => byte,
     }
 }

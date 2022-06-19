@@ -1,4 +1,7 @@
-use crate::lexer::buffer::{Buffer, Lookahead};
+use crate::lexer::{
+    buffer::{Buffer, Lookahead},
+    strings::escapes::unescape_byte,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashMetaCtrl {
@@ -15,7 +18,7 @@ impl<'a> Lookahead<'a> for SlashMetaCtrl {
     type Output = Result<Option<Self>, SlashMetaCtrlError>;
 
     // \C-\M-f
-    // \C-\f
+    // \C-f
     // \c\M-f
     // \cf
     // \M-\cf
@@ -97,22 +100,6 @@ impl<'a> Lookahead<'a> for SlashMetaCtrl {
 
 fn emit_err(length: usize) -> SlashMetaCtrlError {
     SlashMetaCtrlError { length }
-}
-
-fn unescape_byte(byte: u8) -> u8 {
-    match byte {
-        b'a' => 7,      // ?\a
-        b'b' => 8,      // ?\b
-        b'e' => 27,     // ?\e
-        b'f' => 12,     // ?\f
-        b'n' => 10,     // ?\n
-        b'r' => 13,     // ?\r
-        b's' => 32,     // ?\s
-        b't' => 9,      // ?\t
-        b'v' => 11,     // ?\v
-        b'\\' => b'\\', // ?\\,
-        _ => byte,
-    }
 }
 
 fn slash_c(byte: u8) -> u8 {

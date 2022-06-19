@@ -1,20 +1,16 @@
 use std::ops::ControlFlow;
 
-use crate::{
-    lexer::{
-        buffer::BufferWithCursor,
-        string_content::StringContent,
-        strings::{
-            action::StringExtendAction,
-            handlers::{
-                handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
-                handle_string_end,
-            },
-            literal::StringLiteralExtend,
-            types::Interpolation,
+use crate::lexer::{
+    buffer::BufferWithCursor,
+    strings::{
+        action::StringExtendAction,
+        handlers::{
+            handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
+            handle_string_end,
         },
+        literal::StringLiteralExtend,
+        types::Interpolation,
     },
-    token::token,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -55,24 +51,6 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
             handle_interpolation(&mut self.interpolation, buffer, start)?;
             handle_string_end(self.ends_with, buffer, start)?;
 
-            if buffer.lookahead(b"\\\n") {
-                // just emit what we've got so far
-                // parser will merge two consectuive string literals
-                let end = buffer.pos();
-                let action = StringExtendAction::EmitToken {
-                    token: token!(
-                        tSTRING_CONTENT(StringContent::from(
-                            buffer.slice(start, end).expect("bug")
-                        )),
-                        start,
-                        end
-                    ),
-                };
-                // and skip escaped NL
-                buffer.set_pos(buffer.pos() + 2);
-                return ControlFlow::Break(action);
-            }
-
             buffer.skip_byte();
         }
     }
@@ -102,7 +80,10 @@ mod tests {
 
     #[test]
     fn test_string_plain_non_interp() {
-        use crate::{lexer::Lexer, token::token};
+        use crate::{
+            lexer::{string_content::StringContent, Lexer},
+            token::token,
+        };
         let mut lexer = Lexer::new(b"'foo'");
         assert_eq!(
             lexer.tokenize_until_eof(),
