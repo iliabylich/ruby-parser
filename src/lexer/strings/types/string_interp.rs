@@ -78,24 +78,6 @@ mod tests {
         b'"'
     )));
 
-    #[test]
-    fn test_string_plain_non_interp() {
-        use crate::{
-            lexer::{string_content::StringContent, Lexer},
-            token::token,
-        };
-        let mut lexer = Lexer::new(b"'foo'");
-        assert_eq!(
-            lexer.tokenize_until_eof(),
-            vec![
-                token!(tSTRING_BEG, 0, 1),
-                token!(tSTRING_CONTENT(StringContent::from(b"foo")), 1, 4),
-                token!(tSTRING_END, 4, 5),
-                token!(tEOF, 5, 5)
-            ]
-        );
-    }
-
     assert_emits_string_end!(
         literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'"')),
         input = b"\""

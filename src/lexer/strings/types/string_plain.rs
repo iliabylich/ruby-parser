@@ -55,7 +55,7 @@ mod tests {
     );
 
     #[test]
-    fn test_string_plain_non_interp() {
+    fn test_string_plain() {
         use crate::{lexer::Lexer, token::token};
         let mut lexer = Lexer::new(b"'foo'");
         assert_eq!(
