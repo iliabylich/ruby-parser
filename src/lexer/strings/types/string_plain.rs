@@ -57,14 +57,14 @@ mod tests {
     #[test]
     fn test_string_plain() {
         use crate::{lexer::Lexer, token::token};
-        let mut lexer = Lexer::new(b"'foo'");
+        let mut lexer = Lexer::new(b"'foo\\\nbar'");
         assert_eq!(
             lexer.tokenize_until_eof(),
             vec![
                 token!(tSTRING_BEG, 0, 1),
-                token!(tSTRING_CONTENT(StringContent::from(b"foo")), 1, 4),
-                token!(tSTRING_END, 4, 5),
-                token!(tEOF, 5, 5)
+                token!(tSTRING_CONTENT(StringContent::from(b"foo\\\nbar")), 1, 9),
+                token!(tSTRING_END, 9, 10),
+                token!(tEOF, 10, 10)
             ]
         );
     }
