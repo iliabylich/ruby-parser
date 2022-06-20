@@ -19,16 +19,19 @@ use crate::{
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct Regexp {
     interpolation: Interpolation,
+
+    starts_with: u8,
     ends_with: u8,
 }
 
 impl Regexp {
-    pub(crate) fn new(ends_with: u8, curly_level: usize) -> Self {
+    pub(crate) fn new(starts_with: u8, ends_with: u8, curly_level: usize) -> Self {
         Self {
             interpolation: Interpolation {
                 enabled: false,
                 curly_nest: curly_level,
             },
+            starts_with,
             ends_with,
         }
     }
@@ -137,22 +140,22 @@ impl<'a> Lookahead<'a> for RegexpOptions {
 mod tests {
     use crate::lexer::strings::{test_helpers::*, types::Regexp, StringLiteral};
 
-    assert_emits_eof!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
+    assert_emits_eof!(StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)));
 
     // interpolation END handling
-    assert_emits_interpolation_end!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
+    assert_emits_interpolation_end!(StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)));
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::Regexp(Regexp::new(b'/', 0)));
+    assert_emits_interpolated_value!(StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)));
 
     assert_emits_string_end!(
-        literal = StringLiteral::Regexp(Regexp::new(b'/', 0)),
+        literal = StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)),
         input = b"/"
     );
 
     assert_emits_extend_action!(
         test = test_regexp_options,
-        literal = StringLiteral::Regexp(Regexp::new(b'/', 0)),
+        literal = StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)),
         input = b"/ox foo",
         action = StringExtendAction::FoundStringEnd {
             token: token!(tSTRING_END, 0, 3)

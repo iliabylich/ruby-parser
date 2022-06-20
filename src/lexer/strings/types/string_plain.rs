@@ -11,12 +11,16 @@ use crate::lexer::{
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub(crate) struct StringPlain {
+    starts_with: u8,
     ends_with: u8,
 }
 
 impl StringPlain {
-    pub(crate) fn new(ends_with: u8) -> Self {
-        Self { ends_with }
+    pub(crate) fn new(starts_with: u8, ends_with: u8) -> Self {
+        Self {
+            starts_with,
+            ends_with,
+        }
     }
 }
 
@@ -47,7 +51,7 @@ mod tests {
 
     assert_emits_token!(
         test = test_rcurly_with_no_interp_support,
-        literal = StringLiteral::StringPlain(StringPlain::new(b'\'')),
+        literal = StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')),
         input = b"}",
         token = token!(tSTRING_CONTENT(StringContent::from(b"}")), 0, 1),
         pre = |_| {},
@@ -70,7 +74,7 @@ mod tests {
     }
 
     assert_emits_string_end!(
-        literal = StringLiteral::StringPlain(StringPlain::new(b'\'')),
+        literal = StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')),
         input = b"'"
     );
 }

@@ -16,13 +16,15 @@ use crate::lexer::{
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) struct StringInterp {
     interpolation: Interpolation,
+    starts_with: u8,
     ends_with: u8,
 }
 
 impl StringInterp {
-    pub(crate) fn new(interpolation: Interpolation, ends_with: u8) -> Self {
+    pub(crate) fn new(interpolation: Interpolation, starts_with: u8, ends_with: u8) -> Self {
         Self {
             interpolation,
+            starts_with,
             ends_with,
         }
     }
@@ -61,8 +63,8 @@ mod tests {
     use super::*;
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    fn literal(ends_with: u8) -> StringLiteral<'static> {
-        StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), ends_with))
+    fn literal(sep: u8) -> StringLiteral<'static> {
+        StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), sep, sep))
     }
 
     // EOF handling

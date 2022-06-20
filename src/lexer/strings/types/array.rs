@@ -9,15 +9,19 @@ use crate::lexer::{
 pub(crate) struct Array {
     supports_interpolation: bool,
     currently_in_interpolation: bool,
+
+    starts_with: u8,
     ends_with: u8,
+
     interpolation_started_with_curly_level: usize,
 }
 
 impl Array {
-    pub(crate) fn new(interp: bool, ends_with: u8, curly_level: usize) -> Self {
+    pub(crate) fn new(interp: bool, starts_with: u8, ends_with: u8, curly_level: usize) -> Self {
         Self {
             supports_interpolation: interp,
             currently_in_interpolation: false,
+            starts_with,
             ends_with,
             interpolation_started_with_curly_level: curly_level,
         }

@@ -10,14 +10,14 @@ pub(crate) fn parse_percent<'a>(
     let start = buffer.pos();
     buffer.skip_byte();
 
-    let mut ends_with;
+    let starts_with;
     let literal_type;
 
     if let Some(c) = buffer.current_byte() {
         if !c.is_ascii_alphanumeric() {
             if c.is_ascii() {
                 // %< or something similar to punctuation byte
-                ends_with = c; // buffer.slice(buffer.pos(), buffer.pos() + 1);
+                starts_with = c;
                 literal_type = b'Q';
                 buffer.skip_byte();
             } else {
@@ -31,7 +31,7 @@ pub(crate) fn parse_percent<'a>(
                 if c.is_ascii_alphabetic() {
                     panic!("percent_unknown")
                 }
-                ends_with = c; // buffer.slice(buffer.pos(), buffer.pos() + 1);
+                starts_with = c;
                 buffer.skip_byte();
             } else {
                 panic!("percent_unterminated")
@@ -41,13 +41,13 @@ pub(crate) fn parse_percent<'a>(
         panic!("percent_unterminated")
     }
 
-    match ends_with {
-        b'(' => ends_with = b')',
-        b'[' => ends_with = b']',
-        b'{' => ends_with = b'}',
-        b'<' => ends_with = b'>',
-        _ => {}
-    }
+    let ends_with = match starts_with {
+        b'(' => b')',
+        b'[' => b']',
+        b'{' => b'}',
+        b'<' => b'>',
+        _ => starts_with,
+    };
 
     let end = buffer.pos();
     let token;
@@ -59,47 +59,49 @@ pub(crate) fn parse_percent<'a>(
             token = token!(tSTRING_BEG, start, end);
             literal = StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(curly_level),
+                starts_with,
                 ends_with,
             ));
         }
         b'q' => {
             token = token!(tSTRING_BEG, start, end);
-            literal = StringLiteral::StringPlain(StringPlain::new(ends_with));
+            literal = StringLiteral::StringPlain(StringPlain::new(starts_with, ends_with));
         }
 
         b'W' => {
             token = token!(tWORDS_BEG, start, end);
-            literal = StringLiteral::Array(Array::new(true, ends_with, curly_level));
+            literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
         }
         b'w' => {
             token = token!(tWORDS_BEG, start, end);
-            literal = StringLiteral::Array(Array::new(false, ends_with, curly_level));
+            literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
         }
 
         b'I' => {
             token = token!(tSYMBOLS_BEG, start, end);
-            literal = StringLiteral::Array(Array::new(true, ends_with, curly_level));
+            literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
         }
         b'i' => {
             token = token!(tSYMBOLS_BEG, start, end);
-            literal = StringLiteral::Array(Array::new(false, ends_with, curly_level));
+            literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
         }
 
         b'x' => {
             token = token!(tXSTRING_BEG, start, end);
             literal = StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(curly_level),
+                starts_with,
                 ends_with,
             ));
         }
 
         b'r' => {
             token = token!(tREGEXP_BEG, start, end);
-            literal = StringLiteral::Regexp(Regexp::new(ends_with, curly_level));
+            literal = StringLiteral::Regexp(Regexp::new(starts_with, ends_with, curly_level));
         }
         b's' => {
             token = token!(tSYMBEG, start, end);
-            literal = StringLiteral::StringPlain(StringPlain::new(ends_with));
+            literal = StringLiteral::StringPlain(StringPlain::new(starts_with, ends_with));
         }
 
         _ => panic!("percent_unknown"),
@@ -147,31 +149,31 @@ mod tests {
         name = test_tPERCENT_tLPAREN,
         input = b"%(",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b')'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'(', b')'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tLBRACK,
         input = b"%[",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b']'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'[', b']'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tLCURLY,
         input = b"%{",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'}'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tLT,
         input = b"%<",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'>'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'<', b'>'))
     );
     test_string_literal_start!(
         name = test_tPERCENT_tPIPE,
         input = b"%|",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'|'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'|', b'|'))
     );
 
     // %Q
@@ -179,7 +181,7 @@ mod tests {
         name = test_tPERCENT_q_upper,
         input = b"%Q{",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'}'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
     );
 
     // %q
@@ -187,7 +189,7 @@ mod tests {
         name = test_tPERCENT_q_lower,
         input = b"%q{",
         token = tSTRING_BEG,
-        literal = StringLiteral::StringPlain(StringPlain::new(b'}'))
+        literal = StringLiteral::StringPlain(StringPlain::new(b'{', b'}'))
     );
 
     // %W
@@ -195,7 +197,7 @@ mod tests {
         name = test_tPERCENT_w_upper,
         input = b"%W{",
         token = tWORDS_BEG,
-        literal = StringLiteral::Array(Array::new(true, b'}', 0))
+        literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
     );
 
     // %w
@@ -203,7 +205,7 @@ mod tests {
         name = test_tPERCENT_w_lower,
         input = b"%w{",
         token = tWORDS_BEG,
-        literal = StringLiteral::Array(Array::new(false, b'}', 0))
+        literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
     );
 
     // %I
@@ -211,7 +213,7 @@ mod tests {
         name = test_tPERCENT_i_upper,
         input = b"%I{",
         token = tSYMBOLS_BEG,
-        literal = StringLiteral::Array(Array::new(true, b'}', 0))
+        literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
     );
 
     // %i
@@ -219,7 +221,7 @@ mod tests {
         name = test_tPERCENT_i_lower,
         input = b"%i{",
         token = tSYMBOLS_BEG,
-        literal = StringLiteral::Array(Array::new(false, b'}', 0))
+        literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
     );
 
     // %x
@@ -227,7 +229,7 @@ mod tests {
         name = test_tPERCENT_x_lower,
         input = b"%x{",
         token = tXSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'}'))
+        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
     );
 
     // %r
@@ -235,7 +237,7 @@ mod tests {
         name = test_tPERCENT_r_lower,
         input = b"%r{",
         token = tREGEXP_BEG,
-        literal = StringLiteral::Regexp(Regexp::new(b'}', 0))
+        literal = StringLiteral::Regexp(Regexp::new(b'{', b'}', 0))
     );
 
     // %s
@@ -243,6 +245,6 @@ mod tests {
         name = test_tPERCENT_s_lower,
         input = b"%s{",
         token = tSYMBEG,
-        literal = StringLiteral::StringPlain(StringPlain::new(b'}'))
+        literal = StringLiteral::StringPlain(StringPlain::new(b'{', b'}'))
     );
 }

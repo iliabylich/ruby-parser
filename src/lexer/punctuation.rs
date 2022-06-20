@@ -252,6 +252,7 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
             .push(StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(self.curly_nest),
                 b'"',
+                b'"',
             )));
         token
     }
@@ -273,6 +274,7 @@ assert_lex!(
             lexer.string_literals.last(),
             Some(&StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(42),
+                b'"',
                 b'"'
             )))
         );
@@ -295,7 +297,7 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
         self.skip_byte();
         let token = token!(tSTRING_BEG, start, start + 1);
         self.string_literals
-            .push(StringLiteral::StringPlain(StringPlain::new(b'\'')));
+            .push(StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')));
         token
     }
 }
@@ -312,7 +314,7 @@ assert_lex!(
         assert_eq!(lexer.string_literals.size(), 1);
         assert_eq!(
             lexer.string_literals.last(),
-            Some(&StringLiteral::StringPlain(StringPlain::new(b'\'')))
+            Some(&StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')))
         )
     }
 );
