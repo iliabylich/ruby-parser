@@ -35,11 +35,7 @@ pub(crate) fn handle_escape<'a>(
 
         Ok(Some(escape)) => match escape {
             Escape::SlashU(SlashU::Wide { codepoints, length }) => {
-                let codepoints = codepoints
-                    .into_iter()
-                    .map(|c| *c)
-                    .collect::<String>()
-                    .into_bytes();
+                let codepoints = codepoints.into_iter().collect::<String>().into_bytes();
                 escape_content = StringContent::from(codepoints);
                 escape_length = length;
             }

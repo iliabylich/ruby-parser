@@ -28,12 +28,6 @@ impl<const N: usize> From<&[u8; N]> for StringContent<'_> {
     }
 }
 
-impl From<Box<[u8]>> for StringContent<'_> {
-    fn from(bytes: Box<[u8]>) -> Self {
-        Self::Owned(Vec::from(bytes))
-    }
-}
-
 impl From<Vec<u8>> for StringContent<'_> {
     fn from(bytes: Vec<u8>) -> Self {
         Self::Owned(bytes)

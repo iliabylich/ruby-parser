@@ -13,15 +13,15 @@ pub(crate) enum SlashU {
         length: usize,
     },
     Wide {
-        codepoints: Box<[char]>,
+        codepoints: Vec<char>,
         length: usize,
     },
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashUError {
-    pub(crate) codepoints: Option<Box<[char]>>,
-    pub(crate) errors: Box<[SlashUPerCodepointError]>,
+    pub(crate) codepoints: Option<Vec<char>>,
+    pub(crate) errors: Vec<SlashUPerCodepointError>,
     pub(crate) length: usize,
 }
 
@@ -92,18 +92,18 @@ impl<'a> Lookahead<'a> for SlashU {
 
             if errors.is_empty() {
                 return Ok(Some(SlashU::Wide {
-                    codepoints: codepoints.into_boxed_slice(),
+                    codepoints,
                     length: pos - start,
                 }));
             } else {
                 let codepoints = if codepoints.is_empty() {
                     None
                 } else {
-                    Some(codepoints.into_boxed_slice())
+                    Some(codepoints)
                 };
                 return Err(SlashUError {
                     codepoints,
-                    errors: errors.into_boxed_slice(),
+                    errors,
                     length: pos - start,
                 });
             }
@@ -135,7 +135,7 @@ impl<'a> Lookahead<'a> for SlashU {
             } else {
                 return Err(SlashUError {
                     codepoints: None,
-                    errors: errors.into_boxed_slice(),
+                    errors,
                     length: pos - start,
                 });
             }

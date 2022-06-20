@@ -35,10 +35,10 @@ assert_lookahead!(
     input = b"\\uxxxxxx",
     output = Err(SlashUError {
         codepoints: None,
-        errors: Box::new([SlashUPerCodepointError::Expected4Got {
+        errors: vec![SlashUPerCodepointError::Expected4Got {
             start: 2,
             length: 0
-        }]),
+        }],
         length: 2
     })
 );
@@ -48,7 +48,7 @@ assert_lookahead!(
     test = test_slash_u_wide_single_codepoint_valid,
     input = b"\\u{1234}",
     output = Ok(Some(SlashU::Wide {
-        codepoints: Box::new(['\u{1234}']),
+        codepoints: vec!['\u{1234}'],
         length: 8
     }))
 );
@@ -56,7 +56,7 @@ assert_lookahead!(
     test = test_slash_u_wide_multiple_codepoint_valid,
     input = b"\\u{ 1234   4321  }",
     output = Ok(Some(SlashU::Wide {
-        codepoints: Box::new(['\u{1234}', '\u{4321}']),
+        codepoints: vec!['\u{1234}', '\u{4321}'],
         length: 18
     }))
 );
@@ -64,7 +64,7 @@ assert_lookahead!(
     test = test_slash_u_wide_with_tabs,
     input = b"\\u{ 1234\t\t4321\t}",
     output = Ok(Some(SlashU::Wide {
-        codepoints: Box::new(['\u{1234}', '\u{4321}']),
+        codepoints: vec!['\u{1234}', '\u{4321}'],
         length: 16 // there are 20 chars - 4 slashes
     }))
 );
@@ -73,13 +73,13 @@ assert_lookahead!(
     input = b"\\u{foo123",
     output = Err(SlashUError {
         codepoints: None,
-        errors: Box::new([
+        errors: vec![
             SlashUPerCodepointError::NonHex {
                 start: 3,
                 length: 6
             },
             SlashUPerCodepointError::NoRCurly { start: 9 }
-        ]),
+        ],
         length: 9
     })
 );
