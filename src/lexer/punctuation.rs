@@ -749,11 +749,11 @@ impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
 
-        match start
+        let prev_byte = start
             .checked_sub(1)
             .map(|idx| self.buffer.byte_at(idx))
-            .flatten()
-        {
+            .flatten();
+        match prev_byte {
             // prev byte is either
             //   + None (i.e. it's the first byte of the file)
             //   + Some(b'\n')
