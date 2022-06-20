@@ -447,7 +447,14 @@ impl<'a> OnByte<'a, b'.'> for Lexer<'a> {
                 }
             }
             Some(b'0'..=b'9') => {
-                todo!("Handle .<n> case as error?? Skip all number until NaN found");
+                let mut end = start;
+                while matches!(self.buffer.byte_at(end), Some(b'0'..=b'9')) {
+                    end += 1;
+                }
+                panic!(
+                    "no .<digit> floating literal anymore; put 0 before dot ({:?})",
+                    self.buffer.slice(start, end)
+                );
             }
             _ => token!(tDOT, start, start + 1),
         }
