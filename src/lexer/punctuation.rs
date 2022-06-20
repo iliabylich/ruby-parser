@@ -281,9 +281,13 @@ assert_lex!(
 
 impl<'a> OnByte<'a, b'`'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
-        todo!("unclear what to do here?? MRI does state-dependent analysis")
+        // we rewrite '`' to tXSTRING_BEG on the parser level
+        let start = self.pos();
+        self.skip_byte();
+        token!(tIDENTIFIER, start, start + 1)
     }
 }
+assert_lex!(test_tIDENTIFIER_backtick, b"`", tIDENTIFIER, b"`", 0..1);
 
 impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
