@@ -18,3 +18,6 @@ pub(crate) use assert_emits_interpolated_value::assert_emits_interpolated_value;
 
 mod assert_emits_escape_sequence;
 pub(crate) use assert_emits_escape_sequence::*;
+
+mod assert_emits_escaped_start_or_end;
+pub(crate) use assert_emits_escaped_start_or_end::assert_emits_escaped_start_or_end;

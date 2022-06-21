@@ -63,22 +63,33 @@ mod tests {
     use super::*;
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    fn literal(sep: u8) -> StringLiteral<'static> {
-        StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), sep, sep))
+    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral<'static> {
+        StringLiteral::StringInterp(StringInterp::new(
+            Interpolation::new(0),
+            starts_with,
+            ends_with,
+        ))
+    }
+
+    fn dummy_literal() -> StringLiteral<'static> {
+        literal(b'"', b'"')
     }
 
     // EOF handling
-    assert_emits_eof!(literal(b'"'));
+    assert_emits_eof!(dummy_literal());
 
     // interpolation END handling
-    assert_emits_interpolation_end!(literal(b'"'));
+    assert_emits_interpolation_end!(dummy_literal());
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(literal(b'"'));
+    assert_emits_interpolated_value!(dummy_literal());
 
     // literal end handling
-    assert_emits_string_end!(literal = literal(b'"'), input = b"\"");
+    assert_emits_string_end!(literal = literal(b'|', b'|'), input = b"|");
 
     // escape sequences handling
-    assert_emits_escape_sequence!(literal = literal(b'"'));
+    assert_emits_escape_sequence!(literal = dummy_literal());
+
+    // escaped literal start/end handling
+    assert_emits_escaped_start_or_end!(literal = literal(b'{', b'}'), start = "{", end = "}");
 }
