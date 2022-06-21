@@ -7,13 +7,13 @@ use crate::{
             action::StringExtendAction,
             handlers::{
                 handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
-                handle_line_continuation, handle_string_end,
+                handle_line_continuation, handle_processed_string_content, handle_string_end,
             },
             literal::StringLiteralExtend,
             types::Interpolation,
         },
     },
-    token::{Loc, Token},
+    token::token,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -60,27 +60,11 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
             handle_escape(buffer, start)?;
 
             handle_interpolation(&mut self.interpolation, buffer, start)?;
-            {
-                let mut string_end = handle_string_end(self.ends_with, buffer, start);
-                match &mut string_end {
-                    ControlFlow::Break(StringExtendAction::FoundStringEnd {
-                        token: Token(_, Loc(start, end)),
-                    }) if buffer.slice(*start, *end) == Some(b"/") => {
-                        // Regexp has a special handling of string end
-                        // There can be regexp options after trailing `/`
-                        //
-                        // Here we read them and "extend" loc of the tSTRING_END to include options
-                        if let Some(RegexpOptions { length }) =
-                            RegexpOptions::lookahead(buffer.for_lookahead(), *end)
-                        {
-                            *end += length;
-                            buffer.set_pos(*end);
-                        }
-                    }
-                    _ => {}
-                }
-                string_end
-            }?;
+
+            // first check if there's a '/oix' regexp end
+            handle_regexp_end_with_options(buffer, start, self.ends_with)?;
+            // and then check a normal regexp end
+            handle_string_end(self.ends_with, buffer, start)?;
 
             buffer.skip_byte();
         }
@@ -110,6 +94,30 @@ impl<'a> Lookahead<'a> for RegexpOptions {
             })
         }
     }
+}
+
+fn handle_regexp_end_with_options<'a>(
+    buffer: &mut BufferWithCursor<'a>,
+    start: usize,
+    ends_with: u8,
+) -> ControlFlow<StringExtendAction<'a>> {
+    if ends_with == b'/' && buffer.current_byte() == Some(b'/') {
+        // definitely a /foo/ regexp end
+        handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
+
+        if let Some(RegexpOptions { length }) =
+            RegexpOptions::lookahead(buffer.for_lookahead(), buffer.pos() + 1)
+        {
+            let token_end = buffer.pos() + 1 + length;
+            let action = ControlFlow::Break(StringExtendAction::FoundStringEnd {
+                token: token!(tSTRING_END, buffer.pos(), token_end),
+            });
+            buffer.set_pos(token_end);
+            return action;
+        }
+    }
+
+    ControlFlow::Continue(())
 }
 
 #[cfg(test)]
@@ -161,5 +169,15 @@ mod tests {
                 "expected EOF after tSTRING_END"
             )
         }
+    );
+    assert_emits_extend_action!(
+        test = test_regexp_options_for_percent_r_regexp,
+        literal = literal(b'{', b'}'),
+        input = b"}ox",
+        action = StringExtendAction::FoundStringEnd {
+            token: token!(tSTRING_END, 0, 1)
+        },
+        pre = |_| {},
+        post = |_| {}
     );
 }
