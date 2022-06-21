@@ -54,21 +54,12 @@ macro_rules! assert_ignores_escaped_slash_byte {
     (
         literal = $literal:expr
     ) => {
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_escaped_slash_byte,
             literal = $literal,
             input = b"foo\\\tbar",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from("foo\\\tbar")), 0, 8)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 8 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"foo\\\tbar")), 0, 8),
+            pre = |_| {}
         );
     };
 }

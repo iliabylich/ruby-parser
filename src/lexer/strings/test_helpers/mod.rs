@@ -2,7 +2,7 @@ mod assert_emits_extend_action;
 pub(crate) use assert_emits_extend_action::assert_emits_extend_action;
 
 mod assert_emits_token;
-pub(crate) use assert_emits_token::assert_emits_token;
+pub(crate) use assert_emits_token::assert_emits_1_token_and_then_eof;
 
 mod assert_emits_eof;
 pub(crate) use assert_emits_eof::assert_emits_eof;

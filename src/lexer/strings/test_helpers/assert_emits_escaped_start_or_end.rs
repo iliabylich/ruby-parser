@@ -4,38 +4,20 @@ macro_rules! assert_emits_escaped_start_or_end {
         start = $start:literal,
         end = $end:literal
     ) => {
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_escaped_start,
             literal = $literal,
             input = concat!("\\", $start).as_bytes(),
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from($start)), 0, 2)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 2 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from($start)), 0, 2),
+            pre = |_| {}
         );
 
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_escaped_end,
             literal = $literal,
             input = concat!("\\", $end).as_bytes(),
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from($end)), 0, 2)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 2 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from($end)), 0, 2),
+            pre = |_| {}
         );
     };
 }

@@ -79,111 +79,57 @@ macro_rules! assert_emits_interpolated_value {
         );
 
         // "#@@1"
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_interp_raw_cvar_invalid,
             literal = $literal,
             input = b"#@@1",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from(b"#@@1")), 0, 4)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 4 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@1")), 0, 4),
+            pre = |_| {}
         );
 
         // "#@1"
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_interp_raw_ivar_invalid,
             literal = $literal,
             input = b"#@1",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from(b"#@1")), 0, 3)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 3 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@1")), 0, 3),
+            pre = |_| {}
         );
 
         // "#$("
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_interp_raw_gvar_invalid,
             literal = $literal,
             input = b"#$(",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from(b"#$(")), 0, 3)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 3 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#$(")), 0, 3),
+            pre = |_| {}
         );
 
         // "#@@"
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_interp_raw_cvar_no_id,
             literal = $literal,
             input = b"#@@",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from(b"#@@")), 0, 3)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 3 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@")), 0, 3),
+            pre = |_| {}
         );
 
         // "#@"
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_interp_raw_ivar_no_id,
             literal = $literal,
             input = b"#@",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from(b"#@")), 0, 2)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 2 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@")), 0, 2),
+            pre = |_| {}
         );
 
         // "#$ "
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_interp_raw_gvar_no_id,
             literal = $literal,
             input = b"#$ ",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from(b"#$ ")), 0, 3)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 3 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#$ ")), 0, 3),
+            pre = |_| {}
         );
     };
 }

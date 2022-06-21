@@ -2,21 +2,12 @@ macro_rules! assert_emits_escaped_slash_octal {
     (
         literal = $literal:expr
     ) => {
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_escaped_slash_octal,
             literal = $literal,
             input = b"\\123",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from("S")), 0, 4)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 4 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"S")), 0, 4),
+            pre = |_| {}
         );
     };
 }
@@ -26,21 +17,12 @@ macro_rules! assert_ignores_escaped_slash_octal {
     (
         literal = $literal:expr
     ) => {
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_escaped_slash_octal,
             literal = $literal,
             input = b"\\123",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::from("\\123")), 0, 4)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 4 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::from(b"\\123")), 0, 4),
+            pre = |_| {}
         );
     };
 }

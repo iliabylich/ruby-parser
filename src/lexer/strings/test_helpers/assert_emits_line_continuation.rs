@@ -2,21 +2,12 @@ macro_rules! assert_emits_line_continuation {
     (
         literal = $literal:expr
     ) => {
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_line_continuation,
             literal = $literal,
             input = b"\\\n",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::Borrowed(b"")), 0, 2)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 2 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::Borrowed(b"")), 0, 2),
+            pre = |_| {}
         );
     };
 }
@@ -26,21 +17,12 @@ macro_rules! assert_ignores_line_continuation {
     (
         literal = $literal:expr
     ) => {
-        assert_emits_extend_action!(
+        assert_emits_1_token_and_then_eof!(
             test = test_line_continuation,
             literal = $literal,
             input = b"\\\n",
-            action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_CONTENT(StringContent::Borrowed(b"\\\n")), 0, 2)
-            },
-            pre = |_| {},
-            post = |action: StringExtendAction| {
-                assert_eq!(
-                    action,
-                    StringExtendAction::EmitEOF { at: 2 },
-                    "2nd action daction doesn't match"
-                )
-            }
+            token = token!(tSTRING_CONTENT(StringContent::Borrowed(b"\\\n")), 0, 2),
+            pre = |_| {}
         );
     };
 }
