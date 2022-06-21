@@ -766,9 +766,11 @@ impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
             _ => {}
         }
 
-        self.buffer.set_pos(start);
+        // otherwise it's a `_foo`/`_foo?`/`_foo!` identifier
         Ident::parse(&mut self.buffer)
     }
 }
 assert_lex!(test_tEOF_at__END__, b"__END__", tEOF, b"", 0..0);
 assert_lex!(test_tEOF_at_NL___END__, b"\n__END__", tEOF, b"", 1..1);
+assert_lex!(test_underscore_ident, b"_foo", tIDENTIFIER, b"_foo", 0..4);
+assert_lex!(test_underscore_fid, b"_foo?", tFID, b"_foo?", 0..5);
