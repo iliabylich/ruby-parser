@@ -90,7 +90,7 @@ macro_rules! assert_emits_interpolated_value {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 4 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -108,7 +108,7 @@ macro_rules! assert_emits_interpolated_value {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 3 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -126,7 +126,7 @@ macro_rules! assert_emits_interpolated_value {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 3 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -144,7 +144,7 @@ macro_rules! assert_emits_interpolated_value {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 3 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -162,7 +162,7 @@ macro_rules! assert_emits_interpolated_value {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 2 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -180,7 +180,7 @@ macro_rules! assert_emits_interpolated_value {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 3 },
                     "2nd action daction doesn't match"
                 )
             }

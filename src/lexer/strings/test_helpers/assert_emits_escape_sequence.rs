@@ -13,7 +13,7 @@ macro_rules! assert_emits_escaped_slash_u {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 6 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -37,7 +37,7 @@ macro_rules! assert_emits_escaped_slash_octal {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 4 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -61,7 +61,7 @@ macro_rules! assert_emits_escaped_slash_x {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 4 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -85,7 +85,7 @@ macro_rules! assert_emits_escaped_slash_meta_control {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 7 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -137,7 +137,10 @@ macro_rules! assert_emits_escaped_slash_byte {
             );
 
             action = literal.extend(&mut buffer, 0);
-            assert_eq!(action, ControlFlow::Break(StringExtendAction::EmitEOF));
+            assert_eq!(
+                action,
+                ControlFlow::Break(StringExtendAction::EmitEOF { at: 8 })
+            );
         }
     };
 }

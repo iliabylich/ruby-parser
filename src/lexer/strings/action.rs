@@ -5,6 +5,6 @@ pub(crate) enum StringExtendAction<'a> {
     EmitToken { token: Token<'a> },
     FoundStringEnd { token: Token<'a> },
     FoundInterpolation { token: Token<'a> },
-    EmitEOF,
+    EmitEOF { at: usize },
     ReadInterpolatedContent,
 }

@@ -4,7 +4,7 @@ macro_rules! assert_emits_eof {
             test = test_eof,
             literal = $literal,
             input = b"",
-            action = StringExtendAction::EmitEOF,
+            action = StringExtendAction::EmitEOF { at: 0 },
             pre = |_| {},
             post = |_| {}
         );

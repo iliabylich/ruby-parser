@@ -14,7 +14,7 @@ macro_rules! assert_emits_string_end {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 1 },
                     "2nd action daction doesn't match"
                 )
             }

@@ -156,11 +156,17 @@ mod tests {
     assert_emits_extend_action!(
         test = test_regexp_options,
         literal = StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)),
-        input = b"/ox foo",
+        input = b"/ox",
         action = StringExtendAction::FoundStringEnd {
             token: token!(tSTRING_END, 0, 3)
         },
         pre = |_| {},
-        post = |_| {}
+        post = |action: StringExtendAction| {
+            assert_eq!(
+                action,
+                StringExtendAction::EmitEOF { at: 3 },
+                "2nd action daction doesn't match"
+            )
+        }
     );
 }

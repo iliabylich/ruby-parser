@@ -132,11 +132,11 @@ impl<'a> Lexer<'a> {
                 // and should read an interpolated value
                 self.tokenize_normally()
             }
-            StringExtendAction::EmitEOF => {
+            StringExtendAction::EmitEOF { at: eof_pos } => {
                 // close current literal
                 self.string_literals.pop();
                 // and emit EOF
-                token!(tEOF, self.buffer.pos(), self.buffer.pos())
+                token!(tEOF, eof_pos, eof_pos)
             }
         }
     }

@@ -15,7 +15,7 @@ macro_rules! assert_emits_escaped_start_or_end {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 2 },
                     "2nd action daction doesn't match"
                 )
             }
@@ -32,7 +32,7 @@ macro_rules! assert_emits_escaped_start_or_end {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF,
+                    StringExtendAction::EmitEOF { at: 2 },
                     "2nd action daction doesn't match"
                 )
             }

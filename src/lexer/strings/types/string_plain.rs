@@ -55,7 +55,13 @@ mod tests {
         input = b"}",
         token = token!(tSTRING_CONTENT(StringContent::from(b"}")), 0, 1),
         pre = |_| {},
-        post = |_| {}
+        post = |action: StringExtendAction| {
+            assert_eq!(
+                action,
+                StringExtendAction::EmitEOF { at: 1 },
+                "2nd action daction doesn't match"
+            )
+        }
     );
 
     #[test]

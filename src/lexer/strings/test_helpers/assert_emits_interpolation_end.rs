@@ -14,7 +14,13 @@ macro_rules! assert_emits_interpolation_end {
                     _ => panic!("String literal {:?} doesn't embed Interpolation", literal),
                 };
             },
-            post = |_| {}
+            post = |action: StringExtendAction| {
+                assert_eq!(
+                    action,
+                    StringExtendAction::EmitEOF { at: 1 },
+                    "2nd action daction doesn't match"
+                )
+            }
         );
     };
 }
