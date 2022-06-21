@@ -6,7 +6,7 @@ use crate::lexer::{
         action::StringExtendAction,
         handlers::{
             handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
-            handle_string_end,
+            handle_line_continuation, handle_string_end,
         },
         literal::StringLiteralExtend,
         types::Interpolation,
@@ -47,6 +47,8 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
 
         loop {
             handle_eof(buffer, start)?;
+
+            handle_line_continuation(buffer, start)?;
 
             handle_escape(buffer, start)?;
 
@@ -92,4 +94,7 @@ mod tests {
 
     // escaped literal start/end handling
     assert_emits_escaped_start_or_end!(literal = literal(b'{', b'}'), start = "{", end = "}");
+
+    // line continuation handling
+    assert_emits_line_continuation!(literal = dummy_literal());
 }

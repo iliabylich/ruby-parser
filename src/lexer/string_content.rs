@@ -70,6 +70,12 @@ impl PartialEq for StringContent<'_> {
     }
 }
 
+impl<const N: usize> PartialEq<[u8; N]> for StringContent<'_> {
+    fn eq(&self, other: &[u8; N]) -> bool {
+        self.as_bytes() == other
+    }
+}
+
 use std::ops::{Add, AddAssign};
 
 impl<'a> Add for StringContent<'a> {

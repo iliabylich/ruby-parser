@@ -21,3 +21,6 @@ pub(crate) use assert_emits_escape_sequence::*;
 
 mod assert_emits_escaped_start_or_end;
 pub(crate) use assert_emits_escaped_start_or_end::assert_emits_escaped_start_or_end;
+
+mod assert_emits_line_continuation;
+pub(crate) use assert_emits_line_continuation::assert_emits_line_continuation;

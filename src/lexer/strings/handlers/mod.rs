@@ -15,3 +15,6 @@ pub(crate) use handle_processed_string_content::handle_processed_string_content;
 
 mod handle_escape;
 pub(crate) use handle_escape::handle_escape;
+
+mod handle_line_continuation;
+pub(crate) use handle_line_continuation::handle_line_continuation;
