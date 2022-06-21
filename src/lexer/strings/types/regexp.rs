@@ -3,17 +3,17 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::{Buffer, BufferWithCursor, Lookahead},
-        string_content::StringContent,
         strings::{
             action::StringExtendAction,
             handlers::{
-                handle_eof, handle_interpolation, handle_interpolation_end, handle_string_end,
+                handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
+                handle_line_continuation, handle_string_end,
             },
             literal::StringLiteralExtend,
             types::Interpolation,
         },
     },
-    token::{token, Loc, Token},
+    token::{Loc, Token},
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -48,63 +48,39 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
         buffer: &mut BufferWithCursor<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
-        let mut action = self._extend(buffer, current_curly_nest);
-
-        // Regexp has a special handling of string end
-        // There can be regexp options after trailing `/`
-        //
-        // Here we read them and "extend" loc of the tSTRING_END to include options
-        match &mut action {
-            ControlFlow::Break(StringExtendAction::FoundStringEnd {
-                token: Token(_, Loc(_, end)),
-            }) if self.ends_with == b'/' => {
-                if let Some(RegexpOptions { length }) =
-                    RegexpOptions::lookahead(buffer.for_lookahead(), *end)
-                {
-                    *end += length;
-                    buffer.set_pos(*end);
-                }
-            }
-            _ => {}
-        }
-
-        action
-    }
-}
-
-impl Regexp {
-    #[must_use]
-    fn _extend<'a>(
-        &mut self,
-        buffer: &mut BufferWithCursor<'a>,
-        current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
         handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;
 
         let start = buffer.pos();
 
         loop {
             handle_eof(buffer, start)?;
-            handle_interpolation(&mut self.interpolation, buffer, start)?;
-            handle_string_end(self.ends_with, buffer, start)?;
 
-            if buffer.lookahead(b"\\\n") {
-                // just emit what we've got so far
-                // parser will merge two consectuive string literals
-                let end = buffer.pos();
-                let action = StringExtendAction::EmitToken {
-                    token: token!(
-                        tSTRING_CONTENT(StringContent::from(
-                            buffer.slice(start, end).expect("bug")
-                        )),
-                        start,
-                        end
-                    ),
-                };
-                // and skip escaped NL
-                buffer.set_pos(buffer.pos() + 2);
-                return ControlFlow::Break(action);
-            }
+            handle_line_continuation(buffer, start)?;
+
+            handle_escape(buffer, start)?;
+
+            handle_interpolation(&mut self.interpolation, buffer, start)?;
+            {
+                let mut string_end = handle_string_end(self.ends_with, buffer, start);
+                match &mut string_end {
+                    ControlFlow::Break(StringExtendAction::FoundStringEnd {
+                        token: Token(_, Loc(start, end)),
+                    }) if buffer.slice(*start, *end) == Some(b"/") => {
+                        // Regexp has a special handling of string end
+                        // There can be regexp options after trailing `/`
+                        //
+                        // Here we read them and "extend" loc of the tSTRING_END to include options
+                        if let Some(RegexpOptions { length }) =
+                            RegexpOptions::lookahead(buffer.for_lookahead(), *end)
+                        {
+                            *end += length;
+                            buffer.set_pos(*end);
+                        }
+                    }
+                    _ => {}
+                }
+                string_end
+            }?;
 
             buffer.skip_byte();
         }
@@ -140,22 +116,39 @@ impl<'a> Lookahead<'a> for RegexpOptions {
 mod tests {
     use crate::lexer::strings::{test_helpers::*, types::Regexp, StringLiteral};
 
-    assert_emits_eof!(StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)));
+    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral<'static> {
+        StringLiteral::Regexp(Regexp::new(starts_with, ends_with, 0))
+    }
+
+    fn dummy_literal() -> StringLiteral<'static> {
+        literal(b'/', b'/')
+    }
+
+    // EOF handling
+    assert_emits_eof!(dummy_literal());
 
     // interpolation END handling
-    assert_emits_interpolation_end!(StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)));
+    assert_emits_interpolation_end!(dummy_literal());
 
     // interpolation VALUE handling
-    assert_emits_interpolated_value!(StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)));
+    assert_emits_interpolated_value!(dummy_literal());
 
-    assert_emits_string_end!(
-        literal = StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)),
-        input = b"/"
-    );
+    // literal end handling
+    assert_emits_string_end!(literal = literal(b'|', b'|'), input = b"|");
 
+    // escape sequences handling
+    assert_emits_escape_sequence!(literal = dummy_literal());
+
+    // escaped literal start/end handling
+    assert_emits_escaped_start_or_end!(literal = literal(b'{', b'}'), start = "{", end = "}");
+
+    // line continuation handling
+    assert_emits_line_continuation!(literal = dummy_literal());
+
+    // regexp options handling
     assert_emits_extend_action!(
         test = test_regexp_options,
-        literal = StringLiteral::Regexp(Regexp::new(b'/', b'/', 0)),
+        literal = literal(b'/', b'/'),
         input = b"/ox",
         action = StringExtendAction::FoundStringEnd {
             token: token!(tSTRING_END, 0, 3)
@@ -165,7 +158,7 @@ mod tests {
             assert_eq!(
                 action,
                 StringExtendAction::EmitEOF { at: 3 },
-                "2nd action daction doesn't match"
+                "expected EOF after tSTRING_END"
             )
         }
     );

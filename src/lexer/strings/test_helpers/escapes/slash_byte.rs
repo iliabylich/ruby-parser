@@ -12,6 +12,7 @@ macro_rules! assert_emits_escaped_slash_byte {
                 },
                 token::token,
             };
+            use std::ops::ControlFlow;
             let mut buffer = BufferWithCursor::new(b"foo\\\tbar");
             let mut literal = $literal;
             let mut action;
