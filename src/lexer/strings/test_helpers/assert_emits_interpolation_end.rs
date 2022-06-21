@@ -25,3 +25,33 @@ macro_rules! assert_emits_interpolation_end {
     };
 }
 pub(crate) use assert_emits_interpolation_end;
+
+macro_rules! assert_ignores_interpolation_end {
+    ($literal:expr) => {
+        assert_emits_extend_action!(
+            test = test_interpolation_end,
+            literal = $literal,
+            input = b"}",
+            action = StringExtendAction::EmitToken {
+                token: token!(tSTRING_CONTENT(StringContent::from(b"}")), 0, 1)
+            },
+            pre = |literal: &mut StringLiteral| {
+                match literal {
+                    StringLiteral::StringPlain(_) => {}
+                    _ => panic!(
+                        "{:?} DOES support Interpolation, the test makes no sense",
+                        literal
+                    ),
+                };
+            },
+            post = |action: StringExtendAction| {
+                assert_eq!(
+                    action,
+                    StringExtendAction::EmitEOF { at: 1 },
+                    "2nd action daction doesn't match"
+                )
+            }
+        );
+    };
+}
+pub(crate) use assert_ignores_interpolation_end;

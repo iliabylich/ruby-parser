@@ -11,16 +11,16 @@ mod assert_emits_string_end;
 pub(crate) use assert_emits_string_end::assert_emits_string_end;
 
 mod assert_emits_interpolation_end;
-pub(crate) use assert_emits_interpolation_end::assert_emits_interpolation_end;
+pub(crate) use assert_emits_interpolation_end::*;
 
 mod assert_emits_interpolated_value;
 pub(crate) use assert_emits_interpolated_value::assert_emits_interpolated_value;
 
-mod assert_emits_escape_sequence;
-pub(crate) use assert_emits_escape_sequence::*;
+mod escapes;
+pub(crate) use escapes::*;
 
 mod assert_emits_escaped_start_or_end;
 pub(crate) use assert_emits_escaped_start_or_end::assert_emits_escaped_start_or_end;
 
 mod assert_emits_line_continuation;
-pub(crate) use assert_emits_line_continuation::assert_emits_line_continuation;
+pub(crate) use assert_emits_line_continuation::*;

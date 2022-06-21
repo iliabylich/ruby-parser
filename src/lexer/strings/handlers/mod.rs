@@ -18,3 +18,6 @@ pub(crate) use handle_escape::handle_escape;
 
 mod handle_line_continuation;
 pub(crate) use handle_line_continuation::handle_line_continuation;
+
+mod handle_escaped_start_or_end;
+pub(crate) use handle_escaped_start_or_end::handle_escaped_start_or_end;
