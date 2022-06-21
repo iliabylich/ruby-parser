@@ -136,21 +136,21 @@ impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
                 if let Some(HeredocId {
                     token,
                     id: (id_start, id_end),
-                    indent,
-                    interp,
+                    squiggly,
+                    interpolated,
                 }) = HeredocId::parse(&mut self.buffer)
                 {
-                    let interp = if interp {
+                    let interpolated = if interpolated {
                         Some(Interpolation::new(self.curly_nest))
                     } else {
                         None
                     };
                     self.string_literals
                         .push(StringLiteral::Heredoc(Heredoc::new(
-                            interp,
+                            interpolated,
                             self.buffer.slice(id_start, id_end).expect("bug"),
                             id_end,
-                            indent,
+                            squiggly,
                         )));
                     return token;
                 }

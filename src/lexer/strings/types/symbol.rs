@@ -7,15 +7,15 @@ use crate::lexer::{
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub(crate) struct Symbol {
-    supports_interpolation: bool,
+    interpolated: bool,
     currently_in_interpolation: bool,
     interpolation_started_with_curly_level: usize,
 }
 
 impl Symbol {
-    pub(crate) fn new(interp: bool, curly_level: usize) -> Self {
+    pub(crate) fn new(interpolated: bool, curly_level: usize) -> Self {
         Self {
-            supports_interpolation: interp,
+            interpolated,
             currently_in_interpolation: false,
             interpolation_started_with_curly_level: curly_level,
         }

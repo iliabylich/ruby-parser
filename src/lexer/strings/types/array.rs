@@ -7,7 +7,7 @@ use crate::lexer::{
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
 pub(crate) struct Array {
-    supports_interpolation: bool,
+    interpolated: bool,
     currently_in_interpolation: bool,
 
     starts_with: u8,
@@ -17,9 +17,14 @@ pub(crate) struct Array {
 }
 
 impl Array {
-    pub(crate) fn new(interp: bool, starts_with: u8, ends_with: u8, curly_level: usize) -> Self {
+    pub(crate) fn new(
+        interpolated: bool,
+        starts_with: u8,
+        ends_with: u8,
+        curly_level: usize,
+    ) -> Self {
         Self {
-            supports_interpolation: interp,
+            interpolated: interpolated,
             currently_in_interpolation: false,
             starts_with,
             ends_with,

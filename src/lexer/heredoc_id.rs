@@ -10,8 +10,8 @@ use crate::{
 pub(crate) struct HeredocId<'a> {
     pub(crate) token: Token<'a>,
     pub(crate) id: (usize, usize),
-    pub(crate) interp: bool,
-    pub(crate) indent: bool,
+    pub(crate) interpolated: bool,
+    pub(crate) squiggly: bool,
 }
 
 pub(crate) enum HeredocIdError {
@@ -29,22 +29,22 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
 
         let mut id_start = start;
         let token_value;
-        let indent;
-        let interp;
+        let squiggly;
+        let interpolated;
         let quote;
 
         // Check if there's a `-`/`~` sign
         match buffer.byte_at(id_start) {
             Some(b'~') => {
                 id_start += 1;
-                indent = true;
+                squiggly = true;
             }
             Some(b'-') => {
                 id_start += 1;
-                indent = false;
+                squiggly = false;
             }
             _ => {
-                indent = false;
+                squiggly = false;
             }
         }
 
@@ -52,25 +52,25 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
         match buffer.byte_at(id_start) {
             Some(b'\'') => {
                 token_value = TokenValue::tSTRING_BEG;
-                interp = false;
+                interpolated = false;
                 id_start += 1;
                 quote = Some(b'\'');
             }
             Some(b'"') => {
                 token_value = TokenValue::tDSTRING_BEG;
-                interp = true;
+                interpolated = true;
                 id_start += 1;
                 quote = Some(b'"');
             }
             Some(b'`') => {
                 token_value = TokenValue::tXSTRING_BEG;
-                interp = true;
+                interpolated = true;
                 id_start += 1;
                 quote = Some(b'`');
             }
             _ => {
                 token_value = TokenValue::tDSTRING_BEG;
-                interp = true;
+                interpolated = true;
                 quote = None;
             }
         }
@@ -114,8 +114,8 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
         Ok(Some(Self {
             token,
             id: (id_start, id_end),
-            indent,
-            interp,
+            squiggly,
+            interpolated,
         }))
     }
 }
@@ -164,8 +164,8 @@ mod tests {
         output = Some(HeredocId {
             token: token!(tDSTRING_BEG, 0, 7),
             id: (3, 7),
-            interp: true,
-            indent: false
+            interpolated: true,
+            squiggly: false
         })
     );
     assert_heredoc_id!(
@@ -174,8 +174,8 @@ mod tests {
         output = Some(HeredocId {
             token: token!(tDSTRING_BEG, 0, 7),
             id: (3, 7),
-            interp: true,
-            indent: true
+            interpolated: true,
+            squiggly: true
         })
     );
 
@@ -186,8 +186,8 @@ mod tests {
         output = Some(HeredocId {
             token: token!(tSTRING_BEG, 0, 9),
             id: (4, 8),
-            interp: false,
-            indent: false
+            interpolated: false,
+            squiggly: false
         })
     );
     assert_heredoc_id!(
@@ -196,8 +196,8 @@ mod tests {
         output = Some(HeredocId {
             token: token!(tDSTRING_BEG, 0, 9),
             id: (4, 8),
-            interp: true,
-            indent: false
+            interpolated: true,
+            squiggly: false
         })
     );
     assert_heredoc_id!(
@@ -206,8 +206,8 @@ mod tests {
         output = Some(HeredocId {
             token: token!(tXSTRING_BEG, 0, 9),
             id: (4, 8),
-            interp: true,
-            indent: false
+            interpolated: true,
+            squiggly: false
         })
     );
 

@@ -11,7 +11,7 @@ pub(crate) struct Heredoc<'a> {
     ends_with: &'a [u8],
 
     heredoc_id_ended_at: usize,
-    indent: bool,
+    squiggly: bool,
 }
 
 impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
@@ -29,13 +29,13 @@ impl<'a> Heredoc<'a> {
         interpolation: Option<Interpolation>,
         ends_with: &'a [u8],
         heredoc_id_ended_at: usize,
-        indent: bool,
+        squiggly: bool,
     ) -> Self {
         Self {
             interpolation,
             ends_with,
             heredoc_id_ended_at,
-            indent,
+            squiggly,
         }
     }
 }
