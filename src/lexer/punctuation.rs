@@ -6,9 +6,11 @@ use crate::lexer::{
 };
 use crate::token::{token, Token};
 
-use crate::lexer::ident::Ident;
+use crate::lexer::ident::{Ident, IdentSuffix};
 use crate::lexer::numbers::parse_number;
 use crate::lexer::qmark::QMark;
+
+use super::buffer::Lookahead;
 
 impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -546,7 +548,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
         match self.current_byte() {
             Some(b':') => {
                 self.skip_byte();
-                token!(tCOLON2, start, start + 2)
+                return token!(tCOLON2, start, start + 2);
             }
             Some(b'"') => {
                 // :"..." symbol
@@ -554,7 +556,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
                 let token = token!(tDSYMBEG, start, start + 2);
                 self.string_literals
                     .push(StringLiteral::Symbol(Symbol::new(true, self.curly_nest)));
-                token
+                return token;
             }
             Some(b'\'') => {
                 // :'...' symbol
@@ -562,10 +564,30 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
                 let token = token!(tSYMBEG, start, start + 2);
                 self.string_literals
                     .push(StringLiteral::Symbol(Symbol::new(false, self.curly_nest)));
-                token
+                return token;
             }
-            _ => token!(tCOLON, start, start + 1),
+            _ => {}
         }
+
+        // It still can be a plain `:symbol`
+        if self.required_new_expr {
+            if let Some(Ident { length }) = Ident::lookahead(self.buffer.for_lookahead(), start + 1)
+            {
+                let mut end = start + 1 + length;
+                dbg!(start);
+                dbg!(length);
+                dbg!(end);
+                if let Some(IdentSuffix { .. }) =
+                    IdentSuffix::lookahead(self.buffer.for_lookahead(), end)
+                {
+                    end += 1;
+                }
+                self.buffer.set_pos(end);
+                return token!(tSYMBOL, start, end);
+            }
+        }
+
+        token!(tCOLON, start, start + 1)
     }
 }
 assert_lex!(test_tCOLON2, b"::", tCOLON2, b"::", 0..2);
@@ -608,6 +630,28 @@ assert_lex!(
     }
 );
 assert_lex!(test_tCOLON, b":", tCOLON, b":", 0..1);
+assert_lex!(
+    test_tSYMBOL,
+    b":foo",
+    tSYMBOL,
+    b":foo",
+    0..4,
+    setup = |lexer: &mut Lexer| {
+        lexer.require_new_expr();
+    },
+    assert = |_| {}
+);
+assert_lex!(
+    test_tSYMBOL_with_suffix,
+    b":foo?",
+    tSYMBOL,
+    b":foo?",
+    0..5,
+    setup = |lexer: &mut Lexer| {
+        lexer.require_new_expr();
+    },
+    assert = |_| {}
+);
 
 impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
