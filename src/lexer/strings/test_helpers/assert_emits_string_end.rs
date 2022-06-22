@@ -30,9 +30,9 @@ macro_rules! assert_emits_string_end {
             use crate::{
                 lexer::{
                     buffer::BufferWithCursor,
-                    string_content::StringContent,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
+                string_content::StringContent,
                 token::token,
             };
             use std::ops::ControlFlow;

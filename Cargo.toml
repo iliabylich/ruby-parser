@@ -1,8 +1,11 @@
 [package]
+edition = "2021"
 name = "ruby-parser"
 version = "0.1.0"
-edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+
+[build-dependencies]
+lib-ruby-parser-nodes = {version = "0.53.0"}

@@ -3,7 +3,6 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::{BufferWithCursor, Lookahead},
-        string_content::StringContent,
         strings::{
             action::StringExtendAction,
             escapes::{
@@ -13,6 +12,7 @@ use crate::{
             handlers::handle_processed_string_content,
         },
     },
+    string_content::StringContent,
     token::token,
 };
 

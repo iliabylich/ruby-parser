@@ -1,2 +1,6 @@
 /target
 /Cargo.lock
+
+# codegen
+src/nodes/types/*
+src/nodes/node_enum.rs

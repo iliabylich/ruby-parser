@@ -9,7 +9,6 @@ pub(crate) mod percent;
 pub(crate) mod punctuation;
 pub(crate) mod qmark;
 pub(crate) mod skip_ws;
-pub(crate) mod string_content;
 pub(crate) mod strings;
 
 use crate::token::{token, Token};

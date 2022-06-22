@@ -100,3 +100,9 @@ impl<'a> AddAssign for StringContent<'a> {
         *self = StringContent::Owned(bytes)
     }
 }
+
+impl<'a> StringContent<'a> {
+    pub(crate) fn to_string_lossy(&self) -> String {
+        String::from_utf8_lossy(self.as_bytes()).into_owned()
+    }
+}

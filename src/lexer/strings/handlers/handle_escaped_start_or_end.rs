@@ -3,9 +3,9 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         buffer::BufferWithCursor,
-        string_content::StringContent,
         strings::{action::StringExtendAction, handlers::handle_processed_string_content},
     },
+    string_content::StringContent,
     token::token,
 };
 

@@ -1,7 +1,8 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{buffer::Buffer, string_content::StringContent, strings::action::StringExtendAction},
+    lexer::{buffer::Buffer, strings::action::StringExtendAction},
+    string_content::StringContent,
     token::token,
 };
 

@@ -1,4 +1,4 @@
-use crate::lexer::string_content::StringContent;
+use crate::string_content::StringContent;
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Token<'a>(pub TokenValue<'a>, pub Loc);

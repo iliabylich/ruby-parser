@@ -13,9 +13,9 @@ macro_rules! assert_emits_extend_action {
             use crate::{
                 lexer::{
                     buffer::BufferWithCursor,
-                    string_content::StringContent,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
+                string_content::StringContent,
                 token::token,
             };
             let mut literal = $literal;
