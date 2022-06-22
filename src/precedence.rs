@@ -1,4 +1,3 @@
-use crate::op_precedence::OpPrecedence;
 use crate::token::TokenValue;
 
 #[allow(non_camel_case_types)]
@@ -147,31 +146,50 @@ impl std::convert::TryFrom<&TokenValue<'_>> for BinOp {
     }
 }
 
-impl BinOp {
-    pub(crate) fn precedence(&self) -> OpPrecedence {
-        use BinOp::*;
+macro_rules! left_assoc {
+    ($n:expr) => {
+        Some(($n * 2, $n * 2 + 1))
+    };
+}
+
+macro_rules! right_assoc {
+    ($n:expr) => {
+        Some(($n * 2 + 1, $n * 2))
+    };
+}
+
+macro_rules! non_assoc {
+    ($n:expr) => {
+        left_assoc!($n)
+    };
+}
+
+impl<'a> TokenValue<'a> {
+    pub(crate) fn precedence(&self) -> Option<(u8, u8)> {
+        use TokenValue::*;
 
         match self {
-            kIF_MOD | kUNLESS_MOD | kWHILE_MOD | kUNTIL_MOD | kIN => OpPrecedence::None(1),
-            kOR | kAND => OpPrecedence::Left(1),
-            kNOT => OpPrecedence::Right(3),
-            kDEFINED => OpPrecedence::None(4),
-            tEQL | tOP_ASGN => OpPrecedence::Right(5),
-            kRESCUE_MOD => OpPrecedence::Left(6),
-            tEH | tCOLON => OpPrecedence::Right(7),
-            tDOT2 | tDOT3 | tBDOT2 | tBDOT3 => OpPrecedence::None(8),
-            tOROP => OpPrecedence::Left(9),
-            tANDOP => OpPrecedence::Left(10),
-            tCMP | tEQ | tEQQ | tNEQ | tMATCH | tNMATCH => OpPrecedence::None(11),
-            tGT | tGEQ | tLT | tLEQ => OpPrecedence::Left(12),
-            tPIPE | tCARET => OpPrecedence::Left(13),
-            tAMPER => OpPrecedence::Left(14),
-            tLSHFT | tRSHFT => OpPrecedence::Left(15),
-            tPLUS | tMINUS => OpPrecedence::Left(16),
-            tSTAR | tDIVIDE | tPERCENT => OpPrecedence::Left(17),
-            tUMINUS_NUM | tUMINUS => OpPrecedence::Right(18),
-            tPOW => OpPrecedence::Right(19),
-            tBANG | tTILDE | tUPLUS => OpPrecedence::Right(20),
+            kIF_MOD | kUNLESS_MOD | kWHILE_MOD | kUNTIL_MOD | kIN => non_assoc!(1),
+            kOR | kAND => left_assoc!(2),
+            kNOT => right_assoc!(3),
+            kDEFINED => non_assoc!(4),
+            tEQL | tOP_ASGN => right_assoc!(5),
+            kRESCUE_MOD => left_assoc!(6),
+            tEH | tCOLON => right_assoc!(7),
+            tDOT2 | tDOT3 | tBDOT2 | tBDOT3 => non_assoc!(8),
+            tOROP => left_assoc!(9),
+            tANDOP => left_assoc!(10),
+            tCMP | tEQ | tEQQ | tNEQ | tMATCH | tNMATCH => non_assoc!(11),
+            tGT | tGEQ | tLT | tLEQ => left_assoc!(12),
+            tPIPE | tCARET => left_assoc!(13),
+            tAMPER => left_assoc!(14),
+            tLSHFT | tRSHFT => left_assoc!(15),
+            tPLUS | tMINUS => left_assoc!(16),
+            tSTAR | tDIVIDE | tPERCENT => left_assoc!(17),
+            tUMINUS_NUM | tUMINUS => right_assoc!(18),
+            tPOW => right_assoc!(19),
+            tBANG | tTILDE | tUPLUS => right_assoc!(20),
+            _ => None,
         }
     }
 }

@@ -1,7 +1,10 @@
 use std::ops::ControlFlow;
 
-use crate::lexer::buffer::{Buffer, BufferWithCursor};
-use crate::token::{Loc, Token, TokenValue};
+use crate::{
+    lexer::buffer::{Buffer, BufferWithCursor},
+    token::{Token, TokenValue},
+    Loc,
+};
 
 pub(crate) mod scan;
 pub(crate) mod try_to_extend_with;

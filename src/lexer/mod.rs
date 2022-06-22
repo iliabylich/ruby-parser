@@ -85,6 +85,13 @@ impl<'a> Lexer<'a> {
         token
     }
 
+    pub(crate) fn take_token(&mut self) -> Token<'a> {
+        match self.current_token.take() {
+            Some(token) => token,
+            None => self.next_token(),
+        }
+    }
+
     #[cfg(test)]
     pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
         let mut tokens = vec![];
@@ -245,10 +252,7 @@ macro_rules! assert_lex {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
-            use crate::{
-                lexer::Lexer,
-                token::{Loc, TokenValue::*},
-            };
+            use crate::{lexer::Lexer, token::TokenValue::*, Loc};
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
             let token = lexer.current_token();

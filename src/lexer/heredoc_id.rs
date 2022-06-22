@@ -3,7 +3,8 @@ use crate::{
         buffer::{Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
     },
-    token::{Loc, Token, TokenValue},
+    token::{Token, TokenValue},
+    Loc,
 };
 
 #[derive(Debug, PartialEq, Eq)]

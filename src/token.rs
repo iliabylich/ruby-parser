@@ -1,4 +1,4 @@
-use crate::string_content::StringContent;
+use crate::{string_content::StringContent, Loc};
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Token<'a>(pub TokenValue<'a>, pub Loc);
@@ -190,23 +190,10 @@ impl Default for TokenValue<'_> {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub struct Loc(pub usize, pub usize);
-
-impl Loc {
-    pub fn begin(&self) -> usize {
-        self.0
-    }
-
-    pub fn end(&self) -> usize {
-        self.1
-    }
-}
-
 macro_rules! token {
     ($kind:expr, $begin:expr, $end:expr) => {{
         use crate::token::TokenValue::*;
-        crate::token::Token($kind, crate::token::Loc($begin, $end))
+        crate::token::Token($kind, crate::Loc($begin, $end))
     }};
 }
 pub(crate) use token;

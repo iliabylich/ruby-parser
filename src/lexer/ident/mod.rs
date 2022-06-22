@@ -1,8 +1,11 @@
-use crate::lexer::{
-    assert_lex,
-    buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
+use crate::{
+    lexer::{
+        assert_lex,
+        buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
+    },
+    token::{token, Token},
+    Loc,
 };
-use crate::token::{token, Loc, Token};
 
 mod reserved_words;
 use reserved_words::find_reserved_word;

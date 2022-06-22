@@ -1,9 +1,12 @@
-use crate::lexer::{
-    assert_lex,
-    buffer::{Buffer, BufferWithCursor, Lookahead},
-    ident::Ident,
+use crate::{
+    lexer::{
+        assert_lex,
+        buffer::{Buffer, BufferWithCursor, Lookahead},
+        ident::Ident,
+    },
+    token::{Token, TokenValue},
+    Loc,
 };
-use crate::token::{Loc, Token, TokenValue};
 
 pub(crate) struct AtMark<'a> {
     pub(crate) token: Token<'a>,
