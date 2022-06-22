@@ -75,6 +75,7 @@ where
 }
 
 mod alias;
+mod keyword_variable;
 mod postexe;
 mod preexe;
 mod stmt;
@@ -672,9 +673,6 @@ where
             .or_else(|| self.parse_gvar())
             .or_else(|| self.parse_t_const())
             .or_else(|| self.parse_cvar())
-    }
-    fn parse_keyword_variable(&mut self) {
-        todo!()
     }
     fn parse_var_ref(&mut self) {
         todo!()
