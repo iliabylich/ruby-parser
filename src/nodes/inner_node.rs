@@ -44,15 +44,19 @@ impl InspectVec {
         self.strings.push(format!(", {}", string));
     }
 
-    pub(crate) fn push_maybe_str(&mut self, string: &Option<String>) {
+    pub(crate) fn push_raw_string_content(&mut self, string: &StringContent) {
+        self.push_raw_str(string.as_str())
+    }
+
+    pub(crate) fn push_maybe_str(&mut self, string: &Option<StringContent>) {
         if let Some(string) = string.as_ref() {
             self.strings.push(format!(", {:?}", string));
         }
     }
 
-    pub(crate) fn push_maybe_str_or_nil(&mut self, string: &Option<String>) {
+    pub(crate) fn push_maybe_str_or_nil(&mut self, string: &Option<StringContent>) {
         if let Some(string) = string.as_ref() {
-            self.push_str(string)
+            self.push_str(string.as_str())
         } else {
             self.push_nil()
         }
@@ -103,7 +107,7 @@ impl InspectVec {
         }
     }
 
-    pub(crate) fn push_chars(&mut self, chars: &Option<String>) {
+    pub(crate) fn push_chars(&mut self, chars: &Option<StringContent>) {
         if let Some(chars) = chars.as_ref() {
             for c in chars.as_str().chars() {
                 self.push_str(&format!("{}", c));

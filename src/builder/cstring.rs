@@ -1,3 +1,5 @@
+use crate::string_content::StringContent;
+
 #[repr(C)]
 pub struct CString {
     ptr: *mut u8,
@@ -26,12 +28,26 @@ impl From<&[u8]> for CString {
     }
 }
 
-impl From<CString> for String {
+impl From<CString> for StringContent<'_> {
+    fn from(cstring: CString) -> Self {
+        StringContent::from(Vec::from(cstring))
+    }
+}
+
+impl From<CString> for Vec<u8> {
     fn from(cstring: CString) -> Self {
         unsafe {
             let slice = std::slice::from_raw_parts_mut(cstring.ptr, cstring.length);
-            let s = std::str::from_utf8_unchecked(slice);
-            s.to_string()
+            slice.to_vec()
+        }
+    }
+}
+
+impl From<CString> for String {
+    fn from(cstring: CString) -> Self {
+        unsafe {
+            let bytes = Vec::from(cstring);
+            String::from_utf8_unchecked(bytes)
         }
     }
 }

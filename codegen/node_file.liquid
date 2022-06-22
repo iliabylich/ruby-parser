@@ -15,7 +15,7 @@ use crate::Loc;
 
 {%- for field in node.fields -%}
     {%- case field.field_type -%}
-    {%- when "StringValue" -%}
+    {%- when "StringValue" or "Str" or "RawStr" or "MaybeStr" or "Chars" -%}
         use crate::string_content::StringContent;
         {%- assign has_string_content = true -%}
         {%- break -%}
@@ -48,9 +48,9 @@ pub struct {{ node.camelcase_name }}{{ generic }} {
     {%- when "MaybeLoc" -%}
         Option<Loc>
     {%- when "Str" or "RawStr" -%}
-        String
+        StringContent<'a>
     {%- when "MaybeStr" or "Chars" -%}
-        Option<String>
+        Option<StringContent<'a>>
     {%- when "StringValue" -%}
         StringContent<'a>
     {%- when "U8" -%}
@@ -88,9 +88,9 @@ impl{{ generic }} InnerNode for {{ node.camelcase_name }}{{ generic }} {
             {%- when "RegexpOptions" -%}
                 {%- assign method_name = "push_regex_options" -%}
             {%- when "Str" -%}
-                {%- assign method_name = "push_str" -%}
+                {%- assign method_name = "push_string_content" -%}
             {%- when "RawStr" -%}
-                {%- assign method_name = "push_raw_str" -%}
+                {%- assign method_name = "push_raw_string_content" -%}
             {%- when "Chars" -%}
                 {%- assign method_name = "push_chars" -%}
             {%- when "MaybeStr" -%}

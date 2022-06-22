@@ -105,4 +105,8 @@ impl<'a> StringContent<'a> {
     pub(crate) fn to_string_lossy(&self) -> String {
         String::from_utf8_lossy(self.as_bytes()).into_owned()
     }
+
+    pub(crate) fn as_str(&self) -> &str {
+        std::str::from_utf8(self.as_bytes()).unwrap()
+    }
 }

@@ -3,11 +3,7 @@ use crate::builder::{Builder, Constructor};
 
 impl<'a, C: Constructor> Parser<'a, C> {
     pub(crate) fn parse_alias(&mut self) -> Option<Box<Node<'a>>> {
-        if self.current_token().value() != &TokenValue::kALIAS {
-            return None;
-        }
-
-        let alias_t = self.take_token();
+        let alias_t = self.try_token(TokenValue::kALIAS)?;
 
         let lhs;
         let rhs;
@@ -47,6 +43,7 @@ fn test_alias_fitem_fitem() {
 fn test_alias_gvar_gvar() {
     use crate::{
         nodes::{Alias, Gvar},
+        string_content::StringContent,
         Loc, Node,
     };
 
@@ -55,11 +52,11 @@ fn test_alias_gvar_gvar() {
         parser.parse_alias(),
         Some(Box::new(Node::Alias(Alias {
             to: Box::new(Node::Gvar(Gvar {
-                name: String::from("$foo"),
+                name: StringContent::from("$foo"),
                 expression_l: Loc { start: 6, end: 10 }
             })),
             from: Box::new(Node::Gvar(Gvar {
-                name: String::from("$bar"),
+                name: StringContent::from("$bar"),
                 expression_l: Loc { start: 11, end: 15 }
             })),
             keyword_l: Loc { start: 0, end: 5 },

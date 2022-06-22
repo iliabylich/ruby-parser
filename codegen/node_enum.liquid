@@ -11,7 +11,7 @@ pub enum Node<'a> {
     {%- assign generic = "" -%}
     {%- for field in node.fields -%}
         {%- case field.field_type -%}
-        {%- when "StringValue" or "Node" or "Nodes" or "MaybeNode" -%}
+        {%- when "StringValue" or "Str" or "RawStr" or "MaybeStr" or "Chars" or "Node" or "Nodes" or "MaybeNode" -%}
             {%- assign generic = "<'a>" -%}
             {%- break -%}
         {%- endcase -%}

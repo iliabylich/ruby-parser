@@ -1,4 +1,4 @@
-use crate::builder::{Constructor, RustConstructor};
+use crate::builder::{Builder, Constructor, RustConstructor};
 use crate::lexer::Lexer;
 use crate::nodes::Node;
 use crate::token::{Token, TokenValue};
@@ -75,11 +75,11 @@ where
 }
 
 mod alias;
-mod gvar;
 mod postexe;
 mod preexe;
 mod stmt;
 mod undef;
+mod variables;
 
 impl<'a, C> Parser<'a, C>
 where
@@ -636,7 +636,7 @@ where
             return None;
         }
 
-        let t_symbeg = self.take_token();
+        let symbeg_t = self.take_token();
 
         // try plain symbol (`sym`)
         let sym = self
@@ -645,16 +645,16 @@ where
             .or_else(|| self.try_token(TokenValue::tGVAR))
             .or_else(|| self.try_token(TokenValue::tCVAR));
         if let Some(sym) = sym {
-            panic!("symbol {:?} {:?}", t_symbeg, sym)
+            panic!("symbol {:?} {:?}", symbeg_t, sym)
         }
 
         // otherwise read `dsym`
 
         let string_contents = self.parse_string_contents();
-        let t_string_end = self.expect_token(TokenValue::tSTRING_END);
+        let string_end_t = self.expect_token(TokenValue::tSTRING_END);
         panic!(
             "symbol_compose {:?} {:?} {:?}",
-            t_symbeg, string_contents, t_string_end
+            symbeg_t, string_contents, string_end_t
         )
     }
     fn parse_numeric(&mut self) {
@@ -666,8 +666,12 @@ where
     fn parse_nonlocal_var(&mut self) {
         todo!()
     }
-    fn parse_user_variable(&mut self) {
-        todo!()
+    fn parse_user_variable(&mut self) -> Option<Box<Node<'a>>> {
+        None.or_else(|| self.parse_lvar())
+            .or_else(|| self.parse_ivar())
+            .or_else(|| self.parse_gvar())
+            .or_else(|| self.parse_t_const())
+            .or_else(|| self.parse_cvar())
     }
     fn parse_keyword_variable(&mut self) {
         todo!()
