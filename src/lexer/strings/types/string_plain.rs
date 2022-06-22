@@ -13,6 +13,7 @@ use crate::lexer::{
 pub(crate) struct StringPlain {
     starts_with: u8,
     ends_with: u8,
+    ends_with_nesting: usize,
 }
 
 impl StringPlain {
@@ -20,6 +21,7 @@ impl StringPlain {
         Self {
             starts_with,
             ends_with,
+            ends_with_nesting: 0,
         }
     }
 }
@@ -35,7 +37,14 @@ impl<'a> StringLiteralExtend<'a> for StringPlain {
         loop {
             handle_eof(buffer, start)?;
             handle_escaped_start_or_end(buffer, start, self.starts_with, self.ends_with)?;
-            handle_string_end(self.ends_with, buffer, start)?;
+            handle_string_end(
+                buffer,
+                start,
+                self.starts_with,
+                self.ends_with,
+                &mut self.ends_with_nesting,
+            )?;
+
             buffer.skip_byte()
         }
     }
@@ -48,10 +57,7 @@ mod tests {
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
     fn literal(starts_with: u8, ends_with: u8) -> StringLiteral<'static> {
-        StringLiteral::StringPlain(StringPlain {
-            starts_with,
-            ends_with,
-        })
+        StringLiteral::StringPlain(StringPlain::new(starts_with, ends_with))
     }
 
     fn dummy_literal() -> StringLiteral<'static> {
@@ -65,7 +71,7 @@ mod tests {
     assert_ignores_interpolation_end!(dummy_literal());
 
     // literal end handling
-    assert_emits_string_end!(literal = literal(b'|', b'|'), input = b"|");
+    assert_emits_string_end!(literal = literal(b'{', b'}'), begin = "{", end = "}");
 
     // escape sequences handling
     assert_ignores_escape_sequence!(literal = dummy_literal());

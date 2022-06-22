@@ -16,8 +16,10 @@ use crate::lexer::{
 #[derive(Clone, PartialEq, Eq, Debug)]
 pub(crate) struct StringInterp {
     interpolation: Interpolation,
+
     starts_with: u8,
     ends_with: u8,
+    ends_with_nesting: usize,
 }
 
 impl StringInterp {
@@ -26,6 +28,7 @@ impl StringInterp {
             interpolation,
             starts_with,
             ends_with,
+            ends_with_nesting: 0,
         }
     }
 
@@ -41,7 +44,7 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
         buffer: &mut BufferWithCursor<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
-        handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;
+        handle_interpolation_end(buffer, current_curly_nest, &mut self.interpolation)?;
 
         let start = buffer.pos();
 
@@ -53,7 +56,13 @@ impl<'a> StringLiteralExtend<'a> for StringInterp {
             handle_escape(buffer, start)?;
 
             handle_interpolation(&mut self.interpolation, buffer, start)?;
-            handle_string_end(self.ends_with, buffer, start)?;
+            handle_string_end(
+                buffer,
+                start,
+                self.starts_with,
+                self.ends_with,
+                &mut self.ends_with_nesting,
+            )?;
 
             buffer.skip_byte();
         }
@@ -87,7 +96,7 @@ mod tests {
     assert_emits_interpolated_value!(dummy_literal());
 
     // literal end handling
-    assert_emits_string_end!(literal = literal(b'|', b'|'), input = b"|");
+    assert_emits_string_end!(literal = literal(b'{', b'}'), begin = '{', end = '}');
 
     // escape sequences handling
     assert_emits_escape_sequence!(literal = dummy_literal());

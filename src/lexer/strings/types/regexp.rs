@@ -22,6 +22,7 @@ pub(crate) struct Regexp {
 
     starts_with: u8,
     ends_with: u8,
+    ends_with_nesting: usize,
 }
 
 impl Regexp {
@@ -33,6 +34,7 @@ impl Regexp {
             },
             starts_with,
             ends_with,
+            ends_with_nesting: 0,
         }
     }
 
@@ -48,7 +50,7 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
         buffer: &mut BufferWithCursor<'a>,
         current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
-        handle_interpolation_end(&mut self.interpolation, buffer, current_curly_nest)?;
+        handle_interpolation_end(buffer, current_curly_nest, &mut self.interpolation)?;
 
         let start = buffer.pos();
 
@@ -64,7 +66,13 @@ impl<'a> StringLiteralExtend<'a> for Regexp {
             // first check if there's a '/oix' regexp end
             handle_regexp_end_with_options(buffer, start, self.ends_with)?;
             // and then check a normal regexp end
-            handle_string_end(self.ends_with, buffer, start)?;
+            handle_string_end(
+                buffer,
+                start,
+                self.starts_with,
+                self.ends_with,
+                &mut self.ends_with_nesting,
+            )?;
 
             buffer.skip_byte();
         }
@@ -142,7 +150,7 @@ mod tests {
     assert_emits_interpolated_value!(dummy_literal());
 
     // literal end handling
-    assert_emits_string_end!(literal = literal(b'|', b'|'), input = b"|");
+    assert_emits_string_end!(literal = literal(b'{', b'}'), begin = '{', end = '}');
 
     // escape sequences handling
     assert_emits_escape_sequence!(literal = dummy_literal());

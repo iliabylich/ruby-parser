@@ -9,9 +9,9 @@ use crate::{
 };
 
 pub(crate) fn handle_interpolation_end<'a>(
-    interpolation: &mut Interpolation,
     buffer: &mut BufferWithCursor<'a>,
     current_curly_nest: usize,
+    interpolation: &mut Interpolation,
 ) -> ControlFlow<StringExtendAction<'a>> {
     match interpolation {
         Interpolation {
