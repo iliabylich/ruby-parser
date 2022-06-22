@@ -23,7 +23,7 @@ fn string_value<'a>(loc: Loc, buffer: &Buffer<'a>) -> StringContent<'a> {
     StringContent::from(buffer.slice(loc.start, loc.end).unwrap())
 }
 
-impl<C: Constructor> Builder<C> {
+impl<'a, C: Constructor> Builder<C> {
     // Singletons
     pub(crate) fn nil(nil_t: Token) -> Box<Node> {
         todo!()
@@ -76,34 +76,34 @@ impl<C: Constructor> Builder<C> {
 
     // Access
     // fn self_(token: Token) -> Box<Node>;
-    pub(crate) fn lvar<'a>(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn lvar(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = token.loc();
         Box::new(Node::Lvar(Lvar {
             name: string_value(loc, buffer),
             expression_l: loc,
         }))
     }
-    pub(crate) fn ivar<'a>(token: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
+    pub(crate) fn ivar(token: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
         todo!()
     }
-    pub(crate) fn gvar<'a>(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn gvar(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = token.loc();
         let name = cstring_value(loc, buffer);
         unsafe { node_ptr_to_box!(C::gvar_node(name, loc)) }
     }
-    pub(crate) fn cvar<'a>(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn cvar(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         todo!()
     }
-    pub(crate) fn back_ref<'a>(token: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
+    pub(crate) fn back_ref(token: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
         let loc = token.loc();
         let name = cstring_value(loc, buffer);
         unsafe { node_ptr_to_box!(C::back_ref_node(name, loc)) }
     }
-    pub(crate) fn nth_ref<'a>(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn nth_ref(token: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         todo!()
     }
 
-    pub(crate) fn const_<'a>(name_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn const_(name_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let name_l = name_t.loc();
         let expression_l = name_l;
 
@@ -144,7 +144,7 @@ impl<C: Constructor> Builder<C> {
 
     // Pattern matching
 
-    pub(crate) fn alias<'a>(
+    pub(crate) fn alias(
         alias_t: Token<'a>,
         to: Box<Node<'a>>,
         from: Box<Node<'a>>,
