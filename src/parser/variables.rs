@@ -46,11 +46,11 @@ fn test_gvar() {
     use crate::{loc::loc, nodes::Gvar, string_content::StringContent, Node, RustParser};
     let mut parser = RustParser::new(b"$foo");
     assert_eq!(
-        parser.parse(),
-        Node::Gvar(Gvar {
+        parser.parse_gvar(),
+        Some(Box::new(Node::Gvar(Gvar {
             name: StringContent::from("$foo"),
             expression_l: loc!(0, 4)
-        })
+        })))
     );
 }
 
@@ -59,11 +59,11 @@ fn test_back_ref() {
     use crate::{loc::loc, nodes::BackRef, string_content::StringContent, Node, RustParser};
     let mut parser = RustParser::new(b"$+");
     assert_eq!(
-        parser.parse(),
-        Node::BackRef(BackRef {
+        parser.parse_back_ref(),
+        Some(Box::new(Node::BackRef(BackRef {
             name: StringContent::from("$+"),
             expression_l: loc!(0, 2)
-        })
+        })))
     );
 }
 
@@ -72,10 +72,10 @@ fn test_nth_ref() {
     use crate::{loc::loc, nodes::NthRef, string_content::StringContent, Node, RustParser};
     let mut parser = RustParser::new(b"$1");
     assert_eq!(
-        parser.parse(),
-        Node::NthRef(NthRef {
-            name: StringContent::from("$1"),
+        parser.parse_nth_ref(),
+        Some(Box::new(Node::NthRef(NthRef {
+            name: StringContent::from("1"),
             expression_l: loc!(0, 2)
-        })
+        })))
     );
 }

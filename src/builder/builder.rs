@@ -109,7 +109,26 @@ impl<'a, C: Constructor> Builder<C> {
         unsafe { node_ptr_to_box!(C::back_ref_node(name, loc)) }
     }
     pub(crate) fn nth_ref(nth_ref_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
-        todo!()
+        let expression_l = nth_ref_t.loc();
+        let name = string_value(expression_l, buffer).to_string_lossy();
+        let name = &name[1..];
+        let parsed = name.parse::<usize>();
+        let name = StringContent::from(name.as_bytes().to_vec());
+
+        const MAX_NTH_REF: usize = 0b111111111111111111111111111111;
+        match parsed {
+            Ok(n) if n <= MAX_NTH_REF => {
+                // ok
+            }
+            _ => {
+                // TODO: warn
+                // DiagnosticMessage::NthRefIsTooBig {
+                //      nth_ref: name.clone(),
+                // },
+            }
+        }
+
+        Box::new(Node::NthRef(NthRef { name, expression_l }))
     }
 
     pub(crate) fn const_(const_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {

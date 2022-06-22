@@ -35,7 +35,9 @@ impl<'a, C: Constructor> Parser<'a, C> {
 
 #[test]
 fn test_alias_fitem_fitem() {
-    let mut parser = crate::RustParser::new(b"alias foo bar");
+    use crate::RustParser;
+
+    let mut parser = RustParser::new(b"alias foo bar");
     panic!("{:?}", parser.parse_alias());
 }
 
@@ -44,10 +46,10 @@ fn test_alias_gvar_gvar() {
     use crate::{
         nodes::{Alias, Gvar},
         string_content::StringContent,
-        Loc, Node,
+        Loc, Node, RustParser,
     };
 
-    let mut parser = crate::RustParser::new(b"alias $foo $bar");
+    let mut parser = RustParser::new(b"alias $foo $bar");
     assert_eq!(
         parser.parse_alias(),
         Some(Box::new(Node::Alias(Alias {
