@@ -105,7 +105,7 @@ impl Ident {
 
         // there's a chance that it's a keyword
         if let Some(reserved_word) = find_reserved_word(slice) {
-            return Token(reserved_word.token_value, Loc(start, end));
+            return Token(reserved_word.token_value, Loc { start, end });
         }
 
         // otherwise it's just a plain identifier

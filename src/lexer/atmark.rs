@@ -37,14 +37,20 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
         let empty_var_name = |token_value: TokenValue<'a>| {
             Err(AtMarkError::EmptyVarName(Token(
                 token_value,
-                Loc(start, ident_start),
+                Loc {
+                    start,
+                    end: ident_start,
+                },
             )))
         };
 
         let invalid_var_name = |token_value: TokenValue<'a>| {
             Err(AtMarkError::InvalidVarName(Token(
                 token_value,
-                Loc(start, ident_start),
+                Loc {
+                    start,
+                    end: ident_start,
+                },
             )))
         };
 
@@ -64,7 +70,13 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
                 match Ident::lookahead(buffer, ident_start) {
                     Some(Ident { length }) => {
                         let ident_end = ident_start + length;
-                        let token = Token(token_value, Loc(start, ident_end));
+                        let token = Token(
+                            token_value,
+                            Loc {
+                                start,
+                                end: ident_end,
+                            },
+                        );
 
                         return Ok(AtMark { token });
                     }
@@ -92,7 +104,7 @@ impl<'a> AtMark<'a> {
             }
         };
 
-        buffer.set_pos(token.loc().end());
+        buffer.set_pos(token.loc().end);
         token
     }
 }

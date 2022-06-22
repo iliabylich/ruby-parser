@@ -61,7 +61,13 @@ impl<'a> Into<TokenValue<'a>> for Number {
 
 impl<'a> Into<Token<'a>> for Number {
     fn into(self) -> Token<'a> {
-        Token(self.into(), Loc(self.begin, self.end))
+        Token(
+            self.into(),
+            Loc {
+                start: self.begin,
+                end: self.end,
+            },
+        )
     }
 }
 

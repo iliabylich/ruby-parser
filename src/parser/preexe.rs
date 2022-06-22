@@ -1,6 +1,9 @@
 use super::*;
 
-impl<'a> Parser<'a> {
+impl<'a, Builder> Parser<'a, Builder>
+where
+    Builder: Constructor,
+{
     pub(crate) fn parse_preexe(&mut self) -> Option<Box<Node<'a>>> {
         if !current_token_is!(self, TokenValue::klBEGIN) {
             return None;

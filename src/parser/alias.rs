@@ -1,7 +1,7 @@
 use super::*;
-use crate::builder::alias;
+use crate::builder::{Builder, Constructor};
 
-impl<'a> Parser<'a> {
+impl<'a, C: Constructor> Parser<'a, C> {
     pub(crate) fn parse_alias(&mut self) -> Option<Box<Node<'a>>> {
         if self.current_token().value() != &TokenValue::kALIAS {
             return None;
@@ -33,13 +33,13 @@ impl<'a> Parser<'a> {
                 });
         };
 
-        Some(alias(alias_t, lhs, rhs))
+        Some(Builder::<C>::alias(alias_t, lhs, rhs))
     }
 }
 
 #[test]
 fn test_alias_fitem_fitem() {
-    let mut parser = Parser::new(b"alias foo bar");
+    let mut parser = crate::RustParser::new(b"alias foo bar");
     panic!("{:?}", parser.parse_alias());
 }
 
@@ -50,20 +50,20 @@ fn test_alias_gvar_gvar() {
         Loc, Node,
     };
 
-    let mut parser = Parser::new(b"alias $foo $bar");
+    let mut parser = crate::RustParser::new(b"alias $foo $bar");
     assert_eq!(
         parser.parse_alias(),
         Some(Box::new(Node::Alias(Alias {
             to: Box::new(Node::Gvar(Gvar {
-                name: String::from("foo"),
-                expression_l: Loc(6, 10)
+                name: String::from("$foo"),
+                expression_l: Loc { start: 6, end: 10 }
             })),
             from: Box::new(Node::Gvar(Gvar {
-                name: String::from("bar"),
-                expression_l: Loc(11, 15)
+                name: String::from("$bar"),
+                expression_l: Loc { start: 11, end: 15 }
             })),
-            keyword_l: Loc(0, 5),
-            expression_l: Loc(0, 15)
+            keyword_l: Loc { start: 0, end: 5 },
+            expression_l: Loc { start: 0, end: 15 }
         })))
     );
 }

@@ -252,16 +252,16 @@ macro_rules! assert_lex {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
-            use crate::{lexer::Lexer, token::TokenValue::*, Loc};
+            use crate::{lexer::Lexer, loc::loc, token::TokenValue::*};
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
             let token = lexer.current_token();
             assert_eq!(token.value(), &$tok, "token doesn't match");
-            assert_eq!(token.loc(), Loc($loc.start, $loc.end), "loc doesn't match");
+            assert_eq!(token.loc(), loc!($loc.start, $loc.end), "loc doesn't match");
             assert_eq!(
-                token.loc().end(),
+                token.loc().end,
                 lexer.buffer.pos(),
-                "buffer.pos() is not token.loc().end()"
+                "buffer.pos() is not token.loc().end"
             );
             assert_eq!(
                 &$input[$loc.start..$loc.end],

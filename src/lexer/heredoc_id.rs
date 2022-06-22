@@ -110,7 +110,13 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
             }
         }
 
-        let token = Token(token_value, Loc(heredoc_start, heredoc_end));
+        let token = Token(
+            token_value,
+            Loc {
+                start: heredoc_start,
+                end: heredoc_end,
+            },
+        );
 
         Ok(Some(Self {
             token,
@@ -127,7 +133,7 @@ impl<'a> HeredocId<'a> {
         match heredoc_id {
             Ok(heredoc_id) => {
                 let heredoc_id = heredoc_id?;
-                buffer.set_pos(heredoc_id.token.loc().end());
+                buffer.set_pos(heredoc_id.token.loc().end);
                 Some(heredoc_id)
             }
             Err(HeredocIdError::UnterminatedHeredocId) => {

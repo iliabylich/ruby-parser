@@ -1,6 +1,9 @@
 use super::*;
 
-impl<'a> Parser<'a> {
+impl<'a, Builder> Parser<'a, Builder>
+where
+    Builder: Constructor,
+{
     pub(crate) fn parse_top_compstmt(&mut self) -> Node<'a> {
         let top_stmts = self.parse_top_stmts();
         self.parse_opt_terms();

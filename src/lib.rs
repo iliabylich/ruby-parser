@@ -7,7 +7,8 @@ pub mod nodes;
 pub use nodes::Node;
 
 pub(crate) mod parser;
-pub use parser::Parser;
+pub use parser::Parser as GenericParser;
+pub use parser::RustParser;
 
 pub(crate) mod string_content;
 

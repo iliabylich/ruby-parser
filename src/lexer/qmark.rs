@@ -112,7 +112,7 @@ impl<'a> Lookahead<'a> for QMark<'a> {
 impl<'a> QMark<'a> {
     pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
         let QMark { token } = QMark::lookahead(buffer.for_lookahead(), buffer.pos());
-        buffer.set_pos(token.loc().end());
+        buffer.set_pos(token.loc().end);
         token
     }
 }

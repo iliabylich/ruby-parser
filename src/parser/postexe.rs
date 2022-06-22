@@ -1,6 +1,9 @@
 use super::*;
 
-impl<'a> Parser<'a> {
+impl<'a, Builder> Parser<'a, Builder>
+where
+    Builder: Constructor,
+{
     pub(crate) fn parse_postexe(&mut self) -> Box<Node<'a>> {
         let k_l_end = self.take_token();
         let lcurly = self.expect_token(TokenValue::tLCURLY);

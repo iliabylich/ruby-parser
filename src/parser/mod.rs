@@ -1,11 +1,14 @@
+use crate::builder::{Constructor, RustConstructor};
 use crate::lexer::Lexer;
 use crate::nodes::Node;
 use crate::token::{Token, TokenValue};
 
-pub struct Parser<'a> {
+pub struct Parser<'a, C: Constructor = RustConstructor> {
     lexer: Lexer<'a>,
     debug: bool,
+    phantom: std::marker::PhantomData<C>,
 }
+pub type RustParser<'a> = Parser<'a, RustConstructor>;
 
 macro_rules! current_token_is {
     ($parser:expr, $token:pat) => {
@@ -14,11 +17,15 @@ macro_rules! current_token_is {
 }
 pub(crate) use current_token_is;
 
-impl<'a> Parser<'a> {
+impl<'a, C> Parser<'a, C>
+where
+    C: Constructor,
+{
     pub fn new(input: &'a [u8]) -> Self {
         Self {
             lexer: Lexer::new(input),
             debug: false,
+            phantom: std::marker::PhantomData,
         }
     }
 
@@ -74,7 +81,10 @@ mod preexe;
 mod stmt;
 mod undef;
 
-impl<'a> Parser<'a> {
+impl<'a, C> Parser<'a, C>
+where
+    C: Constructor,
+{
     fn parse_command_asgn(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }

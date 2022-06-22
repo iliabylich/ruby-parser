@@ -192,8 +192,8 @@ impl Default for TokenValue<'_> {
 
 macro_rules! token {
     ($kind:expr, $begin:expr, $end:expr) => {{
-        use crate::token::TokenValue::*;
-        crate::token::Token($kind, crate::Loc($begin, $end))
+        use crate::{loc::loc, token::TokenValue::*};
+        crate::token::Token($kind, loc!($begin, $end))
     }};
 }
 pub(crate) use token;
