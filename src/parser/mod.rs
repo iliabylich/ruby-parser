@@ -65,11 +65,11 @@ where
         }
     }
 
-    pub fn parse(&mut self) -> Node<'a> {
+    pub fn parse(&mut self) -> Option<Box<Node<'a>>> {
         self.parse_program()
     }
 
-    fn parse_program(&mut self) -> Node<'a> {
+    fn parse_program(&mut self) -> Option<Box<Node<'a>>> {
         self.parse_top_compstmt()
     }
 }

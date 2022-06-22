@@ -1,8 +1,8 @@
 use super::*;
 
-impl<'a, Builder> Parser<'a, Builder>
+impl<'a, C> Parser<'a, C>
 where
-    Builder: Constructor,
+    C: Constructor,
 {
     pub(crate) fn parse_undef(&mut self) -> Box<Node<'a>> {
         let k_undef = self.take_token();

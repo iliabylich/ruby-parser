@@ -1,13 +1,13 @@
 use super::*;
 
-impl<'a, Builder> Parser<'a, Builder>
+impl<'a, C> Parser<'a, C>
 where
-    Builder: Constructor,
+    C: Constructor,
 {
-    pub(crate) fn parse_top_compstmt(&mut self) -> Node<'a> {
+    pub(crate) fn parse_top_compstmt(&mut self) -> Option<Box<Node<'a>>> {
         let top_stmts = self.parse_top_stmts();
         self.parse_opt_terms();
-        todo!("builder.compstmt {:?}", top_stmts)
+        Builder::<C>::compstmt(top_stmts)
     }
 
     pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node<'a>> {
@@ -30,7 +30,7 @@ where
     pub(crate) fn parse_compstmt(&mut self) -> Option<Box<Node<'a>>> {
         let stmts = self.parse_stmts();
         self.parse_opt_terms();
-        todo!("compstmt({:?})", stmts)
+        Builder::<C>::compstmt(stmts)
     }
 
     pub(crate) fn parse_stmts(&mut self) -> Vec<Node<'a>> {
@@ -78,8 +78,8 @@ where
             Some(alias)
         } else if self.current_token().value() == &TokenValue::kUNDEF {
             Some(self.parse_undef())
-        } else if self.current_token().value() == &TokenValue::klEND {
-            Some(self.parse_postexe())
+        } else if let Some(postexe) = self.parse_postexe() {
+            Some(postexe)
         } else if let Some(command_asgn) = self.parse_command_asgn() {
             Some(command_asgn)
         } else if let Some(mlhs) = self.parse_mlhs() {
@@ -104,7 +104,7 @@ where
         } else if let Some(expr) = self.parse_expr() {
             Some(expr)
         } else {
-            panic!("expected stmt, got {:?}", self.current_token())
+            None
         }
     }
 }

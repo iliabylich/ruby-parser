@@ -165,10 +165,64 @@ impl<'a, C: Constructor> Builder<C> {
     // Keywords
 
     // BEGIN, END
+    pub(crate) fn preexe(
+        preexe_t: Token<'a>,
+        lbrace_t: Token<'a>,
+        body: Option<Box<Node<'a>>>,
+        rbrace_t: Token<'a>,
+    ) -> Box<Node<'a>> {
+        let keyword_l = preexe_t.loc();
+        let begin_l = lbrace_t.loc();
+        let end_l = rbrace_t.loc();
+        let expression_l = keyword_l.join(&end_l);
+
+        Box::new(Node::Preexe(Preexe {
+            body,
+            keyword_l,
+            begin_l,
+            end_l,
+            expression_l,
+        }))
+    }
+    pub(crate) fn postexe(
+        postexe_t: Token<'a>,
+        lbrace_t: Token<'a>,
+        body: Option<Box<Node<'a>>>,
+        rbrace_t: Token<'a>,
+    ) -> Box<Node<'a>> {
+        let keyword_l = postexe_t.loc();
+        let begin_l = lbrace_t.loc();
+        let end_l = rbrace_t.loc();
+        let expression_l = keyword_l.join(&end_l);
+
+        Box::new(Node::Postexe(Postexe {
+            body,
+            keyword_l,
+            begin_l,
+            end_l,
+            expression_l,
+        }))
+    }
 
     // Exception handling
 
     // Expression grouping
+    pub(crate) fn compstmt(statements: Vec<Node<'a>>) -> Option<Box<Node<'a>>> {
+        if statements.is_empty() {
+            None
+        } else if statements.len() == 1 {
+            Some(Box::new(statements.into_iter().next().unwrap()))
+        } else {
+            todo!()
+            // let (begin_l, end_l, expression_l) = Self::collection_map(&None, &statements, &None);
+            // Some(Box::new(Node::Begin(Begin {
+            //     statements,
+            //     begin_l,
+            //     end_l,
+            //     expression_l,
+            // })))
+        }
+    }
 
     // Pattern matching
 
