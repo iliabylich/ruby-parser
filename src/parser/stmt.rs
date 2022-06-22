@@ -75,13 +75,13 @@ where
 
     pub(crate) fn parse_stmt_head(&mut self) -> Option<Box<Node<'a>>> {
         if let Some(alias) = self.parse_alias() {
-            Some(alias)
-        } else if self.current_token().value() == &TokenValue::kUNDEF {
-            Some(self.parse_undef())
+            return Some(alias);
+        } else if let Some(undef) = self.parse_undef() {
+            return Some(undef);
         } else if let Some(postexe) = self.parse_postexe() {
             Some(postexe)
-        } else if let Some(command_asgn) = self.parse_command_asgn() {
-            Some(command_asgn)
+        // } else if let Some(command_asgn) = self.parse_command_asgn() {
+        //     Some(command_asgn)
         } else if let Some(mlhs) = self.parse_mlhs() {
             let eql = self.expect_token(TokenValue::tEQL);
             if let Some(command_call) = self.parse_command_call() {

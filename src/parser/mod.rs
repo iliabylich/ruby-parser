@@ -86,11 +86,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    fn parse_command_asgn(&mut self) -> Option<Box<Node<'a>>> {
-        todo!()
-    }
-
-    fn parse_command_rhs(&mut self) -> Node<'a> {
+    fn parse_command_rhs(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
 
@@ -314,7 +310,7 @@ where
     fn parse_primary(&mut self) {
         todo!()
     }
-    fn parse_primary_value(&mut self) {
+    fn parse_primary_value(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
     fn parse_k_begin(&mut self) {
@@ -677,8 +673,10 @@ where
     fn parse_var_ref(&mut self) {
         todo!()
     }
-    fn parse_var_lhs(&mut self) {
-        todo!()
+    fn parse_var_lhs(&mut self) -> Option<Box<Node<'a>>> {
+        None.or_else(|| self.parse_user_variable())
+            .or_else(|| self.parse_keyword_variable())
+            .map(|node| Builder::<C>::assignable(node))
     }
     fn parse_backref(&mut self) {
         todo!()

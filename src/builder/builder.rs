@@ -131,6 +131,10 @@ impl<'a, C: Constructor> Builder<C> {
         Box::new(Node::NthRef(NthRef { name, expression_l }))
     }
 
+    pub(crate) fn accessible(node: Box<Node<'a>>) -> Box<Node<'a>> {
+        todo!()
+    }
+
     pub(crate) fn const_(const_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let name_l = const_t.loc();
         let expression_l = name_l;
@@ -144,7 +148,30 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
+    pub(crate) fn const_global(colon2_t: Token<'a>, name_t: Token<'a>) -> Box<Node<'a>> {
+        todo!()
+    }
+
     // Assignments
+    pub(crate) fn assignable(node: Box<Node<'a>>) -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn const_op_assignable(node: Box<Node<'a>>) -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn assign(lhs: Box<Node<'a>>, op_t: Token<'a>, rhs: Box<Node<'a>>) -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn op_assign(
+        lhs: Box<Node<'a>>,
+        op_t: Token<'a>,
+        rhs: Box<Node<'a>>,
+    ) -> Box<Node<'a>> {
+        todo!()
+    }
 
     // Class and module definition
 

@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    fn parse_keyword_variable(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse_keyword_variable(&mut self) -> Option<Box<Node<'a>>> {
         None.or_else(|| self.parse_nil())
             .or_else(|| self.parse_self())
             .or_else(|| self.parse_true())
@@ -19,34 +19,34 @@ where
             .or_else(|| self.parse__encoding__())
     }
 
-    fn parse_nil(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse_nil(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::kNIL)
             .map(|nil_t| Builder::<C>::nil(nil_t))
     }
-    fn parse_self(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse_self(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::kSELF)
             .map(|self_t| Builder::<C>::self_(self_t))
     }
-    fn parse_true(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse_true(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::kTRUE)
             .map(|true_t| Builder::<C>::true_(true_t))
     }
-    fn parse_false(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse_false(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::kFALSE)
             .map(|false_t| Builder::<C>::false_(false_t))
     }
     #[allow(non_snake_case)]
-    fn parse__file__(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse__file__(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::k__FILE__)
             .map(|file_t| Builder::<C>::__file__(file_t))
     }
     #[allow(non_snake_case)]
-    fn parse__line__(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse__line__(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::k__LINE__)
             .map(|line_t| Builder::<C>::__line__(line_t))
     }
     #[allow(non_snake_case)]
-    fn parse__encoding__(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn parse__encoding__(&mut self) -> Option<Box<Node<'a>>> {
         self.try_token(TokenValue::k__ENCODING__)
             .map(|encoding_t| Builder::<C>::__encoding__(encoding_t))
     }

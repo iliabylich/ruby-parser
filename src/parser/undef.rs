@@ -4,10 +4,10 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn parse_undef(&mut self) -> Box<Node<'a>> {
-        let k_undef = self.take_token();
+    pub(crate) fn parse_undef(&mut self) -> Option<Box<Node<'a>>> {
+        let undef_t = self.try_token(TokenValue::kUNDEF)?;
         let undef_list = self.parse_undef_list();
-        panic!("undef({:?}, {:?})", k_undef, undef_list)
+        panic!("undef({:?}, {:?})", undef_t, undef_list)
     }
 
     fn parse_undef_list(&mut self) -> Vec<Node<'a>> {
