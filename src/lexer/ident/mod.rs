@@ -5,8 +5,10 @@ use crate::lexer::{
 use crate::token::{token, Loc, Token};
 
 mod reserved_words;
-
 use reserved_words::find_reserved_word;
+
+mod suffix;
+pub(crate) use suffix::IdentSuffix;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct Ident {
@@ -71,35 +73,16 @@ impl Ident {
 
         buffer.set_pos(start + length);
 
-        // lookahead to handle predicate/bang/setter method names
-        match buffer.current_byte() {
-            Some(b'!' | b'?') => {
-                if buffer.byte_at(buffer.pos() + 1) == Some(b'=') {
-                    // `foo!=` means `foo !=`
-                    // `foo?=` means `foo ?=`
-                } else {
-                    // append `!` or `?`
-                    buffer.skip_byte();
-                    return token!(tFID, start, buffer.pos());
-                }
+        match IdentSuffix::lookahead(buffer.for_lookahead(), buffer.pos()) {
+            Some(IdentSuffix { byte: b'!' | b'?' }) => {
+                // append `!` or `?`
+                buffer.skip_byte();
+                return token!(tFID, start, buffer.pos());
             }
-            Some(b'=') => {
-                match buffer.byte_at(buffer.pos() + 1) {
-                    Some(b'~') => {
-                        // `foo=~` means `foo =~`
-                    }
-                    Some(b'=') => {
-                        // `foo==` means `foo==`
-                    }
-                    Some(b'>') => {
-                        // `foo=>` means `foo => `
-                    }
-                    _ => {
-                        // `foo=` setter, consume `'='
-                        buffer.skip_byte();
-                        return token!(tIDENTIFIER, start, buffer.pos());
-                    }
-                }
+            Some(IdentSuffix { byte: b'=' }) => {
+                // `foo=` setter, consume `'='
+                buffer.skip_byte();
+                return token!(tIDENTIFIER, start, buffer.pos());
             }
             _ => {}
         }
