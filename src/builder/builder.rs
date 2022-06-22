@@ -1,52 +1,35 @@
 use crate::{
-    builder::{CString, Constructor},
+    builder::{CString, Constructor, RustConstructor},
     lexer::buffer::Buffer,
     nodes::*,
     Loc, Node, Token,
 };
-use std::ffi::c_void;
 
 pub(crate) struct Builder<C: Constructor = RustConstructor> {
     phantom: std::marker::PhantomData<C>,
 }
-pub struct RustConstructor;
 
-impl Constructor for RustConstructor {
-    fn gvar_node(name: CString, loc: Loc) -> *mut c_void {
-        Box::into_raw(Box::new(Node::Gvar(Gvar {
-            name: name.into(),
-            expression_l: loc,
-        }))) as *mut c_void
-    }
+macro_rules! node_ptr_to_box {
+    ($ptr:expr) => {
+        Box::from_raw($ptr as *mut Node<'a>)
+    };
+}
 
-    fn back_ref_node(name: CString, loc: Loc) -> *mut c_void {
-        Box::into_raw(Box::new(Node::BackRef(BackRef {
-            name: name.into(),
-            expression_l: loc,
-        }))) as *mut c_void
-    }
-
-    fn nth_ref_node(name: CString, loc: Loc) -> *mut c_void {
-        Box::into_raw(Box::new(Node::NthRef(NthRef {
-            name: name.into(),
-            expression_l: loc,
-        }))) as *mut c_void
-    }
+fn value(loc: Loc, buffer: &Buffer) -> CString {
+    CString::from(buffer.slice(loc.start, loc.end).unwrap())
 }
 
 impl<C: Constructor> Builder<C> {
     pub(crate) fn gvar<'a>(token: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
         let loc = token.loc();
-        let name = CString::from(buffer.slice(loc.start, loc.end).unwrap());
-        unsafe { Box::from_raw(C::gvar_node(name, loc) as *mut Node<'a>) }
+        let name = value(loc, buffer);
+        unsafe { node_ptr_to_box!(C::gvar_node(name, loc)) }
     }
 
-    pub(crate) fn back_ref<'a>(token: Token<'a>) -> Box<Node<'a>> {
-        let expression_l = token.loc();
-        Box::new(Node::BackRef(BackRef {
-            name: String::from("foo"),
-            expression_l,
-        }))
+    pub(crate) fn back_ref<'a>(token: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
+        let loc = token.loc();
+        let name = value(loc, buffer);
+        unsafe { node_ptr_to_box!(C::back_ref_node(name, loc)) }
     }
 
     pub(crate) fn alias<'a>(

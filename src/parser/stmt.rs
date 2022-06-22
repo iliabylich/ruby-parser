@@ -12,17 +12,15 @@ where
 
     pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node<'a>> {
         let mut top_stmts = vec![];
-        while let Some(top_stmt) = self.parse_top_stmt() {
+        while let Some(top_stmt) = self.try_top_stmt() {
             top_stmts.push(*top_stmt);
         }
         top_stmts
     }
 
-    pub(crate) fn parse_top_stmt(&mut self) -> Option<Box<Node<'a>>> {
-        if let Some(begin_block) = self.parse_preexe() {
-            return Some(begin_block);
-        }
-        self.parse_stmt()
+    pub(crate) fn try_top_stmt(&mut self) -> Option<Box<Node<'a>>> {
+        None.or_else(|| self.parse_preexe())
+            .or_else(|| self.parse_stmt())
     }
 
     pub(crate) fn parse_bodystmt(&mut self) -> Node<'a> {
