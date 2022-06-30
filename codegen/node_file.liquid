@@ -29,7 +29,7 @@ use crate::Loc;
 {%- endif -%}
 
 {{ node.comment | render_comment: "///", 0 }}
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
 pub struct {{ node.camelcase_name }}{{ generic }} {
 {%- for field in node.fields %}

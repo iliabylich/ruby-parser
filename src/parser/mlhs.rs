@@ -1,4 +1,9 @@
-use crate::{builder::Constructor, nodes::Node, parser::Parser, token::TokenValue};
+use crate::{
+    builder::{Builder, Constructor},
+    nodes::Node,
+    parser::Parser,
+    token::TokenValue,
+};
 
 impl<'a, C> Parser<'a, C>
 where
@@ -80,7 +85,7 @@ where
                 MLHS::MaybeLhs { node: inner } => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
                     MLHS::MaybeLhs {
-                        node: todo!("begin {:?} {:?} {:?}", lparen_t, inner, rparen_t),
+                        node: Builder::<C>::begin(lparen_t, Some(inner), rparen_t),
                     }
                 }
                 MLHS::None => MLHS::None,
@@ -151,6 +156,7 @@ where
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum MLHS<'a> {
     // This variant is used if there's at least 1 comma
     // i.e. `a, b` or `((a, b))`
@@ -166,4 +172,49 @@ pub(crate) enum MLHS<'a> {
     // absolutely not assignable
     // like `def foo; end`
     None,
+}
+
+#[cfg(test)]
+use crate::{loc::loc, parser::RustParser, string_content::StringContent};
+
+#[test]
+fn test_lhs_user_variable() {
+    use crate::nodes::Lvar;
+
+    let mut parser = RustParser::new(b"a");
+    assert_eq!(
+        parser.parse_mlhs(),
+        MLHS::MaybeLhs {
+            node: Box::new(Node::Lvar(Lvar {
+                name: StringContent::from("a"),
+                expression_l: loc!(0, 1)
+            }))
+        }
+    );
+}
+
+#[test]
+fn test_lhs_parenthesized() {
+    use crate::nodes::{Begin, Lvar};
+
+    let mut parser = RustParser::new(b"((a))");
+    assert_eq!(
+        parser.parse_mlhs(),
+        MLHS::MaybeLhs {
+            node: Box::new(Node::Begin(Begin {
+                statements: vec![Node::Begin(Begin {
+                    statements: vec![Node::Lvar(Lvar {
+                        name: StringContent::from("a"),
+                        expression_l: loc!(2, 3)
+                    })],
+                    begin_l: Some(loc!(1, 2)),
+                    end_l: Some(loc!(3, 4)),
+                    expression_l: loc!(1, 4)
+                })],
+                begin_l: Some(loc!(0, 1)),
+                end_l: Some(loc!(4, 5)),
+                expression_l: loc!(0, 5)
+            }))
+        }
+    );
 }

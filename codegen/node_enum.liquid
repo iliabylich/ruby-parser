@@ -5,7 +5,7 @@ use crate::nodes::*;
 
 /// Generic combination of all known nodes.
 #[allow(missing_docs)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Node<'a> {
 {%- for node in nodes %}
     {%- assign generic = "" -%}

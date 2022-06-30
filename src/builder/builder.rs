@@ -251,6 +251,25 @@ impl<'a, C: Constructor> Builder<C> {
         }
     }
 
+    pub(crate) fn begin(
+        begin_t: Token<'a>,
+        body: Option<Box<Node<'a>>>,
+        end_t: Token<'a>,
+    ) -> Box<Node<'a>> {
+        let mut statements = vec![];
+        if let Some(body) = body {
+            statements.push(*body);
+        }
+        let begin_l = begin_t.loc();
+        let end_l = end_t.loc();
+        Box::new(Node::Begin(Begin {
+            statements,
+            begin_l: Some(begin_l),
+            end_l: Some(end_l),
+            expression_l: begin_l.join(&end_l),
+        }))
+    }
+
     // Pattern matching
 
     pub(crate) fn alias(
