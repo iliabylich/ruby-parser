@@ -79,32 +79,51 @@ where
         } else if let Some(undef) = self.parse_undef() {
             return Some(undef);
         } else if let Some(postexe) = self.parse_postexe() {
-            Some(postexe)
-        // } else if let Some(command_asgn) = self.parse_command_asgn() {
-        //     Some(command_asgn)
-        } else if let Some(mlhs) = self.parse_mlhs() {
-            let eql = self.expect_token(TokenValue::tEQL);
-            if let Some(command_call) = self.parse_command_call() {
-                panic!("multi_assign({:?}, {:?}, {:?})", mlhs, eql, command_call);
-            } else if let Some(mrhs) = self.parse_mrhs() {
-                panic!("assign({:?}, {:?}, array({:?}))", mlhs, eql, mrhs)
-            } else if let Some(mrhs_arg) = self.parse_mrhs_arg() {
-                let rescue_mod = self.expect_token(TokenValue::kRESCUE);
-                let stmt = self.parse_stmt().expect("expected stmt");
-                panic!(
-                    "multi_assign({:?} {:?} {:?} {:?} {:?})",
-                    mlhs, eql, mrhs_arg, rescue_mod, stmt
-                )
-            } else {
-                panic!(
-                    "expected command_call/mrhs/mrhs_arg, got {:?}",
-                    self.current_token()
-                )
-            }
-        } else if let Some(expr) = self.parse_expr() {
-            Some(expr)
-        } else {
-            None
+            return Some(postexe);
+        } else if matches!(self.current_token().value(), TokenValue::kDEF) {
+            todo!("handle endless def")
         }
+
+        match self.parse_mlhs() {
+            mlhs::MLHS::DefinitelyMlhs { node: mlhs } => {
+                // definitely an MLHS, can only be assigned via `=`
+                let eql_t = self.expect_token(TokenValue::tEQL);
+                if let Some(command_call) = self.parse_command_call() {
+                    todo!("mlhs = rhs {:?} {:?} {:?}", mlhs, eql_t, command_call);
+                } else if let Some(mrhs_arg) = self.parse_mrhs_arg() {
+                    if let Some(rescue_t) = self.try_token(TokenValue::kRESCUE) {
+                        let stmt = self.parse_stmt().expect("mlhs -> kRESCUE requires stmt");
+                        todo!(
+                            "mlhs = rhs rescue stmt {:?} {:?} {:?} {:?} {:?}",
+                            mlhs,
+                            eql_t,
+                            mrhs_arg,
+                            rescue_t,
+                            stmt
+                        )
+                    }
+                }
+            }
+            mlhs::MLHS::MaybeLhs { node: lhs } => {
+                // maybe a plain assignment, maybe an expression (that is fully parsed in `parse_expr`)
+                match self.current_token().value() {
+                    TokenValue::tEQL | TokenValue::tOP_ASGN => {
+                        // definitely an assignment
+                        let op_t = self.take_token();
+                        let command_rhs =
+                            self.parse_command_rhs().expect("assignment must have RHS");
+                        todo!("assignment {:?} {:?} {:?}", lhs, op_t, command_rhs);
+                    }
+                    _ => {
+                        todo!("rollback, expr can be more that just an lvar get");
+                    }
+                }
+            }
+            mlhs::MLHS::None => {
+                // well, it's not an MLHS, then it's definitely an expression
+            }
+        }
+
+        self.parse_expr()
     }
 }

@@ -76,6 +76,7 @@ where
 
 mod alias;
 mod keyword_variable;
+mod mlhs;
 mod postexe;
 mod preexe;
 mod stmt;
@@ -138,33 +139,6 @@ where
         todo!()
     }
 
-    fn parse_mlhs(&mut self) -> Option<Box<Node<'a>>> {
-        todo!()
-    }
-
-    fn mlhs_inner(&mut self) {
-        todo!()
-    }
-
-    fn mlhs_basic(&mut self) {
-        todo!()
-    }
-
-    fn parse_mlhs_item(&mut self) {
-        todo!()
-    }
-    fn parse_mlhs_head(&mut self) {
-        todo!()
-    }
-    fn parse_mlhs_post(&mut self) {
-        todo!()
-    }
-    fn parse_mlhs_node(&mut self) {
-        todo!()
-    }
-    fn parse_lhs(&mut self) {
-        todo!()
-    }
     fn parse_cname(&mut self) {
         todo!()
     }
@@ -307,7 +281,7 @@ where
     fn parse_mrhs(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
-    fn parse_primary(&mut self) {
+    fn parse_primary(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
     fn parse_primary_value(&mut self) -> Option<Box<Node<'a>>> {
@@ -678,9 +652,6 @@ where
             .or_else(|| self.parse_keyword_variable())
             .map(|node| Builder::<C>::assignable(node))
     }
-    fn parse_backref(&mut self) {
-        todo!()
-    }
     fn parse_superclass(&mut self) {
         todo!()
     }
@@ -795,7 +766,7 @@ where
     fn parse_dot_or_colon(&mut self) {
         todo!()
     }
-    fn parse_call_op(&mut self) {
+    fn parse_call_op(&mut self) -> Option<Token<'a>> {
         todo!()
     }
     fn parse_call_op2(&mut self) {

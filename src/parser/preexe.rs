@@ -1,18 +1,17 @@
 use super::*;
 
-impl<'a, Builder> Parser<'a, Builder>
+impl<'a, C> Parser<'a, C>
 where
-    Builder: Constructor,
+    C: Constructor,
 {
     pub(crate) fn parse_preexe(&mut self) -> Option<Box<Node<'a>>> {
-        if !current_token_is!(self, TokenValue::klBEGIN) {
-            return None;
-        }
-        self.skip_token();
-
+        let begin_t = self.try_token(TokenValue::klBEGIN)?;
         let lcurly = self.expect_token(TokenValue::tLCURLY);
         let top_compstmt = self.parse_top_compstmt();
         let rcurly = self.expect_token(TokenValue::tRCURLY);
-        panic!("preexe({:?}, {:?}, {:?})", lcurly, top_compstmt, rcurly)
+        panic!(
+            "preexe({:?} {:?}, {:?}, {:?})",
+            begin_t, lcurly, top_compstmt, rcurly
+        )
     }
 }
