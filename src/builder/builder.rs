@@ -76,6 +76,34 @@ impl<'a, C: Constructor> Builder<C> {
 
     // Arrays
 
+    pub(crate) fn array(
+        begin_t: Option<Token<'a>>,
+        elements: Vec<Node<'a>>,
+        end_t: Vec<Node<'a>>,
+    ) -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn splat(star_t: Token<'a>, value: Box<Node<'a>>) -> Box<Node<'a>> {
+        let operator_l = star_t.loc();
+        let expression_l = operator_l.join(value.expression());
+        Box::new(Node::Splat(Splat {
+            value: Some(value),
+            operator_l,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn nameless_splat(star_t: Token<'a>) -> Box<Node<'a>> {
+        let operator_l = star_t.loc();
+        let expression_l = operator_l;
+        Box::new(Node::Splat(Splat {
+            value: None,
+            operator_l,
+            expression_l,
+        }))
+    }
+
     // Hashes
 
     // Ranges
@@ -92,8 +120,12 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l: loc,
         }))
     }
-    pub(crate) fn ivar(ivar_t: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
-        todo!()
+    pub(crate) fn ivar(ivar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+        let loc = ivar_t.loc();
+        Box::new(Node::Ivar(Ivar {
+            name: string_value(loc, buffer),
+            expression_l: loc,
+        }))
     }
     pub(crate) fn gvar(gvar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = gvar_t.loc();
@@ -267,6 +299,32 @@ impl<'a, C: Constructor> Builder<C> {
             begin_l: Some(begin_l),
             end_l: Some(end_l),
             expression_l: begin_l.join(&end_l),
+        }))
+    }
+
+    pub(crate) fn group(nodes: Vec<Node<'a>>) -> Box<Node<'a>> {
+        debug_assert!(nodes.len() > 0);
+
+        let begin = nodes.first().unwrap().expression().start;
+        let end = nodes.last().unwrap().expression().end;
+
+        let begin_l = Loc {
+            start: begin,
+            end: begin + 1,
+        };
+        let end_l = Loc {
+            start: end,
+            end: end + 1,
+        };
+        let expression_l = Loc {
+            start: begin,
+            end: end + 1,
+        };
+        Box::new(Node::Begin(Begin {
+            statements: nodes,
+            begin_l: Some(begin_l),
+            end_l: Some(end_l),
+            expression_l,
         }))
     }
 

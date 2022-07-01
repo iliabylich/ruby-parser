@@ -27,7 +27,7 @@ where
                         has_splat = true;
                     }
 
-                    items.push(node);
+                    items.push(*node);
                 }
 
                 MLHS::MaybeLhs { node } => {
@@ -38,7 +38,7 @@ where
                         has_splat = true;
                     }
 
-                    items.push(node);
+                    items.push(*node);
                 }
 
                 MLHS::None => break,
@@ -64,12 +64,14 @@ where
             MLHS::None
         } else if definitely_mlhs {
             MLHS::DefinitelyMlhs {
-                node: todo!("begin {:?}", items),
+                node: Builder::<C>::group(items),
             }
         } else {
             debug_assert_eq!(items.len(), 1);
             let node = items.into_iter().next().unwrap();
-            MLHS::MaybeLhs { node }
+            MLHS::MaybeLhs {
+                node: Box::new(node),
+            }
         }
     }
 
@@ -79,7 +81,7 @@ where
                 MLHS::DefinitelyMlhs { node: inner } => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
                     MLHS::DefinitelyMlhs {
-                        node: todo!("begin {:?} {:?} {:?}", lparen_t, inner, rparen_t),
+                        node: Builder::<C>::begin(lparen_t, Some(inner), rparen_t),
                     }
                 }
                 MLHS::MaybeLhs { node: inner } => {
@@ -92,30 +94,37 @@ where
             }
         } else if let Some(star_t) = self.try_token(TokenValue::tSTAR) {
             match self.parse_mlhs_primitive_item() {
-                MLHS::DefinitelyMlhs { node } | MLHS::MaybeLhs { node } => MLHS::DefinitelyMlhs {
-                    node: todo!("splat {:?} {:?}", star_t, node),
+                Some(node) => MLHS::DefinitelyMlhs {
+                    node: Builder::<C>::splat(star_t, node),
                 },
-                MLHS::None => return MLHS::None,
+                None => match self.current_token().value() {
+                    TokenValue::tCOMMA | TokenValue::tRPAREN => MLHS::DefinitelyMlhs {
+                        node: Builder::<C>::nameless_splat(star_t),
+                    },
+                    _ => MLHS::None,
+                },
             }
         } else {
-            self.parse_mlhs_primitive_item()
+            match self.parse_mlhs_primitive_item() {
+                Some(node) => MLHS::MaybeLhs { node },
+                None => MLHS::None,
+            }
         }
     }
 
-    fn parse_mlhs_primitive_item(&mut self) -> MLHS<'a> {
+    fn parse_mlhs_primitive_item(&mut self) -> Option<Box<Node<'a>>> {
         let trivial = None
             .or_else(|| self.parse_user_variable())
             .or_else(|| self.parse_keyword_variable())
             .or_else(|| self.parse_user_variable());
 
         if let Some(node) = trivial {
-            return MLHS::MaybeLhs { node };
+            return Some(node);
         }
 
         if let Some(primary) = self.parse_primary() {
             if let Some(lbrack_t) = self.try_token(TokenValue::tLBRACK) {
                 // foo[bar] = something
-                let lbrack_t = self.take_token();
                 let opt_call_args = self.parse_opt_call_args();
                 let rbrack_t = self.expect_token(TokenValue::tRBRACK);
                 todo!(
@@ -152,7 +161,7 @@ where
             }
         }
 
-        MLHS::None
+        None
     }
 }
 
@@ -171,6 +180,13 @@ pub(crate) enum MLHS<'a> {
     // This variant is used if we found something that is
     // absolutely not assignable
     // like `def foo; end`
+    None,
+}
+
+enum MlhsInner<'a> {
+    DefinitelyMlhsNode(Box<Node<'a>>),
+    DefinitelyMlhsList(Vec<Node<'a>>),
+    MaybeLhs(Box<Node<'a>>),
     None,
 }
 
@@ -217,4 +233,99 @@ fn test_lhs_parenthesized() {
             }))
         }
     );
+}
+
+#[test]
+fn test_mlhs_without_parens() {
+    use crate::nodes::{Begin, Lvar, Splat};
+
+    let mut parser = RustParser::new(b"a, *b, c");
+    assert_eq!(
+        parser.parse_mlhs(),
+        MLHS::DefinitelyMlhs {
+            node: Box::new(Node::Begin(Begin {
+                statements: vec![
+                    Node::Lvar(Lvar {
+                        name: StringContent::from("a"),
+                        expression_l: loc!(0, 1)
+                    }),
+                    Node::Splat(Splat {
+                        value: Some(Box::new(Node::Lvar(Lvar {
+                            name: StringContent::from("b"),
+                            expression_l: loc!(4, 5)
+                        }))),
+                        operator_l: loc!(3, 4),
+                        expression_l: loc!(3, 5)
+                    }),
+                    Node::Lvar(Lvar {
+                        name: StringContent::from("c"),
+                        expression_l: loc!(7, 8)
+                    })
+                ],
+                begin_l: Some(loc!(0, 1)),
+                end_l: Some(loc!(8, 9)),
+                expression_l: loc!(0, 9)
+            }))
+        }
+    );
+}
+
+#[test]
+fn test_mlhs_with_parens() {
+    use crate::nodes::{Begin, Gvar, Ivar, Lvar, Splat};
+
+    let mut parser = RustParser::new(b"((*a), $x, @c)");
+    assert_eq!(
+        parser.parse_mlhs(),
+        MLHS::DefinitelyMlhs {
+            node: Box::new(Node::Begin(Begin {
+                statements: vec![Node::Begin(Begin {
+                    statements: vec![Node::Begin(Begin {
+                        statements: vec![
+                            Node::Begin(Begin {
+                                statements: vec![Node::Begin(Begin {
+                                    statements: vec![Node::Splat(Splat {
+                                        value: Some(Box::new(Node::Lvar(Lvar {
+                                            name: StringContent::from("a"),
+                                            expression_l: loc!(3, 4)
+                                        }))),
+                                        operator_l: loc!(2, 3),
+                                        expression_l: loc!(2, 4)
+                                    })],
+                                    begin_l: Some(loc!(2, 3)),
+                                    end_l: Some(loc!(4, 5)),
+                                    expression_l: loc!(2, 5)
+                                })],
+                                begin_l: Some(loc!(1, 2)),
+                                end_l: Some(loc!(4, 5)),
+                                expression_l: loc!(1, 5)
+                            }),
+                            Node::Gvar(Gvar {
+                                name: StringContent::from("$x"),
+                                expression_l: loc!(7, 9)
+                            }),
+                            Node::Ivar(Ivar {
+                                name: StringContent::from("@c"),
+                                expression_l: loc!(11, 13)
+                            })
+                        ],
+                        begin_l: Some(loc!(1, 2)),
+                        end_l: Some(loc!(13, 14)),
+                        expression_l: loc!(1, 14)
+                    })],
+                    begin_l: Some(loc!(0, 1)),
+                    end_l: Some(loc!(13, 14)),
+                    expression_l: loc!(0, 14)
+                })],
+                begin_l: Some(loc!(0, 1)),
+                end_l: Some(loc!(14, 15)),
+                expression_l: loc!(0, 15)
+            }))
+        }
+    );
+}
+
+#[test]
+fn test_nameless_splat() {
+    todo!("requires parse_primary");
 }
