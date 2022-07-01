@@ -272,14 +272,14 @@ impl<'a, C: Constructor> Builder<C> {
         } else if statements.len() == 1 {
             Some(Box::new(statements.into_iter().next().unwrap()))
         } else {
-            todo!()
-            // let (begin_l, end_l, expression_l) = Self::collection_map(&None, &statements, &None);
-            // Some(Box::new(Node::Begin(Begin {
-            //     statements,
-            //     begin_l,
-            //     end_l,
-            //     expression_l,
-            // })))
+            let (begin_l, end_l, expression_l) = nodes_locs(&statements);
+
+            Some(Box::new(Node::Begin(Begin {
+                statements,
+                begin_l: Some(begin_l),
+                end_l: Some(end_l),
+                expression_l,
+            })))
         }
     }
 
@@ -305,25 +305,7 @@ impl<'a, C: Constructor> Builder<C> {
             return Box::new(nodes.into_iter().next().unwrap());
         }
 
-        let begin = nodes.first().unwrap().expression().start;
-        let end = nodes.last().unwrap().expression().end;
-
-        if begin == 1 && end == 13 {
-            panic!("HERE {:?}", nodes);
-        }
-
-        let begin_l = Loc {
-            start: begin,
-            end: begin + 1,
-        };
-        let end_l = Loc {
-            start: end,
-            end: end + 1,
-        };
-        let expression_l = Loc {
-            start: begin,
-            end: end + 1,
-        };
+        let (begin_l, end_l, expression_l) = nodes_locs(&nodes);
 
         Box::new(Node::Begin(Begin {
             statements: nodes,
@@ -356,4 +338,25 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
+}
+
+// Loc helpers
+
+fn nodes_locs(nodes: &[Node]) -> (Loc, Loc, Loc) {
+    debug_assert!(nodes.len() > 0);
+
+    let begin = nodes.first().unwrap().expression().start;
+    let end = nodes.last().unwrap().expression().end;
+
+    let begin_l = Loc {
+        start: begin,
+        end: begin + 1,
+    };
+    let end_l = Loc {
+        start: end,
+        end: end + 1,
+    };
+    let expression_l = begin_l.join(&end_l);
+
+    (begin_l, end_l, expression_l)
 }
