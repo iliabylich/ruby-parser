@@ -1,5 +1,6 @@
 pub(crate) mod atmark;
 pub(crate) mod buffer;
+mod checkpoint;
 pub(crate) mod gvar;
 pub(crate) mod handle_eof;
 pub(crate) mod heredoc_id;
@@ -21,6 +22,8 @@ use percent::parse_percent;
 use strings::parse_string;
 
 use strings::{action::StringExtendAction, literal::StringLiteral, stack::StringLiteralStack};
+
+pub(crate) use checkpoint::Checkpoint;
 
 pub struct Lexer<'a> {
     pub(crate) buffer: BufferWithCursor<'a>,

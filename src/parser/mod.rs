@@ -3,19 +3,14 @@ use crate::lexer::Lexer;
 use crate::nodes::Node;
 use crate::token::{Token, TokenValue};
 
+mod checkpoint;
+
 pub struct Parser<'a, C: Constructor = RustConstructor> {
     lexer: Lexer<'a>,
     debug: bool,
     phantom: std::marker::PhantomData<C>,
 }
 pub type RustParser<'a> = Parser<'a, RustConstructor>;
-
-macro_rules! current_token_is {
-    ($parser:expr, $token:pat) => {
-        matches!($parser.current_token().value(), $token)
-    };
-}
-pub(crate) use current_token_is;
 
 impl<'a, C> Parser<'a, C>
 where
