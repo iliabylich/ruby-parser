@@ -1,4 +1,4 @@
-use crate::{lexer::Lexer, token::token};
+use crate::lexer::Lexer;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub(crate) enum Checkpoint {
@@ -34,6 +34,8 @@ impl Checkpoint {
 
 #[test]
 fn test_checkpoint() {
+    use crate::token::token;
+
     let mut lexer = Lexer::new(b"1 2 3");
 
     assert_eq!(lexer.next_token(), token!(tINTEGER, 0, 1));

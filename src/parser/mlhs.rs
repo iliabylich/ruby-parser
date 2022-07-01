@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn parse_mlhs(&mut self) -> MLHS<'a> {
-        match self.parse_mlhs2() {
+        match self.parse_mlhs_internal() {
             MlhsInternal::DefinitelyMlhsNode(node) => MLHS::DefinitelyMlhs { node },
             MlhsInternal::DefinitelyMlhsList {
                 nodes,
@@ -28,11 +28,11 @@ where
         }
     }
 
-    fn parse_mlhs2(&mut self) -> MlhsInternal<'a> {
+    fn parse_mlhs_internal(&mut self) -> MlhsInternal<'a> {
         let mut items = vec![];
         let mut has_splat = false;
         let mut definitely_mlhs = false;
-        let mut has_trailing_comma = false;
+        let mut trailing_comma = None;
 
         macro_rules! handle_splat_argument {
             ($node:expr) => {
@@ -45,61 +45,36 @@ where
             };
         }
 
-        let is_splat = |node: &Node| matches!(node, Node::Splat(_));
-
         loop {
             match self.parse_mlhs_item() {
-                MlhsInternal::DefinitelyMlhsNode(node) => {
+                MlhsItem::DefinitelyMlhs(node) => {
                     definitely_mlhs = true;
+                    trailing_comma = None;
 
                     handle_splat_argument!(&*node);
-                    // if is_splat(&*node) {
-                    //     if has_splat {
-                    //         panic!("two splats in mlhs on the same level")
-                    //     }
-                    //     has_splat = true;
-                    // }
 
                     items.push(*node);
                 }
 
-                MlhsInternal::DefinitelyMlhsList {
-                    nodes,
-                    trailing_comma,
-                } => {
-                    definitely_mlhs = true;
+                MlhsItem::MaybeLhs(node) => {
+                    trailing_comma = None;
 
-                    for node in nodes {
-                        handle_splat_argument!(node);
-                        items.push(node);
-                    }
-                }
-
-                MlhsInternal::MaybeLhs(node) => {
                     items.push(*node);
                 }
 
-                MlhsInternal::None => break,
+                MlhsItem::None => break,
             }
 
-            has_trailing_comma = false;
-            if matches!(self.current_token().value(), TokenValue::tCOMMA) {
-                // consume ,
-                self.take_token();
-                has_trailing_comma = true;
+            if trailing_comma.is_none()
+                && matches!(self.current_token().value(), TokenValue::tCOMMA)
+            {
+                // consume comma after MLHS item
+                trailing_comma = Some(self.take_token());
                 definitely_mlhs = true;
             } else {
                 break;
             }
         }
-
-        let trailing_comma =
-            if !has_trailing_comma && matches!(self.current_token().value(), TokenValue::tCOMMA) {
-                // consume ,
-                Some(self.take_token())
-            } else {
-                None
-            };
 
         if items.is_empty() {
             MlhsInternal::None
@@ -116,44 +91,44 @@ where
         }
     }
 
-    fn parse_mlhs_item(&mut self) -> MlhsInternal<'a> {
+    fn parse_mlhs_item(&mut self) -> MlhsItem<'a> {
         if let Some(lparen_t) = self.try_token(TokenValue::tLPAREN) {
-            match self.parse_mlhs2() {
+            match self.parse_mlhs_internal() {
                 MlhsInternal::DefinitelyMlhsNode(inner) => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
                     let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
-                    MlhsInternal::DefinitelyMlhsNode(node)
+                    MlhsItem::DefinitelyMlhs(node)
                 }
                 MlhsInternal::DefinitelyMlhsList { nodes, .. } => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
                     let node = Builder::<C>::begin(lparen_t, nodes, rparen_t);
-                    MlhsInternal::DefinitelyMlhsNode(node)
+                    MlhsItem::DefinitelyMlhs(node)
                 }
                 MlhsInternal::MaybeLhs(inner) => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
                     let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
-                    MlhsInternal::MaybeLhs(node)
+                    MlhsItem::MaybeLhs(node)
                 }
-                MlhsInternal::None => MlhsInternal::None,
+                MlhsInternal::None => MlhsItem::None,
             }
         } else if let Some(star_t) = self.try_token(TokenValue::tSTAR) {
             match self.parse_mlhs_primitive_item() {
                 Some(node) => {
                     let node = Builder::<C>::splat(star_t, node);
-                    MlhsInternal::DefinitelyMlhsNode(node)
+                    MlhsItem::DefinitelyMlhs(node)
                 }
                 None => match self.current_token().value() {
                     TokenValue::tCOMMA | TokenValue::tRPAREN => {
                         let node = Builder::<C>::nameless_splat(star_t);
-                        MlhsInternal::DefinitelyMlhsNode(node)
+                        MlhsItem::DefinitelyMlhs(node)
                     }
-                    _ => MlhsInternal::None,
+                    _ => MlhsItem::None,
                 },
             }
         } else {
             match self.parse_mlhs_primitive_item() {
-                Some(node) => MlhsInternal::MaybeLhs(node),
-                None => MlhsInternal::None,
+                Some(node) => MlhsItem::MaybeLhs(node),
+                None => MlhsItem::None,
             }
         }
     }
@@ -235,6 +210,12 @@ enum MlhsInternal<'a> {
         nodes: Vec<Node<'a>>,
         trailing_comma: Option<Token<'a>>,
     },
+    MaybeLhs(Box<Node<'a>>),
+    None,
+}
+
+enum MlhsItem<'a> {
+    DefinitelyMlhs(Box<Node<'a>>),
     MaybeLhs(Box<Node<'a>>),
     None,
 }
