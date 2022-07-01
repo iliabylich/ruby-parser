@@ -133,7 +133,11 @@ impl<'a, C: Constructor> Builder<C> {
         unsafe { node_ptr_to_box!(C::gvar_node(name, loc)) }
     }
     pub(crate) fn cvar(cvar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
-        todo!()
+        let loc = cvar_t.loc();
+        Box::new(Node::Cvar(Cvar {
+            name: string_value(loc, buffer),
+            expression_l: loc,
+        }))
     }
     pub(crate) fn back_ref(back_ref_t: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
         let loc = back_ref_t.loc();

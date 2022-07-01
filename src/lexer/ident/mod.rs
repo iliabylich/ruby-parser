@@ -76,6 +76,18 @@ impl Ident {
 
         buffer.set_pos(start + length);
 
+        match buffer.for_lookahead().utf8_char_at(start) {
+            Utf8Char::Valid { length } => {
+                let s = std::str::from_utf8(buffer.slice(start, start + length).expect("bug"))
+                    .expect("bug");
+                let c = s.chars().next().expect("bug");
+                if c.is_uppercase() {
+                    return token!(tCONSTANT, start, buffer.pos());
+                }
+            }
+            _ => {}
+        }
+
         match IdentSuffix::lookahead(buffer.for_lookahead(), buffer.pos()) {
             Some(IdentSuffix { byte: b'!' | b'?' }) => {
                 // append `!` or `?`
@@ -146,12 +158,20 @@ fn test_lookahead_ident() {
 }
 
 assert_lex!(test_tIDENTIFIER_plain, b"foo", tIDENTIFIER, b"foo", 0..3);
+assert_lex!(test_tCONSTANT_plain, b"Foo", tCONSTANT, b"Foo", 0..3);
 
 assert_lex!(
     test_tIDENTIFIER_multibyte,
     b"\xD0\xB0\xD0\xB1\xD0\xB2+",
     tIDENTIFIER,
     b"\xD0\xB0\xD0\xB1\xD0\xB2",
+    0..6
+);
+assert_lex!(
+    test_tCONSTANT_multibyte,
+    b"\xD0\x90\xD0\x91\xD0\x92+",
+    tCONSTANT,
+    b"\xD0\x90\xD0\x91\xD0\x92",
     0..6
 );
 
