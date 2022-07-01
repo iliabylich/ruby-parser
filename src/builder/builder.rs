@@ -285,13 +285,9 @@ impl<'a, C: Constructor> Builder<C> {
 
     pub(crate) fn begin(
         begin_t: Token<'a>,
-        body: Option<Box<Node<'a>>>,
+        statements: Vec<Node<'a>>,
         end_t: Token<'a>,
     ) -> Box<Node<'a>> {
-        let mut statements = vec![];
-        if let Some(body) = body {
-            statements.push(*body);
-        }
         let begin_l = begin_t.loc();
         let end_l = end_t.loc();
         Box::new(Node::Begin(Begin {
@@ -305,8 +301,16 @@ impl<'a, C: Constructor> Builder<C> {
     pub(crate) fn group(nodes: Vec<Node<'a>>) -> Box<Node<'a>> {
         debug_assert!(nodes.len() > 0);
 
+        if nodes.len() == 1 {
+            return Box::new(nodes.into_iter().next().unwrap());
+        }
+
         let begin = nodes.first().unwrap().expression().start;
         let end = nodes.last().unwrap().expression().end;
+
+        if begin == 1 && end == 13 {
+            panic!("HERE {:?}", nodes);
+        }
 
         let begin_l = Loc {
             start: begin,
@@ -320,12 +324,20 @@ impl<'a, C: Constructor> Builder<C> {
             start: begin,
             end: end + 1,
         };
+
         Box::new(Node::Begin(Begin {
             statements: nodes,
             begin_l: Some(begin_l),
             end_l: Some(end_l),
             expression_l,
         }))
+    }
+
+    pub(crate) fn group_with_trailing_comma(
+        nodes: Vec<Node<'a>>,
+        trailing_comma: Token<'a>,
+    ) -> Box<Node<'a>> {
+        todo!()
     }
 
     // Pattern matching

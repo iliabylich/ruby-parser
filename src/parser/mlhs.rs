@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     nodes::Node,
     parser::Parser,
-    token::TokenValue,
+    token::{Token, TokenValue},
 };
 
 impl<'a, C> Parser<'a, C>
@@ -10,38 +10,76 @@ where
     C: Constructor,
 {
     pub(crate) fn parse_mlhs(&mut self) -> MLHS<'a> {
+        match self.parse_mlhs2() {
+            MlhsInternal::DefinitelyMlhsNode(node) => MLHS::DefinitelyMlhs { node },
+            MlhsInternal::DefinitelyMlhsList {
+                nodes,
+                trailing_comma,
+            } => {
+                let node = if let Some(trailing_comma) = trailing_comma {
+                    Builder::<C>::group_with_trailing_comma(nodes, trailing_comma)
+                } else {
+                    Builder::<C>::group(nodes)
+                };
+                MLHS::DefinitelyMlhs { node }
+            }
+            MlhsInternal::MaybeLhs(node) => MLHS::MaybeLhs { node },
+            MlhsInternal::None => MLHS::None,
+        }
+    }
+
+    fn parse_mlhs2(&mut self) -> MlhsInternal<'a> {
         let mut items = vec![];
         let mut has_splat = false;
         let mut definitely_mlhs = false;
         let mut has_trailing_comma = false;
 
+        macro_rules! handle_splat_argument {
+            ($node:expr) => {
+                if matches!($node, Node::Splat(_)) {
+                    if has_splat {
+                        panic!("two splats in mlhs on the same level")
+                    }
+                    has_splat = true;
+                }
+            };
+        }
+
+        let is_splat = |node: &Node| matches!(node, Node::Splat(_));
+
         loop {
             match self.parse_mlhs_item() {
-                MLHS::DefinitelyMlhs { node } => {
+                MlhsInternal::DefinitelyMlhsNode(node) => {
                     definitely_mlhs = true;
 
-                    if let Node::Splat(_) = &*node {
-                        if has_splat {
-                            panic!("two splats in mlhs on the same level")
-                        }
-                        has_splat = true;
-                    }
+                    handle_splat_argument!(&*node);
+                    // if is_splat(&*node) {
+                    //     if has_splat {
+                    //         panic!("two splats in mlhs on the same level")
+                    //     }
+                    //     has_splat = true;
+                    // }
 
                     items.push(*node);
                 }
 
-                MLHS::MaybeLhs { node } => {
-                    if let Node::Splat(_) = &*node {
-                        if has_splat {
-                            panic!("two splats in mlhs on the same level")
-                        }
-                        has_splat = true;
-                    }
+                MlhsInternal::DefinitelyMlhsList {
+                    nodes,
+                    trailing_comma,
+                } => {
+                    definitely_mlhs = true;
 
+                    for node in nodes {
+                        handle_splat_argument!(node);
+                        items.push(node);
+                    }
+                }
+
+                MlhsInternal::MaybeLhs(node) => {
                     items.push(*node);
                 }
 
-                MLHS::None => break,
+                MlhsInternal::None => break,
             }
 
             has_trailing_comma = false;
@@ -55,59 +93,67 @@ where
             }
         }
 
-        if !has_trailing_comma && matches!(self.current_token().value(), TokenValue::tCOMMA) {
-            // consume ,
-            self.take_token();
-        }
+        let trailing_comma =
+            if !has_trailing_comma && matches!(self.current_token().value(), TokenValue::tCOMMA) {
+                // consume ,
+                Some(self.take_token())
+            } else {
+                None
+            };
 
         if items.is_empty() {
-            MLHS::None
+            MlhsInternal::None
         } else if definitely_mlhs {
-            MLHS::DefinitelyMlhs {
-                node: Builder::<C>::group(items),
+            MlhsInternal::DefinitelyMlhsList {
+                nodes: items,
+                trailing_comma,
             }
         } else {
             debug_assert_eq!(items.len(), 1);
+
             let node = items.into_iter().next().unwrap();
-            MLHS::MaybeLhs {
-                node: Box::new(node),
-            }
+            MlhsInternal::MaybeLhs(Box::new(node))
         }
     }
 
-    fn parse_mlhs_item(&mut self) -> MLHS<'a> {
+    fn parse_mlhs_item(&mut self) -> MlhsInternal<'a> {
         if let Some(lparen_t) = self.try_token(TokenValue::tLPAREN) {
-            match self.parse_mlhs() {
-                MLHS::DefinitelyMlhs { node: inner } => {
+            match self.parse_mlhs2() {
+                MlhsInternal::DefinitelyMlhsNode(inner) => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
-                    MLHS::DefinitelyMlhs {
-                        node: Builder::<C>::begin(lparen_t, Some(inner), rparen_t),
-                    }
+                    let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
+                    MlhsInternal::DefinitelyMlhsNode(node)
                 }
-                MLHS::MaybeLhs { node: inner } => {
+                MlhsInternal::DefinitelyMlhsList { nodes, .. } => {
                     let rparen_t = self.expect_token(TokenValue::tRPAREN);
-                    MLHS::MaybeLhs {
-                        node: Builder::<C>::begin(lparen_t, Some(inner), rparen_t),
-                    }
+                    let node = Builder::<C>::begin(lparen_t, nodes, rparen_t);
+                    MlhsInternal::DefinitelyMlhsNode(node)
                 }
-                MLHS::None => MLHS::None,
+                MlhsInternal::MaybeLhs(inner) => {
+                    let rparen_t = self.expect_token(TokenValue::tRPAREN);
+                    let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
+                    MlhsInternal::MaybeLhs(node)
+                }
+                MlhsInternal::None => MlhsInternal::None,
             }
         } else if let Some(star_t) = self.try_token(TokenValue::tSTAR) {
             match self.parse_mlhs_primitive_item() {
-                Some(node) => MLHS::DefinitelyMlhs {
-                    node: Builder::<C>::splat(star_t, node),
-                },
+                Some(node) => {
+                    let node = Builder::<C>::splat(star_t, node);
+                    MlhsInternal::DefinitelyMlhsNode(node)
+                }
                 None => match self.current_token().value() {
-                    TokenValue::tCOMMA | TokenValue::tRPAREN => MLHS::DefinitelyMlhs {
-                        node: Builder::<C>::nameless_splat(star_t),
-                    },
-                    _ => MLHS::None,
+                    TokenValue::tCOMMA | TokenValue::tRPAREN => {
+                        let node = Builder::<C>::nameless_splat(star_t);
+                        MlhsInternal::DefinitelyMlhsNode(node)
+                    }
+                    _ => MlhsInternal::None,
                 },
             }
         } else {
             match self.parse_mlhs_primitive_item() {
-                Some(node) => MLHS::MaybeLhs { node },
-                None => MLHS::None,
+                Some(node) => MlhsInternal::MaybeLhs(node),
+                None => MlhsInternal::None,
             }
         }
     }
@@ -183,9 +229,12 @@ pub(crate) enum MLHS<'a> {
     None,
 }
 
-enum MlhsInner<'a> {
+enum MlhsInternal<'a> {
     DefinitelyMlhsNode(Box<Node<'a>>),
-    DefinitelyMlhsList(Vec<Node<'a>>),
+    DefinitelyMlhsList {
+        nodes: Vec<Node<'a>>,
+        trailing_comma: Option<Token<'a>>,
+    },
     MaybeLhs(Box<Node<'a>>),
     None,
 }
@@ -279,47 +328,32 @@ fn test_mlhs_with_parens() {
         parser.parse_mlhs(),
         MLHS::DefinitelyMlhs {
             node: Box::new(Node::Begin(Begin {
-                statements: vec![Node::Begin(Begin {
-                    statements: vec![Node::Begin(Begin {
-                        statements: vec![
-                            Node::Begin(Begin {
-                                statements: vec![Node::Begin(Begin {
-                                    statements: vec![Node::Splat(Splat {
-                                        value: Some(Box::new(Node::Lvar(Lvar {
-                                            name: StringContent::from("a"),
-                                            expression_l: loc!(3, 4)
-                                        }))),
-                                        operator_l: loc!(2, 3),
-                                        expression_l: loc!(2, 4)
-                                    })],
-                                    begin_l: Some(loc!(2, 3)),
-                                    end_l: Some(loc!(4, 5)),
-                                    expression_l: loc!(2, 5)
-                                })],
-                                begin_l: Some(loc!(1, 2)),
-                                end_l: Some(loc!(4, 5)),
-                                expression_l: loc!(1, 5)
-                            }),
-                            Node::Gvar(Gvar {
-                                name: StringContent::from("$x"),
-                                expression_l: loc!(7, 9)
-                            }),
-                            Node::Ivar(Ivar {
-                                name: StringContent::from("@c"),
-                                expression_l: loc!(11, 13)
-                            })
-                        ],
+                statements: vec![
+                    Node::Begin(Begin {
+                        statements: vec![Node::Splat(Splat {
+                            value: Some(Box::new(Node::Lvar(Lvar {
+                                name: StringContent::from("a"),
+                                expression_l: loc!(3, 4)
+                            }))),
+                            operator_l: loc!(2, 3),
+                            expression_l: loc!(2, 4)
+                        })],
                         begin_l: Some(loc!(1, 2)),
-                        end_l: Some(loc!(13, 14)),
-                        expression_l: loc!(1, 14)
-                    })],
-                    begin_l: Some(loc!(0, 1)),
-                    end_l: Some(loc!(13, 14)),
-                    expression_l: loc!(0, 14)
-                })],
+                        end_l: Some(loc!(4, 5)),
+                        expression_l: loc!(1, 5)
+                    }),
+                    Node::Gvar(Gvar {
+                        name: StringContent::from("$x"),
+                        expression_l: loc!(7, 9)
+                    }),
+                    Node::Ivar(Ivar {
+                        name: StringContent::from("@c"),
+                        expression_l: loc!(11, 13)
+                    })
+                ],
                 begin_l: Some(loc!(0, 1)),
-                end_l: Some(loc!(14, 15)),
-                expression_l: loc!(0, 15)
+                end_l: Some(loc!(13, 14)),
+                expression_l: loc!(0, 14)
             }))
         }
     );
