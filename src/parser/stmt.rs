@@ -90,7 +90,15 @@ where
             return Some(postexe);
         } else if matches!(self.current_token().value(), TokenValue::kDEF) {
             todo!("handle endless def")
+        } else if let Some(assignment) = self.try_assignment() {
+            return Some(assignment);
         }
+
+        self.try_expr()
+    }
+
+    fn try_assignment(&mut self) -> Option<Box<Node<'a>>> {
+        let checkpoint = self.new_checkpoint();
 
         match self.parse_mlhs() {
             mlhs::MLHS::DefinitelyMlhs { node: mlhs } => {
@@ -109,11 +117,16 @@ where
                             rescue_t,
                             stmt
                         )
+                    } else {
+                        todo!("mlhs = rhs {:?} {:?} {:?}", mlhs, eql_t, mrhs_arg)
                     }
+                } else {
+                    todo!("mlhs -> tEQL requires rhs")
                 }
             }
             mlhs::MLHS::MaybeLhs { node: lhs } => {
-                // maybe a plain assignment, maybe an expression (that is fully parsed in `parse_expr`)
+                // maybe a plain assignment,
+                // but maybe just an expression (that is fully parsed later in `parse_expr`)
                 match self.current_token().value() {
                     TokenValue::tEQL | TokenValue::tOP_ASGN => {
                         // definitely an assignment
@@ -122,15 +135,16 @@ where
                         todo!("assignment {:?} {:?} {:?}", lhs, op_t, command_rhs);
                     }
                     _ => {
-                        todo!("rollback, expr can be more that just an lvar get");
+                        // rollback, expr can be more that just an lvar get
+                        self.restore_checkpoint(checkpoint);
+                        None
                     }
                 }
             }
             mlhs::MLHS::None => {
                 // well, it's not an MLHS, then it's definitely an expression
+                None
             }
         }
-
-        self.try_expr()
     }
 }
