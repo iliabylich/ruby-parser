@@ -1,5 +1,5 @@
 use crate::builder::{Builder, Constructor, RustConstructor};
-use crate::lexer::Lexer;
+use crate::lexer::{buffer::Buffer, Lexer};
 use crate::nodes::Node;
 use crate::token::{Token, TokenValue};
 
@@ -67,6 +67,10 @@ where
     fn parse_program(&mut self) -> Option<Box<Node<'a>>> {
         self.parse_top_compstmt()
     }
+
+    pub(crate) fn buffer(&self) -> &Buffer<'a> {
+        self.lexer.buffer.for_lookahead()
+    }
 }
 
 mod alias;
@@ -75,6 +79,7 @@ mod mlhs;
 mod postexe;
 mod preexe;
 mod stmt;
+mod symbol;
 mod undef;
 mod variables;
 
@@ -149,8 +154,8 @@ where
     }
     fn parse_fitem(&mut self) -> Option<Box<Node<'a>>> {
         self.parse_fname()
-            .map(|token| panic!("symbol_internal {:?}", token))
-            .or_else(|| self.parse_symbol())
+            .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
+            .or_else(|| self.try_symbol())
     }
 
     fn parse_op(&mut self) -> Option<Token<'a>> {
@@ -582,7 +587,7 @@ where
     fn parse_qsym_list(&mut self) {
         todo!()
     }
-    fn parse_string_contents(&mut self) {
+    fn parse_string_contents(&mut self) -> Vec<Node<'a>> {
         todo!()
     }
     fn parse_xstring_contents(&mut self) {
@@ -596,32 +601,6 @@ where
     }
     fn parse_string_dvar(&mut self) {
         todo!()
-    }
-    fn parse_symbol(&mut self) -> Option<Box<Node<'a>>> {
-        if self.current_token().value() != &TokenValue::tSYMBEG {
-            return None;
-        }
-
-        let symbeg_t = self.take_token();
-
-        // try plain symbol (`sym`)
-        let sym = self
-            .parse_fname()
-            .or_else(|| self.try_token(TokenValue::tIVAR))
-            .or_else(|| self.try_token(TokenValue::tGVAR))
-            .or_else(|| self.try_token(TokenValue::tCVAR));
-        if let Some(sym) = sym {
-            panic!("symbol {:?} {:?}", symbeg_t, sym)
-        }
-
-        // otherwise read `dsym`
-
-        let string_contents = self.parse_string_contents();
-        let string_end_t = self.expect_token(TokenValue::tSTRING_END);
-        panic!(
-            "symbol_compose {:?} {:?} {:?}",
-            symbeg_t, string_contents, string_end_t
-        )
     }
     fn parse_numeric(&mut self) {
         todo!()

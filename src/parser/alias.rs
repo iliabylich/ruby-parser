@@ -33,36 +33,80 @@ impl<'a, C: Constructor> Parser<'a, C> {
     }
 }
 
-#[test]
-fn test_alias_fitem_fitem() {
-    use crate::RustParser;
-
-    let mut parser = RustParser::new(b"alias foo bar");
-    panic!("{:?}", parser.parse_alias());
-}
-
-#[test]
-fn test_alias_gvar_gvar() {
+#[cfg(test)]
+mod tests {
     use crate::{
-        nodes::{Alias, Gvar},
+        loc::loc,
+        nodes::{Alias, Gvar, Sym},
         string_content::StringContent,
-        Loc, Node, RustParser,
+        Node, RustParser,
     };
 
-    let mut parser = RustParser::new(b"alias $foo $bar");
-    assert_eq!(
-        parser.parse_alias(),
-        Some(Box::new(Node::Alias(Alias {
-            to: Box::new(Node::Gvar(Gvar {
-                name: StringContent::from("$foo"),
-                expression_l: Loc { start: 6, end: 10 }
-            })),
-            from: Box::new(Node::Gvar(Gvar {
-                name: StringContent::from("$bar"),
-                expression_l: Loc { start: 11, end: 15 }
-            })),
-            keyword_l: Loc { start: 0, end: 5 },
-            expression_l: Loc { start: 0, end: 15 }
-        })))
-    );
+    #[test]
+    fn test_alias_name_to_name() {
+        let mut parser = RustParser::new(b"alias foo bar");
+        assert_eq!(
+            parser.parse_alias(),
+            Some(Box::new(Node::Alias(Alias {
+                to: Box::new(Node::Sym(Sym {
+                    name: StringContent::from("foo"),
+                    begin_l: None,
+                    end_l: None,
+                    expression_l: loc!(6, 9)
+                })),
+                from: Box::new(Node::Sym(Sym {
+                    name: StringContent::from("bar"),
+                    begin_l: None,
+                    end_l: None,
+                    expression_l: loc!(10, 13)
+                })),
+                keyword_l: loc!(0, 5),
+                expression_l: loc!(0, 13)
+            })))
+        );
+    }
+
+    #[test]
+    fn test_alias_sym_to_sym() {
+        let mut parser = RustParser::new(b"alias :foo :bar");
+        assert_eq!(
+            parser.parse_alias(),
+            Some(Box::new(Node::Alias(Alias {
+                to: Box::new(Node::Sym(Sym {
+                    name: StringContent::from("foo"),
+                    begin_l: Some(loc!(6, 7)),
+                    end_l: None,
+                    expression_l: loc!(6, 10)
+                })),
+                from: Box::new(Node::Sym(Sym {
+                    name: StringContent::from("bar"),
+                    begin_l: Some(loc!(11, 12)),
+                    end_l: None,
+                    expression_l: loc!(11, 15)
+                })),
+                keyword_l: loc!(0, 5),
+                expression_l: loc!(0, 15)
+            })))
+        );
+    }
+
+    #[test]
+    fn test_alias_gvar_to_gvar() {
+        let mut parser = RustParser::new(b"alias $foo $bar");
+        assert_eq!(
+            parser.parse_alias(),
+            Some(Box::new(Node::Alias(Alias {
+                to: Box::new(Node::Gvar(Gvar {
+                    name: StringContent::from("$foo"),
+                    expression_l: loc!(6, 10)
+                })),
+                from: Box::new(Node::Gvar(Gvar {
+                    name: StringContent::from("$bar"),
+                    expression_l: loc!(11, 15)
+                })),
+                keyword_l: loc!(0, 5),
+                expression_l: loc!(0, 15)
+            })))
+        );
+    }
 }

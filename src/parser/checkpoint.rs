@@ -4,15 +4,15 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    fn new_checkpoint(&self) -> Checkpoint {
+    pub(crate) fn new_checkpoint(&self) -> Checkpoint {
         Checkpoint::real(&self.lexer)
     }
 
-    fn dummy_checkpoint(&self) -> Checkpoint {
+    pub(crate) fn dummy_checkpoint(&self) -> Checkpoint {
         Checkpoint::Dummy
     }
 
-    fn restore_checkpoint(&mut self, checkpoint: Checkpoint) {
+    pub(crate) fn restore_checkpoint(&mut self, checkpoint: Checkpoint) {
         checkpoint.restore(&mut self.lexer)
     }
 }

@@ -144,7 +144,6 @@ pub enum TokenValue<'a> {
     tSTRING_DVAR,  // "#" (in case of #@var / #@@var / #$var)
     tLAMBEG,       //
     tLABEL_END,    //
-    tSYMBOL,       // "symbol"
 
     tCOMMA,   // ","
     tLCURLY,  // "{"

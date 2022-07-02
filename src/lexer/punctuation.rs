@@ -569,23 +569,8 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
             _ => {}
         }
 
-        // It still can be a plain `:symbol`
-        if self.required_new_expr {
-            if let Some(Ident { length }) = Ident::lookahead(self.buffer.for_lookahead(), start + 1)
-            {
-                let mut end = start + 1 + length;
-                dbg!(start);
-                dbg!(length);
-                dbg!(end);
-                if let Some(IdentSuffix { .. }) =
-                    IdentSuffix::lookahead(self.buffer.for_lookahead(), end)
-                {
-                    end += 1;
-                }
-                self.buffer.set_pos(end);
-                return token!(tSYMBOL, start, end);
-            }
-        }
+        // Plain symbols are handled on the parser level
+        // by concatenating tCOLON and tIDENTIFIER/tCONSTANT/tIVAR/tCVAR/tGVAR
 
         token!(tCOLON, start, start + 1)
     }
@@ -630,28 +615,6 @@ assert_lex!(
     }
 );
 assert_lex!(test_tCOLON, b":", tCOLON, b":", 0..1);
-assert_lex!(
-    test_tSYMBOL,
-    b":foo",
-    tSYMBOL,
-    b":foo",
-    0..4,
-    setup = |lexer: &mut Lexer| {
-        lexer.require_new_expr();
-    },
-    assert = |_| {}
-);
-assert_lex!(
-    test_tSYMBOL_with_suffix,
-    b":foo?",
-    tSYMBOL,
-    b":foo?",
-    0..5,
-    setup = |lexer: &mut Lexer| {
-        lexer.require_new_expr();
-    },
-    assert = |_| {}
-);
 
 impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
