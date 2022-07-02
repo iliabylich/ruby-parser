@@ -6,11 +6,9 @@ use crate::lexer::{
 };
 use crate::token::{token, Token};
 
-use crate::lexer::ident::{Ident, IdentSuffix};
+use crate::lexer::ident::Ident;
 use crate::lexer::numbers::parse_number;
 use crate::lexer::qmark::QMark;
-
-use super::buffer::Lookahead;
 
 impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
