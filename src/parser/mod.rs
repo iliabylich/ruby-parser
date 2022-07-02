@@ -61,11 +61,11 @@ where
     }
 
     pub fn parse(&mut self) -> Option<Box<Node<'a>>> {
-        self.parse_program()
+        self.try_program()
     }
 
-    fn parse_program(&mut self) -> Option<Box<Node<'a>>> {
-        self.parse_top_compstmt()
+    fn try_program(&mut self) -> Option<Box<Node<'a>>> {
+        self.try_top_compstmt()
     }
 
     pub(crate) fn buffer(&self) -> &Buffer<'a> {
@@ -87,20 +87,20 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    fn parse_command_rhs(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_command_rhs(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
 
-    fn parse_expr(&mut self) -> Option<Box<Node<'a>>> {
-        if let Some(command_call) = self.parse_command_call() {
+    fn try_expr(&mut self) -> Option<Box<Node<'a>>> {
+        if let Some(command_call) = self.try_command_call() {
             return Some(command_call);
         }
 
         todo!()
     }
 
-    fn parse_def_name(&mut self) -> Option<Token<'a>> {
-        self.parse_fname()
+    fn try_def_name(&mut self) -> Option<Token<'a>> {
+        self.try_fname()
     }
 
     fn parse_defn_head(&mut self) -> (Token<'a>, Token<'a>) {
@@ -111,15 +111,15 @@ where
         todo!()
     }
 
-    fn parse_expr_value(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_expr_value(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
 
-    fn parse_expr_value_do(&mut self) -> Option<(Node<'a>, Token<'a>)> {
+    fn try_expr_value_do(&mut self) -> Option<(Node<'a>, Token<'a>)> {
         todo!()
     }
 
-    fn parse_command_call(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_command_call(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
 
@@ -145,20 +145,20 @@ where
     fn parse_cpath(&mut self) {
         todo!()
     }
-    fn parse_fname(&mut self) -> Option<Token<'a>> {
+    fn try_fname(&mut self) -> Option<Token<'a>> {
         self.try_token(TokenValue::tIDENTIFIER)
             .or_else(|| self.try_token(TokenValue::tCONSTANT))
             .or_else(|| self.try_token(TokenValue::tFID))
-            .or_else(|| self.parse_op())
-            .or_else(|| self.parse_reswords())
+            .or_else(|| self.try_op())
+            .or_else(|| self.try_reswords())
     }
-    fn parse_fitem(&mut self) -> Option<Box<Node<'a>>> {
-        self.parse_fname()
+    fn try_fitem(&mut self) -> Option<Box<Node<'a>>> {
+        self.try_fname()
             .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
             .or_else(|| self.try_symbol())
     }
 
-    fn parse_op(&mut self) -> Option<Token<'a>> {
+    fn try_op(&mut self) -> Option<Token<'a>> {
         None.or_else(|| self.try_token(TokenValue::tPIPE))
             .or_else(|| self.try_token(TokenValue::tCARET))
             .or_else(|| self.try_token(TokenValue::tAMPER))
@@ -190,7 +190,7 @@ where
             .or_else(|| self.try_token(TokenValue::tASET))
             .or_else(|| self.try_token(TokenValue::tBACK_REF))
     }
-    fn parse_reswords(&mut self) -> Option<Token<'a>> {
+    fn try_reswords(&mut self) -> Option<Token<'a>> {
         None.or_else(|| self.try_token(TokenValue::k__LINE__))
             .or_else(|| self.try_token(TokenValue::k__FILE__))
             .or_else(|| self.try_token(TokenValue::k__ENCODING__))
@@ -275,16 +275,16 @@ where
     fn parse_args(&mut self) {
         todo!()
     }
-    fn parse_mrhs_arg(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_mrhs_arg(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
-    fn parse_mrhs(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_mrhs(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
-    fn parse_primary(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_primary(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
-    fn parse_primary_value(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_primary_value(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
     fn parse_k_begin(&mut self) {
@@ -611,19 +611,19 @@ where
     fn parse_nonlocal_var(&mut self) {
         todo!()
     }
-    fn parse_user_variable(&mut self) -> Option<Box<Node<'a>>> {
-        None.or_else(|| self.parse_lvar())
-            .or_else(|| self.parse_ivar())
-            .or_else(|| self.parse_gvar())
-            .or_else(|| self.parse_t_const())
-            .or_else(|| self.parse_cvar())
+    fn try_user_variable(&mut self) -> Option<Box<Node<'a>>> {
+        None.or_else(|| self.try_lvar())
+            .or_else(|| self.try_ivar())
+            .or_else(|| self.try_gvar())
+            .or_else(|| self.try_t_const())
+            .or_else(|| self.try_cvar())
     }
-    fn parse_var_ref(&mut self) {
+    fn try_var_ref(&mut self) {
         todo!()
     }
-    fn parse_var_lhs(&mut self) -> Option<Box<Node<'a>>> {
-        None.or_else(|| self.parse_user_variable())
-            .or_else(|| self.parse_keyword_variable())
+    fn try_var_lhs(&mut self) -> Option<Box<Node<'a>>> {
+        None.or_else(|| self.try_user_variable())
+            .or_else(|| self.try_keyword_variable())
             .map(|node| Builder::<C>::assignable(node))
     }
     fn parse_superclass(&mut self) {
@@ -740,7 +740,7 @@ where
     fn parse_dot_or_colon(&mut self) {
         todo!()
     }
-    fn parse_call_op(&mut self) -> Option<Token<'a>> {
+    fn try_call_op(&mut self) -> Option<Token<'a>> {
         todo!()
     }
     fn parse_call_op2(&mut self) {

@@ -17,7 +17,7 @@ where
                 // maybe a plain symbol
                 let colon_t = self.take_token();
                 let sym_t = None
-                    .or_else(|| self.parse_fname())
+                    .or_else(|| self.try_fname())
                     .or_else(|| self.try_token(TokenValue::tIVAR))
                     .or_else(|| self.try_token(TokenValue::tCVAR))
                     .or_else(|| self.try_token(TokenValue::tGVAR));

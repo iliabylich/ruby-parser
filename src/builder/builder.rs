@@ -334,20 +334,20 @@ impl<'a, C: Constructor> Builder<C> {
     // Exception handling
 
     // Expression grouping
-    pub(crate) fn compstmt(statements: Vec<Node<'a>>) -> Option<Box<Node<'a>>> {
-        if statements.is_empty() {
-            None
-        } else if statements.len() == 1 {
-            Some(Box::new(statements.into_iter().next().unwrap()))
+    pub(crate) fn compstmt(statements: Vec<Node<'a>>) -> Box<Node<'a>> {
+        debug_assert!(!statements.is_empty());
+
+        if statements.len() == 1 {
+            Box::new(statements.into_iter().next().unwrap())
         } else {
             let (begin_l, end_l, expression_l) = nodes_locs(&statements);
 
-            Some(Box::new(Node::Begin(Begin {
+            Box::new(Node::Begin(Begin {
                 statements,
                 begin_l: Some(begin_l),
                 end_l: Some(end_l),
                 expression_l,
-            })))
+            }))
         }
     }
 

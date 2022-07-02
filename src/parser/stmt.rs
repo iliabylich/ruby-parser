@@ -4,10 +4,14 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn parse_top_compstmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_top_compstmt(&mut self) -> Option<Box<Node<'a>>> {
         let top_stmts = self.parse_top_stmts();
         self.parse_opt_terms();
-        Builder::<C>::compstmt(top_stmts)
+        if top_stmts.is_empty() {
+            None
+        } else {
+            Some(Builder::<C>::compstmt(top_stmts))
+        }
     }
 
     pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node<'a>> {
@@ -19,66 +23,70 @@ where
     }
 
     pub(crate) fn try_top_stmt(&mut self) -> Option<Box<Node<'a>>> {
-        None.or_else(|| self.parse_preexe())
-            .or_else(|| self.parse_stmt())
+        None.or_else(|| self.try_preexe())
+            .or_else(|| self.try_stmt())
     }
 
     pub(crate) fn parse_bodystmt(&mut self) -> Node<'a> {
         todo!()
     }
 
-    pub(crate) fn parse_compstmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_compstmt(&mut self) -> Option<Box<Node<'a>>> {
         let stmts = self.parse_stmts();
         self.parse_opt_terms();
-        Builder::<C>::compstmt(stmts)
+        if stmts.is_empty() {
+            None
+        } else {
+            Some(Builder::<C>::compstmt(stmts))
+        }
     }
 
     pub(crate) fn parse_stmts(&mut self) -> Vec<Node<'a>> {
         let mut stmts = vec![];
-        while let Some(stmt) = self.parse_stmt() {
+        while let Some(stmt) = self.try_stmt() {
             stmts.push(*stmt);
         }
 
-        if let Some(begin_block) = self.parse_preexe() {
+        if let Some(begin_block) = self.try_preexe() {
             stmts.push(*begin_block);
         }
         stmts
     }
 
-    pub(crate) fn parse_stmt(&mut self) -> Option<Box<Node<'a>>> {
-        let stmt = self.parse_stmt_head()?;
+    pub(crate) fn try_stmt(&mut self) -> Option<Box<Node<'a>>> {
+        let stmt = self.try_stmt_head()?;
 
         match self.current_token().value() {
             TokenValue::kIF => {
                 let k_if = self.take_token();
-                let expr_value = self.parse_expr_value();
+                let expr_value = self.try_expr_value();
                 panic!("if_mod {:?} {:?} {:?}", stmt, k_if, expr_value);
             }
             TokenValue::kUNLESS => {
                 let k_unless = self.take_token();
-                let expr_value = self.parse_expr_value();
+                let expr_value = self.try_expr_value();
                 panic!("unless_mod {:?} {:?} {:?}", stmt, k_unless, expr_value);
             }
             TokenValue::kWHILE => {
                 let k_while = self.take_token();
-                let expr_value = self.parse_expr_value();
+                let expr_value = self.try_expr_value();
                 panic!("while_mod {:?} {:?} {:?}", stmt, k_while, expr_value);
             }
             TokenValue::kUNTIL => {
                 let k_until = self.take_token();
-                let expr_value = self.parse_expr_value();
+                let expr_value = self.try_expr_value();
                 panic!("until_mod {:?} {:?} {:?}", stmt, k_until, expr_value);
             }
             _ => Some(stmt),
         }
     }
 
-    pub(crate) fn parse_stmt_head(&mut self) -> Option<Box<Node<'a>>> {
-        if let Some(alias) = self.parse_alias() {
+    fn try_stmt_head(&mut self) -> Option<Box<Node<'a>>> {
+        if let Some(alias) = self.try_alias() {
             return Some(alias);
-        } else if let Some(undef) = self.parse_undef() {
+        } else if let Some(undef) = self.try_undef() {
             return Some(undef);
-        } else if let Some(postexe) = self.parse_postexe() {
+        } else if let Some(postexe) = self.try_postexe() {
             return Some(postexe);
         } else if matches!(self.current_token().value(), TokenValue::kDEF) {
             todo!("handle endless def")
@@ -88,11 +96,11 @@ where
             mlhs::MLHS::DefinitelyMlhs { node: mlhs } => {
                 // definitely an MLHS, can only be assigned via `=`
                 let eql_t = self.expect_token(TokenValue::tEQL);
-                if let Some(command_call) = self.parse_command_call() {
+                if let Some(command_call) = self.try_command_call() {
                     todo!("mlhs = rhs {:?} {:?} {:?}", mlhs, eql_t, command_call);
-                } else if let Some(mrhs_arg) = self.parse_mrhs_arg() {
+                } else if let Some(mrhs_arg) = self.try_mrhs_arg() {
                     if let Some(rescue_t) = self.try_token(TokenValue::kRESCUE) {
-                        let stmt = self.parse_stmt().expect("mlhs -> kRESCUE requires stmt");
+                        let stmt = self.try_stmt().expect("mlhs -> kRESCUE requires stmt");
                         todo!(
                             "mlhs = rhs rescue stmt {:?} {:?} {:?} {:?} {:?}",
                             mlhs,
@@ -110,8 +118,7 @@ where
                     TokenValue::tEQL | TokenValue::tOP_ASGN => {
                         // definitely an assignment
                         let op_t = self.take_token();
-                        let command_rhs =
-                            self.parse_command_rhs().expect("assignment must have RHS");
+                        let command_rhs = self.try_command_rhs().expect("assignment must have RHS");
                         todo!("assignment {:?} {:?} {:?}", lhs, op_t, command_rhs);
                     }
                     _ => {
@@ -124,6 +131,6 @@ where
             }
         }
 
-        self.parse_expr()
+        self.try_expr()
     }
 }

@@ -2,25 +2,25 @@ use super::*;
 use crate::builder::{Builder, Constructor};
 
 impl<'a, C: Constructor> Parser<'a, C> {
-    pub(crate) fn parse_alias(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_alias(&mut self) -> Option<Box<Node<'a>>> {
         let alias_t = self.try_token(TokenValue::kALIAS)?;
 
         let lhs;
         let rhs;
 
-        if let Some(fitem) = self.parse_fitem() {
+        if let Some(fitem) = self.try_fitem() {
             lhs = fitem;
             rhs = self
-                .parse_fitem()
+                .try_fitem()
                 .unwrap_or_else(|| panic!("expected fitem, got {:?}", self.current_token()));
         } else {
             lhs = self
-                .parse_gvar()
+                .try_gvar()
                 .unwrap_or_else(|| panic!("expected gvar, got {:?}", self.current_token()));
             rhs = None
-                .or_else(|| self.parse_gvar())
-                .or_else(|| self.parse_back_ref())
-                .or_else(|| self.parse_nth_ref())
+                .or_else(|| self.try_gvar())
+                .or_else(|| self.try_back_ref())
+                .or_else(|| self.try_nth_ref())
                 .unwrap_or_else(|| {
                     panic!(
                         "expected tGVAR/tBACK_REF/tNTH_REF, got {:?}",
@@ -46,7 +46,7 @@ mod tests {
     fn test_alias_name_to_name() {
         let mut parser = RustParser::new(b"alias foo bar");
         assert_eq!(
-            parser.parse_alias(),
+            parser.try_alias(),
             Some(Box::new(Node::Alias(Alias {
                 to: Box::new(Node::Sym(Sym {
                     name: StringContent::from("foo"),
@@ -70,7 +70,7 @@ mod tests {
     fn test_alias_sym_to_sym() {
         let mut parser = RustParser::new(b"alias :foo :bar");
         assert_eq!(
-            parser.parse_alias(),
+            parser.try_alias(),
             Some(Box::new(Node::Alias(Alias {
                 to: Box::new(Node::Sym(Sym {
                     name: StringContent::from("foo"),
@@ -94,7 +94,7 @@ mod tests {
     fn test_alias_gvar_to_gvar() {
         let mut parser = RustParser::new(b"alias $foo $bar");
         assert_eq!(
-            parser.parse_alias(),
+            parser.try_alias(),
             Some(Box::new(Node::Alias(Alias {
                 to: Box::new(Node::Gvar(Gvar {
                     name: StringContent::from("$foo"),

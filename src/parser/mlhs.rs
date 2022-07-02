@@ -112,7 +112,7 @@ where
                 MlhsInternal::None => MlhsItem::None,
             }
         } else if let Some(star_t) = self.try_token(TokenValue::tSTAR) {
-            match self.parse_mlhs_primitive_item() {
+            match self.try_mlhs_primitive_item() {
                 Some(node) => {
                     let node = Builder::<C>::splat(star_t, node);
                     MlhsItem::DefinitelyMlhs(node)
@@ -126,24 +126,24 @@ where
                 },
             }
         } else {
-            match self.parse_mlhs_primitive_item() {
+            match self.try_mlhs_primitive_item() {
                 Some(node) => MlhsItem::MaybeLhs(node),
                 None => MlhsItem::None,
             }
         }
     }
 
-    fn parse_mlhs_primitive_item(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_mlhs_primitive_item(&mut self) -> Option<Box<Node<'a>>> {
         let trivial = None
-            .or_else(|| self.parse_user_variable())
-            .or_else(|| self.parse_keyword_variable())
-            .or_else(|| self.parse_user_variable());
+            .or_else(|| self.try_user_variable())
+            .or_else(|| self.try_keyword_variable())
+            .or_else(|| self.try_user_variable());
 
         if let Some(node) = trivial {
             return Some(node);
         }
 
-        if let Some(primary) = self.parse_primary() {
+        if let Some(primary) = self.try_primary() {
             if let Some(lbrack_t) = self.try_token(TokenValue::tLBRACK) {
                 // foo[bar] = something
                 let opt_call_args = self.parse_opt_call_args();
@@ -170,7 +170,7 @@ where
                 );
             }
 
-            if let Some(call_op_t) = self.parse_call_op() {
+            if let Some(call_op_t) = self.try_call_op() {
                 // TODO: or tCONSTANT
                 let call_mid = self.expect_token(TokenValue::tIDENTIFIER);
                 todo!(
