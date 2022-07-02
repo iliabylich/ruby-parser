@@ -1,5 +1,9 @@
-use super::*;
-use crate::builder::{Builder, Constructor};
+use crate::{
+    builder::{Builder, Constructor},
+    parser::Parser,
+    token::TokenValue,
+    Node,
+};
 
 impl<'a, C: Constructor> Parser<'a, C> {
     pub(crate) fn try_alias(&mut self) -> Option<Box<Node<'a>>> {
