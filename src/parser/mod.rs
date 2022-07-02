@@ -74,13 +74,13 @@ where
 }
 
 mod alias;
-mod else_;
-mod ensure;
 mod keyword_variable;
 mod mlhs;
+mod opt_else;
+mod opt_ensure;
+mod opt_rescue;
 mod postexe;
 mod preexe;
-mod rescue;
 mod stmt;
 mod symbol;
 mod undef;
