@@ -7,7 +7,7 @@ use crate::{
             action::StringExtendAction,
             escapes::{
                 Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
-                SlashOctal, SlashU, SlashUError, SlashX, SlashXError,
+                SlashOctal, SlashU, SlashUError, SlashUPerCodepointError, SlashX, SlashXError,
             },
             handlers::handle_processed_string_content,
         },
@@ -69,6 +69,41 @@ pub(crate) fn handle_escape<'a>(
                         .into_bytes();
                 }
                 _ => codepoints = vec![],
+            }
+
+            match &err {
+                EscapeError::SlashUError(SlashUError {
+                    codepoints,
+                    errors,
+                    length,
+                }) => {
+                    eprintln!("Got \\u errors: {:?} {:?} {:?}", codepoints, errors, length);
+                    for error in errors {
+                        match error {
+                            SlashUPerCodepointError::Expected4Got { start, length } => {
+                                eprintln!("expected 4 got {:?} {:?}", start, length);
+                            }
+                            SlashUPerCodepointError::TooLong { start, length } => {
+                                eprintln!("too long {:?} {:?}", start, length);
+                            }
+                            SlashUPerCodepointError::NonHex { start, length } => {
+                                eprintln!("non-hex {:?} {:?}", start, length);
+                            }
+                            SlashUPerCodepointError::NoRCurly { start } => {
+                                eprintln!("no closing rcurly {:?} {:?}", start, length);
+                            }
+                        }
+                    }
+                }
+                EscapeError::SlashXError(SlashXError { length }) => {
+                    eprintln!("\\x error {:?}", length);
+                }
+                EscapeError::SlashMetaCtrlError(SlashMetaCtrlError { length }) => {
+                    eprintln!("\\ meta/ctrl error {:?}", length);
+                }
+                EscapeError::SlashByteError(SlashByteError { length }) => {
+                    eprintln!("\\byte error {:?}", length);
+                }
             }
             // 2. TODO: report `err`
 

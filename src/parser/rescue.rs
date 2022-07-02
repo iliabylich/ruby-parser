@@ -46,7 +46,7 @@ where
             .or_else(|| self.try_token(TokenValue::kTHEN))
             .or_else(|| {
                 let checkpoint = self.new_checkpoint();
-                if let Some(term) = self.try_term() {
+                if let Some(_term) = self.try_term() {
                     if let Some(k_then) = self.try_token(TokenValue::kTHEN) {
                         return Some(k_then);
                     }
@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_opt_rescue1() {
-        let mut parser = RustParser::new(b"rescue");
+        let _parser = RustParser::new(b"rescue");
         unimplemented!("requires try_arg")
     }
 }
