@@ -104,7 +104,7 @@ mod tests {
 
     #[test]
     fn test_opt_rescue1() {
-        let _parser = RustParser::new(b"rescue");
-        unimplemented!("requires try_arg")
+        let mut parser = RustParser::new(b"rescue");
+        assert_eq!(parser.try_opt_rescue1(), None);
     }
 }

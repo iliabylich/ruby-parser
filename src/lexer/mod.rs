@@ -68,7 +68,7 @@ impl<'a> Lexer<'a> {
 
         match self.current_token.as_ref() {
             Some(token) => token,
-            None => unreachable!("token has been filled"),
+            None => unreachable!("token has been filled above"),
         }
     }
 

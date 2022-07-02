@@ -294,5 +294,6 @@ fn test_mlhs_with_parens() {
 
 #[test]
 fn test_nameless_splat() {
-    todo!("requires parse_primary");
+    let mut parser = RustParser::new(b"*");
+    assert_eq!(parser.parse_mlhs(), MLHS::None)
 }

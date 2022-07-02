@@ -32,6 +32,6 @@ impl<'a> StringLiteralExtend<'a> for Symbol {
 
         handle_eof(buffer, start)?;
 
-        todo!("implement symbol.extend")
+        todo!("symbol.extend")
     }
 }

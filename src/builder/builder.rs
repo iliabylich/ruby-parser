@@ -40,16 +40,16 @@ impl<'a, C: Constructor> Builder<C> {
 
     // Numerics
     pub(crate) fn integer(integer_t: Token) -> Box<Node> {
-        todo!()
+        todo!("builder.integer")
     }
     pub(crate) fn float(float_t: Token) -> Box<Node> {
-        todo!()
+        todo!("builder.float")
     }
     pub(crate) fn rational(rational_t: Token) -> Box<Node> {
-        todo!()
+        todo!("builder.rational")
     }
     pub(crate) fn complex(complex_t: Token) -> Box<Node> {
-        todo!()
+        todo!("builder.complex")
     }
 
     // Special constants
@@ -145,7 +145,7 @@ impl<'a, C: Constructor> Builder<C> {
         elements: Vec<Node<'a>>,
         end_t: Option<Token<'a>>,
     ) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.array")
     }
 
     pub(crate) fn splat(star_t: Token<'a>, value: Box<Node<'a>>) -> Box<Node<'a>> {
@@ -232,7 +232,7 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn accessible(node: Box<Node<'a>>) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.accessible")
     }
 
     pub(crate) fn const_(const_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
@@ -249,20 +249,20 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn const_global(colon2_t: Token<'a>, name_t: Token<'a>) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.const_global")
     }
 
     // Assignments
     pub(crate) fn assignable(node: Box<Node<'a>>) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.assignable")
     }
 
     pub(crate) fn const_op_assignable(node: Box<Node<'a>>) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.const_op_assignable")
     }
 
     pub(crate) fn assign(lhs: Box<Node<'a>>, op_t: Token<'a>, rhs: Box<Node<'a>>) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.assign")
     }
 
     pub(crate) fn op_assign(
@@ -270,7 +270,7 @@ impl<'a, C: Constructor> Builder<C> {
         op_t: Token<'a>,
         rhs: Box<Node<'a>>,
     ) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.op_assign")
     }
 
     // Class and module definition
@@ -341,7 +341,7 @@ impl<'a, C: Constructor> Builder<C> {
         body: Option<Box<Node<'a>>>,
     ) -> Box<Node<'a>> {
         let exc_list = exc_list.map(|exc_list| Self::array(None, exc_list, None));
-        todo!()
+        todo!("builder.rescue_body")
     }
 
     pub(crate) fn begin_body(
@@ -350,7 +350,7 @@ impl<'a, C: Constructor> Builder<C> {
         opt_else: Option<(Token<'a>, Box<Node<'a>>)>,
         opt_ensure: Option<(Token<'a>, Option<Box<Node<'a>>>)>,
     ) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.begin_body")
     }
 
     // Expression grouping
@@ -407,25 +407,25 @@ impl<'a, C: Constructor> Builder<C> {
         nodes: Vec<Node<'a>>,
         trailing_comma: Token<'a>,
     ) -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.group_with_trailing_comma")
     }
 
     // Pattern matching
 
     pub(crate) fn def_method() -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.def_method")
     }
 
     pub(crate) fn def_endless_method() -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.def_endless_method")
     }
 
     pub(crate) fn def_singleton() -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.def_singleton")
     }
 
     pub(crate) fn def_endless_singleton() -> Box<Node<'a>> {
-        todo!()
+        todo!("builder.def_endless_singleton")
     }
 
     pub(crate) fn undef(undef_t: Token<'a>, names: Vec<Node<'a>>) -> Box<Node<'a>> {

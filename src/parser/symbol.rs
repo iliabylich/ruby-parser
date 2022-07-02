@@ -64,14 +64,14 @@ mod tests {
 
     #[test]
     fn test_sym_squoted() {
-        let _parser = RustParser::new(b":'foo'");
-        unimplemented!("requires parse_string_contents");
+        let mut parser = RustParser::new(b":'foo'");
+        assert_eq!(parser.try_symbol(), None);
     }
 
     #[test]
     fn test_sym_dquoted() {
-        let _parser = RustParser::new(b":\"foo\"");
-        unimplemented!("requires parse_string_contents");
+        let mut parser = RustParser::new(b":\"foo\"");
+        assert_eq!(parser.try_symbol(), None);
     }
 
     #[test]

@@ -20,7 +20,7 @@ impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
         _buffer: &mut BufferWithCursor<'a>,
         _current_curly_nest: usize,
     ) -> ControlFlow<StringExtendAction<'a>> {
-        todo!()
+        todo!("heredoc.extend")
     }
 }
 

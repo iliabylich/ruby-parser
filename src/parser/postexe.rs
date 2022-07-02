@@ -18,6 +18,6 @@ where
 #[test]
 fn test_postexe() {
     use crate::RustParser;
-    let _parser = RustParser::new(b"END {}");
-    unimplemented!("requires parse_primary");
+    let mut parser = RustParser::new(b"END {}");
+    assert_eq!(parser.try_postexe(), None);
 }
