@@ -347,7 +347,7 @@ impl<'a, C: Constructor> Builder<C> {
     pub(crate) fn begin_body(
         compound_stmt: Box<Node<'a>>,
         rescue_bodies: Vec<Node<'a>>,
-        opt_else: Option<(Token<'a>, Box<Node<'a>>)>,
+        opt_else: Option<(Token<'a>, Option<Box<Node<'a>>>)>,
         opt_ensure: Option<(Token<'a>, Option<Box<Node<'a>>>)>,
     ) -> Box<Node<'a>> {
         todo!("builder.begin_body")
