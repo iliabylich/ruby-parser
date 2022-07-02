@@ -76,18 +76,6 @@ impl Ident {
 
         buffer.set_pos(start + length);
 
-        match buffer.for_lookahead().utf8_char_at(start) {
-            Utf8Char::Valid { length } => {
-                let s = std::str::from_utf8(buffer.slice(start, start + length).expect("bug"))
-                    .expect("bug");
-                let c = s.chars().next().expect("bug");
-                if c.is_uppercase() {
-                    return token!(tCONSTANT, start, buffer.pos());
-                }
-            }
-            _ => {}
-        }
-
         match IdentSuffix::lookahead(buffer.for_lookahead(), buffer.pos()) {
             Some(IdentSuffix { byte: b'!' | b'?' }) => {
                 // append `!` or `?`
@@ -118,6 +106,19 @@ impl Ident {
         // there's a chance that it's a keyword
         if let Some(reserved_word) = find_reserved_word(slice) {
             return Token(reserved_word.token_value, Loc { start, end });
+        }
+
+        // Can be a constant
+        match buffer.for_lookahead().utf8_char_at(start) {
+            Utf8Char::Valid { length } => {
+                let s = std::str::from_utf8(buffer.slice(start, start + length).expect("bug"))
+                    .expect("bug");
+                let c = s.chars().next().expect("bug");
+                if c.is_uppercase() {
+                    return token!(tCONSTANT, start, buffer.pos());
+                }
+            }
+            _ => {}
         }
 
         // otherwise it's just a plain identifier

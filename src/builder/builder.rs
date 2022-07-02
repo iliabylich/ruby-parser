@@ -392,6 +392,34 @@ impl<'a, C: Constructor> Builder<C> {
 
     // Pattern matching
 
+    pub(crate) fn def_method() -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn def_endless_method() -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn def_singleton() -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn def_endless_singleton() -> Box<Node<'a>> {
+        todo!()
+    }
+
+    pub(crate) fn undef(undef_t: Token<'a>, names: Vec<Node<'a>>) -> Box<Node<'a>> {
+        debug_assert!(!names.is_empty());
+
+        let keyword_l = undef_t.loc();
+        let expression_l = keyword_l.join(names.last().unwrap().expression());
+        Box::new(Node::Undef(Undef {
+            names,
+            keyword_l,
+            expression_l,
+        }))
+    }
+
     pub(crate) fn alias(
         alias_t: Token<'a>,
         to: Box<Node<'a>>,

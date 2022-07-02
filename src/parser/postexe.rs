@@ -17,16 +17,7 @@ where
 
 #[test]
 fn test_postexe() {
-    use crate::{loc::loc, nodes::Postexe, Node, RustParser};
-    let mut parser = RustParser::new(b"END {}");
-    assert_eq!(
-        parser.try_postexe(),
-        Some(Box::new(Node::Postexe(Postexe {
-            body: None,
-            keyword_l: loc!(0, 3),
-            begin_l: loc!(4, 5),
-            end_l: loc!(5, 6),
-            expression_l: loc!(0, 6)
-        })))
-    );
+    use crate::RustParser;
+    let _parser = RustParser::new(b"END {}");
+    unimplemented!("requires parse_primary");
 }
