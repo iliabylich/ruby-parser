@@ -14,9 +14,20 @@ where
         let lcurly = self.expect_token(TokenValue::tLCURLY);
         let top_compstmt = self.try_top_compstmt();
         let rcurly = self.expect_token(TokenValue::tRCURLY);
-        panic!(
-            "preexe({:?} {:?}, {:?}, {:?})",
-            begin_t, lcurly, top_compstmt, rcurly
-        )
+        Some(Builder::<C>::preexe(begin_t, lcurly, top_compstmt, rcurly))
     }
+}
+
+#[test]
+fn test_preexe() {
+    use crate::parser::RustParser;
+    let mut parser = RustParser::new(b"BEGIN {}");
+    assert_eq!(parser.try_preexe(), None);
+}
+
+#[test]
+fn test_nothing() {
+    use crate::parser::RustParser;
+    let mut parser = RustParser::new(b"");
+    assert_eq!(parser.try_preexe(), None);
 }
