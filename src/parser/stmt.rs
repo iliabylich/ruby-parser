@@ -27,7 +27,9 @@ where
             .or_else(|| self.try_stmt())
     }
 
-    pub(crate) fn parse_bodystmt(&mut self) -> Node<'a> {
+    pub(crate) fn parse_bodystmt(&mut self) -> Option<Node<'a>> {
+        let compstmt = self.try_compstmt()?;
+        let rescue_bodies = self.parse_opt_rescue();
         todo!()
     }
 

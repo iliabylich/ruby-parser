@@ -143,7 +143,7 @@ impl<'a, C: Constructor> Builder<C> {
     pub(crate) fn array(
         begin_t: Option<Token<'a>>,
         elements: Vec<Node<'a>>,
-        end_t: Vec<Node<'a>>,
+        end_t: Option<Token<'a>>,
     ) -> Box<Node<'a>> {
         todo!()
     }
@@ -332,6 +332,17 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     // Exception handling
+
+    pub(crate) fn rescue_body(
+        rescue_t: Token<'a>,
+        exc_list: Option<Vec<Node<'a>>>,
+        exc_var: Option<(Token<'a>, Box<Node<'a>>)>,
+        then_t: Option<Token<'a>>,
+        body: Option<Box<Node<'a>>>,
+    ) -> Box<Node<'a>> {
+        let exc_list = exc_list.map(|exc_list| Self::array(None, exc_list, None));
+        todo!()
+    }
 
     // Expression grouping
     pub(crate) fn compstmt(statements: Vec<Node<'a>>) -> Box<Node<'a>> {

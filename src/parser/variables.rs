@@ -39,6 +39,11 @@ where
         self.try_token(TokenValue::tCONSTANT)
             .map(|ident_t| Builder::<C>::const_(ident_t, self.buffer()))
     }
+
+    pub(crate) fn try_const_or_identifier(&mut self) -> Option<Token<'a>> {
+        None.or_else(|| self.try_token(TokenValue::tCONSTANT))
+            .or_else(|| self.try_token(TokenValue::tIDENTIFIER))
+    }
 }
 
 #[test]

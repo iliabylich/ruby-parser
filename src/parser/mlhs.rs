@@ -134,55 +134,7 @@ where
     }
 
     fn try_mlhs_primitive_item(&mut self) -> Option<Box<Node<'a>>> {
-        let trivial = None
-            .or_else(|| self.try_user_variable())
-            .or_else(|| self.try_keyword_variable())
-            .or_else(|| self.try_user_variable());
-
-        if let Some(node) = trivial {
-            return Some(node);
-        }
-
-        if let Some(primary) = self.try_primary() {
-            if let Some(lbrack_t) = self.try_token(TokenValue::tLBRACK) {
-                // foo[bar] = something
-                let opt_call_args = self.parse_opt_call_args();
-                let rbrack_t = self.expect_token(TokenValue::tRBRACK);
-                todo!(
-                    "return foo[bar] {:?} {:?} {:?} {:?}",
-                    primary,
-                    lbrack_t,
-                    opt_call_args,
-                    rbrack_t
-                );
-            }
-
-            if let Some(colon2_t) = self.try_token(TokenValue::tCOLON2) {
-                // Foo::Bar = something
-
-                // TODO: or tIDENTIFIER
-                let constant_t = self.expect_token(TokenValue::tCONSTANT);
-                todo!(
-                    "return Foo::Bar = {:?} {:?} {:?}",
-                    primary,
-                    colon2_t,
-                    constant_t
-                );
-            }
-
-            if let Some(call_op_t) = self.try_call_op() {
-                // TODO: or tCONSTANT
-                let call_mid = self.expect_token(TokenValue::tIDENTIFIER);
-                todo!(
-                    "return Foo.bar = {:?} {:?} {:?}",
-                    primary,
-                    call_op_t,
-                    call_mid
-                )
-            }
-        }
-
-        None
+        self.try_lhs()
     }
 }
 

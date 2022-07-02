@@ -74,10 +74,13 @@ where
 }
 
 mod alias;
+mod else_;
+mod ensure;
 mod keyword_variable;
 mod mlhs;
 mod postexe;
 mod preexe;
+mod rescue;
 mod stmt;
 mod symbol;
 mod undef;
@@ -233,7 +236,7 @@ where
             .or_else(|| self.try_token(TokenValue::kWHILE))
             .or_else(|| self.try_token(TokenValue::kUNTIL))
     }
-    fn parse_arg(&mut self) {
+    fn try_arg(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
     fn parse_relop(&mut self) {
@@ -278,7 +281,7 @@ where
     fn try_mrhs_arg(&mut self) -> Option<Box<Node<'a>>> {
         todo!()
     }
-    fn try_mrhs(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_mrhs(&mut self) -> Option<Vec<Node<'a>>> {
         todo!()
     }
     fn try_primary(&mut self) -> Option<Box<Node<'a>>> {
@@ -530,16 +533,7 @@ where
     fn parse_p_const(&mut self) {
         todo!()
     }
-    fn parse_opt_rescue(&mut self) {
-        todo!()
-    }
-    fn parse_exc_list(&mut self) {
-        todo!()
-    }
-    fn parse_exc_var(&mut self) {
-        todo!()
-    }
-    fn parse_opt_ensure(&mut self) {
+    fn parse_opt_ensure(&mut self) -> Option<(Token<'a>, Box<Node<'a>>)> {
         todo!()
     }
     fn parse_literal(&mut self) {
@@ -769,7 +763,7 @@ where
     fn parse_trailer(&mut self) {
         todo!()
     }
-    fn parse_term(&mut self) {
+    fn try_term(&mut self) -> Option<Token<'a>> {
         todo!()
     }
     fn parse_terms(&mut self) {
