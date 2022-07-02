@@ -27,10 +27,17 @@ where
             .or_else(|| self.try_stmt())
     }
 
-    pub(crate) fn parse_bodystmt(&mut self) -> Option<Node<'a>> {
+    pub(crate) fn parse_bodystmt(&mut self) -> Option<Box<Node<'a>>> {
         let compstmt = self.try_compstmt()?;
         let rescue_bodies = self.parse_opt_rescue();
-        todo!()
+        let opt_else = self.try_opt_else();
+        let opt_ensure = self.try_opt_ensure();
+        Some(Builder::<C>::begin_body(
+            compstmt,
+            rescue_bodies,
+            opt_else,
+            opt_ensure,
+        ))
     }
 
     pub(crate) fn try_compstmt(&mut self) -> Option<Box<Node<'a>>> {

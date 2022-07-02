@@ -344,6 +344,15 @@ impl<'a, C: Constructor> Builder<C> {
         todo!()
     }
 
+    pub(crate) fn begin_body(
+        compound_stmt: Box<Node<'a>>,
+        rescue_bodies: Vec<Node<'a>>,
+        opt_else: Option<(Token<'a>, Box<Node<'a>>)>,
+        opt_ensure: Option<(Token<'a>, Box<Node<'a>>)>,
+    ) -> Box<Node<'a>> {
+        todo!()
+    }
+
     // Expression grouping
     pub(crate) fn compstmt(statements: Vec<Node<'a>>) -> Box<Node<'a>> {
         debug_assert!(!statements.is_empty());
