@@ -32,7 +32,7 @@ where
             .or_else(|| self.try_stmt())
     }
 
-    pub(crate) fn parse_bodystmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_bodystmt(&mut self) -> Option<Box<Node<'a>>> {
         let compstmt = self.try_compstmt()?;
         let rescue_bodies = self.parse_opt_rescue();
         let opt_else = self.try_opt_else();

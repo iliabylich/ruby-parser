@@ -5,6 +5,31 @@ use crate::token::{Token, TokenValue};
 
 mod checkpoint;
 
+mod alias;
+mod array;
+mod case;
+mod class;
+mod defined;
+mod for_loop;
+mod hash;
+mod if_unless;
+mod keyword_variable;
+mod method;
+mod mlhs;
+mod module;
+mod opt_else;
+mod opt_ensure;
+mod opt_rescue;
+mod postexe;
+mod preexe;
+mod primary;
+mod stmt;
+mod symbol;
+mod undef;
+mod variables;
+mod while_until;
+mod yield_;
+
 pub struct Parser<'a, C: Constructor = RustConstructor> {
     lexer: Lexer<'a>,
     debug: bool,
@@ -73,19 +98,6 @@ where
     }
 }
 
-mod alias;
-mod keyword_variable;
-mod mlhs;
-mod opt_else;
-mod opt_ensure;
-mod opt_rescue;
-mod postexe;
-mod preexe;
-mod stmt;
-mod symbol;
-mod undef;
-mod variables;
-
 impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
@@ -130,12 +142,12 @@ where
         todo!("parser.parse_block_command")
     }
 
-    fn cmd_brace_block(&mut self) {
-        todo!("parser.cmd_brace_block")
+    fn parse_cmd_brace_block(&mut self) {
+        todo!("parser.parse_cmd_brace_block")
     }
 
-    fn parse_fcall(&mut self) {
-        todo!("parser.parse_fcall")
+    fn try_fcall(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_fcall")
     }
 
     fn parse_command(&mut self) {
@@ -248,8 +260,8 @@ where
     fn parse_arg_value(&mut self) {
         todo!("parser.parse_arg_value")
     }
-    fn parse_aref_args(&mut self) {
-        todo!("parser.parse_aref_args")
+    fn try_aref_args(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_aref_args")
     }
     fn parse_arg_rhs(&mut self) {
         todo!("parser.parse_arg_rhs")
@@ -263,7 +275,7 @@ where
     fn parse_opt_call_args(&mut self) {
         todo!("parser.parse_opt_call_args")
     }
-    fn parse_call_args(&mut self) {
+    fn parse_call_args(&mut self) -> Vec<Node<'a>> {
         todo!("parser.parse_call_args")
     }
     fn parse_command_args(&mut self) {
@@ -283,12 +295,6 @@ where
     }
     fn try_mrhs(&mut self) -> Option<Vec<Node<'a>>> {
         todo!("parser.try_mrhs")
-    }
-    fn try_primary(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_primary")
-    }
-    fn try_primary_value(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_primary_value")
     }
     fn parse_k_begin(&mut self) {
         todo!("parser.parse_k_begin")
@@ -407,8 +413,8 @@ where
     fn parse_bvar(&mut self) {
         todo!("parser.parse_bvar")
     }
-    fn parse_lambda(&mut self) {
-        todo!("parser.parse_lambda")
+    fn try_lambda(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_lambda")
     }
     fn parse_f_larglist(&mut self) {
         todo!("parser.parse_f_larglist")
@@ -422,11 +428,13 @@ where
     fn parse_block_call(&mut self) {
         todo!("parser.parse_block_call")
     }
-    fn parse_method_call(&mut self) {
-        todo!("parser.parse_method_call")
+    fn try_method_call(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_method_call")
     }
-    fn parse_brace_block(&mut self) {
-        todo!("parser.parse_brace_block")
+
+    // TODO: return ArgsType instead of ()
+    fn try_brace_block(&mut self) -> Option<(Token<'a>, (), Option<Box<Node<'a>>>, Token<'a>)> {
+        todo!("parser.try_brace_block")
     }
     fn parse_brace_body(&mut self) {
         todo!("parser.parse_brace_body")
@@ -536,11 +544,11 @@ where
     fn parse_opt_ensure(&mut self) -> Option<(Token<'a>, Box<Node<'a>>)> {
         todo!("parser.parse_opt_ensure")
     }
-    fn parse_literal(&mut self) {
+    fn try_literal(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.parse_literal")
     }
-    fn parse_strings(&mut self) {
-        todo!("parser.parse_strings")
+    fn try_strings(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_strings")
     }
     fn parse_string(&mut self) {
         todo!("parser.parse_string")
@@ -548,14 +556,14 @@ where
     fn parse_string1(&mut self) {
         todo!("parser.parse_string1")
     }
-    fn parse_xstring(&mut self) {
-        todo!("parser.parse_xstring")
+    fn try_xstring(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_xstring")
     }
-    fn parse_regexp(&mut self) {
-        todo!("parser.parse_regexp")
+    fn try_regexp(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_regexp")
     }
-    fn parse_words(&mut self) {
-        todo!("parser.parse_words")
+    fn try_words(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_words")
     }
     fn parse_word_list(&mut self) {
         todo!("parser.parse_word_list")
@@ -563,17 +571,17 @@ where
     fn parse_word(&mut self) {
         todo!("parser.parse_word")
     }
-    fn parse_symbols(&mut self) {
-        todo!("parser.parse_symbols")
+    fn try_symbols(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_symbols")
     }
     fn parse_symbol_list(&mut self) {
         todo!("parser.parse_symbol_list")
     }
-    fn parse_qwords(&mut self) {
-        todo!("parser.parse_qwords")
+    fn try_qwords(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_qwords")
     }
-    fn parse_qsymbols(&mut self) {
-        todo!("parser.parse_qsymbols")
+    fn try_qsymbols(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_qsymbols")
     }
     fn parse_qword_list(&mut self) {
         todo!("parser.parse_qword_list")
@@ -612,7 +620,7 @@ where
             .or_else(|| self.try_t_const())
             .or_else(|| self.try_cvar())
     }
-    fn try_var_ref(&mut self) {
+    fn try_var_ref(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_var_ref")
     }
     fn try_var_lhs(&mut self) -> Option<Box<Node<'a>>> {
@@ -713,7 +721,7 @@ where
     fn parse_singleton(&mut self) {
         todo!("parser.parse_singleton")
     }
-    fn parse_assoc_list(&mut self) {
+    fn parse_assoc_list(&mut self) -> Vec<Box<Node<'a>>> {
         todo!("parser.parse_assoc_list")
     }
     fn parse_assocs(&mut self) {
@@ -748,20 +756,20 @@ where
             self.skip_token()
         }
     }
-    fn parse_opt_nl(&mut self) {
-        todo!("parser.parse_opt_nl")
+    fn try_opt_nl(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_opt_nl")
     }
-    fn parse_rparen(&mut self) {
-        todo!("parser.parse_rparen")
+    fn try_rparen(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_rparen")
     }
-    fn parse_rbracket(&mut self) {
-        todo!("parser.parse_rbracket")
+    fn try_rbracket(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_rbracket")
     }
-    fn parse_rbrace(&mut self) {
-        todo!("parser.parse_rbrace")
+    fn try_rbrace(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_rbrace")
     }
-    fn parse_trailer(&mut self) {
-        todo!("parser.parse_trailer")
+    fn try_trailer(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_trailer")
     }
     fn try_term(&mut self) -> Option<Token<'a>> {
         todo!("parser.try_term")
@@ -771,5 +779,11 @@ where
     }
     fn parse_none(&mut self) {
         todo!("parser.parse_none")
+    }
+
+    fn try_colon2_const(&mut self) -> Option<(Token<'a>, Token<'a>)> {
+        let colon2_t = self.try_token(TokenValue::tCOLON2)?;
+        let const_t = self.expect_token(TokenValue::tCONSTANT);
+        Some((colon2_t, const_t))
     }
 }

@@ -61,8 +61,7 @@ where
             .or_else(|| self.try_keyword_variable())
             .or_else(|| self.try_back_ref())
             .or_else(|| {
-                let colon2_t = self.try_token(TokenValue::tCOLON2)?;
-                let const_t = self.expect_token(TokenValue::tCONSTANT);
+                let (colon2_t, const_t) = self.try_colon2_const()?;
                 panic!("const {:?} {:?}", colon2_t, const_t)
             })
             .or_else(|| {
