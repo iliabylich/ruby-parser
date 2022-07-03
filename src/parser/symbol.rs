@@ -10,11 +10,15 @@ where
     C: Constructor,
 {
     pub(crate) fn try_symbol(&mut self) -> Option<Box<Node<'a>>> {
-        let checkpoint = self.new_checkpoint();
+        self.try_ssym().or_else(|| self.try_dsym())
+    }
 
+    fn try_ssym(&mut self) -> Option<Box<Node<'a>>> {
         match self.current_token().value() {
             TokenValue::tCOLON => {
                 // maybe a plain symbol
+                let checkpoint = self.new_checkpoint();
+
                 let colon_t = self.take_token();
                 let sym_t = None
                     .or_else(|| self.try_fname())
@@ -32,7 +36,7 @@ where
                     None
                 }
             }
-            TokenValue::tSYMBEG | TokenValue::tDSYMBEG => {
+            TokenValue::tSYMBEG => {
                 let symbeg_t = self.take_token();
                 let contents = self.parse_string_contents();
                 let string_end_t = self.expect_token(TokenValue::tSTRING_END);
@@ -42,6 +46,14 @@ where
             _ => None,
         }
     }
+
+    fn try_dsym(&mut self) -> Option<Box<Node<'a>>> {
+        let symbeg_t = self.try_token(TokenValue::tDSYMBEG)?;
+        let contents = self.parse_string_contents();
+        let string_end_t = self.expect_token(TokenValue::tSTRING_END);
+        let node = Builder::<C>::symbol_compose(symbeg_t, contents, string_end_t);
+        Some(node)
+    }
 }
 
 #[cfg(test)]
@@ -49,10 +61,10 @@ mod tests {
     use crate::{loc::loc, nodes::Sym, string_content::StringContent, Node, RustParser};
 
     #[test]
-    fn test_symbol_plain() {
+    fn test_ssym() {
         let mut parser = RustParser::new(b":foo");
         assert_eq!(
-            parser.try_symbol(),
+            parser.try_ssym(),
             Some(Box::new(Node::Sym(Sym {
                 name: StringContent::from("foo"),
                 begin_l: Some(loc!(0, 1)),
@@ -63,28 +75,45 @@ mod tests {
     }
 
     #[test]
-    fn test_sym_squoted() {
-        let mut parser = RustParser::new(b":'foo'");
-        assert_eq!(parser.try_symbol(), None);
-    }
-
-    #[test]
-    fn test_sym_dquoted() {
-        let mut parser = RustParser::new(b":\"foo\"");
-        assert_eq!(parser.try_symbol(), None);
-    }
-
-    #[test]
-    fn test_only_colon() {
+    fn test_ssym_only_colon() {
         let mut parser = RustParser::new(b":");
-        assert_eq!(parser.try_symbol(), None);
+        assert_eq!(parser.try_ssym(), None);
+        // `:` is consumed
+        assert_eq!(parser.lexer.buffer.pos(), 1);
+    }
+
+    #[test]
+    fn test_ssym_no_colon() {
+        let mut parser = RustParser::new(b"");
+        assert_eq!(parser.try_ssym(), None);
         assert_eq!(parser.lexer.buffer.pos(), 0);
     }
 
     #[test]
-    fn test_no_colon() {
+    fn test_ssym_quoted() {
+        let mut parser = RustParser::new(b":'foo'");
+        assert_eq!(parser.try_ssym(), None);
+        panic!("foo")
+    }
+
+    #[test]
+    fn test_dsym() {
+        let mut parser = RustParser::new(b":\"foo\"");
+        assert_eq!(parser.try_dsym(), None);
+    }
+
+    #[test]
+    fn test_dsym_only_colon() {
+        let mut parser = RustParser::new(b":");
+        assert_eq!(parser.try_dsym(), None);
+        // `:` is consumed
+        assert_eq!(parser.lexer.buffer.pos(), 1);
+    }
+
+    #[test]
+    fn test_dsym_no_colon() {
         let mut parser = RustParser::new(b"");
-        assert_eq!(parser.try_symbol(), None);
+        assert_eq!(parser.try_dsym(), None);
         assert_eq!(parser.lexer.buffer.pos(), 0);
     }
 }
