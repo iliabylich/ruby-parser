@@ -17,6 +17,7 @@ mod keyword_variable;
 mod method;
 mod mlhs;
 mod module;
+mod numeric;
 mod opt_else;
 mod opt_ensure;
 mod opt_rescue;
@@ -545,7 +546,8 @@ where
         todo!("parser.parse_opt_ensure")
     }
     fn try_literal(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.parse_literal")
+        None.or_else(|| self.try_numeric())
+            .or_else(|| self.try_symbol())
     }
     fn try_strings(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_strings")
@@ -603,12 +605,6 @@ where
     }
     fn parse_string_dvar(&mut self) {
         todo!("parser.parse_string_dvar")
-    }
-    fn parse_numeric(&mut self) {
-        todo!("parser.parse_numeric")
-    }
-    fn parse_simple_numeric(&mut self) {
-        todo!("parser.parse_simple_numeric")
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")

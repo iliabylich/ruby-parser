@@ -25,43 +25,102 @@ fn string_value<'a>(loc: Loc, buffer: &Buffer<'a>) -> StringContent<'a> {
 
 impl<'a, C: Constructor> Builder<C> {
     // Singletons
-    pub(crate) fn nil(nil_t: Token) -> Box<Node> {
+    pub(crate) fn nil(nil_t: Token<'a>) -> Box<Node<'a>> {
         let loc = nil_t.loc();
         Box::new(Node::Nil(Nil { expression_l: loc }))
     }
-    pub(crate) fn true_(true_t: Token) -> Box<Node> {
+    pub(crate) fn true_(true_t: Token<'a>) -> Box<Node<'a>> {
         let loc = true_t.loc();
         Box::new(Node::True(True { expression_l: loc }))
     }
-    pub(crate) fn false_(false_t: Token) -> Box<Node> {
+    pub(crate) fn false_(false_t: Token<'a>) -> Box<Node<'a>> {
         let loc = false_t.loc();
         Box::new(Node::False(False { expression_l: loc }))
     }
 
     // Numerics
-    pub(crate) fn integer(integer_t: Token) -> Box<Node> {
-        todo!("builder.integer")
+    pub(crate) fn integer(integer_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+        let expression_l = integer_t.loc();
+        Box::new(Node::Int(Int {
+            value: string_value(expression_l, buffer),
+            operator_l: None,
+            expression_l,
+        }))
     }
-    pub(crate) fn float(float_t: Token) -> Box<Node> {
-        todo!("builder.float")
+    pub(crate) fn float(float_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+        let expression_l = float_t.loc();
+        Box::new(Node::Float(Float {
+            value: string_value(expression_l, buffer),
+            operator_l: None,
+            expression_l,
+        }))
     }
-    pub(crate) fn rational(rational_t: Token) -> Box<Node> {
-        todo!("builder.rational")
+    pub(crate) fn rational(rational_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+        let expression_l = rational_t.loc();
+        Box::new(Node::Rational(Rational {
+            value: string_value(expression_l, buffer),
+            operator_l: None,
+            expression_l,
+        }))
     }
-    pub(crate) fn complex(complex_t: Token) -> Box<Node> {
-        todo!("builder.complex")
+    pub(crate) fn complex(complex_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+        let expression_l = complex_t.loc();
+        Box::new(Node::Complex(Complex {
+            value: string_value(expression_l, buffer),
+            operator_l: None,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn unary_num(
+        unary_t: Token<'a>,
+        mut numeric: Box<Node<'a>>,
+        buffer: &Buffer<'a>,
+    ) -> Box<Node<'a>> {
+        let new_operator_l = unary_t.loc();
+
+        match &mut *numeric {
+            Node::Int(Int {
+                value,
+                expression_l,
+                operator_l,
+            })
+            | Node::Float(Float {
+                value,
+                expression_l,
+                operator_l,
+            })
+            | Node::Rational(Rational {
+                value,
+                operator_l,
+                expression_l,
+            })
+            | Node::Complex(Complex {
+                value,
+                operator_l,
+                expression_l,
+            }) => {
+                *operator_l = Some(new_operator_l);
+                *expression_l = new_operator_l.join(expression_l);
+                *value = string_value(*expression_l, buffer);
+            }
+
+            _ => {}
+        }
+
+        numeric
     }
 
     // Special constants
-    pub(crate) fn __line__(line_t: Token) -> Box<Node> {
+    pub(crate) fn __line__(line_t: Token<'a>) -> Box<Node<'a>> {
         let loc = line_t.loc();
         Box::new(Node::Line(Line { expression_l: loc }))
     }
-    pub(crate) fn __file__(file_t: Token) -> Box<Node> {
+    pub(crate) fn __file__(file_t: Token<'a>) -> Box<Node<'a>> {
         let loc = file_t.loc();
         Box::new(Node::File(File { expression_l: loc }))
     }
-    pub(crate) fn __encoding__(encoding_t: Token) -> Box<Node> {
+    pub(crate) fn __encoding__(encoding_t: Token<'a>) -> Box<Node<'a>> {
         let loc = encoding_t.loc();
         Box::new(Node::Encoding(Encoding { expression_l: loc }))
     }
@@ -173,7 +232,7 @@ impl<'a, C: Constructor> Builder<C> {
     // Ranges
 
     // Access
-    pub(crate) fn self_(self_t: Token) -> Box<Node> {
+    pub(crate) fn self_(self_t: Token<'a>) -> Box<Node<'a>> {
         let loc = self_t.loc();
         Box::new(Node::Self_(Self_ { expression_l: loc }))
     }
