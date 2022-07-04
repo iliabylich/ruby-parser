@@ -65,9 +65,7 @@ where
                 MlhsItem::None => break,
             }
 
-            if trailing_comma.is_none()
-                && matches!(self.current_token().value(), TokenValue::tCOMMA)
-            {
+            if trailing_comma.is_none() && self.current_token().is(TokenValue::tCOMMA) {
                 // consume comma after MLHS item
                 trailing_comma = Some(self.take_token());
                 definitely_mlhs = true;

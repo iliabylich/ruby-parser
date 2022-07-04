@@ -100,7 +100,7 @@ impl<'a> Lexer<'a> {
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
-            let is_eof = token.value() == &crate::token::TokenValue::tEOF;
+            let is_eof = token.is(crate::token::TokenValue::tEOF);
             tokens.push(token);
             if is_eof {
                 break;

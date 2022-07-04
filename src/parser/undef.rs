@@ -21,7 +21,7 @@ where
             names.push(*fitem);
         }
         loop {
-            if self.current_token().value() == &TokenValue::tCOMMA {
+            if self.current_token().is(TokenValue::tCOMMA) {
                 // consume
                 self.skip_token();
             } else {

@@ -102,7 +102,7 @@ where
             return Some(undef);
         } else if let Some(postexe) = self.try_postexe() {
             return Some(postexe);
-        } else if matches!(self.current_token().value(), TokenValue::kDEF) {
+        } else if self.current_token().is(TokenValue::kDEF) {
             todo!("handle endless def")
         } else if let Some(assignment) = self.try_assignment() {
             return Some(assignment);

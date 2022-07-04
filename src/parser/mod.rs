@@ -79,7 +79,7 @@ where
     }
 
     pub(crate) fn try_token(&mut self, expected: TokenValue<'a>) -> Option<Token<'a>> {
-        if self.current_token().value() == &expected {
+        if self.current_token().is(expected) {
             Some(self.take_token())
         } else {
             None

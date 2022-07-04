@@ -8,6 +8,10 @@ impl<'a> Token<'a> {
         &self.0
     }
 
+    pub fn is(&self, other: TokenValue) -> bool {
+        self.0 == other
+    }
+
     pub fn loc(&self) -> Loc {
         self.1
     }
