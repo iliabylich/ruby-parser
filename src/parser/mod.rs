@@ -30,6 +30,7 @@ mod symbol;
 mod undef;
 mod variables;
 mod while_until;
+mod xstring;
 mod yield_;
 
 pub struct Parser<'a, C: Constructor = RustConstructor> {
@@ -550,9 +551,6 @@ where
         None.or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
     }
-    fn try_xstring(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_xstring")
-    }
     fn try_regexp(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_regexp")
     }
@@ -583,17 +581,8 @@ where
     fn parse_qsym_list(&mut self) {
         todo!("parser.parse_qsym_list")
     }
-    fn parse_xstring_contents(&mut self) {
-        todo!("parser.parse_xstring_contents")
-    }
     fn parse_regexp_contents(&mut self) {
         todo!("parser.parse_regexp_contents")
-    }
-    fn parse_string_content(&mut self) {
-        todo!("parser.parse_string_content")
-    }
-    fn parse_string_dvar(&mut self) {
-        todo!("parser.parse_string_dvar")
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")

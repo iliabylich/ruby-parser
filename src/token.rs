@@ -138,6 +138,7 @@ pub enum TokenValue<'a> {
     tHEREDOC_BEG,  // "heredoc begin"
     tDSTRING_BEG,  // "dynamic string begin"
     tXSTRING_BEG,  // "backtick literal"
+    tXHEREDOC_BEG, // "backtick heredoc"
     tREGEXP_BEG,   // "regexp literal"
     tWORDS_BEG,    // "word list"
     tQWORDS_BEG,   // "verbatim word list"

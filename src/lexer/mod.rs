@@ -30,11 +30,11 @@ pub struct Lexer<'a> {
     debug: bool,
     required_new_expr: bool,
 
-    string_literals: StringLiteralStack<'a>,
+    pub(crate) string_literals: StringLiteralStack<'a>,
 
     current_token: Option<Token<'a>>,
 
-    curly_nest: usize,
+    pub(crate) curly_nest: usize,
     paren_nest: usize,
     brack_nest: usize,
 }

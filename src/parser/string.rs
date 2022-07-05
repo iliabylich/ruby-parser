@@ -38,7 +38,8 @@ where
     fn try_string1(&mut self) -> Option<Box<Node<'a>>> {
         let string_beg_t = None
             .or_else(|| self.try_token(TokenValue::tDSTRING_BEG))
-            .or_else(|| self.try_token(TokenValue::tSTRING_BEG))?;
+            .or_else(|| self.try_token(TokenValue::tSTRING_BEG))
+            .or_else(|| self.try_token(TokenValue::tHEREDOC_BEG))?;
         let string_contents = self.parse_string_contents();
         let string_end_t = self.expect_token(TokenValue::tSTRING_END);
         // TODO: dedent_heredoc
