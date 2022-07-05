@@ -49,7 +49,7 @@ impl<'a> Lookahead<'a> for QMark<'a> {
 
                             Escape::SlashU(SlashU::Short { codepoint, length }) => {
                                 return QMark {
-                                    token: token!(tCHAR(codepoint), start, start + length),
+                                    token: token!(tCHAR(codepoint), start, start + 1 + length),
                                 };
                             }
 
@@ -58,7 +58,11 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                             | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length })
                             | Escape::SlashByte(SlashByte { codepoint, length }) => {
                                 return QMark {
-                                    token: token!(tCHAR(codepoint as char), start, start + length),
+                                    token: token!(
+                                        tCHAR(codepoint as char),
+                                        start,
+                                        start + 1 + length
+                                    ),
                                 };
                             }
                         },
@@ -125,5 +129,12 @@ assert_lex!(
     tCHAR('字'),
     "?字".as_bytes(),
     0..4
+);
+assert_lex!(
+    test_tCHAR_slash_u,
+    b"?\\u1234",
+    tCHAR('\u{1234}'),
+    b"?\\u1234",
+    0..7
 );
 assert_lex!(test_tEH_and_ident, b"?ident", tEH, b"?", 0..1);

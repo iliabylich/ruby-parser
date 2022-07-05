@@ -25,6 +25,7 @@ mod postexe;
 mod preexe;
 mod primary;
 mod stmt;
+mod string;
 mod symbol;
 mod undef;
 mod variables;
@@ -549,15 +550,6 @@ where
         None.or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
     }
-    fn try_strings(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_strings")
-    }
-    fn parse_string(&mut self) {
-        todo!("parser.parse_string")
-    }
-    fn parse_string1(&mut self) {
-        todo!("parser.parse_string1")
-    }
     fn try_xstring(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_xstring")
     }
@@ -590,9 +582,6 @@ where
     }
     fn parse_qsym_list(&mut self) {
         todo!("parser.parse_qsym_list")
-    }
-    fn parse_string_contents(&mut self) -> Vec<Node<'a>> {
-        todo!("parser.parse_string_contents")
     }
     fn parse_xstring_contents(&mut self) {
         todo!("parser.parse_xstring_contents")
@@ -739,7 +728,8 @@ where
         todo!("parser.parse_dot_or_colon")
     }
     fn try_call_op(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_call_op")
+        None.or_else(|| self.try_token(TokenValue::tDOT))
+            .or_else(|| self.try_token(TokenValue::tANDDOT))
     }
     fn parse_call_op2(&mut self) {
         todo!("parser.parse_call_op2")

@@ -1,9 +1,11 @@
 use crate::{
     builder::{CString, Constructor, RustConstructor},
     lexer::buffer::Buffer,
+    loc::{loc, Loc},
     nodes::*,
     string_content::StringContent,
-    Loc, Node, Token,
+    token::{Token, TokenValue},
+    Node,
 };
 
 pub(crate) struct Builder<C: Constructor = RustConstructor> {
@@ -126,6 +128,94 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     // Strings
+
+    pub(crate) fn str_node(
+        begin_t: Option<Token<'a>>,
+        value: StringContent<'a>,
+        parts: Vec<Node<'a>>,
+        end_t: Option<Token<'a>>,
+    ) -> Box<Node<'a>> {
+        if let Some(Token(TokenValue::tHEREDOC_BEG, _)) = &begin_t {
+            let (heredoc_body_l, heredoc_end_l, expression_l) =
+                heredoc_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Heredoc(Heredoc {
+                parts,
+                heredoc_body_l,
+                heredoc_end_l,
+                expression_l,
+            }))
+        } else {
+            let (begin_l, end_l, expression_l) = collection_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Str(Str {
+                value,
+                begin_l,
+                end_l,
+                expression_l,
+            }))
+        }
+    }
+
+    pub(crate) fn string_internal(string_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+        let expression_l = string_t.loc();
+        let value = string_value(expression_l, buffer);
+        Box::new(Node::Str(Str {
+            value,
+            begin_l: None,
+            end_l: None,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn string_compose(
+        begin_t: Option<Token<'a>>,
+        parts: Vec<Node<'a>>,
+        end_t: Option<Token<'a>>,
+    ) -> Box<Node<'a>> {
+        match &parts[..] {
+            [] => {
+                return Self::str_node(begin_t, StringContent::from(""), parts, end_t);
+            }
+
+            [Node::Str(_) | Node::Dstr(_) | Node::Heredoc(_)]
+                if begin_t.is_none() && end_t.is_none() =>
+            {
+                return Box::new(parts.into_iter().next().expect("expected at least 1 item"));
+            }
+
+            [Node::Str(Str { value, .. })] => {
+                return Self::str_node(begin_t, value.clone(), parts, end_t);
+            }
+
+            [Node::Dstr(_) | Node::Heredoc(_)] => {
+                unreachable!("dstr or heredoc string without begin_t/end_t")
+            }
+
+            _ => {}
+        }
+
+        todo!()
+    }
+
+    pub(crate) fn character(char_t: Token<'a>) -> Box<Node<'a>> {
+        let expression_l = char_t.loc();
+        let begin_l = loc!(expression_l.start, expression_l.start + 1);
+
+        let char = if let TokenValue::tCHAR(char) = char_t.value() {
+            *char
+        } else {
+            unreachable!()
+        };
+
+        let value = StringContent::from(char);
+        Box::new(Node::Str(Str {
+            value,
+            begin_l: Some(begin_l),
+            end_l: None,
+            expression_l,
+        }))
+    }
 
     // Symbols
     pub(crate) fn symbol(
@@ -523,15 +613,46 @@ fn nodes_locs(nodes: &[Node]) -> (Loc, Loc, Loc) {
     let begin = nodes.first().unwrap().expression().start;
     let end = nodes.last().unwrap().expression().end;
 
-    let begin_l = Loc {
-        start: begin,
-        end: begin + 1,
-    };
-    let end_l = Loc {
-        start: end,
-        end: end + 1,
-    };
+    let begin_l = loc!(begin, begin + 1);
+    let end_l = loc!(end, end + 1);
     let expression_l = begin_l.join(&end_l);
 
     (begin_l, end_l, expression_l)
+}
+
+fn collection_map(
+    begin_t: &Option<Token>,
+    nodes: &[Node],
+    end_t: &Option<Token>,
+) -> (Option<Loc>, Option<Loc>, Loc) {
+    let begin_l = begin_t.as_ref().map(|tok| tok.loc());
+    let end_l = end_t.as_ref().map(|tok| tok.loc());
+
+    let expression_l = collection_expr(nodes);
+    let expression_l = join_maybe_locs(&begin_l, &expression_l);
+    let expression_l = join_maybe_locs(&expression_l, &end_l);
+    let expression_l = expression_l.unwrap_or_else(|| {
+        unreachable!("empty collection without begin_t/end_t, can't build source map");
+    });
+
+    (begin_l, end_l, expression_l)
+}
+
+fn collection_expr(nodes: &[Node]) -> Option<Loc> {
+    let lhs = nodes.first().map(|node| *node.expression());
+    let rhs = nodes.last().map(|node| *node.expression());
+    join_maybe_locs(&lhs, &rhs)
+}
+
+fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
+    match (lhs, rhs) {
+        (None, None) => None,
+        (None, Some(rhs)) => Some(*rhs),
+        (Some(lhs), None) => Some(*lhs),
+        (Some(lhs), Some(rhs)) => Some(lhs.join(rhs)),
+    }
+}
+
+fn heredoc_map(begin_t: &Option<Token>, nodes: &[Node], end_t: &Option<Token>) -> (Loc, Loc, Loc) {
+    todo!("builder.heredoc_map")
 }
