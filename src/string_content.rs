@@ -16,6 +16,12 @@ impl<'a> From<&'a str> for StringContent<'a> {
     }
 }
 
+impl<'a> From<String> for StringContent<'a> {
+    fn from(s: String) -> Self {
+        Self::from(s.into_bytes())
+    }
+}
+
 impl<const N: usize> From<[u8; N]> for StringContent<'_> {
     fn from(bytes: [u8; N]) -> Self {
         Self::Owned(Vec::from(bytes))
