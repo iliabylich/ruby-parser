@@ -10,6 +10,7 @@ mod array;
 mod case;
 mod class;
 mod defined;
+mod expr;
 mod for_loop;
 mod hash;
 mod if_unless;
@@ -112,14 +113,6 @@ where
 {
     fn try_command_rhs(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_command_rhs")
-    }
-
-    fn try_expr(&mut self) -> Option<Box<Node<'a>>> {
-        if let Some(command_call) = self.try_command_call() {
-            return Some(command_call);
-        }
-
-        todo!("parser.try_expr")
     }
 
     fn try_def_name(&mut self) -> Option<Token<'a>> {
@@ -468,8 +461,8 @@ where
     fn parse_p_top_expr(&mut self) {
         todo!("parser.parse_p_top_expr")
     }
-    fn parse_p_top_expr_body(&mut self) {
-        todo!("parser.parse_p_top_expr_body")
+    fn try_p_top_expr_body(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_p_top_expr_body")
     }
     fn parse_p_expr(&mut self) {
         todo!("parser.parse_p_expr")
@@ -556,9 +549,6 @@ where
         None.or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
     }
-    fn parse_regexp_contents(&mut self) {
-        todo!("parser.parse_regexp_contents")
-    }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
     }
@@ -570,7 +560,8 @@ where
             .or_else(|| self.try_cvar())
     }
     fn try_var_ref(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_var_ref")
+        None.or_else(|| self.try_user_variable())
+            .or_else(|| self.try_keyword_variable())
     }
     fn try_var_lhs(&mut self) -> Option<Box<Node<'a>>> {
         None.or_else(|| self.try_user_variable())

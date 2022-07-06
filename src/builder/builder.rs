@@ -602,11 +602,107 @@ impl<'a, C: Constructor> Builder<C> {
 
     // Method (un)definition
 
+    pub(crate) fn def_method() -> Box<Node<'a>> {
+        todo!("builder.def_method")
+    }
+
+    pub(crate) fn def_endless_method() -> Box<Node<'a>> {
+        todo!("builder.def_endless_method")
+    }
+
+    pub(crate) fn def_singleton() -> Box<Node<'a>> {
+        todo!("builder.def_singleton")
+    }
+
+    pub(crate) fn def_endless_singleton() -> Box<Node<'a>> {
+        todo!("builder.def_endless_singleton")
+    }
+
+    pub(crate) fn undef(undef_t: Token<'a>, names: Vec<Node<'a>>) -> Box<Node<'a>> {
+        debug_assert!(!names.is_empty());
+
+        let keyword_l = undef_t.loc();
+        let expression_l = keyword_l.join(names.last().unwrap().expression());
+        Box::new(Node::Undef(Undef {
+            names,
+            keyword_l,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn alias(
+        alias_t: Token<'a>,
+        to: Box<Node<'a>>,
+        from: Box<Node<'a>>,
+    ) -> Box<Node<'a>> {
+        let keyword_l = alias_t.loc();
+        let expression_l = keyword_l.join(from.expression());
+        Box::new(Node::Alias(Alias {
+            to,
+            from,
+            keyword_l,
+            expression_l,
+        }))
+    }
+
     // Formatl arguments
 
     // Method calls
 
+    pub(crate) fn forwarded_args() {}
+    pub(crate) fn call_method() {}
+    pub(crate) fn call_lambda() {}
+    pub(crate) fn block() {}
+    pub(crate) fn block_pass() {}
+    pub(crate) fn attr_asgn() {}
+    pub(crate) fn index() {}
+    pub(crate) fn index_asgn() {}
+    pub(crate) fn binary_op() {}
+    pub(crate) fn match_op() {}
+    pub(crate) fn unary_op() {}
+    pub(crate) fn not_op(
+        not_t: Token<'a>,
+        begin_t: Option<Token<'a>>,
+        receiver: Option<Box<Node<'a>>>,
+        end_t: Option<Token<'a>>,
+    ) -> Box<Node<'a>> {
+        todo!()
+    }
+
     // Logical operations: and, or
+
+    pub(crate) fn logical_op(
+        lhs: Box<Node<'a>>,
+        op_t: Token<'a>,
+        rhs: Box<Node<'a>>,
+    ) -> Box<Node<'a>> {
+        // TODO: value_expr(lhs)
+
+        let operator_l = op_t.loc();
+        let expression_l = lhs.expression().join(rhs.expression());
+
+        match operator_l.size() {
+            2 => {
+                // kOR
+                Box::new(Node::And(And {
+                    lhs,
+                    rhs,
+                    operator_l,
+                    expression_l,
+                }))
+            }
+            3 => {
+                // kAND
+                Box::new(Node::And(And {
+                    lhs,
+                    rhs,
+                    operator_l,
+                    expression_l,
+                }))
+            }
+            _ => unreachable!("only kOR (size = 2) or kAND(size = 3) is supported"),
+        }
+    }
 
     // Conditionals
 
@@ -737,48 +833,57 @@ impl<'a, C: Constructor> Builder<C> {
 
     // Pattern matching
 
-    pub(crate) fn def_method() -> Box<Node<'a>> {
-        todo!("builder.def_method")
-    }
+    pub(crate) fn case_match() {}
 
-    pub(crate) fn def_endless_method() -> Box<Node<'a>> {
-        todo!("builder.def_endless_method")
-    }
-
-    pub(crate) fn def_singleton() -> Box<Node<'a>> {
-        todo!("builder.def_singleton")
-    }
-
-    pub(crate) fn def_endless_singleton() -> Box<Node<'a>> {
-        todo!("builder.def_endless_singleton")
-    }
-
-    pub(crate) fn undef(undef_t: Token<'a>, names: Vec<Node<'a>>) -> Box<Node<'a>> {
-        debug_assert!(!names.is_empty());
-
-        let keyword_l = undef_t.loc();
-        let expression_l = keyword_l.join(names.last().unwrap().expression());
-        Box::new(Node::Undef(Undef {
-            names,
-            keyword_l,
-            expression_l,
-        }))
-    }
-
-    pub(crate) fn alias(
-        alias_t: Token<'a>,
-        to: Box<Node<'a>>,
-        from: Box<Node<'a>>,
+    pub(crate) fn match_pattern(
+        value: Box<Node<'a>>,
+        assoc_t: Token<'a>,
+        pattern: Box<Node<'a>>,
     ) -> Box<Node<'a>> {
-        let keyword_l = alias_t.loc();
-        let expression_l = keyword_l.join(from.expression());
-        Box::new(Node::Alias(Alias {
-            to,
-            from,
-            keyword_l,
+        let operator_l = assoc_t.loc();
+        let expression_l = value.expression().join(pattern.expression());
+
+        Box::new(Node::MatchPattern(MatchPattern {
+            value,
+            pattern,
+            operator_l,
             expression_l,
         }))
     }
+
+    pub(crate) fn match_pattern_p(
+        value: Box<Node<'a>>,
+        in_t: Token<'a>,
+        pattern: Box<Node<'a>>,
+    ) -> Box<Node<'a>> {
+        let operator_l = in_t.loc();
+        let expression_l = value.expression().join(pattern.expression());
+
+        Box::new(Node::MatchPatternP(MatchPatternP {
+            value,
+            pattern,
+            operator_l,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn in_pattern() {}
+    pub(crate) fn if_guard() {}
+    pub(crate) fn unless_guard() {}
+    pub(crate) fn match_var() {}
+    pub(crate) fn match_hash_var() {}
+    pub(crate) fn match_hash_var_from_str() {}
+    pub(crate) fn match_rest() {}
+    pub(crate) fn hash_pattern() {}
+    pub(crate) fn array_pattern() {}
+    pub(crate) fn find_pattern() {}
+    pub(crate) fn const_pattern() {}
+    pub(crate) fn pin() {}
+    pub(crate) fn match_alt() {}
+    pub(crate) fn match_as() {}
+    pub(crate) fn match_nil_pattern() {}
+    pub(crate) fn match_pair() {}
+    pub(crate) fn match_label() {}
 }
 
 // Loc helpers

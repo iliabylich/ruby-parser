@@ -23,7 +23,7 @@ where
 #[test]
 fn test_postexe() {
     use crate::RustParser;
-    let mut parser = RustParser::new(b"END {}");
+    let mut parser = RustParser::new(b"END { 42 }");
     assert_eq!(parser.try_postexe(), None);
     todo!("implement me");
 }
