@@ -8,33 +8,44 @@ use crate::{
 impl<'a, C: Constructor> Parser<'a, C> {
     pub(crate) fn try_alias(&mut self) -> Option<Box<Node<'a>>> {
         let alias_t = self.try_token(TokenValue::kALIAS)?;
-
-        let lhs;
-        let rhs;
-
-        if let Some(fitem) = self.try_fitem() {
-            lhs = fitem;
-            rhs = self
-                .try_fitem()
-                .unwrap_or_else(|| panic!("expected fitem, got {:?}", self.current_token()));
-        } else {
-            lhs = self
-                .try_gvar()
-                .unwrap_or_else(|| panic!("expected gvar, got {:?}", self.current_token()));
-            rhs = None
-                .or_else(|| self.try_gvar())
-                .or_else(|| self.try_back_ref())
-                .or_else(|| self.try_nth_ref())
-                .unwrap_or_else(|| {
-                    panic!(
-                        "expected tGVAR/tBACK_REF/tNTH_REF, got {:?}",
-                        self.current_token()
-                    )
-                });
-        };
-
+        let (lhs, rhs) = parse_alias_args(self);
         Some(Builder::<C>::alias(alias_t, lhs, rhs))
     }
+}
+
+fn parse_alias_args<'a, C: Constructor>(
+    parser: &mut Parser<'a, C>,
+) -> (Box<Node<'a>>, Box<Node<'a>>) {
+    None.or_else(|| try_fitem_fitem(parser))
+        .or_else(|| try_gvar_gvar(parser))
+        .unwrap_or_else(|| panic!("expected alias on fitems or gvars"))
+}
+
+fn try_fitem_fitem<'a, C: Constructor>(
+    parser: &mut Parser<'a, C>,
+) -> Option<(Box<Node<'a>>, Box<Node<'a>>)> {
+    let lhs = parser.try_fitem()?;
+    let rhs = parser
+        .try_fitem()
+        .unwrap_or_else(|| panic!("expected fitem, got {:?}", parser.current_token()));
+    Some((lhs, rhs))
+}
+
+fn try_gvar_gvar<'a, C: Constructor>(
+    parser: &mut Parser<'a, C>,
+) -> Option<(Box<Node<'a>>, Box<Node<'a>>)> {
+    let lhs = parser.try_gvar()?;
+    let rhs = None
+        .or_else(|| parser.try_gvar())
+        .or_else(|| parser.try_back_ref())
+        .or_else(|| parser.try_nth_ref())
+        .unwrap_or_else(|| {
+            panic!(
+                "expected tGVAR/tBACK_REF/tNTH_REF, got {:?}",
+                parser.current_token()
+            )
+        });
+    Some((lhs, rhs))
 }
 
 #[cfg(test)]
