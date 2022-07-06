@@ -24,6 +24,7 @@ mod opt_rescue;
 mod postexe;
 mod preexe;
 mod primary;
+mod qsymbols;
 mod qwords;
 mod regexp;
 mod stmt;
@@ -554,12 +555,6 @@ where
     fn try_literal(&mut self) -> Option<Box<Node<'a>>> {
         None.or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
-    }
-    fn try_qsymbols(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_qsymbols")
-    }
-    fn parse_qsym_list(&mut self) {
-        todo!("parser.parse_qsym_list")
     }
     fn parse_regexp_contents(&mut self) {
         todo!("parser.parse_regexp_contents")
