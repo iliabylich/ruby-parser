@@ -46,10 +46,10 @@ where
             })
             .or_else(|| self.try_array())
             .or_else(|| self.try_hash())
-            .or_else(|| self.try_keyword_cmd(TokenValue::kRETURN))
+            .or_else(|| try_keyword_cmd(self, TokenValue::kRETURN))
             .or_else(|| self.try_yield())
             .or_else(|| self.try_defined())
-            .or_else(|| self.try_not_expr())
+            .or_else(|| try_not_expr(self))
             .or_else(|| {
                 let fcall = self.try_fcall()?;
                 if let Some(brace_block) = self.try_brace_block() {
@@ -80,10 +80,10 @@ where
             .or_else(|| self.try_class())
             .or_else(|| self.try_module())
             .or_else(|| self.try_method())
-            .or_else(|| self.try_keyword_cmd(TokenValue::kBREAK))
-            .or_else(|| self.try_keyword_cmd(TokenValue::kNEXT))
-            .or_else(|| self.try_keyword_cmd(TokenValue::kREDO))
-            .or_else(|| self.try_keyword_cmd(TokenValue::kRETRY));
+            .or_else(|| try_keyword_cmd(self, TokenValue::kBREAK))
+            .or_else(|| try_keyword_cmd(self, TokenValue::kNEXT))
+            .or_else(|| try_keyword_cmd(self, TokenValue::kREDO))
+            .or_else(|| try_keyword_cmd(self, TokenValue::kRETRY));
 
         let node = node?;
 
@@ -97,35 +97,36 @@ where
     pub(crate) fn try_primary_value(&mut self) -> Option<Box<Node<'a>>> {
         self.try_primary()
     }
+}
 
-    // Helpers
+fn try_keyword_cmd<'a, C: Constructor>(
+    parser: &mut Parser<'a, C>,
+    expected: TokenValue<'a>,
+) -> Option<Box<Node<'a>>> {
+    let token = parser.try_token(expected)?;
+    todo!("keyword.cmd {:?}", token)
+}
 
-    fn try_keyword_cmd(&mut self, expected: TokenValue<'a>) -> Option<Box<Node<'a>>> {
-        let token = self.try_token(expected)?;
-        todo!("keyword.cmd {:?}", token)
-    }
-
-    // kNOT tLPAREN2 expr rparen
-    // kNOT tLPAREN2 rparen
-    fn try_not_expr(&mut self) -> Option<Box<Node<'a>>> {
-        let not_t = self.try_token(TokenValue::kNOT)?;
-        let checkpoint = self.new_checkpoint();
-        if let Some(lparen_t) = self.try_token(TokenValue::tLPAREN) {
-            let expr = self.try_expr();
-            if let Some(rparen_t) = self.try_rparen() {
-                todo!(
-                    "not_op {:?} {:?} {:?} {:?}",
-                    not_t,
-                    lparen_t,
-                    expr,
-                    rparen_t
-                )
-            } else {
-                panic!("expected tRPAREN, got {:?}", self.current_token());
-            }
+// kNOT tLPAREN2 expr rparen
+// kNOT tLPAREN2 rparen
+fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+    let not_t = parser.try_token(TokenValue::kNOT)?;
+    let checkpoint = parser.new_checkpoint();
+    if let Some(lparen_t) = parser.try_token(TokenValue::tLPAREN) {
+        let expr = parser.try_expr();
+        if let Some(rparen_t) = parser.try_rparen() {
+            todo!(
+                "not_op {:?} {:?} {:?} {:?}",
+                not_t,
+                lparen_t,
+                expr,
+                rparen_t
+            )
         } else {
-            self.restore_checkpoint(checkpoint);
-            None
+            panic!("expected tRPAREN, got {:?}", parser.current_token());
         }
+    } else {
+        parser.restore_checkpoint(checkpoint);
+        None
     }
 }
