@@ -135,5 +135,6 @@ mod tests {
     fn test_string1_interp() {
         let mut parser = RustParser::new(b"\"foo #{42} #@bar\"");
         assert_eq!(parser.try_strings(), None);
+        todo!("implement me");
     }
 }

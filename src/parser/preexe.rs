@@ -23,6 +23,7 @@ fn test_preexe() {
     use crate::parser::RustParser;
     let mut parser = RustParser::new(b"BEGIN {}");
     assert_eq!(parser.try_preexe(), None);
+    todo!("implement me");
 }
 
 #[test]

@@ -93,13 +93,14 @@ mod tests {
     fn test_ssym_quoted() {
         let mut parser = RustParser::new(b":'foo'");
         assert_eq!(parser.try_ssym(), None);
-        panic!("foo")
+        todo!("implement me");
     }
 
     #[test]
     fn test_dsym() {
         let mut parser = RustParser::new(b":\"foo\"");
         assert_eq!(parser.try_dsym(), None);
+        todo!("implement me");
     }
 
     #[test]

@@ -24,6 +24,7 @@ mod opt_rescue;
 mod postexe;
 mod preexe;
 mod primary;
+mod qwords;
 mod regexp;
 mod stmt;
 mod string;
@@ -559,14 +560,8 @@ where
     fn parse_symbol_list(&mut self) {
         todo!("parser.parse_symbol_list")
     }
-    fn try_qwords(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_qwords")
-    }
     fn try_qsymbols(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_qsymbols")
-    }
-    fn parse_qword_list(&mut self) {
-        todo!("parser.parse_qword_list")
     }
     fn parse_qsym_list(&mut self) {
         todo!("parser.parse_qsym_list")

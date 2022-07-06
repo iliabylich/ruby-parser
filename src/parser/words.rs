@@ -44,7 +44,7 @@ mod tests {
 
     #[test]
     fn test_words() {
-        let mut parser = RustParser::new(b"%w[foo bar]");
+        let mut parser = RustParser::new(b"%W[foo bar]");
         assert_eq!(parser.parse(), None);
         todo!("implement me");
     }
