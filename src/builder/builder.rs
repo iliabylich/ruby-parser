@@ -445,6 +445,54 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
+    pub(crate) fn symbols_compose(
+        begin_t: Token<'a>,
+        elements: Vec<Node<'a>>,
+        end_t: Token<'a>,
+    ) -> Box<Node<'a>> {
+        let elements = elements
+            .into_iter()
+            .map(|part| match part {
+                Node::Str(Str {
+                    value,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }) => {
+                    // TODO: validate_sym_value
+                    Node::Sym(Sym {
+                        name: value,
+                        begin_l,
+                        end_l,
+                        expression_l,
+                    })
+                }
+                Node::Dstr(Dstr {
+                    parts,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }) => Node::Dsym(Dsym {
+                    parts,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }),
+                other => other,
+            })
+            .collect::<Vec<_>>();
+
+        let begin_l = begin_t.loc();
+        let end_l = end_t.loc();
+        let expression_l = begin_l.join(&end_l);
+        Box::new(Node::Array(Array {
+            elements,
+            begin_l: Some(begin_l),
+            end_l: Some(end_l),
+            expression_l,
+        }))
+    }
+
     // Hashes
 
     // Ranges

@@ -29,6 +29,7 @@ mod regexp;
 mod stmt;
 mod string;
 mod symbol;
+mod symbols;
 mod undef;
 mod variables;
 mod while_until;
@@ -553,12 +554,6 @@ where
     fn try_literal(&mut self) -> Option<Box<Node<'a>>> {
         None.or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
-    }
-    fn try_symbols(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_symbols")
-    }
-    fn parse_symbol_list(&mut self) {
-        todo!("parser.parse_symbol_list")
     }
     fn try_qsymbols(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_qsymbols")
