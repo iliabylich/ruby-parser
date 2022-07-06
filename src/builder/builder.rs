@@ -412,6 +412,39 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
+    pub(crate) fn word(parts: Vec<Node<'a>>) -> Box<Node<'a>> {
+        debug_assert!(!parts.is_empty());
+
+        if parts.len() == 1 && matches!(&parts[0], Node::Str(_) | Node::Dstr(_)) {
+            let part = parts.into_iter().next().expect("expected 1 element");
+            return Box::new(part);
+        }
+
+        let (begin_l, end_l, expression_l) = collection_map(&None, &parts, &None);
+        Box::new(Node::Dstr(Dstr {
+            parts,
+            begin_l,
+            end_l,
+            expression_l,
+        }))
+    }
+
+    pub(crate) fn words_compose(
+        begin_t: Token<'a>,
+        elements: Vec<Node<'a>>,
+        end_t: Token<'a>,
+    ) -> Box<Node<'a>> {
+        let begin_l = begin_t.loc();
+        let end_l = end_t.loc();
+        let expression_l = begin_l.join(&end_l);
+        Box::new(Node::Array(Array {
+            elements,
+            begin_l: Some(begin_l),
+            end_l: Some(end_l),
+            expression_l,
+        }))
+    }
+
     // Hashes
 
     // Ranges
