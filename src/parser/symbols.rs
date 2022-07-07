@@ -12,18 +12,19 @@ where
 {
     pub(crate) fn try_symbols(&mut self) -> Option<Box<Node<'a>>> {
         let begin_t = self.try_token(TokenValue::tSYMBOLS_BEG)?;
-        let word_list = self.parse_symbol_list();
+        let word_list = parse_symbol_list(self);
         let end_t = self.expect_token(TokenValue::tSTRING_END);
         Some(Builder::<C>::symbols_compose(begin_t, word_list, end_t))
     }
+}
 
-    fn parse_symbol_list(&mut self) -> Vec<Node<'a>> {
-        let mut result = vec![];
-        while let Some(word) = self.try_word() {
-            result.push(*word);
-        }
-        result
+// This rule can be `none`
+fn parse_symbol_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Vec<Node<'a>> {
+    let mut result = vec![];
+    while let Some(word) = parser.try_word() {
+        result.push(*word);
     }
+    result
 }
 
 #[cfg(test)]
@@ -33,7 +34,7 @@ mod tests {
     #[test]
     fn test_words() {
         let mut parser = RustParser::new(b"%I[foo bar]");
-        assert_eq!(parser.parse(), None);
+        assert_eq!(parser.try_symbols(), None);
         todo!("implement me");
     }
 }

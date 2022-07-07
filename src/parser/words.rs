@@ -17,6 +17,7 @@ where
         Some(Builder::<C>::words_compose(begin_t, word_list, end_t))
     }
 
+    // This rule can be `none
     fn parse_word_list(&mut self) -> Vec<Node<'a>> {
         let mut result = vec![];
         while let Some(word) = self.try_word() {

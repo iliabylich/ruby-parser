@@ -80,6 +80,7 @@ where
         }
     }
 
+    // This rule can be `none`
     pub(crate) fn parse_command_args(&mut self) -> Vec<Node<'a>> {
         todo!("parser.parse_command_args")
     }

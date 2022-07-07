@@ -19,6 +19,7 @@ where
         }
     }
 
+    // This rule can be `none`
     pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node<'a>> {
         let mut top_stmts = vec![];
         while let Some(top_stmt) = self.try_top_stmt() {
@@ -34,7 +35,7 @@ where
 
     pub(crate) fn try_bodystmt(&mut self) -> Option<Box<Node<'a>>> {
         let compstmt = self.try_compstmt()?;
-        let rescue_bodies = self.parse_opt_rescue();
+        let rescue_bodies = self.try_opt_rescue();
         let opt_else = self.try_opt_else();
         let opt_ensure = self.try_opt_ensure();
         Some(Builder::<C>::begin_body(
@@ -55,6 +56,7 @@ where
         }
     }
 
+    // This rule can be `none`
     pub(crate) fn parse_stmts(&mut self) -> Vec<Node<'a>> {
         let mut stmts = vec![];
         while let Some(stmt) = self.try_stmt() {

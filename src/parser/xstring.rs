@@ -37,6 +37,7 @@ where
         ))
     }
 
+    // This rule can be `none`
     fn parse_xstring_contents(&mut self) -> Vec<Node<'a>> {
         let mut contents = vec![];
         while let Some(content) = self.try_string_content() {

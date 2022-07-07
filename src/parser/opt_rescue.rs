@@ -9,7 +9,8 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn parse_opt_rescue(&mut self) -> Vec<Node<'a>> {
+    // This rule can be `none`
+    pub(crate) fn try_opt_rescue(&mut self) -> Vec<Node<'a>> {
         let mut nodes = vec![];
         while let Some(node) = try_opt_rescue1(self) {
             nodes.push(*node)

@@ -17,6 +17,7 @@ where
         Some(Builder::<C>::words_compose(begin_t, word_list, end_t))
     }
 
+    // This rule can be `None`
     fn parse_qword_list(&mut self) -> Vec<Node<'a>> {
         let mut result = vec![];
         loop {

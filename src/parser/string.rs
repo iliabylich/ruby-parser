@@ -50,6 +50,7 @@ where
         ))
     }
 
+    // This rule can be `none`
     pub(crate) fn parse_string_contents(&mut self) -> Vec<Node<'a>> {
         let mut strings = vec![];
         while let Some(string_content) = self.try_string_content() {

@@ -36,6 +36,7 @@ where
         ))
     }
 
+    // This rule can be `none`
     fn try_regexp_contents(&mut self) -> Vec<Node<'a>> {
         let mut strings = vec![];
         while let Some(string_content) = self.try_string_content() {
