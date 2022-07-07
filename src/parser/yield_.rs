@@ -12,7 +12,7 @@ where
     pub(crate) fn try_yield(&mut self) -> Option<Box<Node<'a>>> {
         let yield_t = self.try_token(TokenValue::kYIELD)?;
         if let Some(lparen_t) = self.try_token(TokenValue::tLPAREN) {
-            let call_args = self.parse_call_args();
+            let call_args = self.try_call_args().unwrap_or_else(|| vec![]);
             if let Some(rparen_t) = self.try_rparen() {
                 todo!(
                     "yield {:?} {:?} {:?} {:?}",

@@ -9,6 +9,7 @@ mod alias;
 mod array;
 mod case;
 mod class;
+mod command;
 mod defined;
 mod expr;
 mod for_loop;
@@ -136,11 +137,12 @@ where
     }
 
     fn try_command_call(&mut self) -> Option<Box<Node<'a>>> {
-        todo!("parser.try_command_call")
+        None.or_else(|| self.try_command())
+            .or_else(|| self.try_block_command())
     }
 
-    fn parse_block_command(&mut self) {
-        todo!("parser.parse_block_command")
+    fn try_block_command(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_block_command")
     }
 
     fn parse_cmd_brace_block(&mut self) {
@@ -148,11 +150,7 @@ where
     }
 
     fn try_fcall(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_fcall")
-    }
-
-    fn parse_command(&mut self) {
-        todo!("parser.parse_command")
+        self.try_operation()
     }
 
     fn parse_cname(&mut self) {
@@ -273,15 +271,6 @@ where
     fn parse_opt_paren_args(&mut self) {
         todo!("parser.parse_opt_paren_args")
     }
-    fn parse_opt_call_args(&mut self) {
-        todo!("parser.parse_opt_call_args")
-    }
-    fn parse_call_args(&mut self) -> Vec<Node<'a>> {
-        todo!("parser.parse_call_args")
-    }
-    fn parse_command_args(&mut self) {
-        todo!("parser.parse_command_args")
-    }
     fn parse_block_arg(&mut self) {
         todo!("parser.parse_block_arg")
     }
@@ -297,62 +286,62 @@ where
     fn try_mrhs(&mut self) -> Option<Vec<Node<'a>>> {
         todo!("parser.try_mrhs")
     }
-    fn parse_k_begin(&mut self) {
-        todo!("parser.parse_k_begin")
+    fn try_k_begin(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_begin")
     }
-    fn parse_k_if(&mut self) {
-        todo!("parser.parse_k_if")
+    fn try_k_if(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_if")
     }
-    fn parse_k_unless(&mut self) {
-        todo!("parser.parse_k_unless")
+    fn try_k_unless(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_unless")
     }
-    fn parse_k_while(&mut self) {
-        todo!("parser.parse_k_while")
+    fn try_k_while(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_while")
     }
-    fn parse_k_until(&mut self) {
-        todo!("parser.parse_k_until")
+    fn try_k_until(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_until")
     }
-    fn parse_k_case(&mut self) {
-        todo!("parser.parse_k_case")
+    fn try_k_case(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_case")
     }
-    fn parse_k_for(&mut self) {
-        todo!("parser.parse_k_for")
+    fn try_k_for(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_for")
     }
-    fn parse_k_class(&mut self) {
-        todo!("parser.parse_k_class")
+    fn try_k_class(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_class")
     }
-    fn parse_k_module(&mut self) {
-        todo!("parser.parse_k_module")
+    fn try_k_module(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_module")
     }
-    fn parse_k_def(&mut self) {
-        todo!("parser.parse_k_def")
+    fn try_k_def(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_def")
     }
-    fn parse_k_do(&mut self) {
-        todo!("parser.parse_k_do")
+    fn try_k_do(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_do")
     }
-    fn parse_k_do_block(&mut self) {
-        todo!("parser.parse_k_do_block")
+    fn try_k_do_block(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_do_block")
     }
-    fn parse_k_rescue(&mut self) {
-        todo!("parser.parse_k_rescue")
+    fn try_k_rescue(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_rescue")
     }
-    fn parse_k_ensure(&mut self) {
-        todo!("parser.parse_k_ensure")
+    fn try_k_ensure(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_ensure")
     }
-    fn parse_k_when(&mut self) {
-        todo!("parser.parse_k_when")
+    fn try_k_when(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_when")
     }
-    fn parse_k_else(&mut self) {
-        todo!("parser.parse_k_else")
+    fn try_k_else(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_else")
     }
-    fn parse_k_elsif(&mut self) {
-        todo!("parser.parse_k_elsif")
+    fn try_k_elsif(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_elsif")
     }
-    fn parse_k_end(&mut self) {
-        todo!("parser.parse_k_end")
+    fn try_k_end(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_end")
     }
-    fn parse_k_return(&mut self) {
-        todo!("parser.parse_k_return")
+    fn try_k_return(&mut self) -> Option<Token<'a>> {
+        todo!("parser.try_k_return")
     }
     fn parse_then(&mut self) {
         todo!("parser.parse_then")
@@ -426,8 +415,8 @@ where
     fn parse_do_block(&mut self) {
         todo!("parser.parse_do_block")
     }
-    fn parse_block_call(&mut self) {
-        todo!("parser.parse_block_call")
+    fn try_block_call(&mut self) -> Option<Box<Node<'a>>> {
+        todo!("parser.try_block_call")
     }
     fn try_method_call(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_method_call")
@@ -436,9 +425,6 @@ where
     // TODO: return ArgsType instead of ()
     fn try_brace_block(&mut self) -> Option<(Token<'a>, (), Option<Box<Node<'a>>>, Token<'a>)> {
         todo!("parser.try_brace_block")
-    }
-    fn parse_brace_body(&mut self) {
-        todo!("parser.parse_brace_body")
     }
     fn parse_do_body(&mut self) {
         todo!("parser.parse_do_body")
@@ -670,56 +656,97 @@ where
     fn parse_assoc(&mut self) {
         todo!("parser.parse_assoc")
     }
-    fn parse_operation(&mut self) {
-        todo!("parser.parse_operation")
+    fn try_operation(&mut self) -> Option<Token<'a>> {
+        None.or_else(|| self.try_token(TokenValue::tIDENTIFIER))
+            .or_else(|| self.try_token(TokenValue::tCONSTANT))
+            .or_else(|| self.try_token(TokenValue::tFID))
     }
-    fn parse_operation2(&mut self) {
-        todo!("parser.parse_operation2")
+    fn try_operation2(&mut self) -> Option<Token<'a>> {
+        None.or_else(|| self.try_operation())
+            .or_else(|| self.try_op())
     }
-    fn parse_operation3(&mut self) {
-        todo!("parser.parse_operation3")
+    fn try_operation3(&mut self) -> Option<Token<'a>> {
+        None.or_else(|| self.try_token(TokenValue::tIDENTIFIER))
+            .or_else(|| self.try_token(TokenValue::tFID))
+            .or_else(|| self.try_op())
     }
-    fn parse_dot_or_colon(&mut self) {
-        todo!("parser.parse_dot_or_colon")
+    fn try_dot_or_colon(&mut self) -> Option<Token<'a>> {
+        None.or_else(|| self.try_token(TokenValue::tDOT))
+            .or_else(|| self.try_token(TokenValue::tCOLON2))
     }
     fn try_call_op(&mut self) -> Option<Token<'a>> {
         None.or_else(|| self.try_token(TokenValue::tDOT))
             .or_else(|| self.try_token(TokenValue::tANDDOT))
     }
-    fn parse_call_op2(&mut self) {
-        todo!("parser.parse_call_op2")
+    fn try_call_op2(&mut self) -> Option<Token<'a>> {
+        None.or_else(|| self.try_call_op())
+            .or_else(|| self.try_token(TokenValue::tCOLON2))
     }
     fn parse_opt_terms(&mut self) {
-        while matches!(
-            self.current_token().value(),
-            TokenValue::tSEMI | TokenValue::tNL
-        ) {
-            self.skip_token()
-        }
+        self.parse_terms();
     }
     fn try_opt_nl(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_opt_nl")
+        self.try_token(TokenValue::tNL)
     }
     fn try_rparen(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_rparen")
+        let checkpoint = self.new_checkpoint();
+        self.try_opt_nl();
+        if let Some(rparen_t) = self.try_token(TokenValue::tRPAREN) {
+            Some(rparen_t)
+        } else {
+            self.restore_checkpoint(checkpoint);
+            None
+        }
     }
     fn try_rbracket(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_rbracket")
+        let checkpoint = self.new_checkpoint();
+        self.try_opt_nl();
+        if let Some(rbrack_t) = self.try_token(TokenValue::tRBRACK) {
+            Some(rbrack_t)
+        } else {
+            self.restore_checkpoint(checkpoint);
+            None
+        }
     }
     fn try_rbrace(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_rbrace")
+        let checkpoint = self.new_checkpoint();
+        self.try_opt_nl();
+        if let Some(rbrace_t) = self.try_token(TokenValue::tRCURLY) {
+            Some(rbrace_t)
+        } else {
+            self.restore_checkpoint(checkpoint);
+            None
+        }
     }
     fn try_trailer(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_trailer")
+        None.or_else(|| self.try_token(TokenValue::tNL))
+            .or_else(|| self.try_token(TokenValue::tCOMMA))
     }
     fn try_term(&mut self) -> Option<Token<'a>> {
-        todo!("parser.try_term")
+        None.or_else(|| self.try_token(TokenValue::tSEMI))
+            .or_else(|| self.try_token(TokenValue::tNL))
     }
-    fn parse_terms(&mut self) {
-        todo!("parser.parse_terms")
-    }
-    fn parse_none(&mut self) {
-        todo!("parser.parse_none")
+    fn parse_terms(&mut self) -> Vec<Token<'a>> {
+        let mut terms = vec![];
+        if let Some(term) = self.try_term() {
+            terms.push(term)
+        } else {
+            return vec![];
+        }
+        loop {
+            if self.current_token().is(TokenValue::tSEMI) {
+                self.take_token();
+            } else {
+                break;
+            }
+
+            if let Some(term) = self.try_term() {
+                terms.push(term)
+            } else {
+                break;
+            }
+        }
+        terms
     }
 
     fn try_colon2_const(&mut self) -> Option<(Token<'a>, Token<'a>)> {
