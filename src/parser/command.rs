@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -26,7 +26,7 @@ where
             .or_else(|| {
                 let primary_value = self.try_primary_value()?;
                 let maybe_op_t = None
-                    .or_else(|| self.try_token(TokenValue::tCOLON2))
+                    .or_else(|| self.try_token(TokenKind::tCOLON2))
                     .or_else(|| self.try_operation2());
                 if let Some(op_t) = maybe_op_t {
                     if let Some(operation2) = self.try_operation2() {
@@ -47,7 +47,7 @@ where
             })
             .or_else(|| {
                 let checkpoint = self.new_checkpoint();
-                let super_t = self.try_token(TokenValue::kSUPER)?;
+                let super_t = self.try_token(TokenKind::kSUPER)?;
                 if let Some(command_args) = self.try_command_args() {
                     todo!("super {:?} {:?}", super_t, command_args)
                 } else {
@@ -57,7 +57,7 @@ where
             })
             .or_else(|| {
                 let checkpoint = self.new_checkpoint();
-                let yield_t = self.try_token(TokenValue::kYIELD)?;
+                let yield_t = self.try_token(TokenKind::kYIELD)?;
                 if let Some(command_args) = self.try_command_args() {
                     todo!("yield {:?} {:?}", yield_t, command_args)
                 } else {
@@ -86,8 +86,8 @@ where
         let checkpoint = self.new_checkpoint();
         let keyword_t = None
             .or_else(|| self.try_k_return())
-            .or_else(|| self.try_token(TokenValue::kBREAK))
-            .or_else(|| self.try_token(TokenValue::kNEXT))?;
+            .or_else(|| self.try_token(TokenKind::kBREAK))
+            .or_else(|| self.try_token(TokenKind::kNEXT))?;
         if let Some(call_args) = self.try_call_args() {
             todo!("keyword_cmd {:?} {:?}", keyword_t, call_args)
         } else {
@@ -121,16 +121,16 @@ struct CmdBraceBlock<'a> {
 fn try_cmd_brace_block<'a, C: Constructor>(
     parser: &mut Parser<'a, C>,
 ) -> Option<CmdBraceBlock<'a>> {
-    let begin_t = parser.try_token(TokenValue::tLCURLY)?;
+    let begin_t = parser.try_token(TokenKind::tLCURLY)?;
     if let Some(brace_body) = parser.try_brace_body() {
-        let end_t = parser.expect_token(TokenValue::tRCURLY);
+        let end_t = parser.expect_token(TokenKind::tRCURLY);
         Some(CmdBraceBlock {
             begin_t,
             brace_body: Some(brace_body),
             end_t,
         })
     } else {
-        let end_t = parser.expect_token(TokenValue::tRCURLY);
+        let end_t = parser.expect_token(TokenKind::tRCURLY);
         Some(CmdBraceBlock {
             begin_t,
             brace_body: None,

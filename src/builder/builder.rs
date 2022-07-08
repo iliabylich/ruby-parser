@@ -4,7 +4,7 @@ use crate::{
     loc::{loc, Loc},
     nodes::*,
     string_content::StringContent,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -136,7 +136,7 @@ impl<'a, C: Constructor> Builder<C> {
         end_t: Option<Token<'a>>,
     ) -> Box<Node<'a>> {
         if let Some(Token {
-            value: TokenValue::tHEREDOC_BEG,
+            value: TokenKind::tHEREDOC_BEG,
             ..
         }) = &begin_t
         {
@@ -206,7 +206,7 @@ impl<'a, C: Constructor> Builder<C> {
         let expression_l = char_t.loc();
         let begin_l = loc!(expression_l.start, expression_l.start + 1);
 
-        let char = if let TokenValue::tCHAR(char) = char_t.value() {
+        let char = if let TokenKind::tCHAR(char) = char_t.value() {
             *char
         } else {
             unreachable!()
@@ -297,7 +297,7 @@ impl<'a, C: Constructor> Builder<C> {
         let begin_l = begin_t.loc();
         let end_l = end_t.loc();
 
-        if begin_t.is(TokenValue::tXHEREDOC_BEG) {
+        if begin_t.is(TokenKind::tXHEREDOC_BEG) {
             let heredoc_body_l = collection_expr(&parts).unwrap_or(end_l);
             let heredoc_end_l = end_l;
             let expression_l = begin_l;

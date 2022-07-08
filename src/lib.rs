@@ -17,7 +17,7 @@ pub(crate) mod loc;
 pub use loc::Loc;
 
 pub(crate) mod token;
-pub use token::{Token, TokenValue};
+pub use token::{Token, TokenKind};
 
 #[allow(dead_code, unused_variables)]
 pub(crate) mod builder;

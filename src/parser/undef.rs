@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_undef(&mut self) -> Option<Box<Node<'a>>> {
-        let undef_t = self.try_token(TokenValue::kUNDEF)?;
+        let undef_t = self.try_token(TokenKind::kUNDEF)?;
         let names = self.parse_names();
         Some(Builder::<C>::undef(undef_t, names))
     }
@@ -21,7 +21,7 @@ where
             names.push(*fitem);
         }
         loop {
-            if self.current_token().is(TokenValue::tCOMMA) {
+            if self.current_token().is(TokenKind::tCOMMA) {
                 // consume
                 self.skip_token();
             } else {

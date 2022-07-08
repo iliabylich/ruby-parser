@@ -1,7 +1,7 @@
 use crate::builder::{Builder, Constructor, RustConstructor};
 use crate::lexer::{buffer::Buffer, Lexer};
 use crate::nodes::Node;
-use crate::token::{Token, TokenValue};
+use crate::token::{Token, TokenKind};
 
 mod checkpoint;
 
@@ -75,7 +75,7 @@ where
         self.lexer.take_token()
     }
 
-    pub(crate) fn expect_token(&mut self, expected: TokenValue<'a>) -> Token<'a> {
+    pub(crate) fn expect_token(&mut self, expected: TokenKind<'a>) -> Token<'a> {
         if self.current_token().value() == &expected {
             self.take_token()
         } else {
@@ -87,7 +87,7 @@ where
         }
     }
 
-    pub(crate) fn try_token(&mut self, expected: TokenValue<'a>) -> Option<Token<'a>> {
+    pub(crate) fn try_token(&mut self, expected: TokenKind<'a>) -> Option<Token<'a>> {
         if self.current_token().is(expected) {
             Some(self.take_token())
         } else {
@@ -160,9 +160,9 @@ where
         todo!("parser.parse_cpath")
     }
     fn try_fname(&mut self) -> Option<Token<'a>> {
-        self.try_token(TokenValue::tIDENTIFIER)
-            .or_else(|| self.try_token(TokenValue::tCONSTANT))
-            .or_else(|| self.try_token(TokenValue::tFID))
+        self.try_token(TokenKind::tIDENTIFIER)
+            .or_else(|| self.try_token(TokenKind::tCONSTANT))
+            .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
             .or_else(|| self.try_reswords())
     }
@@ -173,79 +173,79 @@ where
     }
 
     fn try_op(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tPIPE))
-            .or_else(|| self.try_token(TokenValue::tCARET))
-            .or_else(|| self.try_token(TokenValue::tAMPER))
-            .or_else(|| self.try_token(TokenValue::tCMP))
-            .or_else(|| self.try_token(TokenValue::tEQ))
-            .or_else(|| self.try_token(TokenValue::tEQQ))
-            .or_else(|| self.try_token(TokenValue::tMATCH))
-            .or_else(|| self.try_token(TokenValue::tNMATCH))
-            .or_else(|| self.try_token(TokenValue::tGT))
-            .or_else(|| self.try_token(TokenValue::tGEQ))
-            .or_else(|| self.try_token(TokenValue::tLT))
-            .or_else(|| self.try_token(TokenValue::tLEQ))
-            .or_else(|| self.try_token(TokenValue::tNEQ))
-            .or_else(|| self.try_token(TokenValue::tLSHFT))
-            .or_else(|| self.try_token(TokenValue::tRSHFT))
-            .or_else(|| self.try_token(TokenValue::tPLUS))
-            .or_else(|| self.try_token(TokenValue::tMINUS))
-            .or_else(|| self.try_token(TokenValue::tSTAR))
-            .or_else(|| self.try_token(TokenValue::tSTAR))
-            .or_else(|| self.try_token(TokenValue::tDIVIDE))
-            .or_else(|| self.try_token(TokenValue::tPERCENT))
-            .or_else(|| self.try_token(TokenValue::tPOW))
-            .or_else(|| self.try_token(TokenValue::tDSTAR))
-            .or_else(|| self.try_token(TokenValue::tBANG))
-            .or_else(|| self.try_token(TokenValue::tTILDE))
-            .or_else(|| self.try_token(TokenValue::tUPLUS))
-            .or_else(|| self.try_token(TokenValue::tUMINUS))
-            .or_else(|| self.try_token(TokenValue::tAREF))
-            .or_else(|| self.try_token(TokenValue::tASET))
-            .or_else(|| self.try_token(TokenValue::tBACK_REF))
+        None.or_else(|| self.try_token(TokenKind::tPIPE))
+            .or_else(|| self.try_token(TokenKind::tCARET))
+            .or_else(|| self.try_token(TokenKind::tAMPER))
+            .or_else(|| self.try_token(TokenKind::tCMP))
+            .or_else(|| self.try_token(TokenKind::tEQ))
+            .or_else(|| self.try_token(TokenKind::tEQQ))
+            .or_else(|| self.try_token(TokenKind::tMATCH))
+            .or_else(|| self.try_token(TokenKind::tNMATCH))
+            .or_else(|| self.try_token(TokenKind::tGT))
+            .or_else(|| self.try_token(TokenKind::tGEQ))
+            .or_else(|| self.try_token(TokenKind::tLT))
+            .or_else(|| self.try_token(TokenKind::tLEQ))
+            .or_else(|| self.try_token(TokenKind::tNEQ))
+            .or_else(|| self.try_token(TokenKind::tLSHFT))
+            .or_else(|| self.try_token(TokenKind::tRSHFT))
+            .or_else(|| self.try_token(TokenKind::tPLUS))
+            .or_else(|| self.try_token(TokenKind::tMINUS))
+            .or_else(|| self.try_token(TokenKind::tSTAR))
+            .or_else(|| self.try_token(TokenKind::tSTAR))
+            .or_else(|| self.try_token(TokenKind::tDIVIDE))
+            .or_else(|| self.try_token(TokenKind::tPERCENT))
+            .or_else(|| self.try_token(TokenKind::tPOW))
+            .or_else(|| self.try_token(TokenKind::tDSTAR))
+            .or_else(|| self.try_token(TokenKind::tBANG))
+            .or_else(|| self.try_token(TokenKind::tTILDE))
+            .or_else(|| self.try_token(TokenKind::tUPLUS))
+            .or_else(|| self.try_token(TokenKind::tUMINUS))
+            .or_else(|| self.try_token(TokenKind::tAREF))
+            .or_else(|| self.try_token(TokenKind::tASET))
+            .or_else(|| self.try_token(TokenKind::tBACK_REF))
     }
     fn try_reswords(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::k__LINE__))
-            .or_else(|| self.try_token(TokenValue::k__FILE__))
-            .or_else(|| self.try_token(TokenValue::k__ENCODING__))
-            .or_else(|| self.try_token(TokenValue::klBEGIN))
-            .or_else(|| self.try_token(TokenValue::klEND))
-            .or_else(|| self.try_token(TokenValue::kALIAS))
-            .or_else(|| self.try_token(TokenValue::kAND))
-            .or_else(|| self.try_token(TokenValue::kBEGIN))
-            .or_else(|| self.try_token(TokenValue::kBREAK))
-            .or_else(|| self.try_token(TokenValue::kCASE))
-            .or_else(|| self.try_token(TokenValue::kCLASS))
-            .or_else(|| self.try_token(TokenValue::kDEF))
-            .or_else(|| self.try_token(TokenValue::kDEFINED))
-            .or_else(|| self.try_token(TokenValue::kDO))
-            .or_else(|| self.try_token(TokenValue::kELSE))
-            .or_else(|| self.try_token(TokenValue::kELSIF))
-            .or_else(|| self.try_token(TokenValue::kEND))
-            .or_else(|| self.try_token(TokenValue::kENSURE))
-            .or_else(|| self.try_token(TokenValue::kFALSE))
-            .or_else(|| self.try_token(TokenValue::kFOR))
-            .or_else(|| self.try_token(TokenValue::kIN))
-            .or_else(|| self.try_token(TokenValue::kMODULE))
-            .or_else(|| self.try_token(TokenValue::kNEXT))
-            .or_else(|| self.try_token(TokenValue::kNIL))
-            .or_else(|| self.try_token(TokenValue::kNOT))
-            .or_else(|| self.try_token(TokenValue::kOR))
-            .or_else(|| self.try_token(TokenValue::kREDO))
-            .or_else(|| self.try_token(TokenValue::kRESCUE))
-            .or_else(|| self.try_token(TokenValue::kRETRY))
-            .or_else(|| self.try_token(TokenValue::kRETURN))
-            .or_else(|| self.try_token(TokenValue::kSELF))
-            .or_else(|| self.try_token(TokenValue::kSUPER))
-            .or_else(|| self.try_token(TokenValue::kTHEN))
-            .or_else(|| self.try_token(TokenValue::kTRUE))
-            .or_else(|| self.try_token(TokenValue::kUNDEF))
-            .or_else(|| self.try_token(TokenValue::kWHEN))
-            .or_else(|| self.try_token(TokenValue::kYIELD))
-            .or_else(|| self.try_token(TokenValue::kIF))
-            .or_else(|| self.try_token(TokenValue::kUNLESS))
-            .or_else(|| self.try_token(TokenValue::kWHILE))
-            .or_else(|| self.try_token(TokenValue::kUNTIL))
+        None.or_else(|| self.try_token(TokenKind::k__LINE__))
+            .or_else(|| self.try_token(TokenKind::k__FILE__))
+            .or_else(|| self.try_token(TokenKind::k__ENCODING__))
+            .or_else(|| self.try_token(TokenKind::klBEGIN))
+            .or_else(|| self.try_token(TokenKind::klEND))
+            .or_else(|| self.try_token(TokenKind::kALIAS))
+            .or_else(|| self.try_token(TokenKind::kAND))
+            .or_else(|| self.try_token(TokenKind::kBEGIN))
+            .or_else(|| self.try_token(TokenKind::kBREAK))
+            .or_else(|| self.try_token(TokenKind::kCASE))
+            .or_else(|| self.try_token(TokenKind::kCLASS))
+            .or_else(|| self.try_token(TokenKind::kDEF))
+            .or_else(|| self.try_token(TokenKind::kDEFINED))
+            .or_else(|| self.try_token(TokenKind::kDO))
+            .or_else(|| self.try_token(TokenKind::kELSE))
+            .or_else(|| self.try_token(TokenKind::kELSIF))
+            .or_else(|| self.try_token(TokenKind::kEND))
+            .or_else(|| self.try_token(TokenKind::kENSURE))
+            .or_else(|| self.try_token(TokenKind::kFALSE))
+            .or_else(|| self.try_token(TokenKind::kFOR))
+            .or_else(|| self.try_token(TokenKind::kIN))
+            .or_else(|| self.try_token(TokenKind::kMODULE))
+            .or_else(|| self.try_token(TokenKind::kNEXT))
+            .or_else(|| self.try_token(TokenKind::kNIL))
+            .or_else(|| self.try_token(TokenKind::kNOT))
+            .or_else(|| self.try_token(TokenKind::kOR))
+            .or_else(|| self.try_token(TokenKind::kREDO))
+            .or_else(|| self.try_token(TokenKind::kRESCUE))
+            .or_else(|| self.try_token(TokenKind::kRETRY))
+            .or_else(|| self.try_token(TokenKind::kRETURN))
+            .or_else(|| self.try_token(TokenKind::kSELF))
+            .or_else(|| self.try_token(TokenKind::kSUPER))
+            .or_else(|| self.try_token(TokenKind::kTHEN))
+            .or_else(|| self.try_token(TokenKind::kTRUE))
+            .or_else(|| self.try_token(TokenKind::kUNDEF))
+            .or_else(|| self.try_token(TokenKind::kWHEN))
+            .or_else(|| self.try_token(TokenKind::kYIELD))
+            .or_else(|| self.try_token(TokenKind::kIF))
+            .or_else(|| self.try_token(TokenKind::kUNLESS))
+            .or_else(|| self.try_token(TokenKind::kWHILE))
+            .or_else(|| self.try_token(TokenKind::kUNTIL))
     }
     fn try_arg(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_arg")
@@ -657,41 +657,41 @@ where
         todo!("parser.parse_assoc")
     }
     fn try_operation(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tIDENTIFIER))
-            .or_else(|| self.try_token(TokenValue::tCONSTANT))
-            .or_else(|| self.try_token(TokenValue::tFID))
+        None.or_else(|| self.try_token(TokenKind::tIDENTIFIER))
+            .or_else(|| self.try_token(TokenKind::tCONSTANT))
+            .or_else(|| self.try_token(TokenKind::tFID))
     }
     fn try_operation2(&mut self) -> Option<Token<'a>> {
         None.or_else(|| self.try_operation())
             .or_else(|| self.try_op())
     }
     fn try_operation3(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tIDENTIFIER))
-            .or_else(|| self.try_token(TokenValue::tFID))
+        None.or_else(|| self.try_token(TokenKind::tIDENTIFIER))
+            .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
     }
     fn try_dot_or_colon(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tDOT))
-            .or_else(|| self.try_token(TokenValue::tCOLON2))
+        None.or_else(|| self.try_token(TokenKind::tDOT))
+            .or_else(|| self.try_token(TokenKind::tCOLON2))
     }
     fn try_call_op(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tDOT))
-            .or_else(|| self.try_token(TokenValue::tANDDOT))
+        None.or_else(|| self.try_token(TokenKind::tDOT))
+            .or_else(|| self.try_token(TokenKind::tANDDOT))
     }
     fn try_call_op2(&mut self) -> Option<Token<'a>> {
         None.or_else(|| self.try_call_op())
-            .or_else(|| self.try_token(TokenValue::tCOLON2))
+            .or_else(|| self.try_token(TokenKind::tCOLON2))
     }
     fn parse_opt_terms(&mut self) {
         self.parse_terms();
     }
     fn try_opt_nl(&mut self) -> Option<Token<'a>> {
-        self.try_token(TokenValue::tNL)
+        self.try_token(TokenKind::tNL)
     }
     fn try_rparen(&mut self) -> Option<Token<'a>> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
-        if let Some(rparen_t) = self.try_token(TokenValue::tRPAREN) {
+        if let Some(rparen_t) = self.try_token(TokenKind::tRPAREN) {
             Some(rparen_t)
         } else {
             self.restore_checkpoint(checkpoint);
@@ -701,7 +701,7 @@ where
     fn try_rbracket(&mut self) -> Option<Token<'a>> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
-        if let Some(rbrack_t) = self.try_token(TokenValue::tRBRACK) {
+        if let Some(rbrack_t) = self.try_token(TokenKind::tRBRACK) {
             Some(rbrack_t)
         } else {
             self.restore_checkpoint(checkpoint);
@@ -711,7 +711,7 @@ where
     fn try_rbrace(&mut self) -> Option<Token<'a>> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
-        if let Some(rbrace_t) = self.try_token(TokenValue::tRCURLY) {
+        if let Some(rbrace_t) = self.try_token(TokenKind::tRCURLY) {
             Some(rbrace_t)
         } else {
             self.restore_checkpoint(checkpoint);
@@ -719,12 +719,12 @@ where
         }
     }
     fn try_trailer(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tNL))
-            .or_else(|| self.try_token(TokenValue::tCOMMA))
+        None.or_else(|| self.try_token(TokenKind::tNL))
+            .or_else(|| self.try_token(TokenKind::tCOMMA))
     }
     fn try_term(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tSEMI))
-            .or_else(|| self.try_token(TokenValue::tNL))
+        None.or_else(|| self.try_token(TokenKind::tSEMI))
+            .or_else(|| self.try_token(TokenKind::tNL))
     }
     fn parse_terms(&mut self) -> Vec<Token<'a>> {
         let mut terms = vec![];
@@ -734,7 +734,7 @@ where
             return vec![];
         }
         loop {
-            if self.current_token().is(TokenValue::tSEMI) {
+            if self.current_token().is(TokenKind::tSEMI) {
                 self.take_token();
             } else {
                 break;
@@ -750,8 +750,8 @@ where
     }
 
     fn try_colon2_const(&mut self) -> Option<(Token<'a>, Token<'a>)> {
-        let colon2_t = self.try_token(TokenValue::tCOLON2)?;
-        let const_t = self.expect_token(TokenValue::tCONSTANT);
+        let colon2_t = self.try_token(TokenKind::tCOLON2)?;
+        let const_t = self.expect_token(TokenKind::tCONSTANT);
         Some((colon2_t, const_t))
     }
 }

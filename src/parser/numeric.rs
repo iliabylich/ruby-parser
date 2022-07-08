@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_numeric(&mut self) -> Option<Box<Node<'a>>> {
-        if let Some(uminus_num) = self.try_token(TokenValue::tUMINUS) {
+        if let Some(uminus_num) = self.try_token(TokenKind::tUMINUS) {
             // If there's no number after `-` is still could be `-expr`,
             // that's fine, here we handle only numeric literals
             let simple_numeric = self.try_simple_numeric()?;
@@ -26,19 +26,19 @@ where
 
     pub(crate) fn try_simple_numeric(&mut self) -> Option<Box<Node<'a>>> {
         None.or_else(|| {
-            let integer_t = self.try_token(TokenValue::tINTEGER)?;
+            let integer_t = self.try_token(TokenKind::tINTEGER)?;
             Some(Builder::<C>::integer(integer_t, self.buffer()))
         })
         .or_else(|| {
-            let float_t = self.try_token(TokenValue::tFLOAT)?;
+            let float_t = self.try_token(TokenKind::tFLOAT)?;
             Some(Builder::<C>::float(float_t, self.buffer()))
         })
         .or_else(|| {
-            let rational_t = self.try_token(TokenValue::tRATIONAL)?;
+            let rational_t = self.try_token(TokenKind::tRATIONAL)?;
             Some(Builder::<C>::rational(rational_t, self.buffer()))
         })
         .or_else(|| {
-            let imaginary_t = self.try_token(TokenValue::tIMAGINARY)?;
+            let imaginary_t = self.try_token(TokenKind::tIMAGINARY)?;
             Some(Builder::<C>::complex(imaginary_t, self.buffer()))
         })
     }

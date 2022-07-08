@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -20,11 +20,11 @@ where
 
     pub(crate) fn try_then(&mut self) -> Option<Token<'a>> {
         None.or_else(|| self.try_term())
-            .or_else(|| self.try_token(TokenValue::kTHEN))
+            .or_else(|| self.try_token(TokenKind::kTHEN))
             .or_else(|| {
                 let checkpoint = self.new_checkpoint();
                 if let Some(_term) = self.try_term() {
-                    if let Some(k_then) = self.try_token(TokenValue::kTHEN) {
+                    if let Some(k_then) = self.try_token(TokenKind::kTHEN) {
                         return Some(k_then);
                     }
                 }
@@ -52,7 +52,7 @@ where
                             "primary_value call_op tIDENT {:?} {:?} {:?}",
                             primary_value, op_t, id_t
                         )
-                    } else if let Some(colon2_t) = self.try_token(TokenValue::tCOLON2) {
+                    } else if let Some(colon2_t) = self.try_token(TokenKind::tCOLON2) {
                         let const_t = self
                             .try_const_or_identifier()
                             .expect("expected tCONST or tIDDENT");
@@ -75,7 +75,7 @@ where
 }
 
 fn try_opt_rescue1<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
-    let rescue_t = parser.try_token(TokenValue::kRESCUE)?;
+    let rescue_t = parser.try_token(TokenKind::kRESCUE)?;
     let exc_list = try_exc_list(parser);
     let exc_var = try_exc_var(parser);
     let then = parser.try_then();
@@ -92,7 +92,7 @@ fn try_exc_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Vec<No
 fn try_exc_var<'a, C: Constructor>(
     parser: &mut Parser<'a, C>,
 ) -> Option<(Token<'a>, Box<Node<'a>>)> {
-    let assoc_t = parser.try_token(TokenValue::tASSOC)?;
+    let assoc_t = parser.try_token(TokenKind::tASSOC)?;
     if let Some(lhs) = parser.try_lhs() {
         Some((assoc_t, lhs))
     } else {

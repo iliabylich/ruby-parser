@@ -9,7 +9,7 @@ use crate::{
             ExtendNumber, Number,
         },
     },
-    token::TokenValue,
+    token::TokenKind,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -35,8 +35,8 @@ impl ExtendNumber for IntegerPrefix {
     }
 }
 
-impl<'a> Into<TokenValue<'a>> for IntegerPrefix {
-    fn into(self) -> TokenValue<'a> {
+impl<'a> Into<TokenKind<'a>> for IntegerPrefix {
+    fn into(self) -> TokenKind<'a> {
         unreachable!("ExtendNumber made an incomplete transition to {:?}", self)
     }
 }

@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -10,43 +10,43 @@ where
     C: Constructor,
 {
     pub(crate) fn try_gvar(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tGVAR)
+        self.try_token(TokenKind::tGVAR)
             .map(|gvar_t| Builder::<C>::gvar(gvar_t, self.buffer()))
     }
 
     pub(crate) fn try_back_ref(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tBACK_REF)
+        self.try_token(TokenKind::tBACK_REF)
             .map(|back_ref_t| Builder::<C>::back_ref(back_ref_t, self.buffer()))
     }
 
     pub(crate) fn try_nth_ref(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tNTH_REF)
+        self.try_token(TokenKind::tNTH_REF)
             .map(|nth_ref_t| Builder::<C>::nth_ref(nth_ref_t, self.buffer()))
     }
 
     pub(crate) fn try_lvar(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tIDENTIFIER)
+        self.try_token(TokenKind::tIDENTIFIER)
             .map(|ident_t| Builder::<C>::lvar(ident_t, self.buffer()))
     }
 
     pub(crate) fn try_ivar(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tIVAR)
+        self.try_token(TokenKind::tIVAR)
             .map(|ident_t| Builder::<C>::ivar(ident_t, self.buffer()))
     }
 
     pub(crate) fn try_cvar(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tCVAR)
+        self.try_token(TokenKind::tCVAR)
             .map(|ident_t| Builder::<C>::cvar(ident_t, self.buffer()))
     }
 
     pub(crate) fn try_t_const(&mut self) -> Option<Box<Node<'a>>> {
-        self.try_token(TokenValue::tCONSTANT)
+        self.try_token(TokenKind::tCONSTANT)
             .map(|ident_t| Builder::<C>::const_(ident_t, self.buffer()))
     }
 
     pub(crate) fn try_const_or_identifier(&mut self) -> Option<Token<'a>> {
-        None.or_else(|| self.try_token(TokenValue::tCONSTANT))
-            .or_else(|| self.try_token(TokenValue::tIDENTIFIER))
+        None.or_else(|| self.try_token(TokenKind::tCONSTANT))
+            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
     }
 }
 

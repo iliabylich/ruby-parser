@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -11,9 +11,9 @@ where
     C: Constructor,
 {
     pub(crate) fn try_words(&mut self) -> Option<Box<Node<'a>>> {
-        let begin_t = self.try_token(TokenValue::tWORDS_BEG)?;
+        let begin_t = self.try_token(TokenKind::tWORDS_BEG)?;
         let word_list = self.parse_word_list();
-        let end_t = self.expect_token(TokenValue::tSTRING_END);
+        let end_t = self.expect_token(TokenKind::tSTRING_END);
         Some(Builder::<C>::words_compose(begin_t, word_list, end_t))
     }
 

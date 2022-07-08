@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -11,7 +11,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_regexp(&mut self) -> Option<Box<Node<'a>>> {
-        let begin_t = self.try_token(TokenValue::tREGEXP_BEG).or_else(|| {
+        let begin_t = self.try_token(TokenKind::tREGEXP_BEG).or_else(|| {
             let token = self.read_div_as_heredoc_beg()?;
 
             // now we need to manually push a xstring literal
@@ -28,7 +28,7 @@ where
         })?;
 
         let contents = self.try_regexp_contents();
-        let end_t = self.expect_token(TokenValue::tSTRING_END);
+        let end_t = self.expect_token(TokenKind::tSTRING_END);
 
         let options = Builder::<C>::regexp_options(&end_t, self.buffer());
         Some(Builder::<C>::regexp_compose(
@@ -47,10 +47,10 @@ where
 
     fn read_div_as_heredoc_beg(&mut self) -> Option<Token<'a>> {
         let loc = self.current_token().loc();
-        if self.current_token().is(TokenValue::tDIVIDE) {
+        if self.current_token().is(TokenKind::tDIVIDE) {
             self.take_token();
             Some(Token {
-                value: TokenValue::tREGEXP_BEG,
+                value: TokenKind::tREGEXP_BEG,
                 loc,
             })
         } else {

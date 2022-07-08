@@ -1,9 +1,9 @@
-use crate::token::TokenValue;
+use crate::token::TokenKind;
 
 #[derive(Clone)]
 pub(crate) struct ReservedWord<'a> {
     name: &'static [u8],
-    pub(crate) token_value: TokenValue<'a>,
+    pub(crate) token_value: TokenKind<'a>,
 }
 
 pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[
@@ -15,163 +15,163 @@ pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[
     &[
         ReservedWord {
             name: b"do",
-            token_value: TokenValue::kDO,
+            token_value: TokenKind::kDO,
         },
         ReservedWord {
             name: b"if",
-            token_value: TokenValue::kIF,
+            token_value: TokenKind::kIF,
         },
         ReservedWord {
             name: b"in",
-            token_value: TokenValue::kIN,
+            token_value: TokenKind::kIN,
         },
         ReservedWord {
             name: b"or",
-            token_value: TokenValue::kOR,
+            token_value: TokenKind::kOR,
         },
     ],
     // size = 3
     &[
         ReservedWord {
             name: b"END",
-            token_value: TokenValue::klEND,
+            token_value: TokenKind::klEND,
         },
         ReservedWord {
             name: b"and",
-            token_value: TokenValue::kAND,
+            token_value: TokenKind::kAND,
         },
         ReservedWord {
             name: b"def",
-            token_value: TokenValue::kDEF,
+            token_value: TokenKind::kDEF,
         },
         ReservedWord {
             name: b"end",
-            token_value: TokenValue::kEND,
+            token_value: TokenKind::kEND,
         },
         ReservedWord {
             name: b"for",
-            token_value: TokenValue::kFOR,
+            token_value: TokenKind::kFOR,
         },
         ReservedWord {
             name: b"nil",
-            token_value: TokenValue::kNIL,
+            token_value: TokenKind::kNIL,
         },
         ReservedWord {
             name: b"not",
-            token_value: TokenValue::kNOT,
+            token_value: TokenKind::kNOT,
         },
     ],
     // size = 4
     &[
         ReservedWord {
             name: b"case",
-            token_value: TokenValue::kCASE,
+            token_value: TokenKind::kCASE,
         },
         ReservedWord {
             name: b"else",
-            token_value: TokenValue::kELSE,
+            token_value: TokenKind::kELSE,
         },
         ReservedWord {
             name: b"next",
-            token_value: TokenValue::kNEXT,
+            token_value: TokenKind::kNEXT,
         },
         ReservedWord {
             name: b"redo",
-            token_value: TokenValue::kREDO,
+            token_value: TokenKind::kREDO,
         },
         ReservedWord {
             name: b"self",
-            token_value: TokenValue::kSELF,
+            token_value: TokenKind::kSELF,
         },
         ReservedWord {
             name: b"then",
-            token_value: TokenValue::kTHEN,
+            token_value: TokenKind::kTHEN,
         },
         ReservedWord {
             name: b"true",
-            token_value: TokenValue::kTRUE,
+            token_value: TokenKind::kTRUE,
         },
         ReservedWord {
             name: b"when",
-            token_value: TokenValue::kWHEN,
+            token_value: TokenKind::kWHEN,
         },
     ],
     // size = 5
     &[
         ReservedWord {
             name: b"BEGIN",
-            token_value: TokenValue::klBEGIN,
+            token_value: TokenKind::klBEGIN,
         },
         ReservedWord {
             name: b"alias",
-            token_value: TokenValue::kALIAS,
+            token_value: TokenKind::kALIAS,
         },
         ReservedWord {
             name: b"begin",
-            token_value: TokenValue::kBEGIN,
+            token_value: TokenKind::kBEGIN,
         },
         ReservedWord {
             name: b"break",
-            token_value: TokenValue::kBREAK,
+            token_value: TokenKind::kBREAK,
         },
         ReservedWord {
             name: b"class",
-            token_value: TokenValue::kCLASS,
+            token_value: TokenKind::kCLASS,
         },
         ReservedWord {
             name: b"elsif",
-            token_value: TokenValue::kELSIF,
+            token_value: TokenKind::kELSIF,
         },
         ReservedWord {
             name: b"false",
-            token_value: TokenValue::kFALSE,
+            token_value: TokenKind::kFALSE,
         },
         ReservedWord {
             name: b"retry",
-            token_value: TokenValue::kRETRY,
+            token_value: TokenKind::kRETRY,
         },
         ReservedWord {
             name: b"super",
-            token_value: TokenValue::kSUPER,
+            token_value: TokenKind::kSUPER,
         },
         ReservedWord {
             name: b"undef",
-            token_value: TokenValue::kUNDEF,
+            token_value: TokenKind::kUNDEF,
         },
         ReservedWord {
             name: b"until",
-            token_value: TokenValue::kUNTIL,
+            token_value: TokenKind::kUNTIL,
         },
         ReservedWord {
             name: b"while",
-            token_value: TokenValue::kWHILE,
+            token_value: TokenKind::kWHILE,
         },
         ReservedWord {
             name: b"yield",
-            token_value: TokenValue::kYIELD,
+            token_value: TokenKind::kYIELD,
         },
     ],
     // size = 6
     &[
         ReservedWord {
             name: b"ensure",
-            token_value: TokenValue::kENSURE,
+            token_value: TokenKind::kENSURE,
         },
         ReservedWord {
             name: b"module",
-            token_value: TokenValue::kMODULE,
+            token_value: TokenKind::kMODULE,
         },
         ReservedWord {
             name: b"rescue",
-            token_value: TokenValue::kRESCUE,
+            token_value: TokenKind::kRESCUE,
         },
         ReservedWord {
             name: b"return",
-            token_value: TokenValue::kRETURN,
+            token_value: TokenKind::kRETURN,
         },
         ReservedWord {
             name: b"unless",
-            token_value: TokenValue::kUNLESS,
+            token_value: TokenKind::kUNLESS,
         },
     ],
     // size = 7
@@ -180,15 +180,15 @@ pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[
     &[
         ReservedWord {
             name: b"__FILE__",
-            token_value: TokenValue::k__FILE__,
+            token_value: TokenKind::k__FILE__,
         },
         ReservedWord {
             name: b"__LINE__",
-            token_value: TokenValue::k__LINE__,
+            token_value: TokenKind::k__LINE__,
         },
         ReservedWord {
             name: b"defined?",
-            token_value: TokenValue::kDEFINED,
+            token_value: TokenKind::kDEFINED,
         },
     ],
     // size = 9
@@ -200,7 +200,7 @@ pub(crate) const RESERVED_WORDS: &[&[ReservedWord]] = &[
     // size = 12
     &[ReservedWord {
         name: b"__ENCODING__",
-        token_value: TokenValue::k__ENCODING__,
+        token_value: TokenKind::k__ENCODING__,
     }],
 ];
 

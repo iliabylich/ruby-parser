@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -15,7 +15,7 @@ where
     }
 
     fn try_char(&mut self) -> Option<Box<Node<'a>>> {
-        if let TokenValue::tCHAR(_) = self.current_token().value() {
+        if let TokenKind::tCHAR(_) = self.current_token().value() {
             let char_t = self.take_token();
             Some(Builder::<C>::character(char_t))
         } else {
@@ -37,11 +37,11 @@ where
 
     fn try_string1(&mut self) -> Option<Box<Node<'a>>> {
         let string_beg_t = None
-            .or_else(|| self.try_token(TokenValue::tDSTRING_BEG))
-            .or_else(|| self.try_token(TokenValue::tSTRING_BEG))
-            .or_else(|| self.try_token(TokenValue::tHEREDOC_BEG))?;
+            .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
+            .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
+            .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))?;
         let string_contents = self.parse_string_contents();
-        let string_end_t = self.expect_token(TokenValue::tSTRING_END);
+        let string_end_t = self.expect_token(TokenKind::tSTRING_END);
         // TODO: dedent_heredoc
         Some(Builder::<C>::string_compose(
             Some(string_beg_t),
@@ -61,7 +61,7 @@ where
 
     pub(crate) fn try_string_content(&mut self) -> Option<Box<Node<'a>>> {
         match self.current_token().value() {
-            TokenValue::tSTRING_CONTENT(_) => {
+            TokenKind::tSTRING_CONTENT(_) => {
                 let string_content_t = self.take_token();
                 Some(Builder::<C>::string_internal(
                     string_content_t,
@@ -69,7 +69,7 @@ where
                 ))
             }
 
-            TokenValue::tSTRING_DVAR => {
+            TokenKind::tSTRING_DVAR => {
                 let string_dvar_t = self.take_token();
                 if let Some(string_dvar) = self.try_string_dvar() {
                     panic!(
@@ -81,10 +81,10 @@ where
                 }
             }
 
-            TokenValue::tSTRING_DBEG => {
+            TokenKind::tSTRING_DBEG => {
                 let string_dbeg_t = self.take_token();
                 let compstmt = self.try_compstmt();
-                let string_dend_t = self.expect_token(TokenValue::tSTRING_DEND);
+                let string_dend_t = self.expect_token(TokenKind::tSTRING_DEND);
                 panic!(
                     "tSTRING_DBEG compstmt tSTRING_DEND {:?} {:?} {:?}",
                     string_dbeg_t, compstmt, string_dend_t

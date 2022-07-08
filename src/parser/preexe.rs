@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -10,10 +10,10 @@ where
     C: Constructor,
 {
     pub(crate) fn try_preexe(&mut self) -> Option<Box<Node<'a>>> {
-        let begin_t = self.try_token(TokenValue::klBEGIN)?;
-        let lcurly = self.expect_token(TokenValue::tLCURLY);
+        let begin_t = self.try_token(TokenKind::klBEGIN)?;
+        let lcurly = self.expect_token(TokenKind::tLCURLY);
         let top_compstmt = self.try_top_compstmt();
-        let rcurly = self.expect_token(TokenValue::tRCURLY);
+        let rcurly = self.expect_token(TokenKind::tRCURLY);
         Some(Builder::<C>::preexe(begin_t, lcurly, top_compstmt, rcurly))
     }
 }

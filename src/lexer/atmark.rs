@@ -5,7 +5,7 @@ use crate::{
         ident::Ident,
     },
     loc::loc,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
 };
 
 pub(crate) struct AtMark<'a> {
@@ -23,25 +23,25 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
-        let mut token_value = TokenValue::tIVAR;
+        let mut token_value = TokenKind::tIVAR;
 
         match buffer.byte_at(start + 1) {
             Some(b'@') => {
                 // @@
-                token_value = TokenValue::tCVAR;
+                token_value = TokenKind::tCVAR;
                 ident_start += 1;
             }
             _ => {}
         }
 
-        let empty_var_name = |token_value: TokenValue<'a>| {
+        let empty_var_name = |token_value: TokenKind<'a>| {
             Err(AtMarkError::EmptyVarName(Token {
                 value: token_value,
                 loc: loc!(start, ident_start),
             }))
         };
 
-        let invalid_var_name = |token_value: TokenValue<'a>| {
+        let invalid_var_name = |token_value: TokenKind<'a>| {
             Err(AtMarkError::InvalidVarName(Token {
                 value: token_value,
                 loc: loc!(start, ident_start),

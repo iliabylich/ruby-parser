@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -15,16 +15,16 @@ where
 
     fn try_ssym(&mut self) -> Option<Box<Node<'a>>> {
         match self.current_token().value() {
-            TokenValue::tCOLON => {
+            TokenKind::tCOLON => {
                 // maybe a plain symbol
                 let checkpoint = self.new_checkpoint();
 
                 let colon_t = self.take_token();
                 let sym_t = None
                     .or_else(|| self.try_fname())
-                    .or_else(|| self.try_token(TokenValue::tIVAR))
-                    .or_else(|| self.try_token(TokenValue::tCVAR))
-                    .or_else(|| self.try_token(TokenValue::tGVAR));
+                    .or_else(|| self.try_token(TokenKind::tIVAR))
+                    .or_else(|| self.try_token(TokenKind::tCVAR))
+                    .or_else(|| self.try_token(TokenKind::tGVAR));
 
                 if let Some(sym_t) = sym_t {
                     // definitely a plain symbol
@@ -36,10 +36,10 @@ where
                     None
                 }
             }
-            TokenValue::tSYMBEG => {
+            TokenKind::tSYMBEG => {
                 let symbeg_t = self.take_token();
                 let contents = self.parse_string_contents();
-                let string_end_t = self.expect_token(TokenValue::tSTRING_END);
+                let string_end_t = self.expect_token(TokenKind::tSTRING_END);
                 let node = Builder::<C>::symbol_compose(symbeg_t, contents, string_end_t);
                 Some(node)
             }
@@ -48,9 +48,9 @@ where
     }
 
     fn try_dsym(&mut self) -> Option<Box<Node<'a>>> {
-        let symbeg_t = self.try_token(TokenValue::tDSYMBEG)?;
+        let symbeg_t = self.try_token(TokenKind::tDSYMBEG)?;
         let contents = self.parse_string_contents();
-        let string_end_t = self.expect_token(TokenValue::tSTRING_END);
+        let string_end_t = self.expect_token(TokenKind::tSTRING_END);
         let node = Builder::<C>::symbol_compose(symbeg_t, contents, string_end_t);
         Some(node)
     }

@@ -8,7 +8,7 @@ use crate::{
             try_to_extend_with, ExtendNumber, Number,
         },
     },
-    token::TokenValue,
+    token::TokenKind,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -27,8 +27,8 @@ impl ExtendNumber for Rational {
     }
 }
 
-impl<'a> Into<TokenValue<'a>> for Rational {
-    fn into(self) -> TokenValue<'a> {
-        TokenValue::tRATIONAL
+impl<'a> Into<TokenKind<'a>> for Rational {
+    fn into(self) -> TokenKind<'a> {
+        TokenKind::tRATIONAL
     }
 }

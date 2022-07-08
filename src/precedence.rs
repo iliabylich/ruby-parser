@@ -1,4 +1,4 @@
-use crate::token::TokenValue;
+use crate::token::TokenKind;
 
 #[allow(non_camel_case_types)]
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -90,57 +90,57 @@ pub enum BinOp {
     tUPLUS,
 }
 
-impl std::convert::TryFrom<&TokenValue<'_>> for BinOp {
+impl std::convert::TryFrom<&TokenKind<'_>> for BinOp {
     type Error = ();
 
-    fn try_from(token: &TokenValue) -> Result<Self, Self::Error> {
+    fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
         match token {
-            TokenValue::kIF_MOD => Ok(BinOp::kIF_MOD),
-            TokenValue::kUNLESS_MOD => Ok(BinOp::kUNLESS_MOD),
-            TokenValue::kWHILE_MOD => Ok(BinOp::kWHILE_MOD),
-            TokenValue::kUNTIL_MOD => Ok(BinOp::kUNTIL_MOD),
-            TokenValue::kIN => Ok(BinOp::kIN),
-            TokenValue::kOR => Ok(BinOp::kOR),
-            TokenValue::kAND => Ok(BinOp::kAND),
-            TokenValue::kNOT => Ok(BinOp::kNOT),
-            TokenValue::kDEFINED => Ok(BinOp::kDEFINED),
-            TokenValue::tEQL => Ok(BinOp::tEQL),
-            TokenValue::tOP_ASGN => Ok(BinOp::tOP_ASGN),
-            TokenValue::kRESCUE_MOD => Ok(BinOp::kRESCUE_MOD),
-            TokenValue::tEH => Ok(BinOp::tEH),
-            TokenValue::tCOLON => Ok(BinOp::tCOLON),
-            TokenValue::tDOT2 => Ok(BinOp::tDOT2),
-            TokenValue::tDOT3 => Ok(BinOp::tDOT3),
-            TokenValue::tBDOT2 => Ok(BinOp::tBDOT2),
-            TokenValue::tBDOT3 => Ok(BinOp::tBDOT3),
-            TokenValue::tOROP => Ok(BinOp::tOROP),
-            TokenValue::tANDOP => Ok(BinOp::tANDOP),
-            TokenValue::tCMP => Ok(BinOp::tCMP),
-            TokenValue::tEQ => Ok(BinOp::tEQ),
-            TokenValue::tEQQ => Ok(BinOp::tEQQ),
-            TokenValue::tNEQ => Ok(BinOp::tNEQ),
-            TokenValue::tMATCH => Ok(BinOp::tMATCH),
-            TokenValue::tNMATCH => Ok(BinOp::tNMATCH),
-            TokenValue::tGT => Ok(BinOp::tGT),
-            TokenValue::tGEQ => Ok(BinOp::tGEQ),
-            TokenValue::tLT => Ok(BinOp::tLT),
-            TokenValue::tLEQ => Ok(BinOp::tLEQ),
-            TokenValue::tPIPE => Ok(BinOp::tPIPE),
-            TokenValue::tCARET => Ok(BinOp::tCARET),
-            TokenValue::tAMPER => Ok(BinOp::tAMPER),
-            TokenValue::tLSHFT => Ok(BinOp::tLSHFT),
-            TokenValue::tRSHFT => Ok(BinOp::tRSHFT),
-            TokenValue::tPLUS => Ok(BinOp::tPLUS),
-            TokenValue::tMINUS => Ok(BinOp::tMINUS),
-            TokenValue::tSTAR => Ok(BinOp::tSTAR),
-            TokenValue::tDIVIDE => Ok(BinOp::tDIVIDE),
-            TokenValue::tPERCENT => Ok(BinOp::tPERCENT),
-            TokenValue::tUMINUS_NUM => Ok(BinOp::tUMINUS_NUM),
-            TokenValue::tUMINUS => Ok(BinOp::tUMINUS),
-            TokenValue::tPOW => Ok(BinOp::tPOW),
-            TokenValue::tBANG => Ok(BinOp::tBANG),
-            TokenValue::tTILDE => Ok(BinOp::tTILDE),
-            TokenValue::tUPLUS => Ok(BinOp::tUPLUS),
+            TokenKind::kIF_MOD => Ok(BinOp::kIF_MOD),
+            TokenKind::kUNLESS_MOD => Ok(BinOp::kUNLESS_MOD),
+            TokenKind::kWHILE_MOD => Ok(BinOp::kWHILE_MOD),
+            TokenKind::kUNTIL_MOD => Ok(BinOp::kUNTIL_MOD),
+            TokenKind::kIN => Ok(BinOp::kIN),
+            TokenKind::kOR => Ok(BinOp::kOR),
+            TokenKind::kAND => Ok(BinOp::kAND),
+            TokenKind::kNOT => Ok(BinOp::kNOT),
+            TokenKind::kDEFINED => Ok(BinOp::kDEFINED),
+            TokenKind::tEQL => Ok(BinOp::tEQL),
+            TokenKind::tOP_ASGN => Ok(BinOp::tOP_ASGN),
+            TokenKind::kRESCUE_MOD => Ok(BinOp::kRESCUE_MOD),
+            TokenKind::tEH => Ok(BinOp::tEH),
+            TokenKind::tCOLON => Ok(BinOp::tCOLON),
+            TokenKind::tDOT2 => Ok(BinOp::tDOT2),
+            TokenKind::tDOT3 => Ok(BinOp::tDOT3),
+            TokenKind::tBDOT2 => Ok(BinOp::tBDOT2),
+            TokenKind::tBDOT3 => Ok(BinOp::tBDOT3),
+            TokenKind::tOROP => Ok(BinOp::tOROP),
+            TokenKind::tANDOP => Ok(BinOp::tANDOP),
+            TokenKind::tCMP => Ok(BinOp::tCMP),
+            TokenKind::tEQ => Ok(BinOp::tEQ),
+            TokenKind::tEQQ => Ok(BinOp::tEQQ),
+            TokenKind::tNEQ => Ok(BinOp::tNEQ),
+            TokenKind::tMATCH => Ok(BinOp::tMATCH),
+            TokenKind::tNMATCH => Ok(BinOp::tNMATCH),
+            TokenKind::tGT => Ok(BinOp::tGT),
+            TokenKind::tGEQ => Ok(BinOp::tGEQ),
+            TokenKind::tLT => Ok(BinOp::tLT),
+            TokenKind::tLEQ => Ok(BinOp::tLEQ),
+            TokenKind::tPIPE => Ok(BinOp::tPIPE),
+            TokenKind::tCARET => Ok(BinOp::tCARET),
+            TokenKind::tAMPER => Ok(BinOp::tAMPER),
+            TokenKind::tLSHFT => Ok(BinOp::tLSHFT),
+            TokenKind::tRSHFT => Ok(BinOp::tRSHFT),
+            TokenKind::tPLUS => Ok(BinOp::tPLUS),
+            TokenKind::tMINUS => Ok(BinOp::tMINUS),
+            TokenKind::tSTAR => Ok(BinOp::tSTAR),
+            TokenKind::tDIVIDE => Ok(BinOp::tDIVIDE),
+            TokenKind::tPERCENT => Ok(BinOp::tPERCENT),
+            TokenKind::tUMINUS_NUM => Ok(BinOp::tUMINUS_NUM),
+            TokenKind::tUMINUS => Ok(BinOp::tUMINUS),
+            TokenKind::tPOW => Ok(BinOp::tPOW),
+            TokenKind::tBANG => Ok(BinOp::tBANG),
+            TokenKind::tTILDE => Ok(BinOp::tTILDE),
+            TokenKind::tUPLUS => Ok(BinOp::tUPLUS),
             _ => Err(()),
         }
     }
@@ -164,9 +164,9 @@ macro_rules! non_assoc {
     };
 }
 
-impl<'a> TokenValue<'a> {
+impl<'a> TokenKind<'a> {
     pub(crate) fn precedence(&self) -> Option<(u8, u8)> {
-        use TokenValue::*;
+        use TokenKind::*;
 
         match self {
             kIF_MOD | kUNLESS_MOD | kWHILE_MOD | kUNTIL_MOD | kIN => non_assoc!(1),

@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::buffer::{Buffer, BufferWithCursor},
     loc::loc,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
 };
 
 pub(crate) mod scan;
@@ -46,8 +46,8 @@ impl ExtendNumber for Number {
     }
 }
 
-impl<'a> Into<TokenValue<'a>> for Number {
-    fn into(self) -> TokenValue<'a> {
+impl<'a> Into<TokenKind<'a>> for Number {
+    fn into(self) -> TokenKind<'a> {
         match self.state {
             State::Uninitialized(inner) => inner.into(),
             State::IntegerPrefix(inner) => inner.into(),

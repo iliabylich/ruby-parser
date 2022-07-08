@@ -100,7 +100,7 @@ impl<'a> Lexer<'a> {
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
-            let is_eof = token.is(crate::token::TokenValue::tEOF);
+            let is_eof = token.is(crate::token::TokenKind::tEOF);
             tokens.push(token);
             if is_eof {
                 break;
@@ -255,7 +255,7 @@ macro_rules! assert_lex {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
-            use crate::{lexer::Lexer, loc::loc, token::TokenValue::*};
+            use crate::{lexer::Lexer, loc::loc, token::TokenKind::*};
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
             let token = lexer.current_token();

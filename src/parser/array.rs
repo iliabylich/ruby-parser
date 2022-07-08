@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -10,9 +10,9 @@ where
     C: Constructor,
 {
     pub(crate) fn try_array(&mut self) -> Option<Box<Node<'a>>> {
-        let lbrack_t = self.try_token(TokenValue::tLBRACK)?;
+        let lbrack_t = self.try_token(TokenKind::tLBRACK)?;
         let aref_args = self.try_aref_args();
-        let rbrack_t = self.expect_token(TokenValue::tRBRACK);
+        let rbrack_t = self.expect_token(TokenKind::tRBRACK);
         todo!("array {:?} {:?} {:?}", lbrack_t, aref_args, rbrack_t);
     }
 }

@@ -8,7 +8,7 @@ use crate::{
             try_to_extend_with, ExtendNumber, Number,
         },
     },
-    token::TokenValue,
+    token::TokenKind,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -30,9 +30,9 @@ impl ExtendNumber for Float {
     }
 }
 
-impl<'a> Into<TokenValue<'a>> for Float {
-    fn into(self) -> TokenValue<'a> {
-        TokenValue::tFLOAT
+impl<'a> Into<TokenKind<'a>> for Float {
+    fn into(self) -> TokenKind<'a> {
+        TokenKind::tFLOAT
     }
 }
 

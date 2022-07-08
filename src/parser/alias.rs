@@ -1,13 +1,13 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
 impl<'a, C: Constructor> Parser<'a, C> {
     pub(crate) fn try_alias(&mut self) -> Option<Box<Node<'a>>> {
-        let alias_t = self.try_token(TokenValue::kALIAS)?;
+        let alias_t = self.try_token(TokenKind::kALIAS)?;
         let (lhs, rhs) = parse_alias_args(self);
         Some(Builder::<C>::alias(alias_t, lhs, rhs))
     }

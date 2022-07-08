@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -22,17 +22,17 @@ where
             .or_else(|| self.try_var_ref())
             .or_else(|| self.try_back_ref())
             .or_else(|| {
-                let id_t = self.try_token(TokenValue::tFID)?;
+                let id_t = self.try_token(TokenKind::tFID)?;
                 todo!("call_method {:?}", id_t);
             })
             .or_else(|| {
-                let begin_t = self.try_token(TokenValue::kBEGIN)?;
+                let begin_t = self.try_token(TokenKind::kBEGIN)?;
                 let bodystmt = self.try_bodystmt();
-                let end_t = self.expect_token(TokenValue::kEND);
+                let end_t = self.expect_token(TokenKind::kEND);
                 todo!("begin {:?} {:?} {:?}", begin_t, bodystmt, end_t);
             })
             .or_else(|| {
-                let lparen_t = self.try_token(TokenValue::tLPAREN)?;
+                let lparen_t = self.try_token(TokenKind::tLPAREN)?;
                 let stmt = self.try_stmt();
                 if let Some(rparen_t) = self.try_rparen() {
                     todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
@@ -46,7 +46,7 @@ where
             })
             .or_else(|| self.try_array())
             .or_else(|| self.try_hash())
-            .or_else(|| try_keyword_cmd(self, TokenValue::kRETURN))
+            .or_else(|| try_keyword_cmd(self, TokenKind::kRETURN))
             .or_else(|| self.try_yield())
             .or_else(|| self.try_defined())
             .or_else(|| try_not_expr(self))
@@ -80,10 +80,10 @@ where
             .or_else(|| self.try_class())
             .or_else(|| self.try_module())
             .or_else(|| self.try_method())
-            .or_else(|| try_keyword_cmd(self, TokenValue::kBREAK))
-            .or_else(|| try_keyword_cmd(self, TokenValue::kNEXT))
-            .or_else(|| try_keyword_cmd(self, TokenValue::kREDO))
-            .or_else(|| try_keyword_cmd(self, TokenValue::kRETRY));
+            .or_else(|| try_keyword_cmd(self, TokenKind::kBREAK))
+            .or_else(|| try_keyword_cmd(self, TokenKind::kNEXT))
+            .or_else(|| try_keyword_cmd(self, TokenKind::kREDO))
+            .or_else(|| try_keyword_cmd(self, TokenKind::kRETRY));
 
         let node = node?;
 
@@ -101,7 +101,7 @@ where
 
 fn try_keyword_cmd<'a, C: Constructor>(
     parser: &mut Parser<'a, C>,
-    expected: TokenValue<'a>,
+    expected: TokenKind<'a>,
 ) -> Option<Box<Node<'a>>> {
     let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)
@@ -110,9 +110,9 @@ fn try_keyword_cmd<'a, C: Constructor>(
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
 fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
-    let not_t = parser.try_token(TokenValue::kNOT)?;
+    let not_t = parser.try_token(TokenKind::kNOT)?;
     let checkpoint = parser.new_checkpoint();
-    if let Some(lparen_t) = parser.try_token(TokenValue::tLPAREN) {
+    if let Some(lparen_t) = parser.try_token(TokenKind::tLPAREN) {
         let expr = parser.try_expr();
         if let Some(rparen_t) = parser.try_rparen() {
             todo!(

@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -10,11 +10,11 @@ where
     C: Constructor,
 {
     pub(crate) fn try_defined(&mut self) -> Option<Box<Node<'a>>> {
-        let defined_t = self.try_token(TokenValue::kDEFINED)?;
+        let defined_t = self.try_token(TokenKind::kDEFINED)?;
         let _ = self.try_opt_nl();
-        let lparen_t = self.expect_token(TokenValue::tLPAREN);
+        let lparen_t = self.expect_token(TokenKind::tLPAREN);
         if let Some(expr) = self.try_expr() {
-            let rparen_t = self.expect_token(TokenValue::tRPAREN);
+            let rparen_t = self.expect_token(TokenKind::tRPAREN);
             todo!(
                 "defined {:?} {:?} {:?} {:?}",
                 defined_t,

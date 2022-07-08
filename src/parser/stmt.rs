@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::{mlhs, Parser},
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -73,22 +73,22 @@ where
         let stmt = self.try_stmt_head()?;
 
         match self.current_token().value() {
-            TokenValue::kIF => {
+            TokenKind::kIF => {
                 let k_if = self.take_token();
                 let expr_value = self.try_expr_value();
                 panic!("if_mod {:?} {:?} {:?}", stmt, k_if, expr_value);
             }
-            TokenValue::kUNLESS => {
+            TokenKind::kUNLESS => {
                 let k_unless = self.take_token();
                 let expr_value = self.try_expr_value();
                 panic!("unless_mod {:?} {:?} {:?}", stmt, k_unless, expr_value);
             }
-            TokenValue::kWHILE => {
+            TokenKind::kWHILE => {
                 let k_while = self.take_token();
                 let expr_value = self.try_expr_value();
                 panic!("while_mod {:?} {:?} {:?}", stmt, k_while, expr_value);
             }
-            TokenValue::kUNTIL => {
+            TokenKind::kUNTIL => {
                 let k_until = self.take_token();
                 let expr_value = self.try_expr_value();
                 panic!("until_mod {:?} {:?} {:?}", stmt, k_until, expr_value);
@@ -104,7 +104,7 @@ where
             return Some(undef);
         } else if let Some(postexe) = self.try_postexe() {
             return Some(postexe);
-        } else if self.current_token().is(TokenValue::kDEF) {
+        } else if self.current_token().is(TokenKind::kDEF) {
             todo!("handle endless def")
         } else if let Some(assignment) = self.try_assignment() {
             return Some(assignment);
@@ -119,11 +119,11 @@ where
         match self.parse_mlhs() {
             mlhs::MLHS::DefinitelyMlhs { node: mlhs } => {
                 // definitely an MLHS, can only be assigned via `=`
-                let eql_t = self.expect_token(TokenValue::tEQL);
+                let eql_t = self.expect_token(TokenKind::tEQL);
                 if let Some(command_call) = self.try_command_call() {
                     todo!("mlhs = rhs {:?} {:?} {:?}", mlhs, eql_t, command_call);
                 } else if let Some(mrhs_arg) = self.try_mrhs_arg() {
-                    if let Some(rescue_t) = self.try_token(TokenValue::kRESCUE) {
+                    if let Some(rescue_t) = self.try_token(TokenKind::kRESCUE) {
                         let stmt = self.try_stmt().expect("mlhs -> kRESCUE requires stmt");
                         todo!(
                             "mlhs = rhs rescue stmt {:?} {:?} {:?} {:?} {:?}",
@@ -144,7 +144,7 @@ where
                 // maybe a plain assignment,
                 // but maybe just an expression (that is fully parsed later in `parse_expr`)
                 match self.current_token().value() {
-                    TokenValue::tEQL | TokenValue::tOP_ASGN => {
+                    TokenKind::tEQL | TokenKind::tOP_ASGN => {
                         // definitely an assignment
                         let op_t = self.take_token();
                         let command_rhs = self.try_command_rhs().expect("assignment must have RHS");

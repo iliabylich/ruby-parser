@@ -8,7 +8,7 @@ use crate::{
             ExtendNumber, Number,
         },
     },
-    token::TokenValue,
+    token::TokenKind,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -80,8 +80,8 @@ impl ExtendNumber for Uninitialized {
     }
 }
 
-impl<'a> Into<TokenValue<'a>> for Uninitialized {
-    fn into(self) -> TokenValue<'a> {
+impl<'a> Into<TokenKind<'a>> for Uninitialized {
+    fn into(self) -> TokenKind<'a> {
         unreachable!("ExtendNumber made no transition")
     }
 }

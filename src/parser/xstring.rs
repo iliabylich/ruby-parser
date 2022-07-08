@@ -5,7 +5,7 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -16,7 +16,7 @@ where
     pub(crate) fn try_xstring(&mut self) -> Option<Box<Node<'a>>> {
         let xstring_beg_t = None
             .or_else(|| self.read_backtick_identifier_as_xstring_beg())
-            .or_else(|| self.try_token(TokenValue::tXHEREDOC_BEG))?;
+            .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))?;
 
         // now we need to manually push a xstring literal
         // Lexer is not capable of doing it
@@ -29,7 +29,7 @@ where
             )));
 
         let xstring_contents = self.parse_xstring_contents();
-        let string_end_t = self.expect_token(TokenValue::tSTRING_END);
+        let string_end_t = self.expect_token(TokenKind::tSTRING_END);
         Some(Builder::<C>::xstring_compose(
             xstring_beg_t,
             xstring_contents,
@@ -48,11 +48,11 @@ where
 
     fn read_backtick_identifier_as_xstring_beg(&mut self) -> Option<Token<'a>> {
         let loc = self.current_token().loc();
-        if self.current_token().is(TokenValue::tIDENTIFIER) {
+        if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
                 self.take_token();
                 return Some(Token {
-                    value: TokenValue::tXSTRING_BEG,
+                    value: TokenKind::tXSTRING_BEG,
                     loc,
                 });
             }

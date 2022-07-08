@@ -2,16 +2,16 @@ use crate::{string_content::StringContent, Loc};
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Token<'a> {
-    pub value: TokenValue<'a>,
+    pub value: TokenKind<'a>,
     pub loc: Loc,
 }
 
 impl<'a> Token<'a> {
-    pub fn value(&self) -> &TokenValue<'a> {
+    pub fn value(&self) -> &TokenKind<'a> {
         &self.value
     }
 
-    pub fn is(&self, other: TokenValue) -> bool {
+    pub fn is(&self, other: TokenKind) -> bool {
         self.value == other
     }
 
@@ -22,7 +22,7 @@ impl<'a> Token<'a> {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TokenValue<'a> {
+pub enum TokenKind<'a> {
     // Keyword tokens.
     // They are always represented by the same word in code,
     // so they have no attached value, it can be easily inferred
@@ -192,7 +192,7 @@ pub enum TokenValue<'a> {
     tTEST_TOKEN,
 }
 
-impl Default for TokenValue<'_> {
+impl Default for TokenKind<'_> {
     fn default() -> Self {
         Self::tUNINITIALIZED
     }
@@ -200,7 +200,7 @@ impl Default for TokenValue<'_> {
 
 macro_rules! token {
     ($kind:expr, $begin:expr, $end:expr) => {{
-        use crate::{loc::loc, token::TokenValue::*};
+        use crate::{loc::loc, token::TokenKind::*};
         crate::token::Token {
             value: $kind,
             loc: loc!($begin, $end),

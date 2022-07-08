@@ -1,7 +1,7 @@
 use crate::{
     builder::Constructor,
     parser::Parser,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
     Node,
 };
 
@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_opt_else(&mut self) -> Option<(Token<'a>, Option<Box<Node<'a>>>)> {
-        let else_t = self.try_token(TokenValue::kELSE)?;
+        let else_t = self.try_token(TokenKind::kELSE)?;
         let compstmt = self.try_compstmt();
         Some((else_t, compstmt))
     }

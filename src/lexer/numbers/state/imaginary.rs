@@ -5,7 +5,7 @@ use crate::{
         buffer::BufferWithCursor,
         numbers::{ExtendNumber, Number},
     },
-    token::TokenValue,
+    token::TokenKind,
 };
 
 #[derive(Clone, Copy, Debug)]
@@ -18,8 +18,8 @@ impl ExtendNumber for Imaginary {
     }
 }
 
-impl<'a> Into<TokenValue<'a>> for Imaginary {
-    fn into(self) -> TokenValue<'a> {
-        TokenValue::tIMAGINARY
+impl<'a> Into<TokenKind<'a>> for Imaginary {
+    fn into(self) -> TokenKind<'a> {
+        TokenKind::tIMAGINARY
     }
 }

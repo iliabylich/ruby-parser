@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::Parser,
-    token::TokenValue,
+    token::TokenKind,
     Node,
 };
 
@@ -10,8 +10,8 @@ where
     C: Constructor,
 {
     pub(crate) fn try_yield(&mut self) -> Option<Box<Node<'a>>> {
-        let yield_t = self.try_token(TokenValue::kYIELD)?;
-        if let Some(lparen_t) = self.try_token(TokenValue::tLPAREN) {
+        let yield_t = self.try_token(TokenKind::kYIELD)?;
+        if let Some(lparen_t) = self.try_token(TokenKind::tLPAREN) {
             let call_args = self.try_call_args().unwrap_or_else(|| vec![]);
             if let Some(rparen_t) = self.try_rparen() {
                 todo!(

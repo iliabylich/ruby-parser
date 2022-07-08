@@ -4,7 +4,7 @@ use crate::{
         ident::Ident,
     },
     loc::loc,
-    token::{Token, TokenValue},
+    token::{Token, TokenKind},
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -52,25 +52,25 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
         // Check if there's a ' or " or ` around heredoc id
         match buffer.byte_at(id_start) {
             Some(b'\'') => {
-                token_value = TokenValue::tSTRING_BEG;
+                token_value = TokenKind::tSTRING_BEG;
                 interpolated = false;
                 id_start += 1;
                 quote = Some(b'\'');
             }
             Some(b'"') => {
-                token_value = TokenValue::tDSTRING_BEG;
+                token_value = TokenKind::tDSTRING_BEG;
                 interpolated = true;
                 id_start += 1;
                 quote = Some(b'"');
             }
             Some(b'`') => {
-                token_value = TokenValue::tXSTRING_BEG;
+                token_value = TokenKind::tXSTRING_BEG;
                 interpolated = true;
                 id_start += 1;
                 quote = Some(b'`');
             }
             _ => {
-                token_value = TokenValue::tDSTRING_BEG;
+                token_value = TokenKind::tDSTRING_BEG;
                 interpolated = true;
                 quote = None;
             }
