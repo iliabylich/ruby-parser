@@ -1,4 +1,4 @@
-use crate::{string_content::StringContent, Loc};
+use crate::Loc;
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Token {
@@ -8,8 +8,8 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn kind(&self) -> &TokenKind {
-        &self.kind
+    pub fn kind(&self) -> TokenKind {
+        self.kind
     }
 
     pub fn is(&self, other: TokenKind) -> bool {
@@ -22,7 +22,7 @@ impl Token {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum TokenKind {
     // Keyword tokens.
     // They are always represented by the same word in code,
