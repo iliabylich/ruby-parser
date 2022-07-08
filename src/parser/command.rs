@@ -113,9 +113,9 @@ where
 
 #[derive(Debug)]
 struct CmdBraceBlock<'a> {
-    begin_t: Token<'a>,
+    begin_t: Token,
     brace_body: Option<Box<Node<'a>>>,
-    end_t: Token<'a>,
+    end_t: Token,
 }
 
 fn try_cmd_brace_block<'a, C: Constructor>(

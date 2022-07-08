@@ -5,7 +5,7 @@ use crate::lexer::{
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashByte {
-    pub(crate) codepoint: u8,
+    pub(crate) byte: u8,
     pub(crate) length: usize,
 }
 
@@ -14,20 +14,17 @@ pub(crate) struct SlashByteError {
     pub(crate) length: usize,
 }
 
-impl<'a> Lookahead<'a> for SlashByte {
+impl Lookahead for SlashByte {
     type Output = Result<Option<Self>, SlashByteError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         if buffer.byte_at(start) != Some(b'\\') {
             return Ok(None);
         }
 
         if let Some(byte) = buffer.byte_at(start + 1) {
-            let codepoint = unescape_byte(byte);
-            Ok(Some(SlashByte {
-                codepoint,
-                length: 2,
-            }))
+            let byte = unescape_byte(byte);
+            Ok(Some(SlashByte { byte, length: 2 }))
         } else {
             Err(SlashByteError { length: 1 })
         }
@@ -52,7 +49,7 @@ assert_lookahead!(
     test = test_ok_special_byte,
     input = b"\\\n",
     output = Ok(Some(SlashByte {
-        codepoint: b'\n',
+        byte: b'\n',
         length: 2
     }))
 );
@@ -61,7 +58,7 @@ assert_lookahead!(
     test = test_ok_normal_byte,
     input = b"\\d",
     output = Ok(Some(SlashByte {
-        codepoint: b'd',
+        byte: b'd',
         length: 2
     }))
 );

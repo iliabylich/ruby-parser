@@ -18,8 +18,8 @@ impl ExtendNumber for Imaginary {
     }
 }
 
-impl<'a> Into<TokenKind<'a>> for Imaginary {
-    fn into(self) -> TokenKind<'a> {
+impl<'a> Into<TokenKind> for Imaginary {
+    fn into(self) -> TokenKind {
         TokenKind::tIMAGINARY
     }
 }

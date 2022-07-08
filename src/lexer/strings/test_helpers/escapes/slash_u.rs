@@ -6,7 +6,7 @@ macro_rules! assert_emits_escaped_slash_u {
             test = test_escaped_slash_u,
             literal = $literal,
             input = b"\\u1234",
-            token = token!(tSTRING_CONTENT(StringContent::from("\u{1234}")), loc!(0, 6)),
+            token = token!(tSTRING_CONTENT, loc!(0, 6), vec![225, 136, 180]),
             pre = |_| {}
         );
     };
@@ -21,7 +21,7 @@ macro_rules! assert_ignores_escaped_slash_u {
             test = test_escaped_slash_u,
             literal = $literal,
             input = b"\\u1234",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"\\u1234")), loc!(0, 6)),
+            token = token!(tSTRING_CONTENT, loc!(0, 6)),
             pre = |_| {}
         );
     };

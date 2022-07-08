@@ -8,19 +8,19 @@ use crate::{
     token::{token, Token},
 };
 
-pub(crate) struct Gvar<'a> {
-    pub(crate) token: Token<'a>,
+pub(crate) struct Gvar {
+    pub(crate) token: Token,
 }
 
-pub(crate) enum GvarError<'a> {
-    InvalidVarName(Token<'a>),
-    EmptyVarName(Token<'a>),
+pub(crate) enum GvarError {
+    InvalidVarName(Token),
+    EmptyVarName(Token),
 }
 
-impl<'a> Lookahead<'a> for Gvar<'a> {
-    type Output = Result<Gvar<'a>, GvarError<'a>>;
+impl Lookahead for Gvar {
+    type Output = Result<Gvar, GvarError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
         let empty_gvar_name = || {
@@ -135,8 +135,8 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
     }
 }
 
-impl<'a> Gvar<'a> {
-    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+impl Gvar {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
         let token = match Gvar::lookahead(buffer.for_lookahead(), buffer.pos()) {
             Ok(Gvar { token }) => token,
             Err(GvarError::InvalidVarName(token)) => {

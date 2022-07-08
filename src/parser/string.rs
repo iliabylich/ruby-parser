@@ -61,7 +61,7 @@ where
 
     pub(crate) fn try_string_content(&mut self) -> Option<Box<Node<'a>>> {
         match self.current_token().kind() {
-            TokenKind::tSTRING_CONTENT(_) => {
+            TokenKind::tSTRING_CONTENT => {
                 let string_content_t = self.take_token();
                 Some(Builder::<C>::string_internal(
                     string_content_t,
@@ -95,7 +95,7 @@ where
         }
     }
 
-    fn try_string_dvar(&mut self) -> Option<Token<'a>> {
+    fn try_string_dvar(&mut self) -> Option<Token> {
         todo!()
     }
 }

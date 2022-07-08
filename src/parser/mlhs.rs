@@ -160,7 +160,7 @@ enum MlhsInternal<'a> {
     DefinitelyMlhsNode(Box<Node<'a>>),
     DefinitelyMlhsList {
         nodes: Vec<Node<'a>>,
-        trailing_comma: Option<Token<'a>>,
+        trailing_comma: Option<Token>,
     },
     MaybeLhs(Box<Node<'a>>),
     None,

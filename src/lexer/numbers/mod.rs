@@ -46,8 +46,8 @@ impl ExtendNumber for Number {
     }
 }
 
-impl<'a> Into<TokenKind<'a>> for Number {
-    fn into(self) -> TokenKind<'a> {
+impl<'a> Into<TokenKind> for Number {
+    fn into(self) -> TokenKind {
         match self.state {
             State::Uninitialized(inner) => inner.into(),
             State::IntegerPrefix(inner) => inner.into(),
@@ -59,13 +59,13 @@ impl<'a> Into<TokenKind<'a>> for Number {
     }
 }
 
-impl<'a> Into<Token<'a>> for Number {
-    fn into(self) -> Token<'a> {
+impl<'a> Into<Token> for Number {
+    fn into(self) -> Token {
         token!(self.into(), loc!(self.begin, self.end))
     }
 }
 
-pub(crate) fn parse_number<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+pub(crate) fn parse_number<'a>(buffer: &mut BufferWithCursor<'a>) -> Token {
     let mut number = Number::new(buffer.pos());
 
     loop {

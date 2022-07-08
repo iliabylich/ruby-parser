@@ -101,7 +101,7 @@ where
 
 fn try_keyword_cmd<'a, C: Constructor>(
     parser: &mut Parser<'a, C>,
-    expected: TokenKind<'a>,
+    expected: TokenKind,
 ) -> Option<Box<Node<'a>>> {
     let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)

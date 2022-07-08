@@ -3,14 +3,14 @@ use crate::lexer::buffer::{Buffer, Lookahead};
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashOctal {
     // Found `\XXX`
-    pub(crate) codepoint: u8,
+    pub(crate) byte: u8,
     pub(crate) length: usize,
 }
 
-impl<'a> Lookahead<'a> for SlashOctal {
+impl Lookahead for SlashOctal {
     type Output = Option<Self>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         if !buffer.lookahead(start, b"\\") {
             return None;
         }
@@ -38,7 +38,7 @@ impl<'a> Lookahead<'a> for SlashOctal {
         let n = (n % 256) as u8;
 
         Some(SlashOctal {
-            codepoint: n,
+            byte: n,
             length: length + 1, // track leading `\`
         })
     }
@@ -61,7 +61,7 @@ assert_lookahead!(
     test = test_lookahead_valid_3_digits,
     input = b"\\111",
     output = Some(SlashOctal {
-        codepoint: 73,
+        byte: 73,
         length: 4
     })
 );
@@ -69,17 +69,14 @@ assert_lookahead!(
     test = test_lookahead_valid_2_digits,
     input = b"\\33",
     output = Some(SlashOctal {
-        codepoint: 27,
+        byte: 27,
         length: 3
     })
 );
 assert_lookahead!(
     test = test_lookahead_valid_1_digit,
     input = b"\\7",
-    output = Some(SlashOctal {
-        codepoint: 7,
-        length: 2
-    })
+    output = Some(SlashOctal { byte: 7, length: 2 })
 );
 
 assert_lookahead!(

@@ -23,7 +23,7 @@ macro_rules! assert_ignores_interpolation_end {
             test = test_interpolation_end,
             literal = $literal,
             input = b"}",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"}")), loc!(0, 1)),
+            token = token!(tSTRING_CONTENT, loc!(0, 1)),
             pre = |literal: &mut StringLiteral| {
                 match literal {
                     StringLiteral::StringPlain(_) => {}

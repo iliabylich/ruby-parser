@@ -8,19 +8,19 @@ use crate::{
     token::{token, Token, TokenKind},
 };
 
-pub(crate) struct AtMark<'a> {
-    pub(crate) token: Token<'a>,
+pub(crate) struct AtMark {
+    pub(crate) token: Token,
 }
 
-pub(crate) enum AtMarkError<'a> {
-    InvalidVarName(Token<'a>),
-    EmptyVarName(Token<'a>),
+pub(crate) enum AtMarkError {
+    InvalidVarName(Token),
+    EmptyVarName(Token),
 }
 
-impl<'a> Lookahead<'a> for AtMark<'a> {
-    type Output = Result<AtMark<'a>, AtMarkError<'a>>;
+impl Lookahead for AtMark {
+    type Output = Result<AtMark, AtMarkError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
         let mut token_value = TokenKind::tIVAR;
@@ -34,14 +34,14 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
             _ => {}
         }
 
-        let empty_var_name = |token_value: TokenKind<'a>| {
+        let empty_var_name = |token_value: TokenKind| {
             Err(AtMarkError::EmptyVarName(token!(
                 token_value,
                 loc!(start, ident_start)
             )))
         };
 
-        let invalid_var_name = |token_value: TokenKind<'a>| {
+        let invalid_var_name = |token_value: TokenKind| {
             Err(AtMarkError::InvalidVarName(token!(
                 token_value,
                 loc!(start, ident_start)
@@ -78,8 +78,8 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
     }
 }
 
-impl<'a> AtMark<'a> {
-    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+impl AtMark {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
         let token = match AtMark::lookahead(buffer.for_lookahead(), buffer.pos()) {
             Ok(AtMark { token }) => token,
             Err(AtMarkError::InvalidVarName(token)) => {

@@ -65,17 +65,17 @@ where
         self
     }
 
-    pub(crate) fn current_token(&mut self) -> &Token<'a> {
+    pub(crate) fn current_token(&mut self) -> &Token {
         self.lexer.current_token()
     }
     pub(crate) fn skip_token(&mut self) {
         self.lexer.skip_token()
     }
-    pub(crate) fn take_token(&mut self) -> Token<'a> {
+    pub(crate) fn take_token(&mut self) -> Token {
         self.lexer.take_token()
     }
 
-    pub(crate) fn expect_token(&mut self, expected: TokenKind<'a>) -> Token<'a> {
+    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Token {
         if self.current_token().kind() == &expected {
             self.take_token()
         } else {
@@ -87,7 +87,7 @@ where
         }
     }
 
-    pub(crate) fn try_token(&mut self, expected: TokenKind<'a>) -> Option<Token<'a>> {
+    pub(crate) fn try_token(&mut self, expected: TokenKind) -> Option<Token> {
         if self.current_token().is(expected) {
             Some(self.take_token())
         } else {
@@ -116,15 +116,15 @@ where
         todo!("parser.try_command_rhs")
     }
 
-    fn try_def_name(&mut self) -> Option<Token<'a>> {
+    fn try_def_name(&mut self) -> Option<Token> {
         self.try_fname()
     }
 
-    fn parse_defn_head(&mut self) -> (Token<'a>, Token<'a>) {
+    fn parse_defn_head(&mut self) -> (Token, Token) {
         todo!("parser.parse_defn_head")
     }
 
-    fn parse_defs_head(&mut self) -> (Token<'a>, Node<'a>, Token<'a>, Token<'a>) {
+    fn parse_defs_head(&mut self) -> (Token, Node<'a>, Token, Token) {
         todo!("parser.parse_defs_head")
     }
 
@@ -132,7 +132,7 @@ where
         todo!("parser.try_expr_value")
     }
 
-    fn try_expr_value_do(&mut self) -> Option<(Node<'a>, Token<'a>)> {
+    fn try_expr_value_do(&mut self) -> Option<(Node<'a>, Token)> {
         todo!("parser.try_expr_value_do")
     }
 
@@ -149,7 +149,7 @@ where
         todo!("parser.parse_cmd_brace_block")
     }
 
-    fn try_fcall(&mut self) -> Option<Token<'a>> {
+    fn try_fcall(&mut self) -> Option<Token> {
         self.try_operation()
     }
 
@@ -159,7 +159,7 @@ where
     fn parse_cpath(&mut self) {
         todo!("parser.parse_cpath")
     }
-    fn try_fname(&mut self) -> Option<Token<'a>> {
+    fn try_fname(&mut self) -> Option<Token> {
         self.try_token(TokenKind::tIDENTIFIER)
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tFID))
@@ -172,7 +172,7 @@ where
             .or_else(|| self.try_symbol())
     }
 
-    fn try_op(&mut self) -> Option<Token<'a>> {
+    fn try_op(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tPIPE))
             .or_else(|| self.try_token(TokenKind::tCARET))
             .or_else(|| self.try_token(TokenKind::tAMPER))
@@ -204,7 +204,7 @@ where
             .or_else(|| self.try_token(TokenKind::tASET))
             .or_else(|| self.try_token(TokenKind::tBACK_REF))
     }
-    fn try_reswords(&mut self) -> Option<Token<'a>> {
+    fn try_reswords(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::k__LINE__))
             .or_else(|| self.try_token(TokenKind::k__FILE__))
             .or_else(|| self.try_token(TokenKind::k__ENCODING__))
@@ -286,61 +286,61 @@ where
     fn try_mrhs(&mut self) -> Option<Vec<Node<'a>>> {
         todo!("parser.try_mrhs")
     }
-    fn try_k_begin(&mut self) -> Option<Token<'a>> {
+    fn try_k_begin(&mut self) -> Option<Token> {
         todo!("parser.try_k_begin")
     }
-    fn try_k_if(&mut self) -> Option<Token<'a>> {
+    fn try_k_if(&mut self) -> Option<Token> {
         todo!("parser.try_k_if")
     }
-    fn try_k_unless(&mut self) -> Option<Token<'a>> {
+    fn try_k_unless(&mut self) -> Option<Token> {
         todo!("parser.try_k_unless")
     }
-    fn try_k_while(&mut self) -> Option<Token<'a>> {
+    fn try_k_while(&mut self) -> Option<Token> {
         todo!("parser.try_k_while")
     }
-    fn try_k_until(&mut self) -> Option<Token<'a>> {
+    fn try_k_until(&mut self) -> Option<Token> {
         todo!("parser.try_k_until")
     }
-    fn try_k_case(&mut self) -> Option<Token<'a>> {
+    fn try_k_case(&mut self) -> Option<Token> {
         todo!("parser.try_k_case")
     }
-    fn try_k_for(&mut self) -> Option<Token<'a>> {
+    fn try_k_for(&mut self) -> Option<Token> {
         todo!("parser.try_k_for")
     }
-    fn try_k_class(&mut self) -> Option<Token<'a>> {
+    fn try_k_class(&mut self) -> Option<Token> {
         todo!("parser.try_k_class")
     }
-    fn try_k_module(&mut self) -> Option<Token<'a>> {
+    fn try_k_module(&mut self) -> Option<Token> {
         todo!("parser.try_k_module")
     }
-    fn try_k_def(&mut self) -> Option<Token<'a>> {
+    fn try_k_def(&mut self) -> Option<Token> {
         todo!("parser.try_k_def")
     }
-    fn try_k_do(&mut self) -> Option<Token<'a>> {
+    fn try_k_do(&mut self) -> Option<Token> {
         todo!("parser.try_k_do")
     }
-    fn try_k_do_block(&mut self) -> Option<Token<'a>> {
+    fn try_k_do_block(&mut self) -> Option<Token> {
         todo!("parser.try_k_do_block")
     }
-    fn try_k_rescue(&mut self) -> Option<Token<'a>> {
+    fn try_k_rescue(&mut self) -> Option<Token> {
         todo!("parser.try_k_rescue")
     }
-    fn try_k_ensure(&mut self) -> Option<Token<'a>> {
+    fn try_k_ensure(&mut self) -> Option<Token> {
         todo!("parser.try_k_ensure")
     }
-    fn try_k_when(&mut self) -> Option<Token<'a>> {
+    fn try_k_when(&mut self) -> Option<Token> {
         todo!("parser.try_k_when")
     }
-    fn try_k_else(&mut self) -> Option<Token<'a>> {
+    fn try_k_else(&mut self) -> Option<Token> {
         todo!("parser.try_k_else")
     }
-    fn try_k_elsif(&mut self) -> Option<Token<'a>> {
+    fn try_k_elsif(&mut self) -> Option<Token> {
         todo!("parser.try_k_elsif")
     }
-    fn try_k_end(&mut self) -> Option<Token<'a>> {
+    fn try_k_end(&mut self) -> Option<Token> {
         todo!("parser.try_k_end")
     }
-    fn try_k_return(&mut self) -> Option<Token<'a>> {
+    fn try_k_return(&mut self) -> Option<Token> {
         todo!("parser.try_k_return")
     }
     fn parse_then(&mut self) {
@@ -423,7 +423,7 @@ where
     }
 
     // TODO: return ArgsType instead of ()
-    fn try_brace_block(&mut self) -> Option<(Token<'a>, (), Option<Box<Node<'a>>>, Token<'a>)> {
+    fn try_brace_block(&mut self) -> Option<(Token, (), Option<Box<Node<'a>>>, Token)> {
         todo!("parser.try_brace_block")
     }
     fn parse_do_body(&mut self) {
@@ -528,7 +528,7 @@ where
     fn parse_p_const(&mut self) {
         todo!("parser.parse_p_const")
     }
-    fn parse_opt_ensure(&mut self) -> Option<(Token<'a>, Box<Node<'a>>)> {
+    fn parse_opt_ensure(&mut self) -> Option<(Token, Box<Node<'a>>)> {
         todo!("parser.parse_opt_ensure")
     }
     fn try_literal(&mut self) -> Option<Box<Node<'a>>> {
@@ -656,39 +656,39 @@ where
     fn parse_assoc(&mut self) {
         todo!("parser.parse_assoc")
     }
-    fn try_operation(&mut self) -> Option<Token<'a>> {
+    fn try_operation(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tFID))
     }
-    fn try_operation2(&mut self) -> Option<Token<'a>> {
+    fn try_operation2(&mut self) -> Option<Token> {
         None.or_else(|| self.try_operation())
             .or_else(|| self.try_op())
     }
-    fn try_operation3(&mut self) -> Option<Token<'a>> {
+    fn try_operation3(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
     }
-    fn try_dot_or_colon(&mut self) -> Option<Token<'a>> {
+    fn try_dot_or_colon(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tCOLON2))
     }
-    fn try_call_op(&mut self) -> Option<Token<'a>> {
+    fn try_call_op(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tANDDOT))
     }
-    fn try_call_op2(&mut self) -> Option<Token<'a>> {
+    fn try_call_op2(&mut self) -> Option<Token> {
         None.or_else(|| self.try_call_op())
             .or_else(|| self.try_token(TokenKind::tCOLON2))
     }
     fn parse_opt_terms(&mut self) {
         self.parse_terms();
     }
-    fn try_opt_nl(&mut self) -> Option<Token<'a>> {
+    fn try_opt_nl(&mut self) -> Option<Token> {
         self.try_token(TokenKind::tNL)
     }
-    fn try_rparen(&mut self) -> Option<Token<'a>> {
+    fn try_rparen(&mut self) -> Option<Token> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
         if let Some(rparen_t) = self.try_token(TokenKind::tRPAREN) {
@@ -698,7 +698,7 @@ where
             None
         }
     }
-    fn try_rbracket(&mut self) -> Option<Token<'a>> {
+    fn try_rbracket(&mut self) -> Option<Token> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
         if let Some(rbrack_t) = self.try_token(TokenKind::tRBRACK) {
@@ -708,7 +708,7 @@ where
             None
         }
     }
-    fn try_rbrace(&mut self) -> Option<Token<'a>> {
+    fn try_rbrace(&mut self) -> Option<Token> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
         if let Some(rbrace_t) = self.try_token(TokenKind::tRCURLY) {
@@ -718,15 +718,15 @@ where
             None
         }
     }
-    fn try_trailer(&mut self) -> Option<Token<'a>> {
+    fn try_trailer(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tNL))
             .or_else(|| self.try_token(TokenKind::tCOMMA))
     }
-    fn try_term(&mut self) -> Option<Token<'a>> {
+    fn try_term(&mut self) -> Option<Token> {
         None.or_else(|| self.try_token(TokenKind::tSEMI))
             .or_else(|| self.try_token(TokenKind::tNL))
     }
-    fn parse_terms(&mut self) -> Vec<Token<'a>> {
+    fn parse_terms(&mut self) -> Vec<Token> {
         let mut terms = vec![];
         if let Some(term) = self.try_term() {
             terms.push(term)
@@ -749,7 +749,7 @@ where
         terms
     }
 
-    fn try_colon2_const(&mut self) -> Option<(Token<'a>, Token<'a>)> {
+    fn try_colon2_const(&mut self) -> Option<(Token, Token)> {
         let colon2_t = self.try_token(TokenKind::tCOLON2)?;
         let const_t = self.expect_token(TokenKind::tCONSTANT);
         Some((colon2_t, const_t))

@@ -9,11 +9,11 @@ use crate::{
     token::token,
 };
 
-pub(crate) fn handle_interpolation_end<'a>(
-    buffer: &mut BufferWithCursor<'a>,
+pub(crate) fn handle_interpolation_end(
+    buffer: &mut BufferWithCursor,
     current_curly_nest: usize,
     interpolation: &mut Interpolation,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     match interpolation {
         Interpolation {
             enabled,

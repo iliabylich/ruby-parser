@@ -47,7 +47,7 @@ where
         contents
     }
 
-    fn read_backtick_identifier_as_xstring_beg(&mut self) -> Option<Token<'a>> {
+    fn read_backtick_identifier_as_xstring_beg(&mut self) -> Option<Token> {
         let loc = self.current_token().loc();
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {

@@ -80,9 +80,7 @@ fn try_arg_in_p_expr_body<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Opt
     None
 }
 
-fn try_expr_tail<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
-) -> Option<(Token<'a>, Box<Node<'a>>)> {
+fn try_expr_tail<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node<'a>>)> {
     let op_t = None
         .or_else(|| parser.try_token(TokenKind::kAND))
         .or_else(|| parser.try_token(TokenKind::kOR))?;

@@ -5,7 +5,7 @@ use crate::lexer::{
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashMetaCtrl {
-    pub(crate) codepoint: u8,
+    pub(crate) byte: u8,
     pub(crate) length: usize,
 }
 
@@ -14,7 +14,7 @@ pub(crate) struct SlashMetaCtrlError {
     pub(crate) length: usize,
 }
 
-impl<'a> Lookahead<'a> for SlashMetaCtrl {
+impl Lookahead for SlashMetaCtrl {
     type Output = Result<Option<Self>, SlashMetaCtrlError>;
 
     // \C-\M-f
@@ -23,7 +23,7 @@ impl<'a> Lookahead<'a> for SlashMetaCtrl {
     // \cf
     // \M-\cf
     // \M-f
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         if buffer.byte_at(start) != Some(b'\\') {
             return Ok(None);
         }
@@ -111,7 +111,7 @@ fn slash_m(byte: u8) -> u8 {
 
 impl SlashMetaCtrl {
     fn map<F: FnOnce(u8) -> u8>(mut self, f: F) -> Self {
-        self.codepoint = f(self.codepoint);
+        self.byte = f(self.byte);
         self
     }
 }
@@ -120,7 +120,7 @@ fn try_escaped_char(buffer: &Buffer, at: usize) -> Option<SlashMetaCtrl> {
     if buffer.byte_at(at)? == b'\\' {
         let byte = buffer.byte_at(at + 1)?;
         return Some(SlashMetaCtrl {
-            codepoint: unescape_byte(byte),
+            byte: unescape_byte(byte),
             length: 2,
         });
     }
@@ -141,17 +141,14 @@ fn try_hex2(buffer: &Buffer, at: usize) -> Option<SlashMetaCtrl> {
     let byte1 = try_hex(buffer, at)? << 4;
     let byte2 = try_hex(buffer, at + 1)?;
     Some(SlashMetaCtrl {
-        codepoint: (byte1 << 4) & byte2,
+        byte: (byte1 << 4) & byte2,
         length: 2,
     })
 }
 
 fn try_byte(buffer: &Buffer, at: usize) -> Option<SlashMetaCtrl> {
     let byte = buffer.byte_at(at)?;
-    Some(SlashMetaCtrl {
-        codepoint: byte,
-        length: 1,
-    })
+    Some(SlashMetaCtrl { byte, length: 1 })
 }
 
 macro_rules! assert_lookahead {
@@ -182,7 +179,7 @@ mod slash_big_c {
         test = test_dash_slash_big_m_dash_codepoint,
         input = b"\\C-\\M-d",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 132,
+            byte: 132,
             length: 7
         }))
     );
@@ -190,10 +187,7 @@ mod slash_big_c {
     assert_lookahead!(
         test = test_dash_slash_codepoint,
         input = b"\\C-\\d",
-        output = Ok(Some(SlashMetaCtrl {
-            codepoint: 4,
-            length: 5
-        }))
+        output = Ok(Some(SlashMetaCtrl { byte: 4, length: 5 }))
     );
 
     // \C-\M-f
@@ -201,7 +195,7 @@ mod slash_big_c {
         test = test_dash_slash_big_m_dash_escaped_codepoint,
         input = b"\\C-\\M-f",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 134,
+            byte: 134,
             length: 7
         }))
     );
@@ -210,7 +204,7 @@ mod slash_big_c {
         test = test_dash_slash_escaped_codepoint,
         input = b"\\C-\\f",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 12,
+            byte: 12,
             length: 5
         }))
     );
@@ -228,7 +222,7 @@ mod slash_low_c {
         test = test_slash_big_m_dash_codepoint,
         input = b"\\c\\M-d",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 132,
+            byte: 132,
             length: 6
         }))
     );
@@ -236,10 +230,7 @@ mod slash_low_c {
     assert_lookahead!(
         test = test_codepoint,
         input = b"\\cd",
-        output = Ok(Some(SlashMetaCtrl {
-            codepoint: 4,
-            length: 3
-        }))
+        output = Ok(Some(SlashMetaCtrl { byte: 4, length: 3 }))
     );
 
     // \c\M-f
@@ -247,7 +238,7 @@ mod slash_low_c {
         test = test_slash_big_m_dash_escaped_codepoint,
         input = b"\\c\\M-f",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 134,
+            byte: 134,
             length: 6
         }))
     );
@@ -255,10 +246,7 @@ mod slash_low_c {
     assert_lookahead!(
         test = test_escaped_codepoint,
         input = b"\\cf",
-        output = Ok(Some(SlashMetaCtrl {
-            codepoint: 6,
-            length: 3
-        }))
+        output = Ok(Some(SlashMetaCtrl { byte: 6, length: 3 }))
     );
 
     assert_lookahead!(
@@ -274,7 +262,7 @@ mod slash_big_m {
         test = test_dash_slash_low_c_codepoint,
         input = b"\\M-\\cd",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 132,
+            byte: 132,
             length: 6
         }))
     );
@@ -283,7 +271,7 @@ mod slash_big_m {
         test = test_dash_codepoint,
         input = b"\\M-d",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 228,
+            byte: 228,
             length: 4
         }))
     );
@@ -293,7 +281,7 @@ mod slash_big_m {
         test = test_dash_slash_low_c_escaped_codepoint,
         input = b"\\M-\\cf",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 134,
+            byte: 134,
             length: 6
         }))
     );
@@ -302,7 +290,7 @@ mod slash_big_m {
         test = test_dash_escaped_codepoint,
         input = b"\\M-f",
         output = Ok(Some(SlashMetaCtrl {
-            codepoint: 230,
+            byte: 230,
             length: 4
         }))
     );

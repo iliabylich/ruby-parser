@@ -33,7 +33,6 @@ macro_rules! assert_emits_string_end {
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
                 loc::loc,
-                string_content::StringContent,
                 token::token,
             };
             use std::ops::ControlFlow;
@@ -47,7 +46,7 @@ macro_rules! assert_emits_string_end {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT(StringContent::from("{}")), loc!(0, 2))
+                    token: token!(tSTRING_CONTENT, loc!(0, 2))
                 })
             );
 

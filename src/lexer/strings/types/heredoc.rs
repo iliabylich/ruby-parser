@@ -1,39 +1,42 @@
 use std::ops::ControlFlow;
 
-use crate::lexer::{
-    buffer::BufferWithCursor,
-    strings::{action::StringExtendAction, literal::StringLiteralExtend, types::Interpolation},
+use crate::{
+    lexer::{
+        buffer::BufferWithCursor,
+        strings::{action::StringExtendAction, literal::StringLiteralExtend, types::Interpolation},
+    },
+    Loc,
 };
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
-pub(crate) struct Heredoc<'a> {
+pub(crate) struct Heredoc {
     interpolation: Option<Interpolation>,
-    ends_with: &'a [u8],
+    id_loc: Loc,
 
     heredoc_id_ended_at: usize,
     squiggly: bool,
 }
 
-impl<'a> StringLiteralExtend<'a> for Heredoc<'a> {
+impl StringLiteralExtend for Heredoc {
     fn extend(
         &mut self,
-        _buffer: &mut BufferWithCursor<'a>,
+        _buffer: &mut BufferWithCursor,
         _current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         todo!("heredoc.extend")
     }
 }
 
-impl<'a> Heredoc<'a> {
+impl Heredoc {
     pub(crate) fn new(
         interpolation: Option<Interpolation>,
-        ends_with: &'a [u8],
+        id_loc: Loc,
         heredoc_id_ended_at: usize,
         squiggly: bool,
     ) -> Self {
         Self {
             interpolation,
-            ends_with,
+            id_loc,
             heredoc_id_ended_at,
             squiggly,
         }

@@ -33,12 +33,12 @@ impl Array {
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for Array {
+impl StringLiteralExtend for Array {
     fn extend(
         &mut self,
-        buffer: &mut BufferWithCursor<'a>,
+        buffer: &mut BufferWithCursor,
         _current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         let start = buffer.pos();
 
         handle_eof(buffer, start)?;

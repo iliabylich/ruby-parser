@@ -27,21 +27,21 @@ fn string_value<'a>(loc: Loc, buffer: &Buffer<'a>) -> StringContent<'a> {
 
 impl<'a, C: Constructor> Builder<C> {
     // Singletons
-    pub(crate) fn nil(nil_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn nil(nil_t: Token) -> Box<Node<'a>> {
         let loc = nil_t.loc();
         Box::new(Node::Nil(Nil { expression_l: loc }))
     }
-    pub(crate) fn true_(true_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn true_(true_t: Token) -> Box<Node<'a>> {
         let loc = true_t.loc();
         Box::new(Node::True(True { expression_l: loc }))
     }
-    pub(crate) fn false_(false_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn false_(false_t: Token) -> Box<Node<'a>> {
         let loc = false_t.loc();
         Box::new(Node::False(False { expression_l: loc }))
     }
 
     // Numerics
-    pub(crate) fn integer(integer_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn integer(integer_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = integer_t.loc();
         Box::new(Node::Int(Int {
             value: string_value(expression_l, buffer),
@@ -49,7 +49,7 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
-    pub(crate) fn float(float_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn float(float_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = float_t.loc();
         Box::new(Node::Float(Float {
             value: string_value(expression_l, buffer),
@@ -57,7 +57,7 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
-    pub(crate) fn rational(rational_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn rational(rational_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = rational_t.loc();
         Box::new(Node::Rational(Rational {
             value: string_value(expression_l, buffer),
@@ -65,7 +65,7 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
-    pub(crate) fn complex(complex_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn complex(complex_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = complex_t.loc();
         Box::new(Node::Complex(Complex {
             value: string_value(expression_l, buffer),
@@ -75,7 +75,7 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn unary_num(
-        unary_t: Token<'a>,
+        unary_t: Token,
         mut numeric: Box<Node<'a>>,
         buffer: &Buffer<'a>,
     ) -> Box<Node<'a>> {
@@ -114,15 +114,15 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     // Special constants
-    pub(crate) fn __line__(line_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn __line__(line_t: Token) -> Box<Node<'a>> {
         let loc = line_t.loc();
         Box::new(Node::Line(Line { expression_l: loc }))
     }
-    pub(crate) fn __file__(file_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn __file__(file_t: Token) -> Box<Node<'a>> {
         let loc = file_t.loc();
         Box::new(Node::File(File { expression_l: loc }))
     }
-    pub(crate) fn __encoding__(encoding_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn __encoding__(encoding_t: Token) -> Box<Node<'a>> {
         let loc = encoding_t.loc();
         Box::new(Node::Encoding(Encoding { expression_l: loc }))
     }
@@ -130,10 +130,10 @@ impl<'a, C: Constructor> Builder<C> {
     // Strings
 
     pub(crate) fn str_node(
-        begin_t: Option<Token<'a>>,
+        begin_t: Option<Token>,
         value: StringContent<'a>,
         parts: Vec<Node<'a>>,
-        end_t: Option<Token<'a>>,
+        end_t: Option<Token>,
     ) -> Box<Node<'a>> {
         if let Some(Token {
             kind: TokenKind::tHEREDOC_BEG,
@@ -161,7 +161,7 @@ impl<'a, C: Constructor> Builder<C> {
         }
     }
 
-    pub(crate) fn string_internal(string_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn string_internal(string_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = string_t.loc();
         let value = string_value(expression_l, buffer);
         Box::new(Node::Str(Str {
@@ -173,9 +173,9 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn string_compose(
-        begin_t: Option<Token<'a>>,
+        begin_t: Option<Token>,
         parts: Vec<Node<'a>>,
-        end_t: Option<Token<'a>>,
+        end_t: Option<Token>,
     ) -> Box<Node<'a>> {
         match &parts[..] {
             [] => {
@@ -202,7 +202,7 @@ impl<'a, C: Constructor> Builder<C> {
         todo!()
     }
 
-    pub(crate) fn character(char_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn character(char_t: Token) -> Box<Node<'a>> {
         let expression_l = char_t.loc();
         let begin_l = loc!(expression_l.start, expression_l.start + 1);
 
@@ -227,11 +227,7 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     // Symbols
-    pub(crate) fn symbol(
-        start_t: Token<'a>,
-        value_t: Token<'a>,
-        buffer: &Buffer<'a>,
-    ) -> Box<Node<'a>> {
+    pub(crate) fn symbol(start_t: Token, value_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let begin_l = start_t.loc();
         let value_l = value_t.loc();
         let expression_l = begin_l.join(&value_l);
@@ -245,7 +241,7 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn symbol_internal(symbol_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn symbol_internal(symbol_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = symbol_t.loc();
         let value = string_value(expression_l, buffer);
         // TODO: validate_sym_value
@@ -258,9 +254,9 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn symbol_compose(
-        begin_t: Token<'a>,
+        begin_t: Token,
         parts: Vec<Node<'a>>,
-        end_t: Token<'a>,
+        end_t: Token,
     ) -> Box<Node<'a>> {
         let begin_l = begin_t.loc();
         let end_l = end_t.loc();
@@ -295,9 +291,9 @@ impl<'a, C: Constructor> Builder<C> {
     // Executable string
 
     pub(crate) fn xstring_compose(
-        begin_t: Token<'a>,
+        begin_t: Token,
         parts: Vec<Node<'a>>,
-        end_t: Token<'a>,
+        end_t: Token,
     ) -> Box<Node<'a>> {
         let begin_l = begin_t.loc();
         let end_l = end_t.loc();
@@ -328,7 +324,7 @@ impl<'a, C: Constructor> Builder<C> {
     // Regular expressions
 
     pub(crate) fn regexp_options(
-        regexp_end_t: &Token<'a>,
+        regexp_end_t: &Token,
         buffer: &Buffer<'a>,
     ) -> Option<Box<Node<'a>>> {
         let expression_l = regexp_end_t.loc();
@@ -358,9 +354,9 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn regexp_compose(
-        begin_t: Token<'a>,
+        begin_t: Token,
         parts: Vec<Node<'a>>,
-        end_t: Token<'a>,
+        end_t: Token,
         options: Option<Box<Node<'a>>>,
     ) -> Box<Node<'a>> {
         let begin_l = begin_t.loc();
@@ -394,14 +390,14 @@ impl<'a, C: Constructor> Builder<C> {
     // Arrays
 
     pub(crate) fn array(
-        begin_t: Option<Token<'a>>,
+        begin_t: Option<Token>,
         elements: Vec<Node<'a>>,
-        end_t: Option<Token<'a>>,
+        end_t: Option<Token>,
     ) -> Box<Node<'a>> {
         todo!("builder.array")
     }
 
-    pub(crate) fn splat(star_t: Token<'a>, value: Box<Node<'a>>) -> Box<Node<'a>> {
+    pub(crate) fn splat(star_t: Token, value: Box<Node<'a>>) -> Box<Node<'a>> {
         let operator_l = star_t.loc();
         let expression_l = operator_l.join(value.expression());
         Box::new(Node::Splat(Splat {
@@ -411,7 +407,7 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn nameless_splat(star_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn nameless_splat(star_t: Token) -> Box<Node<'a>> {
         let operator_l = star_t.loc();
         let expression_l = operator_l;
         Box::new(Node::Splat(Splat {
@@ -439,9 +435,9 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn words_compose(
-        begin_t: Token<'a>,
+        begin_t: Token,
         elements: Vec<Node<'a>>,
-        end_t: Token<'a>,
+        end_t: Token,
     ) -> Box<Node<'a>> {
         let begin_l = begin_t.loc();
         let end_l = end_t.loc();
@@ -455,9 +451,9 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     pub(crate) fn symbols_compose(
-        begin_t: Token<'a>,
+        begin_t: Token,
         elements: Vec<Node<'a>>,
-        end_t: Token<'a>,
+        end_t: Token,
     ) -> Box<Node<'a>> {
         let elements = elements
             .into_iter()
@@ -507,42 +503,42 @@ impl<'a, C: Constructor> Builder<C> {
     // Ranges
 
     // Access
-    pub(crate) fn self_(self_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn self_(self_t: Token) -> Box<Node<'a>> {
         let loc = self_t.loc();
         Box::new(Node::Self_(Self_ { expression_l: loc }))
     }
-    pub(crate) fn lvar(lvar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn lvar(lvar_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = lvar_t.loc();
         Box::new(Node::Lvar(Lvar {
             name: string_value(loc, buffer),
             expression_l: loc,
         }))
     }
-    pub(crate) fn ivar(ivar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn ivar(ivar_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = ivar_t.loc();
         Box::new(Node::Ivar(Ivar {
             name: string_value(loc, buffer),
             expression_l: loc,
         }))
     }
-    pub(crate) fn gvar(gvar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn gvar(gvar_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = gvar_t.loc();
         let name = cstring_value(loc, buffer);
         unsafe { node_ptr_to_box!(C::gvar_node(name, loc)) }
     }
-    pub(crate) fn cvar(cvar_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn cvar(cvar_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let loc = cvar_t.loc();
         Box::new(Node::Cvar(Cvar {
             name: string_value(loc, buffer),
             expression_l: loc,
         }))
     }
-    pub(crate) fn back_ref(back_ref_t: Token<'a>, buffer: &Buffer) -> Box<Node<'a>> {
+    pub(crate) fn back_ref(back_ref_t: Token, buffer: &Buffer) -> Box<Node<'a>> {
         let loc = back_ref_t.loc();
         let name = cstring_value(loc, buffer);
         unsafe { node_ptr_to_box!(C::back_ref_node(name, loc)) }
     }
-    pub(crate) fn nth_ref(nth_ref_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn nth_ref(nth_ref_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let expression_l = nth_ref_t.loc();
         let name = string_value(expression_l, buffer).to_string_lossy();
         let name = &name[1..];
@@ -569,7 +565,7 @@ impl<'a, C: Constructor> Builder<C> {
         todo!("builder.accessible")
     }
 
-    pub(crate) fn const_(const_t: Token<'a>, buffer: &Buffer<'a>) -> Box<Node<'a>> {
+    pub(crate) fn const_(const_t: Token, buffer: &Buffer<'a>) -> Box<Node<'a>> {
         let name_l = const_t.loc();
         let expression_l = name_l;
 
@@ -582,7 +578,7 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn const_global(colon2_t: Token<'a>, name_t: Token<'a>) -> Box<Node<'a>> {
+    pub(crate) fn const_global(colon2_t: Token, name_t: Token) -> Box<Node<'a>> {
         todo!("builder.const_global")
     }
 
@@ -595,15 +591,11 @@ impl<'a, C: Constructor> Builder<C> {
         todo!("builder.const_op_assignable")
     }
 
-    pub(crate) fn assign(lhs: Box<Node<'a>>, op_t: Token<'a>, rhs: Box<Node<'a>>) -> Box<Node<'a>> {
+    pub(crate) fn assign(lhs: Box<Node<'a>>, op_t: Token, rhs: Box<Node<'a>>) -> Box<Node<'a>> {
         todo!("builder.assign")
     }
 
-    pub(crate) fn op_assign(
-        lhs: Box<Node<'a>>,
-        op_t: Token<'a>,
-        rhs: Box<Node<'a>>,
-    ) -> Box<Node<'a>> {
+    pub(crate) fn op_assign(lhs: Box<Node<'a>>, op_t: Token, rhs: Box<Node<'a>>) -> Box<Node<'a>> {
         todo!("builder.op_assign")
     }
 
@@ -627,7 +619,7 @@ impl<'a, C: Constructor> Builder<C> {
         todo!("builder.def_endless_singleton")
     }
 
-    pub(crate) fn undef(undef_t: Token<'a>, names: Vec<Node<'a>>) -> Box<Node<'a>> {
+    pub(crate) fn undef(undef_t: Token, names: Vec<Node<'a>>) -> Box<Node<'a>> {
         debug_assert!(!names.is_empty());
 
         let keyword_l = undef_t.loc();
@@ -639,11 +631,7 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn alias(
-        alias_t: Token<'a>,
-        to: Box<Node<'a>>,
-        from: Box<Node<'a>>,
-    ) -> Box<Node<'a>> {
+    pub(crate) fn alias(alias_t: Token, to: Box<Node<'a>>, from: Box<Node<'a>>) -> Box<Node<'a>> {
         let keyword_l = alias_t.loc();
         let expression_l = keyword_l.join(from.expression());
         Box::new(Node::Alias(Alias {
@@ -670,21 +658,17 @@ impl<'a, C: Constructor> Builder<C> {
     pub(crate) fn match_op() {}
     pub(crate) fn unary_op() {}
     pub(crate) fn not_op(
-        not_t: Token<'a>,
-        begin_t: Option<Token<'a>>,
+        not_t: Token,
+        begin_t: Option<Token>,
         receiver: Option<Box<Node<'a>>>,
-        end_t: Option<Token<'a>>,
+        end_t: Option<Token>,
     ) -> Box<Node<'a>> {
         todo!()
     }
 
     // Logical operations: and, or
 
-    pub(crate) fn logical_op(
-        lhs: Box<Node<'a>>,
-        op_t: Token<'a>,
-        rhs: Box<Node<'a>>,
-    ) -> Box<Node<'a>> {
+    pub(crate) fn logical_op(lhs: Box<Node<'a>>, op_t: Token, rhs: Box<Node<'a>>) -> Box<Node<'a>> {
         // TODO: value_expr(lhs)
 
         let operator_l = op_t.loc();
@@ -723,10 +707,10 @@ impl<'a, C: Constructor> Builder<C> {
 
     // BEGIN, END
     pub(crate) fn preexe(
-        preexe_t: Token<'a>,
-        lbrace_t: Token<'a>,
+        preexe_t: Token,
+        lbrace_t: Token,
         body: Option<Box<Node<'a>>>,
-        rbrace_t: Token<'a>,
+        rbrace_t: Token,
     ) -> Box<Node<'a>> {
         let keyword_l = preexe_t.loc();
         let begin_l = lbrace_t.loc();
@@ -742,10 +726,10 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
     pub(crate) fn postexe(
-        postexe_t: Token<'a>,
-        lbrace_t: Token<'a>,
+        postexe_t: Token,
+        lbrace_t: Token,
         body: Option<Box<Node<'a>>>,
-        rbrace_t: Token<'a>,
+        rbrace_t: Token,
     ) -> Box<Node<'a>> {
         let keyword_l = postexe_t.loc();
         let begin_l = lbrace_t.loc();
@@ -764,10 +748,10 @@ impl<'a, C: Constructor> Builder<C> {
     // Exception handling
 
     pub(crate) fn rescue_body(
-        rescue_t: Token<'a>,
+        rescue_t: Token,
         exc_list: Option<Vec<Node<'a>>>,
-        exc_var: Option<(Token<'a>, Box<Node<'a>>)>,
-        then_t: Option<Token<'a>>,
+        exc_var: Option<(Token, Box<Node<'a>>)>,
+        then_t: Option<Token>,
         body: Option<Box<Node<'a>>>,
     ) -> Box<Node<'a>> {
         let exc_list = exc_list.map(|exc_list| Self::array(None, exc_list, None));
@@ -777,8 +761,8 @@ impl<'a, C: Constructor> Builder<C> {
     pub(crate) fn begin_body(
         compound_stmt: Box<Node<'a>>,
         rescue_bodies: Vec<Node<'a>>,
-        opt_else: Option<(Token<'a>, Option<Box<Node<'a>>>)>,
-        opt_ensure: Option<(Token<'a>, Option<Box<Node<'a>>>)>,
+        opt_else: Option<(Token, Option<Box<Node<'a>>>)>,
+        opt_ensure: Option<(Token, Option<Box<Node<'a>>>)>,
     ) -> Box<Node<'a>> {
         todo!("builder.begin_body")
     }
@@ -801,11 +785,7 @@ impl<'a, C: Constructor> Builder<C> {
         }
     }
 
-    pub(crate) fn begin(
-        begin_t: Token<'a>,
-        statements: Vec<Node<'a>>,
-        end_t: Token<'a>,
-    ) -> Box<Node<'a>> {
+    pub(crate) fn begin(begin_t: Token, statements: Vec<Node<'a>>, end_t: Token) -> Box<Node<'a>> {
         let begin_l = begin_t.loc();
         let end_l = end_t.loc();
         Box::new(Node::Begin(Begin {
@@ -835,7 +815,7 @@ impl<'a, C: Constructor> Builder<C> {
 
     pub(crate) fn group_with_trailing_comma(
         nodes: Vec<Node<'a>>,
-        trailing_comma: Token<'a>,
+        trailing_comma: Token,
     ) -> Box<Node<'a>> {
         todo!("builder.group_with_trailing_comma")
     }
@@ -846,7 +826,7 @@ impl<'a, C: Constructor> Builder<C> {
 
     pub(crate) fn match_pattern(
         value: Box<Node<'a>>,
-        assoc_t: Token<'a>,
+        assoc_t: Token,
         pattern: Box<Node<'a>>,
     ) -> Box<Node<'a>> {
         let operator_l = assoc_t.loc();
@@ -862,7 +842,7 @@ impl<'a, C: Constructor> Builder<C> {
 
     pub(crate) fn match_pattern_p(
         value: Box<Node<'a>>,
-        in_t: Token<'a>,
+        in_t: Token,
         pattern: Box<Node<'a>>,
     ) -> Box<Node<'a>> {
         let operator_l = in_t.loc();

@@ -9,13 +9,13 @@ use crate::{
     token::token,
 };
 
-pub(crate) fn handle_string_end<'a, P>(
-    buffer: &mut BufferWithCursor<'a>,
+pub(crate) fn handle_string_end<P>(
+    buffer: &mut BufferWithCursor,
     start: usize,
     starts_with: P,
     ends_with: P,
     ends_with_nesting: &mut usize,
-) -> ControlFlow<StringExtendAction<'a>>
+) -> ControlFlow<StringExtendAction>
 where
     P: Pattern,
 {

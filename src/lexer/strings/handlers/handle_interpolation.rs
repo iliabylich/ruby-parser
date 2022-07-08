@@ -14,11 +14,11 @@ use crate::{
     token::token,
 };
 
-pub(crate) fn handle_interpolation<'a>(
+pub(crate) fn handle_interpolation(
     interpolation: &mut Interpolation,
-    buffer: &mut BufferWithCursor<'a>,
+    buffer: &mut BufferWithCursor,
     start: usize,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     // handle #{ interpolation
     handle_regular_interpolation(interpolation, buffer, start)?;
 
@@ -32,11 +32,11 @@ pub(crate) fn handle_interpolation<'a>(
 }
 
 #[must_use]
-fn handle_regular_interpolation<'a>(
+fn handle_regular_interpolation(
     interpolation: &mut Interpolation,
-    buffer: &mut BufferWithCursor<'a>,
+    buffer: &mut BufferWithCursor,
     start: usize,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     if buffer.lookahead(b"#{") {
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
 
@@ -53,10 +53,10 @@ fn handle_regular_interpolation<'a>(
 }
 
 #[must_use]
-fn handle_raw_ivar_or_cvar_interpolation<'a>(
-    buffer: &mut BufferWithCursor<'a>,
+fn handle_raw_ivar_or_cvar_interpolation(
+    buffer: &mut BufferWithCursor,
     start: usize,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     if buffer.lookahead(b"#@") {
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
 
@@ -87,10 +87,10 @@ fn handle_raw_ivar_or_cvar_interpolation<'a>(
 }
 
 #[must_use]
-fn handle_raw_gvar_interpolation<'a>(
-    buffer: &mut BufferWithCursor<'a>,
+fn handle_raw_gvar_interpolation(
+    buffer: &mut BufferWithCursor,
     start: usize,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     if buffer.lookahead(b"#$") {
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
 

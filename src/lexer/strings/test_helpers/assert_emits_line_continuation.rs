@@ -6,7 +6,7 @@ macro_rules! assert_emits_line_continuation {
             test = test_line_continuation,
             literal = $literal,
             input = b"\\\n",
-            token = token!(tSTRING_CONTENT(StringContent::Borrowed(b"")), loc!(0, 2)),
+            token = token!(tSTRING_CONTENT, loc!(0, 2)),
             pre = |_| {}
         );
     };
@@ -21,10 +21,7 @@ macro_rules! assert_ignores_line_continuation {
             test = test_line_continuation,
             literal = $literal,
             input = b"\\\n",
-            token = token!(
-                tSTRING_CONTENT(StringContent::Borrowed(b"\\\n")),
-                loc!(0, 2)
-            ),
+            token = token!(tSTRING_CONTENT, loc!(0, 2)),
             pre = |_| {}
         );
     };

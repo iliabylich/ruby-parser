@@ -90,7 +90,7 @@ pub enum BinOp {
     tUPLUS,
 }
 
-impl std::convert::TryFrom<&TokenKind<'_>> for BinOp {
+impl std::convert::TryFrom<&TokenKind> for BinOp {
     type Error = ();
 
     fn try_from(token: &TokenKind) -> Result<Self, Self::Error> {
@@ -164,7 +164,7 @@ macro_rules! non_assoc {
     };
 }
 
-impl<'a> TokenKind<'a> {
+impl TokenKind {
     pub(crate) fn precedence(&self) -> Option<(u8, u8)> {
         use TokenKind::*;
 

@@ -7,10 +7,10 @@ use crate::{
     token::{token, Token},
 };
 
-pub(crate) fn parse_percent<'a>(
-    buffer: &mut BufferWithCursor<'a>,
+pub(crate) fn parse_percent(
+    buffer: &mut BufferWithCursor,
     curly_level: usize,
-) -> (Option<StringLiteral<'a>>, Token<'a>) {
+) -> (Option<StringLiteral>, Token) {
     let start = buffer.pos();
     buffer.skip_byte();
 

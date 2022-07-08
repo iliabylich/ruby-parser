@@ -18,10 +18,10 @@ pub(crate) struct Ident {
     pub(crate) length: usize,
 }
 
-impl<'a> Lookahead<'a> for Ident {
+impl Lookahead for Ident {
     type Output = Option<Self>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         let mut end = start;
 
         loop {
@@ -64,7 +64,7 @@ impl Ident {
         byte.is_ascii_alphanumeric() || byte == b'_' || !byte.is_ascii()
     }
 
-    pub(crate) fn parse<'a>(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
         let start = buffer.pos();
 
         let length = match Ident::lookahead(buffer.for_lookahead(), start) {

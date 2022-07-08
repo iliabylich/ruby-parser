@@ -32,10 +32,10 @@ pub(crate) enum EscapeError {
 
 use crate::lexer::buffer::{Buffer, Lookahead};
 
-impl<'a> Lookahead<'a> for Escape {
+impl Lookahead for Escape {
     type Output = Result<Option<Self>, EscapeError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         // check \u
         let maybe_slash_u = SlashU::lookahead(buffer, start).map_err(EscapeError::SlashUError)?;
         if let Some(slash_u) = maybe_slash_u {

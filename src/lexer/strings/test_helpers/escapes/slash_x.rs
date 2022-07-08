@@ -6,7 +6,7 @@ macro_rules! assert_emits_escaped_slash_x {
             test = test_escaped_slash_x,
             literal = $literal,
             input = b"\\x49",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"I")), loc!(0, 4)),
+            token = token!(tSTRING_CONTENT, loc!(0, 4), vec![b'I']),
             pre = |_| {}
         );
     };
@@ -21,7 +21,7 @@ macro_rules! assert_ignores_escaped_slash_x {
             test = test_escaped_slash_x,
             literal = $literal,
             input = b"\\x49",
-            token = token!(tSTRING_CONTENT(StringContent::from("\\x49")), loc!(0, 4)),
+            token = token!(tSTRING_CONTENT, loc!(0, 4)),
             pre = |_| {}
         );
     };

@@ -3,24 +3,20 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{buffer::Buffer, strings::action::StringExtendAction},
     loc::loc,
-    string_content::StringContent,
     token::token,
 };
 
 #[must_use]
-pub(crate) fn handle_processed_string_content<'a>(
-    buffer: &Buffer<'a>,
+pub(crate) fn handle_processed_string_content(
+    _buffer: &Buffer,
     start: usize,
     end: usize,
-) -> std::ops::ControlFlow<StringExtendAction<'a>> {
+) -> std::ops::ControlFlow<StringExtendAction> {
     if start == end {
         ControlFlow::Continue(())
     } else {
         ControlFlow::Break(StringExtendAction::EmitToken {
-            token: token!(
-                tSTRING_CONTENT(StringContent::from(buffer.slice(start, end).expect("bug"))),
-                loc!(start, end)
-            ),
+            token: token!(tSTRING_CONTENT, loc!(start, end)),
         })
     }
 }

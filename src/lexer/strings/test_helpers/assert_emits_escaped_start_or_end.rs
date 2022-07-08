@@ -8,7 +8,7 @@ macro_rules! assert_emits_escaped_start_or_end {
             test = test_escaped_start,
             literal = $literal,
             input = concat!("\\", $start).as_bytes(),
-            token = token!(tSTRING_CONTENT(StringContent::from($start)), loc!(0, 2)),
+            token = token!(tSTRING_CONTENT, loc!(0, 2), $start.as_bytes().to_vec()),
             pre = |_| {}
         );
 
@@ -16,7 +16,7 @@ macro_rules! assert_emits_escaped_start_or_end {
             test = test_escaped_end,
             literal = $literal,
             input = concat!("\\", $end).as_bytes(),
-            token = token!(tSTRING_CONTENT(StringContent::from($end)), loc!(0, 2)),
+            token = token!(tSTRING_CONTENT, loc!(0, 2), $end.as_bytes().to_vec()),
             pre = |_| {}
         );
     };

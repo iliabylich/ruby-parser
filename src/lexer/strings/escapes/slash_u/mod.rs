@@ -8,19 +8,13 @@ use crate::lexer::buffer::{scan_while_matches_pattern, Buffer, Lookahead, Lookah
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum SlashU {
-    Short {
-        codepoint: char,
-        length: usize,
-    },
-    Wide {
-        codepoints: Vec<char>,
-        length: usize,
-    },
+    Short { bytes: Vec<u8>, length: usize },
+    Wide { bytes: Vec<u8>, length: usize },
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashUError {
-    pub(crate) codepoints: Option<Vec<char>>,
+    pub(crate) valid_bytes: Option<Vec<u8>>,
     pub(crate) errors: Vec<SlashUPerCodepointError>,
     pub(crate) length: usize,
 }
@@ -33,10 +27,10 @@ pub(crate) enum SlashUPerCodepointError {
     NoRCurly { start: usize },
 }
 
-impl<'a> Lookahead<'a> for SlashU {
+impl Lookahead for SlashU {
     type Output = Result<Option<Self>, SlashUError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         if buffer.byte_at(start) != Some(b'\\') || buffer.byte_at(start + 1) != Some(b'u') {
             return Ok(None);
         }
@@ -52,7 +46,7 @@ impl<'a> Lookahead<'a> for SlashU {
         let mut errors = vec![];
 
         if wide {
-            let mut codepoints = vec![];
+            let mut bytes = vec![];
             loop {
                 if let LookaheadResult::Some { length } =
                     scan_while_matches_pattern!(buffer, pos, b' ' | b'\t')
@@ -66,10 +60,7 @@ impl<'a> Lookahead<'a> for SlashU {
                         break;
                     }
                     Ok(CodepointWide { length }) => {
-                        read_codepoint(
-                            buffer.slice(pos, pos + length).expect("bug"),
-                            &mut codepoints,
-                        );
+                        read_codepoint(buffer.slice(pos, pos + length).expect("bug"), &mut bytes);
                         pos += length;
                     }
                     Err(CodepointWideError::NonHexErr { length }) => {
@@ -92,33 +83,26 @@ impl<'a> Lookahead<'a> for SlashU {
 
             if errors.is_empty() {
                 return Ok(Some(SlashU::Wide {
-                    codepoints,
+                    bytes,
                     length: pos - start,
                 }));
             } else {
-                let codepoints = if codepoints.is_empty() {
-                    None
-                } else {
-                    Some(codepoints)
-                };
+                let codepoints = if bytes.is_empty() { None } else { Some(bytes) };
                 return Err(SlashUError {
-                    codepoints,
+                    valid_bytes: codepoints,
                     errors,
                     length: pos - start,
                 });
             }
         } else {
             // short
-            let mut codepoints = vec![];
+            let mut bytes = vec![];
 
             match CodepointShort::lookahead(buffer, pos) {
                 Ok(CodepointShort { length }) => {
                     debug_assert_eq!(length, 4);
 
-                    read_codepoint(
-                        buffer.slice(pos, pos + length).expect("bug"),
-                        &mut codepoints,
-                    );
+                    read_codepoint(buffer.slice(pos, pos + length).expect("bug"), &mut bytes);
                     pos += length;
                 }
                 Err(CodepointShortError { length }) => {
@@ -127,14 +111,14 @@ impl<'a> Lookahead<'a> for SlashU {
                 }
             }
 
-            if let Some(codepoint) = codepoints.into_iter().next() {
+            if !bytes.is_empty() {
                 return Ok(Some(SlashU::Short {
-                    codepoint,
+                    bytes,
                     length: pos - start,
                 }));
             } else {
                 return Err(SlashUError {
-                    codepoints: None,
+                    valid_bytes: None,
                     errors,
                     length: pos - start,
                 });
@@ -143,11 +127,15 @@ impl<'a> Lookahead<'a> for SlashU {
     }
 }
 
-fn read_codepoint(hex_bytes: &[u8], dest: &mut Vec<char>) {
+fn read_codepoint(hex_bytes: &[u8], dest: &mut Vec<u8>) {
     let s = std::str::from_utf8(hex_bytes).unwrap();
     let codepoint = u32::from_str_radix(s, 16).unwrap();
     let c = char::from_u32(codepoint).unwrap();
-    dest.push(c)
+
+    let mut buf = vec![0; c.len_utf8()];
+    c.encode_utf8(&mut buf);
+
+    dest.append(&mut buf);
 }
 
 #[cfg(test)]

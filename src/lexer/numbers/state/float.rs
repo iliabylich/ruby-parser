@@ -30,8 +30,8 @@ impl ExtendNumber for Float {
     }
 }
 
-impl<'a> Into<TokenKind<'a>> for Float {
-    fn into(self) -> TokenKind<'a> {
+impl<'a> Into<TokenKind> for Float {
+    fn into(self) -> TokenKind {
         TokenKind::tFLOAT
     }
 }

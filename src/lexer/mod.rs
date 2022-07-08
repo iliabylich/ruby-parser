@@ -33,9 +33,9 @@ pub struct Lexer<'a> {
     debug: bool,
     required_new_expr: bool,
 
-    pub(crate) string_literals: StringLiteralStack<'a>,
+    pub(crate) string_literals: StringLiteralStack,
 
-    current_token: Option<Token<'a>>,
+    current_token: Option<Token>,
 
     pub(crate) curly_nest: usize,
     pub(crate) paren_nest: usize,
@@ -64,7 +64,7 @@ impl<'a> Lexer<'a> {
         self
     }
 
-    pub fn current_token(&mut self) -> &Token<'a> {
+    pub fn current_token(&mut self) -> &Token {
         if self.current_token.is_none() {
             self.current_token = Some(self.next_token());
         }
@@ -75,7 +75,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn next_token(&mut self) -> Token<'a> {
+    fn next_token(&mut self) -> Token {
         let token = if self.string_literals.last().is_some() {
             self.tokenize_while_in_string()
         } else {
@@ -91,7 +91,7 @@ impl<'a> Lexer<'a> {
         token
     }
 
-    pub(crate) fn take_token(&mut self) -> Token<'a> {
+    pub(crate) fn take_token(&mut self) -> Token {
         match self.current_token.take() {
             Some(token) => token,
             None => self.next_token(),
@@ -99,7 +99,7 @@ impl<'a> Lexer<'a> {
     }
 
     #[cfg(test)]
-    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token<'a>> {
+    pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token> {
         let mut tokens = vec![];
         loop {
             let token = self.next_token();
@@ -120,7 +120,7 @@ impl<'a> Lexer<'a> {
         self.current_token = None;
     }
 
-    fn tokenize_while_in_string(&mut self) -> Token<'a> {
+    fn tokenize_while_in_string(&mut self) -> Token {
         // SAFETY: this method is called only if `string_literals` has at least 1 item
         let literal = unsafe { self.string_literals.last_mut().unwrap_unchecked() };
 
@@ -153,7 +153,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    pub fn tokenize_normally(&mut self) -> Token<'a> {
+    pub fn tokenize_normally(&mut self) -> Token {
         if let Some(eof_t) = self.handle_eof() {
             return eof_t;
         }
@@ -242,7 +242,7 @@ impl<'a> Lexer<'a> {
 }
 
 pub(crate) trait OnByte<'a, const BYTE: u8> {
-    fn on_byte(&mut self) -> Token<'a>;
+    fn on_byte(&mut self) -> Token;
 }
 
 macro_rules! assert_lex {

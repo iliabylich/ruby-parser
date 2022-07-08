@@ -4,10 +4,10 @@ pub(crate) struct IdentSuffix {
     pub(crate) byte: u8,
 }
 
-impl<'a> Lookahead<'a> for IdentSuffix {
+impl Lookahead for IdentSuffix {
     type Output = Option<Self>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         match buffer.byte_at(start) {
             Some(suffix @ (b'!' | b'?')) => {
                 if buffer.byte_at(start + 1) == Some(b'=') {

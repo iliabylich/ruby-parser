@@ -26,12 +26,12 @@ impl StringPlain {
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for StringPlain {
+impl StringLiteralExtend for StringPlain {
     fn extend(
         &mut self,
-        buffer: &mut BufferWithCursor<'a>,
+        buffer: &mut BufferWithCursor,
         _current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         let start = buffer.pos();
 
         loop {
@@ -56,11 +56,11 @@ mod tests {
 
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral<'static> {
+    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral {
         StringLiteral::StringPlain(StringPlain::new(starts_with, ends_with))
     }
 
-    fn dummy_literal() -> StringLiteral<'static> {
+    fn dummy_literal() -> StringLiteral {
         literal(b'\'', b'\'')
     }
 

@@ -9,10 +9,10 @@ pub(crate) enum CodepointWideError {
     TooLong { length: usize },
 }
 
-impl<'a> Lookahead<'a> for CodepointWide {
+impl Lookahead for CodepointWide {
     type Output = Result<Self, CodepointWideError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         let mut end = start;
         let mut valid = true;
         loop {

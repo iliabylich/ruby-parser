@@ -10,7 +10,6 @@ macro_rules! assert_emits_escaped_slash_byte {
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
                 loc::loc,
-                string_content::StringContent,
                 token::token,
             };
             use std::ops::ControlFlow;
@@ -22,7 +21,7 @@ macro_rules! assert_emits_escaped_slash_byte {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT(StringContent::from(b"foo")), loc!(0, 3))
+                    token: token!(tSTRING_CONTENT, loc!(0, 3))
                 })
             );
 
@@ -30,7 +29,7 @@ macro_rules! assert_emits_escaped_slash_byte {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT(StringContent::from(b"\t")), loc!(3, 5))
+                    token: token!(tSTRING_CONTENT, loc!(3, 5), vec![b'\t'])
                 })
             );
 
@@ -38,7 +37,7 @@ macro_rules! assert_emits_escaped_slash_byte {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT(StringContent::from(b"bar")), loc!(5, 8))
+                    token: token!(tSTRING_CONTENT, loc!(5, 8))
                 })
             );
 
@@ -60,10 +59,7 @@ macro_rules! assert_ignores_escaped_slash_byte {
             test = test_escaped_slash_byte,
             literal = $literal,
             input = b"foo\\\tbar",
-            token = token!(
-                tSTRING_CONTENT(StringContent::from(b"foo\\\tbar")),
-                loc!(0, 8)
-            ),
+            token = token!(tSTRING_CONTENT, loc!(0, 8)),
             pre = |_| {}
         );
     };

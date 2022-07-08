@@ -8,8 +8,8 @@ use crate::{
 };
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) struct HeredocId<'a> {
-    pub(crate) token: Token<'a>,
+pub(crate) struct HeredocId {
+    pub(crate) token: Token,
     pub(crate) id: (usize, usize),
     pub(crate) interpolated: bool,
     pub(crate) squiggly: bool,
@@ -19,10 +19,10 @@ pub(crate) enum HeredocIdError {
     UnterminatedHeredocId,
 }
 
-impl<'a> Lookahead<'a> for HeredocId<'a> {
+impl Lookahead for HeredocId {
     type Output = Result<Option<Self>, HeredocIdError>;
 
-    fn lookahead(buffer: &Buffer<'a>, mut start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, mut start: usize) -> Self::Output {
         // We are at `<<`
         let heredoc_start = start;
         // consume `<<`
@@ -121,8 +121,8 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
     }
 }
 
-impl<'a> HeredocId<'a> {
-    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Option<Self> {
+impl HeredocId {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Option<Self> {
         let heredoc_id = Self::lookahead(buffer.for_lookahead(), buffer.pos());
         match heredoc_id {
             Ok(heredoc_id) => {

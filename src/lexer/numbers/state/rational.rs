@@ -27,8 +27,8 @@ impl ExtendNumber for Rational {
     }
 }
 
-impl<'a> Into<TokenKind<'a>> for Rational {
-    fn into(self) -> TokenKind<'a> {
+impl<'a> Into<TokenKind> for Rational {
+    fn into(self) -> TokenKind {
         TokenKind::tRATIONAL
     }
 }

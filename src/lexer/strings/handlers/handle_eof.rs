@@ -5,10 +5,10 @@ use crate::lexer::{
     strings::{action::StringExtendAction, handlers::handle_processed_string_content},
 };
 
-pub(crate) fn handle_eof<'a>(
-    buffer: &mut BufferWithCursor<'a>,
+pub(crate) fn handle_eof(
+    buffer: &mut BufferWithCursor,
     start: usize,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     if buffer.is_eof() {
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
 

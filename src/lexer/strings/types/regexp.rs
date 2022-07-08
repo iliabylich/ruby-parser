@@ -45,12 +45,12 @@ impl Regexp {
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for Regexp {
+impl StringLiteralExtend for Regexp {
     fn extend(
         &mut self,
-        buffer: &mut BufferWithCursor<'a>,
+        buffer: &mut BufferWithCursor,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         handle_interpolation_end(buffer, current_curly_nest, &mut self.interpolation)?;
 
         let start = buffer.pos();
@@ -84,10 +84,10 @@ struct RegexpOptions {
     length: usize,
 }
 
-impl<'a> Lookahead<'a> for RegexpOptions {
+impl Lookahead for RegexpOptions {
     type Output = Option<Self>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         let mut end = start;
         while matches!(
             buffer.byte_at(end),
@@ -105,11 +105,11 @@ impl<'a> Lookahead<'a> for RegexpOptions {
     }
 }
 
-fn handle_regexp_end_with_options<'a>(
-    buffer: &mut BufferWithCursor<'a>,
+fn handle_regexp_end_with_options(
+    buffer: &mut BufferWithCursor,
     start: usize,
     ends_with: u8,
-) -> ControlFlow<StringExtendAction<'a>> {
+) -> ControlFlow<StringExtendAction> {
     if ends_with == b'/' && buffer.current_byte() == Some(b'/') {
         // definitely a /foo/ regexp end
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
@@ -133,11 +133,11 @@ fn handle_regexp_end_with_options<'a>(
 mod tests {
     use crate::lexer::strings::{test_helpers::*, types::Regexp, StringLiteral};
 
-    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral<'static> {
+    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral {
         StringLiteral::Regexp(Regexp::new(starts_with, ends_with, 0))
     }
 
-    fn dummy_literal() -> StringLiteral<'static> {
+    fn dummy_literal() -> StringLiteral {
         literal(b'/', b'/')
     }
 

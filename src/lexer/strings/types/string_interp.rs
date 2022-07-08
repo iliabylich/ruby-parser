@@ -38,12 +38,12 @@ impl StringInterp {
     }
 }
 
-impl<'a> StringLiteralExtend<'a> for StringInterp {
+impl StringLiteralExtend for StringInterp {
     fn extend(
         &mut self,
-        buffer: &mut BufferWithCursor<'a>,
+        buffer: &mut BufferWithCursor,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         handle_interpolation_end(buffer, current_curly_nest, &mut self.interpolation)?;
 
         let start = buffer.pos();
@@ -74,7 +74,7 @@ mod tests {
     use super::*;
     use crate::lexer::strings::{test_helpers::*, StringLiteral};
 
-    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral<'static> {
+    fn literal(starts_with: u8, ends_with: u8) -> StringLiteral {
         StringLiteral::StringInterp(StringInterp::new(
             Interpolation::new(0),
             starts_with,
@@ -82,7 +82,7 @@ mod tests {
         ))
     }
 
-    fn dummy_literal() -> StringLiteral<'static> {
+    fn dummy_literal() -> StringLiteral {
         literal(b'"', b'"')
     }
 

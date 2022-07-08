@@ -46,7 +46,7 @@ where
         strings
     }
 
-    fn read_div_as_heredoc_beg(&mut self) -> Option<Token<'a>> {
+    fn read_div_as_heredoc_beg(&mut self) -> Option<Token> {
         let loc = self.current_token().loc();
         if self.current_token().is(TokenKind::tDIVIDE) {
             self.take_token();

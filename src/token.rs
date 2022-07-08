@@ -1,14 +1,14 @@
 use crate::{string_content::StringContent, Loc};
 
 #[derive(Debug, PartialEq, Eq, Default)]
-pub struct Token<'a> {
-    pub kind: TokenKind<'a>,
+pub struct Token {
+    pub kind: TokenKind,
     pub loc: Loc,
     pub value: Option<Vec<u8>>,
 }
 
-impl<'a> Token<'a> {
-    pub fn kind(&self) -> &TokenKind<'a> {
+impl Token {
+    pub fn kind(&self) -> &TokenKind {
         &self.kind
     }
 
@@ -23,7 +23,7 @@ impl<'a> Token<'a> {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TokenKind<'a> {
+pub enum TokenKind {
     // Keyword tokens.
     // They are always represented by the same word in code,
     // so they have no attached value, it can be easily inferred
@@ -86,14 +86,14 @@ pub enum TokenKind<'a> {
     tCVAR,       // "class variable"
     tLABEL,      // "label"
 
-    tINTEGER,                           // "integer literal"
-    tFLOAT,                             // "float literal"
-    tRATIONAL,                          // "rational literal"
-    tIMAGINARY,                         // "imaginary literal"
-    tCHAR,                              // "char literal"
-    tNTH_REF,                           // "numbered reference"
-    tBACK_REF,                          // "back reference"
-    tSTRING_CONTENT(StringContent<'a>), // "literal content"
+    tINTEGER,        // "integer literal"
+    tFLOAT,          // "float literal"
+    tRATIONAL,       // "rational literal"
+    tIMAGINARY,      // "imaginary literal"
+    tCHAR,           // "char literal"
+    tNTH_REF,        // "numbered reference"
+    tBACK_REF,       // "back reference"
+    tSTRING_CONTENT, // "literal content"
     tREGEXP_END,
 
     // Punctuation/operators
@@ -184,16 +184,13 @@ pub enum TokenKind<'a> {
 
     tEOF,
 
-    // TODO: replace with diagnostics
-    Error(char),
-
     tUNINITIALIZED,
 
     #[cfg(test)]
     tTEST_TOKEN,
 }
 
-impl Default for TokenKind<'_> {
+impl Default for TokenKind {
     fn default() -> Self {
         Self::tUNINITIALIZED
     }

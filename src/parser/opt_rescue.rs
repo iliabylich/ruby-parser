@@ -18,7 +18,7 @@ where
         nodes
     }
 
-    pub(crate) fn try_then(&mut self) -> Option<Token<'a>> {
+    pub(crate) fn try_then(&mut self) -> Option<Token> {
         None.or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kTHEN))
             .or_else(|| {
@@ -89,9 +89,7 @@ fn try_exc_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Vec<No
     None.or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
 }
-fn try_exc_var<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
-) -> Option<(Token<'a>, Box<Node<'a>>)> {
+fn try_exc_var<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node<'a>>)> {
     let assoc_t = parser.try_token(TokenKind::tASSOC)?;
     if let Some(lhs) = parser.try_lhs() {
         Some((assoc_t, lhs))

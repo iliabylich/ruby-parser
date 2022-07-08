@@ -3,7 +3,7 @@ use crate::lexer::buffer::{Buffer, Lookahead};
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashX {
     // Found `\xff`
-    pub(crate) codepoint: u8,
+    pub(crate) byte: u8,
     pub(crate) length: usize,
 }
 
@@ -15,10 +15,10 @@ pub(crate) struct SlashXError {
     pub(crate) length: usize,
 }
 
-impl<'a> Lookahead<'a> for SlashX {
+impl Lookahead for SlashX {
     type Output = Result<Option<Self>, SlashXError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         if !buffer.lookahead(start, b"\\x") {
             return Ok(None);
         }
@@ -41,10 +41,10 @@ impl<'a> Lookahead<'a> for SlashX {
             .slice(codepoint_start, codepoint_start + length)
             .expect("bug");
         let s = std::str::from_utf8(bytes).expect("bug");
-        let n = u8::from_str_radix(s, 16).expect("bug");
+        let byte = u8::from_str_radix(s, 16).expect("bug");
 
         Ok(Some(SlashX {
-            codepoint: n,
+            byte,
             length: length + 2, // track leading `\x`
         }))
     }
@@ -71,7 +71,7 @@ assert_lookahead!(
     test = test_lookahead_valid_1_digit,
     input = b"\\xF",
     output = Ok(Some(SlashX {
-        codepoint: 0xF,
+        byte: 0xF,
         length: 3
     }))
 );
@@ -80,7 +80,7 @@ assert_lookahead!(
     test = test_lookahead_valid_2_digits,
     input = b"\\xFF",
     output = Ok(Some(SlashX {
-        codepoint: 0xFF,
+        byte: 0xFF,
         length: 4
     }))
 );

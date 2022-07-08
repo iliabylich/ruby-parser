@@ -8,31 +8,31 @@ use crate::lexer::{
     },
 };
 
-pub(crate) trait StringLiteralExtend<'a> {
+pub(crate) trait StringLiteralExtend {
     fn extend(
         &mut self,
-        buffer: &mut BufferWithCursor<'a>,
+        buffer: &mut BufferWithCursor,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>>;
+    ) -> ControlFlow<StringExtendAction>;
 }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub(crate) enum StringLiteral<'a> {
+pub(crate) enum StringLiteral {
     StringInterp(StringInterp),
     StringPlain(StringPlain),
 
     Symbol(Symbol),
-    Heredoc(Heredoc<'a>),
+    Heredoc(Heredoc),
     Regexp(Regexp),
     Array(Array),
 }
 
-impl<'a> StringLiteralExtend<'a> for StringLiteral<'a> {
+impl StringLiteralExtend for StringLiteral {
     fn extend(
         &mut self,
-        buffer: &mut BufferWithCursor<'a>,
+        buffer: &mut BufferWithCursor,
         current_curly_nest: usize,
-    ) -> ControlFlow<StringExtendAction<'a>> {
+    ) -> ControlFlow<StringExtendAction> {
         match self {
             Self::StringInterp(string) => string.extend(buffer, current_curly_nest),
             Self::StringPlain(string) => string.extend(buffer, current_curly_nest),

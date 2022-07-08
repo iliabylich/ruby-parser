@@ -83,7 +83,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_cvar_invalid,
             literal = $literal,
             input = b"#@@1",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@1")), loc!(0, 4)),
+            token = token!(tSTRING_CONTENT, loc!(0, 4)),
             pre = |_| {}
         );
 
@@ -92,7 +92,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_ivar_invalid,
             literal = $literal,
             input = b"#@1",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@1")), loc!(0, 3)),
+            token = token!(tSTRING_CONTENT, loc!(0, 3)),
             pre = |_| {}
         );
 
@@ -101,7 +101,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_gvar_invalid,
             literal = $literal,
             input = b"#$(",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#$(")), loc!(0, 3)),
+            token = token!(tSTRING_CONTENT, loc!(0, 3)),
             pre = |_| {}
         );
 
@@ -110,7 +110,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_cvar_no_id,
             literal = $literal,
             input = b"#@@",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@")), loc!(0, 3)),
+            token = token!(tSTRING_CONTENT, loc!(0, 3)),
             pre = |_| {}
         );
 
@@ -119,7 +119,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_ivar_no_id,
             literal = $literal,
             input = b"#@",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@")), loc!(0, 2)),
+            token = token!(tSTRING_CONTENT, loc!(0, 2)),
             pre = |_| {}
         );
 
@@ -128,7 +128,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_gvar_no_id,
             literal = $literal,
             input = b"#$ ",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#$ ")), loc!(0, 3)),
+            token = token!(tSTRING_CONTENT, loc!(0, 3)),
             pre = |_| {}
         );
     };

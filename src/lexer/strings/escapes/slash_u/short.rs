@@ -8,10 +8,10 @@ pub(crate) struct CodepointShortError {
     pub(crate) length: usize,
 }
 
-impl<'a> Lookahead<'a> for CodepointShort {
+impl Lookahead for CodepointShort {
     type Output = Result<Self, CodepointShortError>;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         let mut length = 0;
         for i in 1..=4 {
             match buffer.byte_at(start + i - 1) {

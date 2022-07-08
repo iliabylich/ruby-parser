@@ -12,14 +12,14 @@ use crate::{
     token::{token, Token},
 };
 
-pub(crate) struct QMark<'a> {
-    token: Token<'a>,
+pub(crate) struct QMark {
+    token: Token,
 }
 
-impl<'a> Lookahead<'a> for QMark<'a> {
+impl Lookahead for QMark {
     type Output = Self;
 
-    fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
+    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
         match buffer.byte_at(start + 1) {
             Some(byte) => {
                 if (byte.is_ascii_alphanumeric() || byte == b'_')
@@ -41,39 +41,38 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                         Ok(Some(escape)) => match escape {
                             // single char `?f` syntax doesn't support wide \u escapes
                             // because they may have multiple codepoints
-                            Escape::SlashU(SlashU::Wide { codepoints, length }) => {
+                            Escape::SlashU(SlashU::Wide {
+                                bytes: codepoints,
+                                length,
+                            }) => {
                                 panic!(
                                     "wide codepoint in ?\\u syntax: {:?}, {}",
                                     codepoints, length
                                 );
                             }
 
-                            Escape::SlashU(SlashU::Short { codepoint, length }) => {
+                            Escape::SlashU(SlashU::Short { bytes, length }) => {
                                 return QMark {
-                                    token: token!(
-                                        tCHAR,
-                                        loc!(start, start + 1 + length),
-                                        vec_of_u8_from_char(codepoint)
-                                    ),
+                                    token: token!(tCHAR, loc!(start, start + 1 + length), bytes),
                                 };
                             }
 
-                            Escape::SlashOctal(SlashOctal { codepoint, length })
-                            | Escape::SlashX(SlashX { codepoint, length })
-                            | Escape::SlashMetaCtrl(SlashMetaCtrl { codepoint, length })
-                            | Escape::SlashByte(SlashByte { codepoint, length }) => {
+                            Escape::SlashOctal(SlashOctal { byte, length })
+                            | Escape::SlashX(SlashX { byte, length })
+                            | Escape::SlashMetaCtrl(SlashMetaCtrl { byte, length })
+                            | Escape::SlashByte(SlashByte { byte, length }) => {
                                 return QMark {
                                     token: token!(
                                         tCHAR,
                                         loc!(start, start + 1 + length),
-                                        vec![codepoint]
+                                        vec![byte]
                                     ),
                                 };
                             }
                         },
                         Err(err) => match err {
                             EscapeError::SlashUError(SlashUError {
-                                codepoints,
+                                valid_bytes: codepoints,
                                 errors,
                                 length,
                             }) => {
@@ -117,14 +116,8 @@ impl<'a> Lookahead<'a> for QMark<'a> {
     }
 }
 
-fn vec_of_u8_from_char(c: char) -> Vec<u8> {
-    let mut buf = vec![0; c.len_utf8()];
-    c.encode_utf8(&mut buf);
-    buf
-}
-
-impl<'a> QMark<'a> {
-    pub(crate) fn parse(buffer: &mut BufferWithCursor<'a>) -> Token<'a> {
+impl QMark {
+    pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
         let QMark { token } = QMark::lookahead(buffer.for_lookahead(), buffer.pos());
         buffer.set_pos(token.loc().end);
         token
