@@ -30,7 +30,7 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                     // split ?ident into `?` + `ident`
                     // TODO: warn about ambiguity
                     return QMark {
-                        token: token!(tEH, start, start + 1),
+                        token: token!(tEH, loc!(start, start + 1)),
                     };
                 } else if byte == b'\\' {
                     match Escape::lookahead(buffer, start + 1) {
@@ -49,7 +49,10 @@ impl<'a> Lookahead<'a> for QMark<'a> {
 
                             Escape::SlashU(SlashU::Short { codepoint, length }) => {
                                 return QMark {
-                                    token: token!(tCHAR(codepoint), start, start + 1 + length),
+                                    token: token!(
+                                        tCHAR(codepoint),
+                                        loc!(start, start + 1 + length)
+                                    ),
                                 };
                             }
 
@@ -60,8 +63,7 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                                 return QMark {
                                     token: token!(
                                         tCHAR(codepoint as char),
-                                        start,
-                                        start + 1 + length
+                                        loc!(start, start + 1 + length)
                                     ),
                                 };
                             }
@@ -103,11 +105,11 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                     .next()
                     .unwrap();
                 QMark {
-                    token: token!(tCHAR(codepoint), start, end),
+                    token: token!(tCHAR(codepoint), loc!(start, end)),
                 }
             }
             _ => QMark {
-                token: token!(tEH, start, start + 1),
+                token: token!(tEH, loc!(start, start + 1)),
             },
         }
     }

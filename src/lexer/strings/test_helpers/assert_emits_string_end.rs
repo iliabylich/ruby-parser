@@ -9,7 +9,7 @@ macro_rules! assert_emits_string_end {
             literal = $literal,
             input = concat!($end).as_bytes(),
             action = StringExtendAction::FoundStringEnd {
-                token: token!(tSTRING_END, 0, 1)
+                token: token!(tSTRING_END, loc!(0, 1))
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -46,7 +46,7 @@ macro_rules! assert_emits_string_end {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT(StringContent::from("{}")), 0, 2)
+                    token: token!(tSTRING_CONTENT(StringContent::from("{}")), loc!(0, 2))
                 })
             );
 
@@ -54,7 +54,7 @@ macro_rules! assert_emits_string_end {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::FoundStringEnd {
-                    token: token!(tSTRING_END, 2, 3)
+                    token: token!(tSTRING_END, loc!(2, 3))
                 })
             );
 

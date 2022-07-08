@@ -5,6 +5,7 @@ use crate::{
         buffer::{BufferWithCursor, Pattern},
         strings::{action::StringExtendAction, handlers::handle_processed_string_content},
     },
+    loc::loc,
     token::token,
 };
 
@@ -28,7 +29,7 @@ where
             buffer.set_pos(end);
 
             return ControlFlow::Break(StringExtendAction::FoundStringEnd {
-                token: token!(tSTRING_END, start, end),
+                token: token!(tSTRING_END, loc!(start, end)),
             });
         } else {
             // just a part of the string content like

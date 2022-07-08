@@ -2,6 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{buffer::Buffer, strings::action::StringExtendAction},
+    loc::loc,
     string_content::StringContent,
     token::token,
 };
@@ -18,8 +19,7 @@ pub(crate) fn handle_processed_string_content<'a>(
         ControlFlow::Break(StringExtendAction::EmitToken {
             token: token!(
                 tSTRING_CONTENT(StringContent::from(buffer.slice(start, end).expect("bug"))),
-                start,
-                end
+                loc!(start, end)
             ),
         })
     }

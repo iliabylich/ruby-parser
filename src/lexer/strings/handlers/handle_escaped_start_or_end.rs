@@ -5,6 +5,7 @@ use crate::{
         buffer::BufferWithCursor,
         strings::{action::StringExtendAction, handlers::handle_processed_string_content},
     },
+    loc::loc,
     string_content::StringContent,
     token::token,
 };
@@ -23,8 +24,7 @@ pub(crate) fn handle_escaped_start_or_end<'a>(
                 let action = ControlFlow::Break(StringExtendAction::EmitToken {
                     token: token!(
                         tSTRING_CONTENT(StringContent::from([byte])),
-                        buffer.pos(),
-                        buffer.pos() + 2
+                        loc!(buffer.pos(), buffer.pos() + 2)
                     ),
                 });
                 buffer.set_pos(buffer.pos() + 2);

@@ -47,18 +47,18 @@ impl Checkpoint {
 
 #[test]
 fn test_checkpoint() {
-    use crate::token::token;
+    use crate::{loc::loc, token::token};
 
     let mut lexer = Lexer::new(b"1 2 3");
 
-    assert_eq!(lexer.next_token(), token!(tINTEGER, 0, 1));
+    assert_eq!(lexer.next_token(), token!(tINTEGER, loc!(0, 1)));
 
     let checkpoint = Checkpoint::real(&lexer);
-    assert_eq!(lexer.next_token(), token!(tINTEGER, 2, 3));
+    assert_eq!(lexer.next_token(), token!(tINTEGER, loc!(2, 3)));
 
     checkpoint.restore(&mut lexer);
-    assert_eq!(lexer.next_token(), token!(tINTEGER, 2, 3));
+    assert_eq!(lexer.next_token(), token!(tINTEGER, loc!(2, 3)));
 
-    assert_eq!(lexer.next_token(), token!(tINTEGER, 4, 5));
-    assert_eq!(lexer.next_token(), token!(tEOF, 5, 5));
+    assert_eq!(lexer.next_token(), token!(tINTEGER, loc!(4, 5)));
+    assert_eq!(lexer.next_token(), token!(tEOF, loc!(5, 5)));
 }

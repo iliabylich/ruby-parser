@@ -12,6 +12,7 @@ use crate::{
             handlers::handle_processed_string_content,
         },
     },
+    loc::loc,
     string_content::StringContent,
     token::token,
 };
@@ -123,8 +124,7 @@ pub(crate) fn handle_escape<'a>(
     ControlFlow::Break(StringExtendAction::EmitToken {
         token: token!(
             tSTRING_CONTENT(escape_content),
-            start,
-            start + escape_length
+            loc!(start, start + escape_length)
         ),
     })
 }

@@ -6,7 +6,7 @@ macro_rules! assert_emits_escaped_slash_meta_control {
             test = test_escaped_slash_meta_control,
             literal = $literal,
             input = b"\\C-\\M-a",
-            token = token!(tSTRING_CONTENT(StringContent::from([129])), 0, 7),
+            token = token!(tSTRING_CONTENT(StringContent::from([129])), loc!(0, 7)),
             pre = |_| {}
         );
     };
@@ -21,7 +21,10 @@ macro_rules! assert_ignores_escaped_slash_meta_control {
             test = test_escaped_slash_meta_control,
             literal = $literal,
             input = b"\\C-\\M-a",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"\\C-\\M-a")), 0, 7),
+            token = token!(
+                tSTRING_CONTENT(StringContent::from(b"\\C-\\M-a")),
+                loc!(0, 7)
+            ),
             pre = |_| {}
         );
     };

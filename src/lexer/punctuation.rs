@@ -1,14 +1,16 @@
-use crate::lexer::{
-    assert_lex,
-    heredoc_id::HeredocId,
-    strings::types::{Heredoc, Interpolation, StringInterp, StringPlain, Symbol},
-    Lexer, OnByte, StringLiteral,
+use crate::{
+    lexer::{
+        assert_lex,
+        heredoc_id::HeredocId,
+        ident::Ident,
+        numbers::parse_number,
+        qmark::QMark,
+        strings::types::{Heredoc, Interpolation, StringInterp, StringPlain, Symbol},
+        Lexer, OnByte, StringLiteral,
+    },
+    loc::loc,
+    token::{token, Token},
 };
-use crate::token::{token, Token};
-
-use crate::lexer::ident::Ident;
-use crate::lexer::numbers::parse_number;
-use crate::lexer::qmark::QMark;
 
 impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -23,7 +25,7 @@ impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
         }
         // Multiple consecutive comments are merged on the parser level
 
-        token!(tCOMMENT, start, self.buffer.pos())
+        token!(tCOMMENT, loc!(start, self.buffer.pos()))
     }
 }
 assert_lex!(test_tCOMMENT_INLINE, b"# foo", tCOMMENT, b"# foo", 0..5);
@@ -39,16 +41,16 @@ impl<'a> OnByte<'a, b'*'> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'=') => {
                         self.skip_byte();
-                        token!(tOP_ASGN, start, start + 3)
+                        token!(tOP_ASGN, loc!(start, start + 3))
                     }
-                    _ => token!(tPOW, start, start + 2),
+                    _ => token!(tPOW, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
-            _ => token!(tSTAR, start, start + 1),
+            _ => token!(tSTAR, loc!(start, start + 1)),
         }
     }
 }
@@ -66,13 +68,13 @@ impl<'a> OnByte<'a, b'!'> for Lexer<'a> {
         match self.current_byte() {
             Some(b'=') => {
                 self.skip_byte();
-                token!(tNEQ, start, start + 2)
+                token!(tNEQ, loc!(start, start + 2))
             }
             Some(b'~') => {
                 self.skip_byte();
-                token!(tNMATCH, start, start + 2)
+                token!(tNMATCH, loc!(start, start + 2))
             }
-            _ => token!(tBANG, start, start + 1),
+            _ => token!(tBANG, loc!(start, start + 1)),
         }
     }
 }
@@ -87,7 +89,7 @@ impl<'a> OnByte<'a, b'='> for Lexer<'a> {
 
         if self.buffer.lookahead(b"begin") {
             self.buffer.set_pos(self.pos() + 5);
-            return token!(tEMBEDDED_COMMENT_START, start, start + 6);
+            return token!(tEMBEDDED_COMMENT_START, loc!(start, start + 6));
         }
 
         match self.current_byte() {
@@ -96,20 +98,20 @@ impl<'a> OnByte<'a, b'='> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'=') => {
                         self.skip_byte();
-                        token!(tEQQ, start, start + 3)
+                        token!(tEQQ, loc!(start, start + 3))
                     }
-                    _ => token!(tEQ, start, start + 2),
+                    _ => token!(tEQ, loc!(start, start + 2)),
                 }
             }
             Some(b'~') => {
                 self.skip_byte();
-                token!(tMATCH, start, start + 2)
+                token!(tMATCH, loc!(start, start + 2))
             }
             Some(b'>') => {
                 self.skip_byte();
-                token!(tASSOC, start, start + 2)
+                token!(tASSOC, loc!(start, start + 2))
             }
-            _ => token!(tEQL, start, start + 1),
+            _ => token!(tEQL, loc!(start, start + 1)),
         }
     }
 }
@@ -166,9 +168,9 @@ impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'>') => {
                         self.skip_byte();
-                        token!(tCMP, start, start + 3)
+                        token!(tCMP, loc!(start, start + 3))
                     }
-                    _ => token!(tLEQ, start, start + 2),
+                    _ => token!(tLEQ, loc!(start, start + 2)),
                 }
             }
             Some(b'<') => {
@@ -176,12 +178,12 @@ impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'=') => {
                         self.skip_byte();
-                        token!(tOP_ASGN, start, start + 3)
+                        token!(tOP_ASGN, loc!(start, start + 3))
                     }
-                    _ => token!(tLSHFT, start, start + 2),
+                    _ => token!(tLSHFT, loc!(start, start + 2)),
                 }
             }
-            _ => token!(tLT, start, start + 1),
+            _ => token!(tLT, loc!(start, start + 1)),
         }
     }
 }
@@ -222,19 +224,19 @@ impl<'a> OnByte<'a, b'>'> for Lexer<'a> {
         match self.current_byte() {
             Some(b'=') => {
                 self.skip_byte();
-                token!(tGEQ, start, start + 2)
+                token!(tGEQ, loc!(start, start + 2))
             }
             Some(b'>') => {
                 self.skip_byte();
                 match self.current_byte() {
                     Some(b'=') => {
                         self.skip_byte();
-                        token!(tOP_ASGN, start, start + 3)
+                        token!(tOP_ASGN, loc!(start, start + 3))
                     }
-                    _ => token!(tRSHFT, start, start + 2),
+                    _ => token!(tRSHFT, loc!(start, start + 2)),
                 }
             }
-            _ => token!(tGT, start, start + 1),
+            _ => token!(tGT, loc!(start, start + 1)),
         }
     }
 }
@@ -247,7 +249,7 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
-        let token = token!(tDSTRING_BEG, start, start + 1);
+        let token = token!(tDSTRING_BEG, loc!(start, start + 1));
         self.string_literals
             .push(StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(self.curly_nest),
@@ -286,7 +288,7 @@ impl<'a> OnByte<'a, b'`'> for Lexer<'a> {
         // we rewrite '`' to tXSTRING_BEG on the parser level
         let start = self.pos();
         self.skip_byte();
-        token!(tIDENTIFIER, start, start + 1)
+        token!(tIDENTIFIER, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tIDENTIFIER_backtick, b"`", tIDENTIFIER, b"`", 0..1);
@@ -295,7 +297,7 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
-        let token = token!(tSTRING_BEG, start, start + 1);
+        let token = token!(tSTRING_BEG, loc!(start, start + 1));
         self.string_literals
             .push(StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')));
         token
@@ -335,20 +337,20 @@ impl<'a> OnByte<'a, b'&'> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'=') => {
                         self.skip_byte();
-                        token!(tOP_ASGN, start, start + 3)
+                        token!(tOP_ASGN, loc!(start, start + 3))
                     }
-                    _ => token!(tANDOP, start, start + 2),
+                    _ => token!(tANDOP, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'.') => {
                 self.skip_byte();
-                token!(tANDDOT, start, start + 2)
+                token!(tANDDOT, loc!(start, start + 2))
             }
-            _ => token!(tAMPER, start, start + 1),
+            _ => token!(tAMPER, loc!(start, start + 1)),
         }
     }
 }
@@ -368,16 +370,16 @@ impl<'a> OnByte<'a, b'|'> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'=') => {
                         self.skip_byte();
-                        token!(tOP_ASGN, start, start + 3)
+                        token!(tOP_ASGN, loc!(start, start + 3))
                     }
-                    _ => token!(tOROP, start, start + 2),
+                    _ => token!(tOROP, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
-            _ => token!(tPIPE, start, start + 1),
+            _ => token!(tPIPE, loc!(start, start + 1)),
         }
     }
 }
@@ -394,14 +396,14 @@ impl<'a> OnByte<'a, b'+'> for Lexer<'a> {
         match self.current_byte() {
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'0'..=b'9') => {
                 let mut token = parse_number(&mut self.buffer);
                 token.loc.start = start;
                 token
             }
-            _ => token!(tPLUS, start, start + 1),
+            _ => token!(tPLUS, loc!(start, start + 1)),
         }
     }
 }
@@ -417,14 +419,14 @@ impl<'a> OnByte<'a, b'-'> for Lexer<'a> {
         match self.current_byte() {
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'>') => {
                 self.skip_byte();
-                token!(tLAMBDA, start, start + 2)
+                token!(tLAMBDA, loc!(start, start + 2))
             }
-            Some(b'0'..=b'9') => token!(tUMINUS, start, start + 1),
-            _ => token!(tMINUS, start, start + 1),
+            Some(b'0'..=b'9') => token!(tUMINUS, loc!(start, start + 1)),
+            _ => token!(tMINUS, loc!(start, start + 1)),
         }
     }
 }
@@ -443,9 +445,9 @@ impl<'a> OnByte<'a, b'.'> for Lexer<'a> {
                 match self.current_byte() {
                     Some(b'.') => {
                         self.skip_byte();
-                        token!(tDOT3, start, start + 3)
+                        token!(tDOT3, loc!(start, start + 3))
                     }
-                    _ => token!(tDOT2, start, start + 2),
+                    _ => token!(tDOT2, loc!(start, start + 2)),
                 }
             }
             Some(b'0'..=b'9') => {
@@ -458,7 +460,7 @@ impl<'a> OnByte<'a, b'.'> for Lexer<'a> {
                     self.buffer.slice(start, end)
                 );
             }
-            _ => token!(tDOT, start, start + 1),
+            _ => token!(tDOT, loc!(start, start + 1)),
         }
     }
 }
@@ -476,7 +478,7 @@ impl<'a> OnByte<'a, b')'> for Lexer<'a> {
             panic!("negative paren_nest");
         }
 
-        token!(tRPAREN, start, start + 1)
+        token!(tRPAREN, loc!(start, start + 1))
     }
 }
 assert_lex!(
@@ -500,7 +502,7 @@ impl<'a> OnByte<'a, b']'> for Lexer<'a> {
         } else {
             panic!("negative brack_nest");
         }
-        token!(tRBRACK, start, start + 1)
+        token!(tRBRACK, loc!(start, start + 1))
     }
 }
 assert_lex!(
@@ -524,7 +526,7 @@ impl<'a> OnByte<'a, b'}'> for Lexer<'a> {
         } else {
             panic!("negative curly_nest");
         }
-        token!(tRCURLY, start, start + 1)
+        token!(tRCURLY, loc!(start, start + 1))
     }
 }
 assert_lex!(
@@ -546,12 +548,12 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
         match self.current_byte() {
             Some(b':') => {
                 self.skip_byte();
-                return token!(tCOLON2, start, start + 2);
+                return token!(tCOLON2, loc!(start, start + 2));
             }
             Some(b'"') => {
                 // :"..." symbol
                 self.skip_byte();
-                let token = token!(tDSYMBEG, start, start + 2);
+                let token = token!(tDSYMBEG, loc!(start, start + 2));
                 self.string_literals
                     .push(StringLiteral::Symbol(Symbol::new(true, self.curly_nest)));
                 return token;
@@ -559,7 +561,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
             Some(b'\'') => {
                 // :'...' symbol
                 self.skip_byte();
-                let token = token!(tSYMBEG, start, start + 2);
+                let token = token!(tSYMBEG, loc!(start, start + 2));
                 self.string_literals
                     .push(StringLiteral::Symbol(Symbol::new(false, self.curly_nest)));
                 return token;
@@ -570,7 +572,7 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
         // Plain symbols are handled on the parser level
         // by concatenating tCOLON and tIDENTIFIER/tCONSTANT/tIVAR/tCVAR/tGVAR
 
-        token!(tCOLON, start, start + 1)
+        token!(tCOLON, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tCOLON2, b"::", tCOLON2, b"::", 0..2);
@@ -623,9 +625,9 @@ impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
         match self.current_byte() {
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
-            _ => token!(tDIVIDE, start, start + 1),
+            _ => token!(tDIVIDE, loc!(start, start + 1)),
         }
     }
 }
@@ -640,9 +642,9 @@ impl<'a> OnByte<'a, b'^'> for Lexer<'a> {
         match self.current_byte() {
             Some(b'=') => {
                 self.skip_byte();
-                token!(tOP_ASGN, start, start + 2)
+                token!(tOP_ASGN, loc!(start, start + 2))
             }
-            _ => token!(tCARET, start, start + 1),
+            _ => token!(tCARET, loc!(start, start + 1)),
         }
     }
 }
@@ -653,7 +655,7 @@ impl<'a> OnByte<'a, b';'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
-        token!(tSEMI, start, start + 1)
+        token!(tSEMI, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tSEMI, b";", tSEMI, b";", 0..1);
@@ -662,7 +664,7 @@ impl<'a> OnByte<'a, b','> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
         let start = self.pos();
         self.skip_byte();
-        token!(tCOMMA, start, start + 1)
+        token!(tCOMMA, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tCOMMA, b",", tCOMMA, b",", 0..1);
@@ -672,7 +674,7 @@ impl<'a> OnByte<'a, b'~'> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         // ~@ is handled on the parser level
-        token!(tTILDE, start, start + 1)
+        token!(tTILDE, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tTILDE, b"~", tTILDE, b"~", 0..1);
@@ -682,7 +684,7 @@ impl<'a> OnByte<'a, b'('> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         self.paren_nest += 1;
-        token!(tLPAREN, start, start + 1)
+        token!(tLPAREN, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tLPAREN, b"(", tLPAREN, b"(", 0..1);
@@ -692,7 +694,7 @@ impl<'a> OnByte<'a, b'['> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         self.brack_nest += 1;
-        token!(tLBRACK, start, start + 1)
+        token!(tLBRACK, loc!(start, start + 1))
     }
 }
 assert_lex!(test_tLBRACK, b"[", tLBRACK, b"[", 0..1);
@@ -702,7 +704,7 @@ impl<'a> OnByte<'a, b'{'> for Lexer<'a> {
         let start = self.pos();
         self.skip_byte();
         self.curly_nest += 1;
-        token!(tLCURLY, start, start + 1)
+        token!(tLCURLY, loc!(start, start + 1))
     }
 }
 
@@ -717,25 +719,25 @@ impl<'a> OnByte<'a, b'\\'> for Lexer<'a> {
             }
             Some(b' ') => {
                 self.skip_byte();
-                token!(tSP, start, start + 2)
+                token!(tSP, loc!(start, start + 2))
             }
             Some(b'\t') => {
                 self.skip_byte();
-                token!(tSLASH_T, start, start + 2)
+                token!(tSLASH_T, loc!(start, start + 2))
             }
             Some(0x0c) => {
                 self.skip_byte();
-                token!(tSLASH_F, start, start + 2)
+                token!(tSLASH_F, loc!(start, start + 2))
             }
             Some(b'\r') => {
                 self.skip_byte();
-                token!(tSLASH_R, start, start + 2)
+                token!(tSLASH_R, loc!(start, start + 2))
             }
             Some(0x0b) => {
                 self.skip_byte();
-                token!(tVTAB, start, start + 2)
+                token!(tVTAB, loc!(start, start + 2))
             }
-            _ => token!(tBACKSLASH, start, start + 1),
+            _ => token!(tBACKSLASH, loc!(start, start + 1)),
         }
     }
 }
@@ -766,7 +768,7 @@ impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
             //   + Some(b'\n')
             // AND it's "__END__" sequence
             None | Some(b'\n') if self.buffer.lookahead(b"__END__") => {
-                return token!(tEOF, start, start);
+                return token!(tEOF, loc!(start, start));
             }
             _ => {}
         }

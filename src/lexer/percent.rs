@@ -1,7 +1,11 @@
-use crate::lexer::buffer::BufferWithCursor;
-use crate::token::{token, Token};
-
-use crate::lexer::strings::{literal::StringLiteral, types::*};
+use crate::{
+    lexer::{
+        buffer::BufferWithCursor,
+        strings::{literal::StringLiteral, types::*},
+    },
+    loc::loc,
+    token::{token, Token},
+};
 
 pub(crate) fn parse_percent<'a>(
     buffer: &mut BufferWithCursor<'a>,
@@ -56,7 +60,7 @@ pub(crate) fn parse_percent<'a>(
 
     match literal_type {
         b'Q' => {
-            token = token!(tSTRING_BEG, start, end);
+            token = token!(tSTRING_BEG, loc!(start, end));
             literal = StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(curly_level),
                 starts_with,
@@ -64,30 +68,30 @@ pub(crate) fn parse_percent<'a>(
             ));
         }
         b'q' => {
-            token = token!(tSTRING_BEG, start, end);
+            token = token!(tSTRING_BEG, loc!(start, end));
             literal = StringLiteral::StringPlain(StringPlain::new(starts_with, ends_with));
         }
 
         b'W' => {
-            token = token!(tWORDS_BEG, start, end);
+            token = token!(tWORDS_BEG, loc!(start, end));
             literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
         }
         b'w' => {
-            token = token!(tWORDS_BEG, start, end);
+            token = token!(tWORDS_BEG, loc!(start, end));
             literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
         }
 
         b'I' => {
-            token = token!(tSYMBOLS_BEG, start, end);
+            token = token!(tSYMBOLS_BEG, loc!(start, end));
             literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
         }
         b'i' => {
-            token = token!(tSYMBOLS_BEG, start, end);
+            token = token!(tSYMBOLS_BEG, loc!(start, end));
             literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
         }
 
         b'x' => {
-            token = token!(tXSTRING_BEG, start, end);
+            token = token!(tXSTRING_BEG, loc!(start, end));
             literal = StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(curly_level),
                 starts_with,
@@ -96,11 +100,11 @@ pub(crate) fn parse_percent<'a>(
         }
 
         b'r' => {
-            token = token!(tREGEXP_BEG, start, end);
+            token = token!(tREGEXP_BEG, loc!(start, end));
             literal = StringLiteral::Regexp(Regexp::new(starts_with, ends_with, curly_level));
         }
         b's' => {
-            token = token!(tSYMBEG, start, end);
+            token = token!(tSYMBEG, loc!(start, end));
             literal = StringLiteral::StringPlain(StringPlain::new(starts_with, ends_with));
         }
 
@@ -129,7 +133,7 @@ mod tests {
 
                 let mut lexer = Lexer::new($input);
                 let token = lexer.next_token();
-                assert_eq!(token, token!($token, 0, len));
+                assert_eq!(token, token!($token, loc!(0, len)));
 
                 assert_eq!(
                     lexer.string_literals.size(),
@@ -139,7 +143,7 @@ mod tests {
                 let literal = lexer.string_literals.last().unwrap();
                 assert_eq!(literal, &$literal);
 
-                assert_eq!(lexer.next_token(), token!(tEOF, len, len));
+                assert_eq!(lexer.next_token(), token!(tEOF, loc!(len, len)));
             }
         };
     }

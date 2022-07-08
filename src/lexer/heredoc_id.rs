@@ -110,7 +110,7 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
             }
         }
 
-        let token = token!(token_value, heredoc_start, heredoc_end);
+        let token = token!(token_value, loc!(heredoc_start, heredoc_end));
 
         Ok(Some(Self {
             token,
@@ -163,7 +163,7 @@ mod tests {
         test = test_heredoc_id_minus,
         input = b"<<-HERE",
         output = Some(HeredocId {
-            token: token!(tDSTRING_BEG, 0, 7),
+            token: token!(tDSTRING_BEG, loc!(0, 7)),
             id: (3, 7),
             interpolated: true,
             squiggly: false
@@ -173,7 +173,7 @@ mod tests {
         test = test_heredoc_id_tilde,
         input = b"<<~HERE",
         output = Some(HeredocId {
-            token: token!(tDSTRING_BEG, 0, 7),
+            token: token!(tDSTRING_BEG, loc!(0, 7)),
             id: (3, 7),
             interpolated: true,
             squiggly: true
@@ -185,7 +185,7 @@ mod tests {
         test = test_heredoc_id_squote,
         input = b"<<-'HERE'",
         output = Some(HeredocId {
-            token: token!(tSTRING_BEG, 0, 9),
+            token: token!(tSTRING_BEG, loc!(0, 9)),
             id: (4, 8),
             interpolated: false,
             squiggly: false
@@ -195,7 +195,7 @@ mod tests {
         test = test_heredoc_id_dquote,
         input = b"<<-\"HERE\"",
         output = Some(HeredocId {
-            token: token!(tDSTRING_BEG, 0, 9),
+            token: token!(tDSTRING_BEG, loc!(0, 9)),
             id: (4, 8),
             interpolated: true,
             squiggly: false
@@ -205,7 +205,7 @@ mod tests {
         test = test_heredoc_id_xquote,
         input = b"<<-`HERE`",
         output = Some(HeredocId {
-            token: token!(tXSTRING_BEG, 0, 9),
+            token: token!(tXSTRING_BEG, loc!(0, 9)),
             id: (4, 8),
             interpolated: true,
             squiggly: false

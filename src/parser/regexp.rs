@@ -49,7 +49,7 @@ where
         let loc = self.current_token().loc();
         if self.current_token().is(TokenKind::tDIVIDE) {
             self.take_token();
-            Some(token!(TokenKind::tREGEXP_BEG, loc.start, loc.end))
+            Some(token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end)))
         } else {
             None
         }

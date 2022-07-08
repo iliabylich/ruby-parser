@@ -20,10 +20,15 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
     fn lookahead(buffer: &Buffer<'a>, start: usize) -> Self::Output {
         let mut ident_start = start + 1;
 
-        let empty_gvar_name = || Err(GvarError::EmptyVarName(token!(tGVAR, start, start + 1)));
+        let empty_gvar_name = || {
+            Err(GvarError::EmptyVarName(token!(
+                tGVAR,
+                loc!(start, start + 1)
+            )))
+        };
 
         let invalid_gvar_name =
-            |end: usize| Err(GvarError::InvalidVarName(token!(tGVAR, start, end)));
+            |end: usize| Err(GvarError::InvalidVarName(token!(tGVAR, loc!(start, end))));
 
         match buffer.byte_at(start + 1) {
             Some(b'_') => {
@@ -35,7 +40,7 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
                     _ => {
                         // emit $_
                         return Ok(Gvar {
-                            token: token!(tGVAR, start, start + 2),
+                            token: token!(tGVAR, loc!(start, start + 2)),
                         });
                     }
                 }
@@ -61,7 +66,7 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
             | Some(b'/') | Some(b'\\') | Some(b';') | Some(b',') | Some(b'.') | Some(b'=')
             | Some(b':') | Some(b'<') | Some(b'>') | Some(b'\"') => {
                 return Ok(Gvar {
-                    token: token!(tGVAR, start, start + 2),
+                    token: token!(tGVAR, loc!(start, start + 2)),
                 });
             }
 
@@ -71,7 +76,7 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
                         // $-<UTF-8 char>
                         let end = start + 2 + length;
                         return Ok(Gvar {
-                            token: token!(tGVAR, start, end),
+                            token: token!(tGVAR, loc!(start, end)),
                         });
                     }
                     _ => {
@@ -87,7 +92,7 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
             // $+: string matches last paren
             Some(b'&') | Some(b'`') | Some(b'\'') | Some(b'+') => {
                 return Ok(Gvar {
-                    token: token!(tBACK_REF, start, start + 2),
+                    token: token!(tBACK_REF, loc!(start, start + 2)),
                 });
             }
 
@@ -98,7 +103,7 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
                     end += 1;
                 }
                 return Ok(Gvar {
-                    token: token!(tNTH_REF, start, end),
+                    token: token!(tNTH_REF, loc!(start, end)),
                 });
             }
 
@@ -116,7 +121,7 @@ impl<'a> Lookahead<'a> for Gvar<'a> {
             Some(Ident { length }) => {
                 let end = ident_start + length;
                 Ok(Gvar {
-                    token: token!(tGVAR, start, end),
+                    token: token!(tGVAR, loc!(start, end)),
                 })
             }
             None => {

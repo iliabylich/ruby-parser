@@ -51,7 +51,7 @@ where
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
                 self.take_token();
-                return Some(token!(TokenKind::tXSTRING_BEG, loc.start, loc.end));
+                return Some(token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end)));
             }
         }
         None

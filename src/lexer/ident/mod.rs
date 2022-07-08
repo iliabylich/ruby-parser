@@ -80,12 +80,12 @@ impl Ident {
             Some(IdentSuffix { byte: b'!' | b'?' }) => {
                 // append `!` or `?`
                 buffer.skip_byte();
-                return token!(tFID, start, buffer.pos());
+                return token!(tFID, loc!(start, buffer.pos()));
             }
             Some(IdentSuffix { byte: b'=' }) => {
                 // `foo=` setter, consume `'='
                 buffer.skip_byte();
-                return token!(tIDENTIFIER, start, buffer.pos());
+                return token!(tIDENTIFIER, loc!(start, buffer.pos()));
             }
             _ => {}
         }
@@ -97,7 +97,7 @@ impl Ident {
         // are handled on the parser level
         if buffer.current_byte() == Some(b':') {
             buffer.skip_byte();
-            return token!(tLABEL, start, buffer.pos());
+            return token!(tLABEL, loc!(start, buffer.pos()));
         }
 
         let end = buffer.pos();
@@ -105,7 +105,7 @@ impl Ident {
 
         // there's a chance that it's a keyword
         if let Some(reserved_word) = find_reserved_word(slice) {
-            return token!(reserved_word.token_value, start, end);
+            return token!(reserved_word.token_value, loc!(start, end));
         }
 
         // Can be a constant
@@ -115,14 +115,14 @@ impl Ident {
                     .expect("bug");
                 let c = s.chars().next().expect("bug");
                 if c.is_uppercase() {
-                    return token!(tCONSTANT, start, buffer.pos());
+                    return token!(tCONSTANT, loc!(start, buffer.pos()));
                 }
             }
             _ => {}
         }
 
         // otherwise it's just a plain identifier
-        token!(tIDENTIFIER, start, end)
+        token!(tIDENTIFIER, loc!(start, end))
     }
 }
 

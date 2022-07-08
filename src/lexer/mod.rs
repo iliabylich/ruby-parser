@@ -12,7 +12,10 @@ pub(crate) mod qmark;
 pub(crate) mod skip_ws;
 pub(crate) mod strings;
 
-use crate::token::{token, Token};
+use crate::{
+    loc::loc,
+    token::{token, Token},
+};
 use atmark::AtMark;
 use buffer::BufferWithCursor;
 use gvar::Gvar;
@@ -145,7 +148,7 @@ impl<'a> Lexer<'a> {
                 // close current literal
                 self.string_literals.pop();
                 // and emit EOF
-                token!(tEOF, eof_pos, eof_pos)
+                token!(tEOF, loc!(eof_pos, eof_pos))
             }
         }
     }
@@ -164,7 +167,7 @@ impl<'a> Lexer<'a> {
         if self.buffer.lookahead(b"TEST_TOKEN") {
             let end = start + "TEST_TOKEN".len();
             self.buffer.set_pos(end);
-            return token!(tTEST_TOKEN, start, end);
+            return token!(tTEST_TOKEN, loc!(start, end));
         }
 
         // SAFETY: None (i.e. EOF) has been handled above in `handle_eof`.

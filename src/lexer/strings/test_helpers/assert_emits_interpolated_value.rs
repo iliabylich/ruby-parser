@@ -6,7 +6,7 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#{TEST_TOKEN",
             action = StringExtendAction::FoundInterpolation {
-                token: token!(tSTRING_DBEG, 0, 2)
+                token: token!(tSTRING_DBEG, loc!(0, 2))
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
@@ -24,14 +24,14 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#@@cvar",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_DVAR, 0, 1)
+                token: token!(tSTRING_DVAR, loc!(0, 1))
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
                     StringExtendAction::EmitToken {
-                        token: token!(tCVAR, 1, 7)
+                        token: token!(tCVAR, loc!(1, 7))
                     },
                     "2nd action daction doesn't match"
                 )
@@ -44,14 +44,14 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#@ivar",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_DVAR, 0, 1)
+                token: token!(tSTRING_DVAR, loc!(0, 1))
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
                     StringExtendAction::EmitToken {
-                        token: token!(tIVAR, 1, 6)
+                        token: token!(tIVAR, loc!(1, 6))
                     },
                     "2nd action daction doesn't match"
                 )
@@ -64,14 +64,14 @@ macro_rules! assert_emits_interpolated_value {
             literal = $literal,
             input = b"#$gvar",
             action = StringExtendAction::EmitToken {
-                token: token!(tSTRING_DVAR, 0, 1)
+                token: token!(tSTRING_DVAR, loc!(0, 1))
             },
             pre = |_| {},
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
                     StringExtendAction::EmitToken {
-                        token: token!(tGVAR, 1, 6)
+                        token: token!(tGVAR, loc!(1, 6))
                     },
                     "2nd action daction doesn't match"
                 )
@@ -83,7 +83,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_cvar_invalid,
             literal = $literal,
             input = b"#@@1",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@1")), 0, 4),
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@1")), loc!(0, 4)),
             pre = |_| {}
         );
 
@@ -92,7 +92,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_ivar_invalid,
             literal = $literal,
             input = b"#@1",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@1")), 0, 3),
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@1")), loc!(0, 3)),
             pre = |_| {}
         );
 
@@ -101,7 +101,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_gvar_invalid,
             literal = $literal,
             input = b"#$(",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#$(")), 0, 3),
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#$(")), loc!(0, 3)),
             pre = |_| {}
         );
 
@@ -110,7 +110,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_cvar_no_id,
             literal = $literal,
             input = b"#@@",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@")), 0, 3),
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@@")), loc!(0, 3)),
             pre = |_| {}
         );
 
@@ -119,7 +119,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_ivar_no_id,
             literal = $literal,
             input = b"#@",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#@")), 0, 2),
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#@")), loc!(0, 2)),
             pre = |_| {}
         );
 
@@ -128,7 +128,7 @@ macro_rules! assert_emits_interpolated_value {
             test = test_interp_raw_gvar_no_id,
             literal = $literal,
             input = b"#$ ",
-            token = token!(tSTRING_CONTENT(StringContent::from(b"#$ ")), 0, 3),
+            token = token!(tSTRING_CONTENT(StringContent::from(b"#$ ")), loc!(0, 3)),
             pre = |_| {}
         );
     };

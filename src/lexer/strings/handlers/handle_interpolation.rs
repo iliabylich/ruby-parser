@@ -10,6 +10,7 @@ use crate::{
             types::Interpolation,
         },
     },
+    loc::loc,
     token::token,
 };
 
@@ -39,7 +40,7 @@ fn handle_regular_interpolation<'a>(
     if buffer.lookahead(b"#{") {
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
 
-        let token = token!(tSTRING_DBEG, buffer.pos(), buffer.pos() + 2);
+        let token = token!(tSTRING_DBEG, loc!(buffer.pos(), buffer.pos() + 2));
         // consume `#{`
         buffer.set_pos(token.loc().end);
         // start interpolation
@@ -61,7 +62,7 @@ fn handle_raw_ivar_or_cvar_interpolation<'a>(
 
         // here we (possibly) handle only `#` of "#@foo" / "#@@foo" interpolation
         if let Ok(_) = AtMark::lookahead(buffer.for_lookahead(), buffer.pos() + 1) {
-            let token = token!(tSTRING_DVAR, buffer.pos(), buffer.pos() + 1);
+            let token = token!(tSTRING_DVAR, loc!(buffer.pos(), buffer.pos() + 1));
 
             // consume `#`
             buffer.set_pos(token.loc().end);
@@ -95,7 +96,7 @@ fn handle_raw_gvar_interpolation<'a>(
 
         // here we (possibly) handle only `#` of "#$foo" interpolation
         if let Ok(_) = Gvar::lookahead(buffer.for_lookahead(), buffer.pos() + 1) {
-            let token = token!(tSTRING_DVAR, buffer.pos(), buffer.pos() + 1);
+            let token = token!(tSTRING_DVAR, loc!(buffer.pos(), buffer.pos() + 1));
 
             // consume `#`
             buffer.set_pos(token.loc().end);

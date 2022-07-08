@@ -13,6 +13,7 @@ use crate::{
             types::Interpolation,
         },
     },
+    loc::loc,
     token::token,
 };
 
@@ -118,7 +119,7 @@ fn handle_regexp_end_with_options<'a>(
         {
             let token_end = buffer.pos() + 1 + length;
             let action = ControlFlow::Break(StringExtendAction::FoundStringEnd {
-                token: token!(tSTRING_END, buffer.pos(), token_end),
+                token: token!(tSTRING_END, loc!(buffer.pos(), token_end)),
             });
             buffer.set_pos(token_end);
             return action;
@@ -167,7 +168,7 @@ mod tests {
         literal = literal(b'/', b'/'),
         input = b"/ox",
         action = StringExtendAction::FoundStringEnd {
-            token: token!(tSTRING_END, 0, 3)
+            token: token!(tSTRING_END, loc!(0, 3))
         },
         pre = |_| {},
         post = |action: StringExtendAction| {
@@ -183,7 +184,7 @@ mod tests {
         literal = literal(b'{', b'}'),
         input = b"}ox",
         action = StringExtendAction::FoundStringEnd {
-            token: token!(tSTRING_END, 0, 1)
+            token: token!(tSTRING_END, loc!(0, 1))
         },
         pre = |_| {},
         post = |_| {}

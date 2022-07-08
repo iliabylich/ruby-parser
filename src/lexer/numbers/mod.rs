@@ -61,7 +61,7 @@ impl<'a> Into<TokenKind<'a>> for Number {
 
 impl<'a> Into<Token<'a>> for Number {
     fn into(self) -> Token<'a> {
-        token!(self.into(), self.begin, self.end)
+        token!(self.into(), loc!(self.begin, self.end))
     }
 }
 
