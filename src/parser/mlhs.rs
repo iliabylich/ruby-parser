@@ -116,7 +116,7 @@ fn parse_mlhs_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsItem<'
                 let node = Builder::<C>::splat(star_t, node);
                 MlhsItem::DefinitelyMlhs(node)
             }
-            None => match parser.current_token().value() {
+            None => match parser.current_token().kind() {
                 TokenKind::tCOMMA | TokenKind::tRPAREN => {
                     let node = Builder::<C>::nameless_splat(star_t);
                     MlhsItem::DefinitelyMlhs(node)

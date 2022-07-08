@@ -76,7 +76,7 @@ where
     }
 
     pub(crate) fn expect_token(&mut self, expected: TokenKind<'a>) -> Token<'a> {
-        if self.current_token().value() == &expected {
+        if self.current_token().kind() == &expected {
             self.take_token()
         } else {
             panic!(

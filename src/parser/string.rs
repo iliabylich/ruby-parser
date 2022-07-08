@@ -15,7 +15,7 @@ where
     }
 
     fn try_char(&mut self) -> Option<Box<Node<'a>>> {
-        if let TokenKind::tCHAR(_) = self.current_token().value() {
+        if let TokenKind::tCHAR(_) = self.current_token().kind() {
             let char_t = self.take_token();
             Some(Builder::<C>::character(char_t))
         } else {
@@ -60,7 +60,7 @@ where
     }
 
     pub(crate) fn try_string_content(&mut self) -> Option<Box<Node<'a>>> {
-        match self.current_token().value() {
+        match self.current_token().kind() {
             TokenKind::tSTRING_CONTENT(_) => {
                 let string_content_t = self.take_token();
                 Some(Builder::<C>::string_internal(

@@ -136,7 +136,7 @@ impl<'a, C: Constructor> Builder<C> {
         end_t: Option<Token<'a>>,
     ) -> Box<Node<'a>> {
         if let Some(Token {
-            value: TokenKind::tHEREDOC_BEG,
+            kind: TokenKind::tHEREDOC_BEG,
             ..
         }) = &begin_t
         {
@@ -206,7 +206,7 @@ impl<'a, C: Constructor> Builder<C> {
         let expression_l = char_t.loc();
         let begin_l = loc!(expression_l.start, expression_l.start + 1);
 
-        let char = if let TokenKind::tCHAR(char) = char_t.value() {
+        let char = if let TokenKind::tCHAR(char) = char_t.kind() {
             *char
         } else {
             unreachable!()

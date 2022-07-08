@@ -21,7 +21,7 @@ where
     fn parse_qword_list(&mut self) -> Vec<Node<'a>> {
         let mut result = vec![];
         loop {
-            if matches!(self.current_token().value(), TokenKind::tSTRING_CONTENT(_)) {
+            if matches!(self.current_token().kind(), TokenKind::tSTRING_CONTENT(_)) {
                 let string_t = self.take_token();
                 let node = Builder::<C>::string_internal(string_t, self.buffer());
                 result.push(*node);

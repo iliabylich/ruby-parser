@@ -52,7 +52,7 @@ where
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
                 self.take_token();
                 return Some(Token {
-                    value: TokenKind::tXSTRING_BEG,
+                    kind: TokenKind::tXSTRING_BEG,
                     loc,
                 });
             }

@@ -14,7 +14,7 @@ where
     }
 
     fn try_ssym(&mut self) -> Option<Box<Node<'a>>> {
-        match self.current_token().value() {
+        match self.current_token().kind() {
             TokenKind::tCOLON => {
                 // maybe a plain symbol
                 let checkpoint = self.new_checkpoint();

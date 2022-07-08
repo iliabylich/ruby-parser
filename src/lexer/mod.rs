@@ -259,7 +259,7 @@ macro_rules! assert_lex {
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
             let token = lexer.current_token();
-            assert_eq!(token.value(), &$tok, "token doesn't match");
+            assert_eq!(token.kind(), &$tok, "token doesn't match");
             assert_eq!(token.loc(), loc!($loc.start, $loc.end), "loc doesn't match");
             assert_eq!(
                 token.loc().end,

@@ -72,7 +72,7 @@ where
     pub(crate) fn try_stmt(&mut self) -> Option<Box<Node<'a>>> {
         let stmt = self.try_stmt_head()?;
 
-        match self.current_token().value() {
+        match self.current_token().kind() {
             TokenKind::kIF => {
                 let k_if = self.take_token();
                 let expr_value = self.try_expr_value();
@@ -143,7 +143,7 @@ where
             mlhs::MLHS::MaybeLhs { node: lhs } => {
                 // maybe a plain assignment,
                 // but maybe just an expression (that is fully parsed later in `parse_expr`)
-                match self.current_token().value() {
+                match self.current_token().kind() {
                     TokenKind::tEQL | TokenKind::tOP_ASGN => {
                         // definitely an assignment
                         let op_t = self.take_token();

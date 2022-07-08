@@ -50,7 +50,7 @@ where
         if self.current_token().is(TokenKind::tDIVIDE) {
             self.take_token();
             Some(Token {
-                value: TokenKind::tREGEXP_BEG,
+                kind: TokenKind::tREGEXP_BEG,
                 loc,
             })
         } else {

@@ -2,17 +2,17 @@ use crate::{string_content::StringContent, Loc};
 
 #[derive(Debug, PartialEq, Eq, Default)]
 pub struct Token<'a> {
-    pub value: TokenKind<'a>,
+    pub kind: TokenKind<'a>,
     pub loc: Loc,
 }
 
 impl<'a> Token<'a> {
-    pub fn value(&self) -> &TokenKind<'a> {
-        &self.value
+    pub fn kind(&self) -> &TokenKind<'a> {
+        &self.kind
     }
 
     pub fn is(&self, other: TokenKind) -> bool {
-        self.value == other
+        self.kind == other
     }
 
     pub fn loc(&self) -> Loc {
@@ -202,7 +202,7 @@ macro_rules! token {
     ($kind:expr, $begin:expr, $end:expr) => {{
         use crate::{loc::loc, token::TokenKind::*};
         crate::token::Token {
-            value: $kind,
+            kind: $kind,
             loc: loc!($begin, $end),
         }
     }};
