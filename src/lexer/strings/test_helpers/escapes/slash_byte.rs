@@ -29,7 +29,7 @@ macro_rules! assert_emits_escaped_slash_byte {
             assert_eq!(
                 action,
                 ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(tSTRING_CONTENT, loc!(3, 5), vec![b'\t'])
+                    token: token!(tSTRING_CONTENT, loc!(3, 5), b'\t')
                 })
             );
 

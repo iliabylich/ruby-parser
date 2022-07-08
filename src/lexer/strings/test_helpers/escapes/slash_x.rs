@@ -6,7 +6,7 @@ macro_rules! assert_emits_escaped_slash_x {
             test = test_escaped_slash_x,
             literal = $literal,
             input = b"\\x49",
-            token = token!(tSTRING_CONTENT, loc!(0, 4), vec![b'I']),
+            token = token!(tSTRING_CONTENT, loc!(0, 4), b'I'),
             pre = |_| {}
         );
     };

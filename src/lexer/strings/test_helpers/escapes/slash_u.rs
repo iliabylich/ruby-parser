@@ -6,7 +6,7 @@ macro_rules! assert_emits_escaped_slash_u {
             test = test_escaped_slash_u,
             literal = $literal,
             input = b"\\u1234",
-            token = token!(tSTRING_CONTENT, loc!(0, 6), vec![225, 136, 180]),
+            token = token!(tSTRING_CONTENT, loc!(0, 6), 'ሴ'),
             pre = |_| {}
         );
     };

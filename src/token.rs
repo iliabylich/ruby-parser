@@ -198,14 +198,18 @@ impl Default for TokenKind {
 
 #[derive(Debug, Eq)]
 pub enum TokenValue {
-    Bytes(Vec<u8>),
+    // used for trivial single-byte escape sequences like `\xFF`
     Byte(u8),
-}
 
-impl From<Vec<u8>> for TokenValue {
-    fn from(bytes: Vec<u8>) -> Self {
-        Self::Bytes(bytes)
-    }
+    // used for multibyte characters and escape sequences like `\u1234`
+    Char(char),
+
+    // used for "wide" \u escape sequences like `\u{1234 5678}`
+    // only this variant uses heap, so in most cases TokenValue is located on stack
+    Chars(Vec<char>),
+    // Everything that doesn't involve escaping can be taken directly
+    // from buffer, that's why it's not stored here.
+    // Simply do `buffer.slice(token.loc())` to get a byte slice of the token
 }
 
 impl From<u8> for TokenValue {
@@ -214,14 +218,47 @@ impl From<u8> for TokenValue {
     }
 }
 
+impl From<char> for TokenValue {
+    fn from(c: char) -> Self {
+        Self::Char(c)
+    }
+}
+
+impl From<Vec<char>> for TokenValue {
+    fn from(chars: Vec<char>) -> Self {
+        Self::Chars(chars)
+    }
+}
+
+impl TokenValue {
+    fn to_bytes(&self) -> Vec<u8> {
+        match self {
+            TokenValue::Byte(byte) => vec![*byte],
+            TokenValue::Char(c) => {
+                let mut buf = vec![0_u8; c.len_utf8()];
+                c.encode_utf8(&mut buf);
+                buf
+            }
+            TokenValue::Chars(chars) => chars.iter().cloned().collect::<String>().into_bytes(),
+        }
+    }
+
+    pub(crate) fn into_bytes(self) -> Vec<u8> {
+        match self {
+            TokenValue::Byte(byte) => vec![byte],
+            TokenValue::Char(c) => {
+                let mut buf = vec![0_u8; c.len_utf8()];
+                c.encode_utf8(&mut buf);
+                buf
+            }
+            TokenValue::Chars(chars) => chars.into_iter().collect::<String>().into_bytes(),
+        }
+    }
+}
+
 impl PartialEq for TokenValue {
     fn eq(&self, other: &Self) -> bool {
-        match (self, other) {
-            (TokenValue::Bytes(lhs), TokenValue::Bytes(rhs)) => lhs == rhs,
-            (TokenValue::Bytes(lhs), TokenValue::Byte(rhs)) => lhs.len() == 1 && lhs[0] == *rhs,
-            (TokenValue::Byte(lhs), TokenValue::Bytes(rhs)) => rhs.len() == 1 && rhs[0] == *lhs,
-            (TokenValue::Byte(lhs), TokenValue::Byte(rhs)) => lhs == rhs,
-        }
+        self.to_bytes() == other.to_bytes()
     }
 }
 

@@ -13,7 +13,7 @@ use crate::{
         },
     },
     loc::loc,
-    token::token,
+    token::{token, TokenValue},
 };
 
 #[must_use]
@@ -21,7 +21,7 @@ pub(crate) fn handle_escape(
     buffer: &mut BufferWithCursor,
     start: usize,
 ) -> ControlFlow<StringExtendAction> {
-    let escape_content;
+    let escape_content: TokenValue;
     let escape_length;
 
     if buffer.current_byte() == Some(b'\\') {
@@ -34,31 +34,19 @@ pub(crate) fn handle_escape(
         }
 
         Ok(Some(escape)) => match escape {
-            Escape::SlashU(SlashU::Wide { bytes, length }) => {
-                escape_content = bytes;
+            Escape::SlashU(SlashU::Wide { codepoints, length }) => {
+                escape_content = TokenValue::from(codepoints);
                 escape_length = length;
             }
-            Escape::SlashU(SlashU::Short { bytes, length }) => {
-                escape_content = bytes;
+            Escape::SlashU(SlashU::Short { codepoint, length }) => {
+                escape_content = TokenValue::from(codepoint);
                 escape_length = length;
             }
-            Escape::SlashOctal(SlashOctal {
-                byte: codepoint,
-                length,
-            })
-            | Escape::SlashX(SlashX {
-                byte: codepoint,
-                length,
-            })
-            | Escape::SlashMetaCtrl(SlashMetaCtrl {
-                byte: codepoint,
-                length,
-            })
-            | Escape::SlashByte(SlashByte {
-                byte: codepoint,
-                length,
-            }) => {
-                escape_content = vec![codepoint];
+            Escape::SlashOctal(SlashOctal { byte, length })
+            | Escape::SlashX(SlashX { byte, length })
+            | Escape::SlashMetaCtrl(SlashMetaCtrl { byte, length })
+            | Escape::SlashByte(SlashByte { byte, length }) => {
+                escape_content = TokenValue::from(byte);
                 escape_length = length;
             }
         },
@@ -70,7 +58,7 @@ pub(crate) fn handle_escape(
 
             match &err {
                 EscapeError::SlashUError(SlashUError {
-                    valid_bytes: Some(captured_codepoints),
+                    codepoints: Some(captured_codepoints),
                     ..
                 }) => {
                     valid_codepoints = captured_codepoints.clone();
@@ -80,7 +68,7 @@ pub(crate) fn handle_escape(
 
             match &err {
                 EscapeError::SlashUError(SlashUError {
-                    valid_bytes: codepoints,
+                    codepoints,
                     errors,
                     length,
                 }) => {
@@ -114,7 +102,7 @@ pub(crate) fn handle_escape(
             }
             // 2. TODO: report `err`
 
-            escape_content = valid_codepoints;
+            escape_content = TokenValue::from(valid_codepoints);
 
             escape_length = match err {
                 EscapeError::SlashUError(SlashUError { length, .. })

@@ -22,44 +22,15 @@ impl<'a> From<String> for StringContent<'a> {
     }
 }
 
-impl<const N: usize> From<[u8; N]> for StringContent<'_> {
-    fn from(bytes: [u8; N]) -> Self {
-        Self::Owned(Vec::from(bytes))
-    }
-}
-
-impl<const N: usize> From<&[u8; N]> for StringContent<'_> {
-    fn from(bytes: &[u8; N]) -> Self {
-        Self::Owned(Vec::from(bytes.to_owned()))
-    }
-}
-
 impl From<Vec<u8>> for StringContent<'_> {
     fn from(bytes: Vec<u8>) -> Self {
         Self::Owned(bytes)
     }
 }
 
-impl From<char> for StringContent<'_> {
-    fn from(c: char) -> Self {
-        let mut buf = vec![0; c.len_utf8()];
-        c.encode_utf8(&mut buf);
-        Self::from(buf)
-    }
-}
-
-impl From<u8> for StringContent<'_> {
-    fn from(byte: u8) -> Self {
-        Self::from(vec![byte])
-    }
-}
-
 impl From<TokenValue> for StringContent<'_> {
     fn from(token_value: TokenValue) -> Self {
-        match token_value {
-            TokenValue::Bytes(bytes) => Self::from(bytes),
-            TokenValue::Byte(byte) => Self::from(byte),
-        }
+        Self::from(token_value.into_bytes())
     }
 }
 

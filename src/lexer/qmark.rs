@@ -41,17 +41,17 @@ impl Lookahead for QMark {
                         Ok(Some(escape)) => match escape {
                             // single char `?f` syntax doesn't support wide \u escapes
                             // because they may have multiple codepoints
-                            Escape::SlashU(SlashU::Wide {
-                                bytes: codepoints,
-                                length,
-                            }) => {
+                            Escape::SlashU(SlashU::Wide { codepoints, length }) => {
                                 panic!(
                                     "wide codepoint in ?\\u syntax: {:?}, {}",
                                     codepoints, length
                                 );
                             }
 
-                            Escape::SlashU(SlashU::Short { bytes, length }) => {
+                            Escape::SlashU(SlashU::Short {
+                                codepoint: bytes,
+                                length,
+                            }) => {
                                 return QMark {
                                     token: token!(tCHAR, loc!(start, start + 1 + length), bytes),
                                 };
@@ -68,7 +68,7 @@ impl Lookahead for QMark {
                         },
                         Err(err) => match err {
                             EscapeError::SlashUError(SlashUError {
-                                valid_bytes: codepoints,
+                                codepoints,
                                 errors,
                                 length,
                             }) => {
@@ -97,12 +97,13 @@ impl Lookahead for QMark {
         match buffer.utf8_char_at(start + 1) {
             Utf8Char::Valid { length } => {
                 let end = start + 1 + length;
-                let value = std::str::from_utf8(buffer.slice(start + 1, end).expect("bug"))
+                let c = std::str::from_utf8(buffer.slice(start + 1, end).expect("bug"))
                     .unwrap()
-                    .as_bytes()
-                    .to_vec();
+                    .chars()
+                    .next()
+                    .unwrap();
                 QMark {
-                    token: token!(tCHAR, loc!(start, end), value),
+                    token: token!(tCHAR, loc!(start, end), c),
                 }
             }
             _ => QMark {
@@ -121,19 +122,15 @@ impl QMark {
 }
 
 assert_lex!(test_tEH, b"?", token!(tEH, loc!(0, 1)));
-assert_lex!(
-    test_tCHAR_ascii,
-    b"?a",
-    token!(tCHAR, loc!(0, 2), "a".as_bytes().to_vec())
-);
+assert_lex!(test_tCHAR_ascii, b"?a", token!(tCHAR, loc!(0, 2), b'a'));
 assert_lex!(
     test_tCHAR_multibyte,
     "?字".as_bytes(),
-    token!(tCHAR, loc!(0, 4), "字".as_bytes().to_vec())
+    token!(tCHAR, loc!(0, 4), '字')
 );
 assert_lex!(
     test_tCHAR_slash_u,
     b"?\\u1234",
-    token!(tCHAR, loc!(0, 7), "\u{1234}".as_bytes().to_vec())
+    token!(tCHAR, loc!(0, 7), '\u{1234}')
 );
 assert_lex!(test_tEH_and_ident, b"?ident", token!(tEH, loc!(0, 1)));

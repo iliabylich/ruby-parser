@@ -6,7 +6,7 @@ macro_rules! assert_emits_escaped_slash_meta_control {
             test = test_escaped_slash_meta_control,
             literal = $literal,
             input = b"\\C-\\M-a",
-            token = token!(tSTRING_CONTENT, loc!(0, 7), vec![129]),
+            token = token!(tSTRING_CONTENT, loc!(0, 7), 129),
             pre = |_| {}
         );
     };

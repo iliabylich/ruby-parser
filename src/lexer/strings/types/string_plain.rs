@@ -77,7 +77,7 @@ mod tests {
     assert_ignores_escape_sequence!(literal = dummy_literal());
 
     // escaped literal start/end handling
-    assert_emits_escaped_start_or_end!(literal = literal(b'{', b'}'), start = "{", end = "}");
+    assert_emits_escaped_start_or_end!(literal = literal(b'{', b'}'), start = '{', end = '}');
 
     // line continuation handling
     assert_ignores_line_continuation!(literal = dummy_literal());
