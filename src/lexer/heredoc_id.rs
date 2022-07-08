@@ -4,7 +4,7 @@ use crate::{
         ident::Ident,
     },
     loc::loc,
-    token::{Token, TokenKind},
+    token::{token, Token, TokenKind},
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -110,10 +110,7 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
             }
         }
 
-        let token = Token {
-            kind: token_value,
-            loc: loc!(heredoc_start, heredoc_end),
-        };
+        let token = token!(token_value, heredoc_start, heredoc_end);
 
         Ok(Some(Self {
             token,

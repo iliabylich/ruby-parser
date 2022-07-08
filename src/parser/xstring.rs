@@ -5,7 +5,7 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     parser::Parser,
-    token::{Token, TokenKind},
+    token::{token, Token, TokenKind},
     Node,
 };
 
@@ -51,10 +51,7 @@ where
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
                 self.take_token();
-                return Some(Token {
-                    kind: TokenKind::tXSTRING_BEG,
-                    loc,
-                });
+                return Some(token!(TokenKind::tXSTRING_BEG, loc.start, loc.end));
             }
         }
         None

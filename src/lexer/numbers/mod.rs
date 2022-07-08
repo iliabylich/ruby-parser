@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::buffer::{Buffer, BufferWithCursor},
     loc::loc,
-    token::{Token, TokenKind},
+    token::{token, Token, TokenKind},
 };
 
 pub(crate) mod scan;
@@ -61,10 +61,7 @@ impl<'a> Into<TokenKind<'a>> for Number {
 
 impl<'a> Into<Token<'a>> for Number {
     fn into(self) -> Token<'a> {
-        Token {
-            kind: self.into(),
-            loc: loc!(self.begin, self.end),
-        }
+        token!(self.into(), self.begin, self.end)
     }
 }
 

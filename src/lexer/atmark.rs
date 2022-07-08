@@ -5,7 +5,7 @@ use crate::{
         ident::Ident,
     },
     loc::loc,
-    token::{Token, TokenKind},
+    token::{token, Token, TokenKind},
 };
 
 pub(crate) struct AtMark<'a> {
@@ -35,17 +35,19 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
         }
 
         let empty_var_name = |token_value: TokenKind<'a>| {
-            Err(AtMarkError::EmptyVarName(Token {
-                kind: token_value,
-                loc: loc!(start, ident_start),
-            }))
+            Err(AtMarkError::EmptyVarName(token!(
+                token_value,
+                start,
+                ident_start
+            )))
         };
 
         let invalid_var_name = |token_value: TokenKind<'a>| {
-            Err(AtMarkError::InvalidVarName(Token {
-                kind: token_value,
-                loc: loc!(start, ident_start),
-            }))
+            Err(AtMarkError::InvalidVarName(token!(
+                token_value,
+                start,
+                ident_start
+            )))
         };
 
         match buffer.byte_at(ident_start) {
@@ -64,10 +66,7 @@ impl<'a> Lookahead<'a> for AtMark<'a> {
                 match Ident::lookahead(buffer, ident_start) {
                     Some(Ident { length }) => {
                         let ident_end = ident_start + length;
-                        let token = Token {
-                            kind: token_value,
-                            loc: loc!(start, ident_end),
-                        };
+                        let token = token!(token_value, start, ident_end);
 
                         return Ok(AtMark { token });
                     }

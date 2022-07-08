@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
     parser::Parser,
-    token::{Token, TokenKind},
+    token::{token, Token, TokenKind},
     Node,
 };
 
@@ -49,10 +49,7 @@ where
         let loc = self.current_token().loc();
         if self.current_token().is(TokenKind::tDIVIDE) {
             self.take_token();
-            Some(Token {
-                kind: TokenKind::tREGEXP_BEG,
-                loc,
-            })
+            Some(token!(TokenKind::tREGEXP_BEG, loc.start, loc.end))
         } else {
             None
         }

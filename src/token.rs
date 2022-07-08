@@ -4,6 +4,7 @@ use crate::{string_content::StringContent, Loc};
 pub struct Token<'a> {
     pub kind: TokenKind<'a>,
     pub loc: Loc,
+    pub value: Option<Vec<u8>>,
 }
 
 impl<'a> Token<'a> {
@@ -200,10 +201,21 @@ impl Default for TokenKind<'_> {
 
 macro_rules! token {
     ($kind:expr, $begin:expr, $end:expr) => {{
+        #[allow(unused_imports)]
         use crate::{loc::loc, token::TokenKind::*};
         crate::token::Token {
             kind: $kind,
             loc: loc!($begin, $end),
+            value: None,
+        }
+    }};
+    ($kind:expr, $begin:expr, $end:expr, $value:expr) => {{
+        #[allow(unused_imports)]
+        use crate::{loc::loc, token::TokenKind::*};
+        crate::token::Token {
+            kind: $kind,
+            loc: loc!($begin, $end),
+            value: Some($value),
         }
     }};
 }
