@@ -1,6 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
+    loc::loc,
     parser::Parser,
     token::{token, Token, TokenKind},
     Node,

@@ -9,6 +9,7 @@ macro_rules! assert_emits_escaped_slash_byte {
                     buffer::BufferWithCursor,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
+                loc::loc,
                 string_content::StringContent,
                 token::token,
             };

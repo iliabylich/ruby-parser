@@ -97,11 +97,11 @@ impl<'a> AtMark<'a> {
     }
 }
 
-assert_lex!(test_tIVAR_valid, b"@ivar", tIVAR, None, 0..5);
-assert_lex!(test_tCVAR_valid, b"@@cvar", tCVAR, None, 0..6);
+assert_lex!(test_tIVAR_valid, b"@ivar", token!(tIVAR, loc!(0, 5)));
+assert_lex!(test_tCVAR_valid, b"@@cvar", token!(tCVAR, loc!(0, 6)));
 
-assert_lex!(test_tIVAR_no_id, b"@", tIVAR, None, 0..1);
-assert_lex!(test_tCVAR_no_id, b"@@", tCVAR, None, 0..2);
+assert_lex!(test_tIVAR_no_id, b"@", token!(tIVAR, loc!(0, 1)));
+assert_lex!(test_tCVAR_no_id, b"@@", token!(tCVAR, loc!(0, 2)));
 
-assert_lex!(test_tIVAR_invalid_id, b"@(", tIVAR, None, 0..1);
-assert_lex!(test_tCVAR_invalid_id, b"@@(", tCVAR, None, 0..2);
+assert_lex!(test_tIVAR_invalid_id, b"@(", token!(tIVAR, loc!(0, 1)));
+assert_lex!(test_tCVAR_invalid_id, b"@@(", token!(tCVAR, loc!(0, 2)));

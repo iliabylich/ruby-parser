@@ -8,6 +8,7 @@ use crate::{
             SlashOctal, SlashU, SlashUError, SlashX, SlashXError,
         },
     },
+    loc::loc,
     token::{token, Token},
 };
 
@@ -130,20 +131,20 @@ impl<'a> QMark<'a> {
     }
 }
 
-assert_lex!(test_tEH, b"?", tEH, None, 0..1);
-assert_lex!(test_tCHAR_ascii, b"?a", tCHAR, Some("a"), 0..2);
+assert_lex!(test_tEH, b"?", token!(tEH, loc!(0, 1)));
+assert_lex!(
+    test_tCHAR_ascii,
+    b"?a",
+    token!(tCHAR, loc!(0, 2), "a".as_bytes().to_vec())
+);
 assert_lex!(
     test_tCHAR_multibyte,
     "?字".as_bytes(),
-    tCHAR,
-    Some("字"),
-    0..4
+    token!(tCHAR, loc!(0, 4), "字".as_bytes().to_vec())
 );
 assert_lex!(
     test_tCHAR_slash_u,
     b"?\\u1234",
-    tCHAR,
-    Some("\u{1234}"),
-    0..7
+    token!(tCHAR, loc!(0, 7), "\u{1234}".as_bytes().to_vec())
 );
-assert_lex!(test_tEH_and_ident, b"?ident", tEH, None, 0..1);
+assert_lex!(test_tEH_and_ident, b"?ident", token!(tEH, loc!(0, 1)));

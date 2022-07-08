@@ -32,6 +32,7 @@ macro_rules! assert_emits_string_end {
                     buffer::BufferWithCursor,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
+                loc::loc,
                 string_content::StringContent,
                 token::token,
             };

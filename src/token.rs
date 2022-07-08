@@ -202,7 +202,7 @@ impl Default for TokenKind<'_> {
 macro_rules! token {
     ($kind:expr, $loc:expr) => {{
         #[allow(unused_imports)]
-        use crate::{loc::loc, token::TokenKind::*};
+        use crate::token::TokenKind::*;
         crate::token::Token {
             kind: $kind,
             loc: $loc,
@@ -211,7 +211,7 @@ macro_rules! token {
     }};
     ($kind:expr, $loc:expr, $value:expr) => {{
         #[allow(unused_imports)]
-        use crate::{loc::loc, token::TokenKind::*};
+        use crate::token::TokenKind::*;
         crate::token::Token {
             kind: $kind,
             loc: $loc,

@@ -4,6 +4,7 @@ use crate::{
         literal::StringLiteral,
         types::{Interpolation, StringInterp},
     },
+    loc::loc,
     parser::Parser,
     token::{token, Token, TokenKind},
     Node,

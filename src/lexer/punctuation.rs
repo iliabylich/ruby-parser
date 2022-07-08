@@ -28,7 +28,7 @@ impl<'a> OnByte<'a, b'#'> for Lexer<'a> {
         token!(tCOMMENT, loc!(start, self.buffer.pos()))
     }
 }
-assert_lex!(test_tCOMMENT_INLINE, b"# foo", tCOMMENT, None, 0..5);
+assert_lex!(test_tCOMMENT_INLINE, b"# foo", token!(tCOMMENT, loc!(0, 5)));
 
 impl<'a> OnByte<'a, b'*'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -54,10 +54,10 @@ impl<'a> OnByte<'a, b'*'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tSTAR, b"*", tSTAR, None, 0..1);
-assert_lex!(test_tOP_ASGN_STAR, b"*=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tPOW, b"**", tPOW, None, 0..2);
-assert_lex!(test_tOP_ASGN_DSTAR, b"**=", tOP_ASGN, None, 0..3);
+assert_lex!(test_tSTAR, b"*", token!(tSTAR, loc!(0, 1)));
+assert_lex!(test_tOP_ASGN_STAR, b"*=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tPOW, b"**", token!(tPOW, loc!(0, 2)));
+assert_lex!(test_tOP_ASGN_DSTAR, b"**=", token!(tOP_ASGN, loc!(0, 3)));
 
 impl<'a> OnByte<'a, b'!'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -78,9 +78,9 @@ impl<'a> OnByte<'a, b'!'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tNEQ, b"!=", tNEQ, None, 0..2);
-assert_lex!(test_tNMATCH, b"!~", tNMATCH, None, 0..2);
-assert_lex!(test_tBANG, b"!", tBANG, None, 0..1);
+assert_lex!(test_tNEQ, b"!=", token!(tNEQ, loc!(0, 2)));
+assert_lex!(test_tNMATCH, b"!~", token!(tNMATCH, loc!(0, 2)));
+assert_lex!(test_tBANG, b"!", token!(tBANG, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'='> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -118,15 +118,13 @@ impl<'a> OnByte<'a, b'='> for Lexer<'a> {
 assert_lex!(
     test_tEMBEDDED_COMMENT_START,
     b"=begin",
-    tEMBEDDED_COMMENT_START,
-    None,
-    0..6
+    token!(tEMBEDDED_COMMENT_START, loc!(0, 6))
 );
-assert_lex!(test_tEQQ, b"===", tEQQ, None, 0..3);
-assert_lex!(test_tEQ, b"==", tEQ, None, 0..2);
-assert_lex!(test_tMATCH, b"=~", tMATCH, None, 0..2);
-assert_lex!(test_tASSOC, b"=>", tASSOC, None, 0..2);
-assert_lex!(test_tEQL, b"=", tEQL, None, 0..1);
+assert_lex!(test_tEQQ, b"===", token!(tEQQ, loc!(0, 3)));
+assert_lex!(test_tEQ, b"==", token!(tEQ, loc!(0, 2)));
+assert_lex!(test_tMATCH, b"=~", token!(tMATCH, loc!(0, 2)));
+assert_lex!(test_tASSOC, b"=>", token!(tASSOC, loc!(0, 2)));
+assert_lex!(test_tEQL, b"=", token!(tEQL, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -190,9 +188,7 @@ impl<'a> OnByte<'a, b'<'> for Lexer<'a> {
 assert_lex!(
     test_name = test_tSTRING_BEG_HEREDOC,
     input = b"<<-HERE",
-    kind = tDSTRING_BEG,
-    value = None,
-    loc = 0..7,
+    token = token!(tDSTRING_BEG, loc!(0, 7)),
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 42;
         lexer.require_new_expr();
@@ -211,11 +207,11 @@ assert_lex!(
         );
     }
 );
-assert_lex!(test_tCMP, b"<=>", tCMP, None, 0..3);
-assert_lex!(test_tLEQ, b"<=", tLEQ, None, 0..2);
-assert_lex!(test_tOP_ASGN_LSHIFT, b"<<=", tOP_ASGN, None, 0..3);
-assert_lex!(test_tLSHFT, b"<<", tLSHFT, None, 0..2);
-assert_lex!(test_tLT, b"<", tLT, None, 0..1);
+assert_lex!(test_tCMP, b"<=>", token!(tCMP, loc!(0, 3)));
+assert_lex!(test_tLEQ, b"<=", token!(tLEQ, loc!(0, 2)));
+assert_lex!(test_tOP_ASGN_LSHIFT, b"<<=", token!(tOP_ASGN, loc!(0, 3)));
+assert_lex!(test_tLSHFT, b"<<", token!(tLSHFT, loc!(0, 2)));
+assert_lex!(test_tLT, b"<", token!(tLT, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'>'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -240,10 +236,10 @@ impl<'a> OnByte<'a, b'>'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tGEQ, b">=", tGEQ, None, 0..2);
-assert_lex!(test_tOP_ASGN_RSHIFT, b">>=", tOP_ASGN, None, 0..3);
-assert_lex!(test_tRSHFT, b">>", tRSHFT, None, 0..2);
-assert_lex!(test_tGT, b">", tGT, None, 0..1);
+assert_lex!(test_tGEQ, b">=", token!(tGEQ, loc!(0, 2)));
+assert_lex!(test_tOP_ASGN_RSHIFT, b">>=", token!(tOP_ASGN, loc!(0, 3)));
+assert_lex!(test_tRSHFT, b">>", token!(tRSHFT, loc!(0, 2)));
+assert_lex!(test_tGT, b">", token!(tGT, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -262,9 +258,7 @@ impl<'a> OnByte<'a, b'"'> for Lexer<'a> {
 assert_lex!(
     test_name = test_tSTRING_BEG_DQUOTE,
     input = b"\"",
-    kind = tDSTRING_BEG,
-    value = None,
-    loc = 0..1,
+    token = token!(tDSTRING_BEG, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 42;
     },
@@ -291,7 +285,11 @@ impl<'a> OnByte<'a, b'`'> for Lexer<'a> {
         token!(tIDENTIFIER, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tIDENTIFIER_backtick, b"`", tIDENTIFIER, None, 0..1);
+assert_lex!(
+    test_tIDENTIFIER_backtick,
+    b"`",
+    token!(tIDENTIFIER, loc!(0, 1))
+);
 
 impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -306,9 +304,7 @@ impl<'a> OnByte<'a, b'\''> for Lexer<'a> {
 assert_lex!(
     test_name = test_tSTRING_BEG1_SQUOTE,
     input = b"'",
-    kind = tSTRING_BEG,
-    value = None,
-    loc = 0..1,
+    token = token!(tSTRING_BEG, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 42;
     },
@@ -354,11 +350,11 @@ impl<'a> OnByte<'a, b'&'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_DAMPER, b"&&=", tOP_ASGN, None, 0..3);
-assert_lex!(test_tANDOP, b"&&", tANDOP, None, 0..2);
-assert_lex!(test_tOP_ASGN_AMPER, b"&=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tANDDOT, b"&.", tANDDOT, None, 0..2);
-assert_lex!(test_tAMPER, b"&", tAMPER, None, 0..1);
+assert_lex!(test_tOP_ASGN_DAMPER, b"&&=", token!(tOP_ASGN, loc!(0, 3)));
+assert_lex!(test_tANDOP, b"&&", token!(tANDOP, loc!(0, 2)));
+assert_lex!(test_tOP_ASGN_AMPER, b"&=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tANDDOT, b"&.", token!(tANDDOT, loc!(0, 2)));
+assert_lex!(test_tAMPER, b"&", token!(tAMPER, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'|'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -383,10 +379,10 @@ impl<'a> OnByte<'a, b'|'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_DPIPE, b"||=", tOP_ASGN, None, 0..3);
-assert_lex!(test_tOROP, b"||", tOROP, None, 0..2);
-assert_lex!(test_tOP_ASGN_PIPE, b"|=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tPIPE, b"|", tPIPE, None, 0..1);
+assert_lex!(test_tOP_ASGN_DPIPE, b"||=", token!(tOP_ASGN, loc!(0, 3)));
+assert_lex!(test_tOROP, b"||", token!(tOROP, loc!(0, 2)));
+assert_lex!(test_tOP_ASGN_PIPE, b"|=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tPIPE, b"|", token!(tPIPE, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'+'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -407,9 +403,9 @@ impl<'a> OnByte<'a, b'+'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_PLUS, b"+=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tPLUS_NUMBER, b"+1", tINTEGER, None, 0..2);
-assert_lex!(test_tPLUS, b"+", tPLUS, None, 0..1);
+assert_lex!(test_tOP_ASGN_PLUS, b"+=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tPLUS_NUMBER, b"+1", token!(tINTEGER, loc!(0, 2)));
+assert_lex!(test_tPLUS, b"+", token!(tPLUS, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'-'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -430,10 +426,10 @@ impl<'a> OnByte<'a, b'-'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_MINUS, b"-=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tLAMBDA, b"->", tLAMBDA, None, 0..2);
-assert_lex!(test_tMINUS, b"-", tMINUS, None, 0..1);
-assert_lex!(test_tUMINUS, b"-5", tUMINUS, None, 0..1);
+assert_lex!(test_tOP_ASGN_MINUS, b"-=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tLAMBDA, b"->", token!(tLAMBDA, loc!(0, 2)));
+assert_lex!(test_tMINUS, b"-", token!(tMINUS, loc!(0, 1)));
+assert_lex!(test_tUMINUS, b"-5", token!(tUMINUS, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'.'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -464,9 +460,9 @@ impl<'a> OnByte<'a, b'.'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tDOT3, b"...", tDOT3, None, 0..3);
-assert_lex!(test_tDOT2, b"..", tDOT2, None, 0..2);
-assert_lex!(test_tDOT, b".", tDOT, None, 0..1);
+assert_lex!(test_tDOT3, b"...", token!(tDOT3, loc!(0, 3)));
+assert_lex!(test_tDOT2, b"..", token!(tDOT2, loc!(0, 2)));
+assert_lex!(test_tDOT, b".", token!(tDOT, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b')'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -484,9 +480,7 @@ impl<'a> OnByte<'a, b')'> for Lexer<'a> {
 assert_lex!(
     test_name = test_tRPAREN,
     input = b")",
-    kind = tRPAREN,
-    value = None,
-    loc = 0..1,
+    token = token!(tRPAREN, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
         lexer.paren_nest = 1;
     },
@@ -508,9 +502,7 @@ impl<'a> OnByte<'a, b']'> for Lexer<'a> {
 assert_lex!(
     test_name = test_tRBRACK,
     input = b"]",
-    kind = tRBRACK,
-    value = None,
-    loc = 0..1,
+    token = token!(tRBRACK, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
         lexer.brack_nest = 1;
     },
@@ -532,9 +524,7 @@ impl<'a> OnByte<'a, b'}'> for Lexer<'a> {
 assert_lex!(
     test_name = test_tRCURLY,
     input = b"}",
-    kind = tRCURLY,
-    value = None,
-    loc = 0..1,
+    token = token!(tRCURLY, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 1;
     },
@@ -575,13 +565,11 @@ impl<'a> OnByte<'a, b':'> for Lexer<'a> {
         token!(tCOLON, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tCOLON2, b"::", tCOLON2, None, 0..2);
+assert_lex!(test_tCOLON2, b"::", token!(tCOLON2, loc!(0, 2)));
 assert_lex!(
     test_name = test_tDSYMBEG,
     input = b":\"",
-    kind = tDSYMBEG,
-    value = None,
-    loc = 0..2,
+    token = token!(tDSYMBEG, loc!(0, 2)),
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 42;
     },
@@ -598,9 +586,7 @@ assert_lex!(
 assert_lex!(
     test_name = test_tSYMBEG,
     input = b":'",
-    kind = tSYMBEG,
-    value = None,
-    loc = 0..2,
+    token = token!(tSYMBEG, loc!(0, 2)),
     setup = |lexer: &mut Lexer| {
         lexer.curly_nest = 42;
     },
@@ -614,7 +600,7 @@ assert_lex!(
         )
     }
 );
-assert_lex!(test_tCOLON, b":", tCOLON, None, 0..1);
+assert_lex!(test_tCOLON, b":", token!(tCOLON, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -631,8 +617,8 @@ impl<'a> OnByte<'a, b'/'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_DIV, b"/=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tDIVIDE, b"/", tDIVIDE, None, 0..1);
+assert_lex!(test_tOP_ASGN_DIV, b"/=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tDIVIDE, b"/", token!(tDIVIDE, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'^'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -648,8 +634,8 @@ impl<'a> OnByte<'a, b'^'> for Lexer<'a> {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_CARET, b"^=", tOP_ASGN, None, 0..2);
-assert_lex!(test_tCARET, b"^", tCARET, None, 0..1);
+assert_lex!(test_tOP_ASGN_CARET, b"^=", token!(tOP_ASGN, loc!(0, 2)));
+assert_lex!(test_tCARET, b"^", token!(tCARET, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b';'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -658,7 +644,7 @@ impl<'a> OnByte<'a, b';'> for Lexer<'a> {
         token!(tSEMI, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tSEMI, b";", tSEMI, None, 0..1);
+assert_lex!(test_tSEMI, b";", token!(tSEMI, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b','> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -667,7 +653,7 @@ impl<'a> OnByte<'a, b','> for Lexer<'a> {
         token!(tCOMMA, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tCOMMA, b",", tCOMMA, None, 0..1);
+assert_lex!(test_tCOMMA, b",", token!(tCOMMA, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'~'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -677,7 +663,7 @@ impl<'a> OnByte<'a, b'~'> for Lexer<'a> {
         token!(tTILDE, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tTILDE, b"~", tTILDE, None, 0..1);
+assert_lex!(test_tTILDE, b"~", token!(tTILDE, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'('> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -687,7 +673,7 @@ impl<'a> OnByte<'a, b'('> for Lexer<'a> {
         token!(tLPAREN, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tLPAREN, b"(", tLPAREN, None, 0..1);
+assert_lex!(test_tLPAREN, b"(", token!(tLPAREN, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'['> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -697,7 +683,7 @@ impl<'a> OnByte<'a, b'['> for Lexer<'a> {
         token!(tLBRACK, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tLBRACK, b"[", tLBRACK, None, 0..1);
+assert_lex!(test_tLBRACK, b"[", token!(tLBRACK, loc!(0, 1)));
 
 impl<'a> OnByte<'a, b'{'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -744,15 +730,13 @@ impl<'a> OnByte<'a, b'\\'> for Lexer<'a> {
 assert_lex!(
     test_tESCAPED_NL,
     b"\\\nTEST_TOKEN",
-    tTEST_TOKEN,
-    None,
-    2..12
+    token!(tTEST_TOKEN, loc!(2, 12))
 );
-assert_lex!(test_tESCAPED_SP, b"\\ ", tSP, None, 0..2);
-assert_lex!(test_tESCAPED_TAB, b"\\\t", tSLASH_T, None, 0..2);
-assert_lex!(test_tESCAPED_LF, b"\\\x0c", tSLASH_F, None, 0..2);
-assert_lex!(test_tESCAPED_CR, b"\\\r", tSLASH_R, None, 0..2);
-assert_lex!(test_tESCAPED_VTAB, b"\\\x0b", tVTAB, None, 0..2);
+assert_lex!(test_tESCAPED_SP, b"\\ ", token!(tSP, loc!(0, 2)));
+assert_lex!(test_tESCAPED_TAB, b"\\\t", token!(tSLASH_T, loc!(0, 2)));
+assert_lex!(test_tESCAPED_LF, b"\\\x0c", token!(tSLASH_F, loc!(0, 2)));
+assert_lex!(test_tESCAPED_CR, b"\\\r", token!(tSLASH_R, loc!(0, 2)));
+assert_lex!(test_tESCAPED_VTAB, b"\\\x0b", token!(tVTAB, loc!(0, 2)));
 
 impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
     fn on_byte(&mut self) -> Token<'a> {
@@ -777,7 +761,15 @@ impl<'a> OnByte<'a, b'_'> for Lexer<'a> {
         Ident::parse(&mut self.buffer)
     }
 }
-assert_lex!(test_tEOF_at__END__, b"__END__", tEOF, None, 0..0);
-assert_lex!(test_tEOF_at_NL___END__, b"\n__END__", tEOF, None, 1..1);
-assert_lex!(test_underscore_ident, b"_foo", tIDENTIFIER, None, 0..4);
-assert_lex!(test_underscore_fid, b"_foo?", tFID, None, 0..5);
+assert_lex!(test_tEOF_at__END__, b"__END__", token!(tEOF, loc!(0, 0)));
+assert_lex!(
+    test_tEOF_at_NL___END__,
+    b"\n__END__",
+    token!(tEOF, loc!(1, 1))
+);
+assert_lex!(
+    test_underscore_ident,
+    b"_foo",
+    token!(tIDENTIFIER, loc!(0, 4))
+);
+assert_lex!(test_underscore_fid, b"_foo?", token!(tFID, loc!(0, 5)));

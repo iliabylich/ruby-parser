@@ -15,6 +15,7 @@ macro_rules! assert_emits_extend_action {
                     buffer::BufferWithCursor,
                     strings::{StringExtendAction, StringLiteralExtend},
                 },
+                loc::loc,
                 string_content::StringContent,
                 token::token,
             };

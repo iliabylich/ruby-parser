@@ -249,44 +249,42 @@ macro_rules! assert_lex {
     (
         test_name = $test_name:ident,
         input = $input:expr,
-        kind = $tok_kind:expr,
-        value = $tok_value:expr,
-        loc = $loc:expr,
+        token = $token:expr,
         setup = $pre:expr,
         assert = $assert:expr
     ) => {
         #[test]
         #[allow(non_snake_case)]
         fn $test_name() {
-            use crate::{lexer::Lexer, loc::loc, token::TokenKind::*};
+            use crate::{lexer::Lexer, loc::loc, token::Token};
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
 
-            let token = lexer.take_token();
-            assert_eq!(token.kind(), &$tok_kind, "token doesn't match");
-            assert_eq!(token.loc(), loc!($loc.start, $loc.end), "loc doesn't match");
-            let tok_value: Option<&str> = $tok_value;
+            let actual_token = lexer.take_token();
+            let expected_token: Token = $token;
             assert_eq!(
-                token.value,
-                tok_value.map(|v| v.as_bytes().to_vec()),
+                actual_token.kind, expected_token.kind,
+                "token doesn't match"
+            );
+            assert_eq!(actual_token.loc, expected_token.loc, "loc doesn't match");
+            assert_eq!(
+                actual_token.value, expected_token.value,
                 "source of the loc doesn't match"
             );
             assert_eq!(
-                token.loc().end,
+                actual_token.loc().end,
                 lexer.buffer.pos(),
-                "buffer.pos() is not token.loc().end"
+                "buffer.pos() is not token.loc().end (i.e. input hasn't been consumed)"
             );
             $assert(&lexer);
         }
     };
     // Shortcut with no lexer setup/extra assert
-    ($test_name:ident, $input:expr, $tok_kind:expr, $tok_value:expr, $loc:expr) => {
+    ($test_name:ident, $input:expr, $token:expr) => {
         assert_lex!(
             test_name = $test_name,
             input = $input,
-            kind = $tok_kind,
-            value = $tok_value,
-            loc = $loc,
+            token = $token,
             setup = |_lexer: &mut Lexer| {},
             assert = |_lexer: &Lexer| {}
         );

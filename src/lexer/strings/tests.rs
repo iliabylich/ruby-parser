@@ -1,4 +1,4 @@
-use crate::{lexer::Lexer, token::token};
+use crate::{lexer::Lexer, loc::loc, token::token};
 
 #[test]
 fn test_string_interp_braces() {
