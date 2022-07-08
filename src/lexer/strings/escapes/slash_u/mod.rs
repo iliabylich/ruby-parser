@@ -132,6 +132,9 @@ fn read_codepoint(hex_bytes: &[u8], dest: &mut Vec<u8>) {
     let codepoint = u32::from_str_radix(s, 16).unwrap();
     let c = char::from_u32(codepoint).unwrap();
 
+    // FIXME: avoid allocation by creating a stack-allocated
+    // array of 4 bytes
+    // and moving its [0..c.len_utf8()] sub-slice to `dest`
     let mut buf = vec![0; c.len_utf8()];
     c.encode_utf8(&mut buf);
 

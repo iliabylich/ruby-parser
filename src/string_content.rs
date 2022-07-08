@@ -54,6 +54,15 @@ impl From<u8> for StringContent<'_> {
     }
 }
 
+impl From<TokenValue> for StringContent<'_> {
+    fn from(token_value: TokenValue) -> Self {
+        match token_value {
+            TokenValue::Bytes(bytes) => Self::from(bytes),
+            TokenValue::Byte(byte) => Self::from(byte),
+        }
+    }
+}
+
 impl<'a> StringContent<'a> {
     fn into_bytes(self) -> Vec<u8> {
         match self {
@@ -83,6 +92,8 @@ impl<const N: usize> PartialEq<[u8; N]> for StringContent<'_> {
 }
 
 use std::ops::{Add, AddAssign};
+
+use crate::token::TokenValue;
 
 impl<'a> Add for StringContent<'a> {
     type Output = Self;

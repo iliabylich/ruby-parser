@@ -4,7 +4,7 @@ use crate::Loc;
 pub struct Token {
     pub kind: TokenKind,
     pub loc: Loc,
-    pub value: Option<Vec<u8>>,
+    pub value: Option<TokenValue>,
 }
 
 impl Token {
@@ -196,6 +196,35 @@ impl Default for TokenKind {
     }
 }
 
+#[derive(Debug, Eq)]
+pub enum TokenValue {
+    Bytes(Vec<u8>),
+    Byte(u8),
+}
+
+impl From<Vec<u8>> for TokenValue {
+    fn from(bytes: Vec<u8>) -> Self {
+        Self::Bytes(bytes)
+    }
+}
+
+impl From<u8> for TokenValue {
+    fn from(byte: u8) -> Self {
+        Self::Byte(byte)
+    }
+}
+
+impl PartialEq for TokenValue {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (TokenValue::Bytes(lhs), TokenValue::Bytes(rhs)) => lhs == rhs,
+            (TokenValue::Bytes(lhs), TokenValue::Byte(rhs)) => lhs.len() == 1 && lhs[0] == *rhs,
+            (TokenValue::Byte(lhs), TokenValue::Bytes(rhs)) => rhs.len() == 1 && rhs[0] == *lhs,
+            (TokenValue::Byte(lhs), TokenValue::Byte(rhs)) => lhs == rhs,
+        }
+    }
+}
+
 macro_rules! token {
     ($kind:expr, $loc:expr) => {{
         #[allow(unused_imports)]
@@ -208,11 +237,11 @@ macro_rules! token {
     }};
     ($kind:expr, $loc:expr, $value:expr) => {{
         #[allow(unused_imports)]
-        use crate::token::TokenKind::*;
+        use crate::token::{TokenKind::*, TokenValue};
         crate::token::Token {
             kind: $kind,
             loc: $loc,
-            value: Some($value),
+            value: Some(TokenValue::from($value)),
         }
     }};
 }

@@ -21,11 +21,7 @@ pub(crate) fn handle_escaped_start_or_end(
                 handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
 
                 let action = ControlFlow::Break(StringExtendAction::EmitToken {
-                    token: token!(
-                        tSTRING_CONTENT,
-                        loc!(buffer.pos(), buffer.pos() + 2),
-                        vec![byte]
-                    ),
+                    token: token!(tSTRING_CONTENT, loc!(buffer.pos(), buffer.pos() + 2), byte),
                 });
                 buffer.set_pos(buffer.pos() + 2);
                 return action;

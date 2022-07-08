@@ -62,11 +62,7 @@ impl Lookahead for QMark {
                             | Escape::SlashMetaCtrl(SlashMetaCtrl { byte, length })
                             | Escape::SlashByte(SlashByte { byte, length }) => {
                                 return QMark {
-                                    token: token!(
-                                        tCHAR,
-                                        loc!(start, start + 1 + length),
-                                        vec![byte]
-                                    ),
+                                    token: token!(tCHAR, loc!(start, start + 1 + length), byte),
                                 };
                             }
                         },
