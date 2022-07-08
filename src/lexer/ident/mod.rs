@@ -3,8 +3,8 @@ use crate::{
         assert_lex,
         buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
     },
+    loc::loc,
     token::{token, Token},
-    Loc,
 };
 
 mod reserved_words;
@@ -105,7 +105,10 @@ impl Ident {
 
         // there's a chance that it's a keyword
         if let Some(reserved_word) = find_reserved_word(slice) {
-            return Token(reserved_word.token_value, Loc { start, end });
+            return Token {
+                value: reserved_word.token_value,
+                loc: loc!(start, end),
+            };
         }
 
         // Can be a constant

@@ -135,7 +135,11 @@ impl<'a, C: Constructor> Builder<C> {
         parts: Vec<Node<'a>>,
         end_t: Option<Token<'a>>,
     ) -> Box<Node<'a>> {
-        if let Some(Token(TokenValue::tHEREDOC_BEG, _)) = &begin_t {
+        if let Some(Token {
+            value: TokenValue::tHEREDOC_BEG,
+            ..
+        }) = &begin_t
+        {
             let (heredoc_body_l, heredoc_end_l, expression_l) =
                 heredoc_map(&begin_t, &parts, &end_t);
 

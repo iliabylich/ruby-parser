@@ -398,7 +398,7 @@ impl<'a> OnByte<'a, b'+'> for Lexer<'a> {
             }
             Some(b'0'..=b'9') => {
                 let mut token = parse_number(&mut self.buffer);
-                token.1.start = start;
+                token.loc.start = start;
                 token
             }
             _ => token!(tPLUS, start, start + 1),

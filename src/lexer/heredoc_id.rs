@@ -3,8 +3,8 @@ use crate::{
         buffer::{Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
     },
+    loc::loc,
     token::{Token, TokenValue},
-    Loc,
 };
 
 #[derive(Debug, PartialEq, Eq)]
@@ -110,13 +110,10 @@ impl<'a> Lookahead<'a> for HeredocId<'a> {
             }
         }
 
-        let token = Token(
-            token_value,
-            Loc {
-                start: heredoc_start,
-                end: heredoc_end,
-            },
-        );
+        let token = Token {
+            value: token_value,
+            loc: loc!(heredoc_start, heredoc_end),
+        };
 
         Ok(Some(Self {
             token,

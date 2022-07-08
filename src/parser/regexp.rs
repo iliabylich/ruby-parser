@@ -47,9 +47,12 @@ where
 
     fn read_div_as_heredoc_beg(&mut self) -> Option<Token<'a>> {
         let loc = self.current_token().loc();
-        if let Token(TokenValue::tDIVIDE, _) = self.current_token() {
+        if self.current_token().is(TokenValue::tDIVIDE) {
             self.take_token();
-            Some(Token(TokenValue::tREGEXP_BEG, loc))
+            Some(Token {
+                value: TokenValue::tREGEXP_BEG,
+                loc,
+            })
         } else {
             None
         }
