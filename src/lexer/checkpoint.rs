@@ -5,6 +5,10 @@ pub(crate) enum Checkpoint {
     Real {
         buffer_pos: usize,
         literals_stack_size: usize,
+
+        curly_nest: usize,
+        paren_nest: usize,
+        brack_nest: usize,
     },
     Dummy,
 }
@@ -15,10 +19,16 @@ impl Checkpoint {
             Checkpoint::Real {
                 buffer_pos,
                 literals_stack_size,
+                curly_nest,
+                paren_nest,
+                brack_nest,
             } => {
                 lexer.buffer.set_pos(buffer_pos);
                 lexer.string_literals.truncate(literals_stack_size);
                 lexer.current_token = None;
+                lexer.curly_nest = curly_nest;
+                lexer.paren_nest = paren_nest;
+                lexer.brack_nest = brack_nest;
             }
             Checkpoint::Dummy => return,
         }
@@ -28,6 +38,9 @@ impl Checkpoint {
         Checkpoint::Real {
             buffer_pos: lexer.buffer.pos(),
             literals_stack_size: lexer.string_literals.size(),
+            curly_nest: lexer.curly_nest,
+            paren_nest: lexer.paren_nest,
+            brack_nest: lexer.brack_nest,
         }
     }
 }

@@ -35,8 +35,8 @@ pub struct Lexer<'a> {
     current_token: Option<Token<'a>>,
 
     pub(crate) curly_nest: usize,
-    paren_nest: usize,
-    brack_nest: usize,
+    pub(crate) paren_nest: usize,
+    pub(crate) brack_nest: usize,
 }
 
 impl<'a> Lexer<'a> {
