@@ -14,9 +14,14 @@ where
 
         let maybe_call_with_command_args = None::<Box<Node<'a>>>
             .or_else(|| {
-                let fcall = self.try_fcall();
-                let command_args = self.parse_command_args();
-                todo!("call_method {:?} {:?}", fcall, command_args)
+                let checkpoint = self.new_checkpoint();
+                let fcall = self.try_fcall()?;
+                if let Some(command_args) = self.try_command_args() {
+                    todo!("call_method {:?} {:?}", fcall, command_args)
+                } else {
+                    self.restore_checkpoint(checkpoint);
+                    None
+                }
             })
             .or_else(|| {
                 let primary_value = self.try_primary_value()?;
@@ -25,14 +30,15 @@ where
                     .or_else(|| self.try_operation2());
                 if let Some(op_t) = maybe_op_t {
                     if let Some(operation2) = self.try_operation2() {
-                        let command_args = self.parse_command_args();
-                        todo!(
-                            "return call_method {:?} {:?} {:?} {:?}",
-                            primary_value,
-                            op_t,
-                            operation2,
-                            command_args
-                        )
+                        if let Some(command_args) = self.try_command_args() {
+                            todo!(
+                                "return call_method {:?} {:?} {:?} {:?}",
+                                primary_value,
+                                op_t,
+                                operation2,
+                                command_args
+                            )
+                        }
                     }
                 }
 
@@ -40,14 +46,24 @@ where
                 None
             })
             .or_else(|| {
+                let checkpoint = self.new_checkpoint();
                 let super_t = self.try_token(TokenValue::kSUPER)?;
-                let command_args = self.parse_command_args();
-                todo!("super {:?} {:?}", super_t, command_args)
+                if let Some(command_args) = self.try_command_args() {
+                    todo!("super {:?} {:?}", super_t, command_args)
+                } else {
+                    self.restore_checkpoint(checkpoint);
+                    None
+                }
             })
             .or_else(|| {
+                let checkpoint = self.new_checkpoint();
                 let yield_t = self.try_token(TokenValue::kYIELD)?;
-                let command_args = self.parse_command_args();
-                todo!("yield {:?} {:?}", yield_t, command_args)
+                if let Some(command_args) = self.try_command_args() {
+                    todo!("yield {:?} {:?}", yield_t, command_args)
+                } else {
+                    self.restore_checkpoint(checkpoint);
+                    None
+                }
             });
 
         if let Some(call_with_command_args) = maybe_call_with_command_args {
@@ -81,30 +97,17 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_command_args(&mut self) -> Vec<Node<'a>> {
-        todo!("parser.parse_command_args")
+    pub(crate) fn try_command_args(&mut self) -> Option<Vec<Node<'a>>> {
+        self.try_call_args()
     }
 
     pub(crate) fn try_brace_body(&mut self) -> Option<Box<Node<'a>>> {
         todo!("parser.try_brace_body")
     }
 
+    // This rule can be `none`
     pub(crate) fn try_call_args(&mut self) -> Option<Vec<Node<'a>>> {
         todo!("parser.try_call_args")
-    }
-}
-
-struct CommandTail<'a> {
-    command_args: Vec<Node<'a>>,
-    cmd_brace_block: Option<CmdBraceBlock<'a>>,
-}
-
-fn try_command_tail<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> CommandTail<'a> {
-    let command_args = parser.parse_command_args();
-    let cmd_brace_block = try_cmd_brace_block(parser);
-    CommandTail {
-        command_args,
-        cmd_brace_block,
     }
 }
 
