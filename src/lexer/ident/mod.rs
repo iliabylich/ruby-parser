@@ -158,51 +158,51 @@ fn test_lookahead_ident() {
     assert_eq!(Ident::lookahead(&buffer, 0), Some(Ident { length: 6 })); // captures "абв"
 }
 
-assert_lex!(test_tIDENTIFIER_plain, b"foo", tIDENTIFIER, b"foo", 0..3);
-assert_lex!(test_tCONSTANT_plain, b"Foo", tCONSTANT, b"Foo", 0..3);
+assert_lex!(test_tIDENTIFIER_plain, b"foo", tIDENTIFIER, None, 0..3);
+assert_lex!(test_tCONSTANT_plain, b"Foo", tCONSTANT, None, 0..3);
 
 assert_lex!(
     test_tIDENTIFIER_multibyte,
     b"\xD0\xB0\xD0\xB1\xD0\xB2+",
     tIDENTIFIER,
-    b"\xD0\xB0\xD0\xB1\xD0\xB2",
+    None,
     0..6
 );
 assert_lex!(
     test_tCONSTANT_multibyte,
     b"\xD0\x90\xD0\x91\xD0\x92+",
     tCONSTANT,
-    b"\xD0\x90\xD0\x91\xD0\x92",
+    None,
     0..6
 );
 
-assert_lex!(test_tFID_predicate, b"foo?", tFID, b"foo?", 0..4);
-assert_lex!(test_tFID_predicate_eq, b"foo?=", tIDENTIFIER, b"foo", 0..3);
-assert_lex!(test_tFID_bang, b"foo!", tFID, b"foo!", 0..4);
-assert_lex!(test_tFID_bang_eq, b"foo!=", tIDENTIFIER, b"foo", 0..3);
-assert_lex!(test_tIDENTIFIER_setter, b"foo=", tIDENTIFIER, b"foo=", 0..4);
+assert_lex!(test_tFID_predicate, b"foo?", tFID, None, 0..4);
+assert_lex!(test_tFID_predicate_eq, b"foo?=", tIDENTIFIER, None, 0..3);
+assert_lex!(test_tFID_bang, b"foo!", tFID, None, 0..4);
+assert_lex!(test_tFID_bang_eq, b"foo!=", tIDENTIFIER, None, 0..3);
+assert_lex!(test_tIDENTIFIER_setter, b"foo=", tIDENTIFIER, None, 0..4);
 assert_lex!(
     test_tIDENTIFIER_setter_tilde,
     b"foo=~",
     tIDENTIFIER,
-    b"foo",
+    None,
     0..3
 );
 assert_lex!(
     test_tIDENTIFIER_setter_eq,
     b"foo==",
     tIDENTIFIER,
-    b"foo",
+    None,
     0..3
 );
 assert_lex!(
     test_tIDENTIFIER_setter_gt,
     b"foo=>",
     tIDENTIFIER,
-    b"foo",
+    None,
     0..3
 );
 
-assert_lex!(test_tLABEL, b"foo:", tLABEL, b"foo:", 0..4);
+assert_lex!(test_tLABEL, b"foo:", tLABEL, None, 0..4);
 
-assert_lex!(test_reserved_word, b"if", kIF, b"if", 0..2);
+assert_lex!(test_reserved_word, b"if", kIF, None, 0..2);

@@ -15,7 +15,7 @@ where
     }
 
     fn try_char(&mut self) -> Option<Box<Node<'a>>> {
-        if let TokenKind::tCHAR(_) = self.current_token().kind() {
+        if self.current_token().is(TokenKind::tCHAR) {
             let char_t = self.take_token();
             Some(Builder::<C>::character(char_t))
         } else {

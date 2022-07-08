@@ -247,11 +247,11 @@ pub(crate) trait OnByte<'a, const BYTE: u8> {
 
 macro_rules! assert_lex {
     (
-        $test_name:ident,
-        $input:expr,
-        $tok:expr,
-        $value:expr,
-        $loc:expr,
+        test_name = $test_name:ident,
+        input = $input:expr,
+        kind = $tok_kind:expr,
+        value = $tok_value:expr,
+        loc = $loc:expr,
         setup = $pre:expr,
         assert = $assert:expr
     ) => {
@@ -261,30 +261,32 @@ macro_rules! assert_lex {
             use crate::{lexer::Lexer, loc::loc, token::TokenKind::*};
             let mut lexer = Lexer::new($input);
             $pre(&mut lexer);
-            let token = lexer.current_token();
-            assert_eq!(token.kind(), &$tok, "token doesn't match");
+
+            let token = lexer.take_token();
+            assert_eq!(token.kind(), &$tok_kind, "token doesn't match");
             assert_eq!(token.loc(), loc!($loc.start, $loc.end), "loc doesn't match");
+            let tok_value: Option<&str> = $tok_value;
+            assert_eq!(
+                token.value,
+                tok_value.map(|v| v.as_bytes().to_vec()),
+                "source of the loc doesn't match"
+            );
             assert_eq!(
                 token.loc().end,
                 lexer.buffer.pos(),
                 "buffer.pos() is not token.loc().end"
             );
-            assert_eq!(
-                &$input[$loc.start..$loc.end],
-                $value,
-                "source of the loc doesn't match"
-            );
             $assert(&lexer);
         }
     };
     // Shortcut with no lexer setup/extra assert
-    ($test_name:ident, $input:expr, $tok:expr, $value:expr, $loc:expr) => {
+    ($test_name:ident, $input:expr, $tok_kind:expr, $tok_value:expr, $loc:expr) => {
         assert_lex!(
-            $test_name,
-            $input,
-            $tok,
-            $value,
-            $loc,
+            test_name = $test_name,
+            input = $input,
+            kind = $tok_kind,
+            value = $tok_value,
+            loc = $loc,
             setup = |_lexer: &mut Lexer| {},
             assert = |_lexer: &Lexer| {}
         );

@@ -50,8 +50,9 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                             Escape::SlashU(SlashU::Short { codepoint, length }) => {
                                 return QMark {
                                     token: token!(
-                                        tCHAR(codepoint),
-                                        loc!(start, start + 1 + length)
+                                        tCHAR,
+                                        loc!(start, start + 1 + length),
+                                        vec_of_u8_from_char(codepoint)
                                     ),
                                 };
                             }
@@ -62,8 +63,9 @@ impl<'a> Lookahead<'a> for QMark<'a> {
                             | Escape::SlashByte(SlashByte { codepoint, length }) => {
                                 return QMark {
                                     token: token!(
-                                        tCHAR(codepoint as char),
-                                        loc!(start, start + 1 + length)
+                                        tCHAR,
+                                        loc!(start, start + 1 + length),
+                                        vec![codepoint]
                                     ),
                                 };
                             }
@@ -99,13 +101,12 @@ impl<'a> Lookahead<'a> for QMark<'a> {
         match buffer.utf8_char_at(start + 1) {
             Utf8Char::Valid { length } => {
                 let end = start + 1 + length;
-                let codepoint = std::str::from_utf8(buffer.slice(start + 1, end).expect("bug"))
+                let value = std::str::from_utf8(buffer.slice(start + 1, end).expect("bug"))
                     .unwrap()
-                    .chars()
-                    .next()
-                    .unwrap();
+                    .as_bytes()
+                    .to_vec();
                 QMark {
-                    token: token!(tCHAR(codepoint), loc!(start, end)),
+                    token: token!(tCHAR, loc!(start, end), value),
                 }
             }
             _ => QMark {
@@ -113,6 +114,12 @@ impl<'a> Lookahead<'a> for QMark<'a> {
             },
         }
     }
+}
+
+fn vec_of_u8_from_char(c: char) -> Vec<u8> {
+    let mut buf = vec![0; c.len_utf8()];
+    c.encode_utf8(&mut buf);
+    buf
 }
 
 impl<'a> QMark<'a> {
@@ -123,20 +130,20 @@ impl<'a> QMark<'a> {
     }
 }
 
-assert_lex!(test_tEH, b"?", tEH, b"?", 0..1);
-assert_lex!(test_tCHAR_ascii, b"?a", tCHAR('a'), b"?a", 0..2);
+assert_lex!(test_tEH, b"?", tEH, None, 0..1);
+assert_lex!(test_tCHAR_ascii, b"?a", tCHAR, Some("a"), 0..2);
 assert_lex!(
     test_tCHAR_multibyte,
     "?字".as_bytes(),
-    tCHAR('字'),
-    "?字".as_bytes(),
+    tCHAR,
+    Some("字"),
     0..4
 );
 assert_lex!(
     test_tCHAR_slash_u,
     b"?\\u1234",
-    tCHAR('\u{1234}'),
-    b"?\\u1234",
+    tCHAR,
+    Some("\u{1234}"),
     0..7
 );
-assert_lex!(test_tEH_and_ident, b"?ident", tEH, b"?", 0..1);
+assert_lex!(test_tEH_and_ident, b"?ident", tEH, None, 0..1);

@@ -90,7 +90,7 @@ pub enum TokenKind<'a> {
     tFLOAT,                             // "float literal"
     tRATIONAL,                          // "rational literal"
     tIMAGINARY,                         // "imaginary literal"
-    tCHAR(char),                        // "char literal"
+    tCHAR,                              // "char literal"
     tNTH_REF,                           // "numbered reference"
     tBACK_REF,                          // "back reference"
     tSTRING_CONTENT(StringContent<'a>), // "literal content"

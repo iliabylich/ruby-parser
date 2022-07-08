@@ -206,13 +206,18 @@ impl<'a, C: Constructor> Builder<C> {
         let expression_l = char_t.loc();
         let begin_l = loc!(expression_l.start, expression_l.start + 1);
 
-        let char = if let TokenKind::tCHAR(char) = char_t.kind() {
-            *char
+        let value = if let Token {
+            kind: TokenKind::tCHAR,
+            value: Some(value),
+            ..
+        } = char_t
+        {
+            value
         } else {
             unreachable!()
         };
 
-        let value = StringContent::from(char);
+        let value = StringContent::from(value);
         Box::new(Node::Str(Str {
             value,
             begin_l: Some(begin_l),
