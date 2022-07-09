@@ -2,7 +2,7 @@ use crate::{lexer::Lexer, loc::loc, token::token};
 
 #[test]
 fn test_string_interp_braces() {
-    let mut lexer = Lexer::new(b"\"#{{} + {}}\"");
+    let (mut lexer, _state) = Lexer::new_managed(b"\"#{{} + {}}\"");
     assert_eq!(
         lexer.tokenize_until_eof(),
         vec![

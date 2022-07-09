@@ -18,11 +18,11 @@ where
             // now we need to manually push a xstring literal
             // Lexer is not capable of doing it
             self.lexer
-                .string_literals
+                .string_literals()
                 .push(StringLiteral::Regexp(Regexp::new(
                     b'/',
                     b'/',
-                    self.lexer.curly_nest,
+                    self.lexer.curly_nest(),
                 )));
 
             Some(token)

@@ -23,5 +23,4 @@ pub use token::{Token, TokenKind};
 pub(crate) mod builder;
 pub use builder::{CString, Constructor};
 
-mod state;
-pub(crate) use state::{OwnedState, StateApi, StateRef};
+pub(crate) mod state;

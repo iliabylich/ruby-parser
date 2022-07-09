@@ -33,7 +33,7 @@ fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
     if let Some(expr) = parser.try_expr() {
         return Some(Builder::<C>::not_op(not_t, None, Some(expr), None));
     }
-    parser.restore_checkpoint(checkpoint);
+    checkpoint.restore();
     None
 }
 fn try_bang_command_call<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
@@ -42,7 +42,7 @@ fn try_bang_command_call<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<N
     if let Some(command_call) = parser.try_command_call() {
         return Some(Builder::<C>::not_op(bang_t, None, Some(command_call), None));
     }
-    parser.restore_checkpoint(checkpoint);
+    checkpoint.restore();
     None
 }
 fn try_arg_assoc_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
@@ -58,7 +58,7 @@ fn try_arg_assoc_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> Option<B
             )
         }
     }
-    parser.restore_checkpoint(checkpoint);
+    checkpoint.restore();
     None
 }
 fn try_arg_in_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
@@ -74,7 +74,7 @@ fn try_arg_in_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<
             )
         }
     }
-    parser.restore_checkpoint(checkpoint);
+    checkpoint.restore();
     None
 }
 

@@ -126,7 +126,7 @@ fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
             panic!("expected tRPAREN, got {:?}", parser.current_token());
         }
     } else {
-        parser.restore_checkpoint(checkpoint);
+        checkpoint.restore();
         None
     }
 }

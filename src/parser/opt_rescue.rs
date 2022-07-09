@@ -28,7 +28,7 @@ where
                         return Some(k_then);
                     }
                 }
-                self.restore_checkpoint(checkpoint);
+                checkpoint.restore();
                 None
             })
     }
@@ -64,7 +64,7 @@ where
                     }
                 }
 
-                self.restore_checkpoint(checkpoint);
+                checkpoint.restore();
                 None
             })
     }

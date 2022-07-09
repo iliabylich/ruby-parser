@@ -19,7 +19,7 @@ where
                 if let Some(command_args) = self.try_command_args() {
                     todo!("call_method {:?} {:?}", fcall, command_args)
                 } else {
-                    self.restore_checkpoint(checkpoint);
+                    checkpoint.restore();
                     None
                 }
             })
@@ -42,7 +42,7 @@ where
                     }
                 }
 
-                self.restore_checkpoint(checkpoint);
+                checkpoint.restore();
                 None
             })
             .or_else(|| {
@@ -51,7 +51,7 @@ where
                 if let Some(command_args) = self.try_command_args() {
                     todo!("super {:?} {:?}", super_t, command_args)
                 } else {
-                    self.restore_checkpoint(checkpoint);
+                    checkpoint.restore();
                     None
                 }
             })
@@ -61,7 +61,7 @@ where
                 if let Some(command_args) = self.try_command_args() {
                     todo!("yield {:?} {:?}", yield_t, command_args)
                 } else {
-                    self.restore_checkpoint(checkpoint);
+                    checkpoint.restore();
                     None
                 }
             });
@@ -91,7 +91,7 @@ where
         if let Some(call_args) = self.try_call_args() {
             todo!("keyword_cmd {:?} {:?}", keyword_t, call_args)
         } else {
-            self.restore_checkpoint(checkpoint);
+            checkpoint.restore();
             None
         }
     }

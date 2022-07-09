@@ -32,7 +32,7 @@ where
                     Some(node)
                 } else {
                     // rollback
-                    self.restore_checkpoint(checkpoint);
+                    checkpoint.restore();
                     None
                 }
             }
@@ -79,14 +79,14 @@ mod tests {
         let mut parser = RustParser::new(b":");
         assert_eq!(parser.try_ssym(), None);
         // `:` is consumed
-        assert_eq!(parser.lexer.buffer.pos(), 1);
+        assert_eq!(parser.lexer.buffer().pos(), 1);
     }
 
     #[test]
     fn test_ssym_no_colon() {
         let mut parser = RustParser::new(b"");
         assert_eq!(parser.try_ssym(), None);
-        assert_eq!(parser.lexer.buffer.pos(), 0);
+        assert_eq!(parser.lexer.buffer().pos(), 0);
     }
 
     #[test]
@@ -108,13 +108,13 @@ mod tests {
         let mut parser = RustParser::new(b":");
         assert_eq!(parser.try_dsym(), None);
         // `:` is consumed
-        assert_eq!(parser.lexer.buffer.pos(), 1);
+        assert_eq!(parser.lexer.buffer().pos(), 1);
     }
 
     #[test]
     fn test_dsym_no_colon() {
         let mut parser = RustParser::new(b"");
         assert_eq!(parser.try_dsym(), None);
-        assert_eq!(parser.lexer.buffer.pos(), 0);
+        assert_eq!(parser.lexer.buffer().pos(), 0);
     }
 }

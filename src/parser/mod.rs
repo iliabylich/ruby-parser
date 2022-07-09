@@ -1,6 +1,7 @@
 use crate::builder::{Builder, Constructor, RustConstructor};
 use crate::lexer::{buffer::Buffer, Lexer};
 use crate::nodes::Node;
+use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 
 mod checkpoint;
@@ -42,6 +43,8 @@ mod xstring;
 mod yield_;
 
 pub struct Parser<C: Constructor = RustConstructor> {
+    state: OwnedState,
+
     lexer: Lexer,
     debug: bool,
     phantom: std::marker::PhantomData<C>,
@@ -53,8 +56,12 @@ where
     C: Constructor,
 {
     pub fn new(input: &[u8]) -> Self {
+        let mut state = OwnedState::new(input);
+        let state_ref = state.new_ref();
+
         Self {
-            lexer: Lexer::new(input),
+            state,
+            lexer: Lexer::new(state_ref),
             debug: false,
             phantom: std::marker::PhantomData,
         }
@@ -67,7 +74,7 @@ where
     }
 
     pub(crate) fn current_token(&mut self) -> &Token {
-        self.lexer.current_token()
+        self.lexer.get_current_token()
     }
     pub(crate) fn skip_token(&mut self) {
         self.lexer.skip_token()
@@ -105,7 +112,7 @@ where
     }
 
     pub(crate) fn buffer(&self) -> &Buffer {
-        self.lexer.buffer.for_lookahead()
+        self.lexer.buffer().for_lookahead()
     }
 }
 
@@ -695,7 +702,7 @@ where
         if let Some(rparen_t) = self.try_token(TokenKind::tRPAREN) {
             Some(rparen_t)
         } else {
-            self.restore_checkpoint(checkpoint);
+            checkpoint.restore();
             None
         }
     }
@@ -705,7 +712,7 @@ where
         if let Some(rbrack_t) = self.try_token(TokenKind::tRBRACK) {
             Some(rbrack_t)
         } else {
-            self.restore_checkpoint(checkpoint);
+            checkpoint.restore();
             None
         }
     }
@@ -715,7 +722,7 @@ where
         if let Some(rbrace_t) = self.try_token(TokenKind::tRCURLY) {
             Some(rbrace_t)
         } else {
-            self.restore_checkpoint(checkpoint);
+            checkpoint.restore();
             None
         }
     }

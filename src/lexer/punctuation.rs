@@ -18,14 +18,14 @@ impl OnByte<b'#'> for Lexer {
 
         // simply read until EOL
         loop {
-            match self.buffer.current_byte() {
+            match self.buffer().current_byte() {
                 None | Some(b'\n') => break,
-                _ => self.buffer.skip_byte(),
+                _ => self.buffer().skip_byte(),
             }
         }
         // Multiple consecutive comments are merged on the parser level
 
-        token!(tCOMMENT, loc!(start, self.buffer.pos()))
+        token!(tCOMMENT, loc!(start, self.buffer().pos()))
     }
 }
 assert_lex!(test_tCOMMENT_INLINE, b"# foo", token!(tCOMMENT, loc!(0, 5)));
@@ -87,8 +87,8 @@ impl OnByte<b'='> for Lexer {
         let start = self.pos();
         self.skip_byte();
 
-        if self.buffer.lookahead(b"begin") {
-            self.buffer.set_pos(self.pos() + 5);
+        if self.buffer().lookahead(b"begin") {
+            self.buffer().set_pos(self.pos() + 5);
             return token!(tEMBEDDED_COMMENT_START, loc!(start, start + 6));
         }
 
@@ -131,21 +131,21 @@ impl OnByte<b'<'> for Lexer {
         let start = self.pos();
 
         // Check if heredoc id
-        if let Some(b'<') = self.buffer.byte_at(start + 1) {
-            if self.required_new_expr {
+        if let Some(b'<') = self.buffer().byte_at(start + 1) {
+            if self.required_new_expr() {
                 if let Some(HeredocId {
                     token,
                     id: (id_start, id_end),
                     squiggly,
                     interpolated,
-                }) = HeredocId::parse(&mut self.buffer)
+                }) = HeredocId::parse(&mut self.buffer())
                 {
                     let interpolated = if interpolated {
-                        Some(Interpolation::new(self.curly_nest))
+                        Some(Interpolation::new(self.curly_nest()))
                     } else {
                         None
                     };
-                    self.string_literals
+                    self.string_literals()
                         .push(StringLiteral::Heredoc(Heredoc::new(
                             interpolated,
                             loc!(id_start, id_end),
@@ -190,14 +190,14 @@ assert_lex!(
     input = b"<<-HERE",
     token = token!(tDSTRING_BEG, loc!(0, 7)),
     setup = |lexer: &mut Lexer| {
-        lexer.curly_nest = 42;
+        *lexer.curly_nest_mut() = 42;
         lexer.require_new_expr();
     },
     assert = |lexer: &Lexer| {
-        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(lexer.string_literals().size(), 1);
 
         assert_eq!(
-            lexer.string_literals.last(),
+            lexer.string_literals().last(),
             Some(&StringLiteral::Heredoc(Heredoc::new(
                 Some(Interpolation::new(42)),
                 loc!(3, 7),
@@ -246,9 +246,9 @@ impl OnByte<b'"'> for Lexer {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tDSTRING_BEG, loc!(start, start + 1));
-        self.string_literals
+        self.string_literals()
             .push(StringLiteral::StringInterp(StringInterp::new(
-                Interpolation::new(self.curly_nest),
+                Interpolation::new(self.curly_nest()),
                 b'"',
                 b'"',
             )));
@@ -260,14 +260,14 @@ assert_lex!(
     input = b"\"",
     token = token!(tDSTRING_BEG, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
-        lexer.curly_nest = 42;
+        *lexer.curly_nest_mut() = 42;
     },
     assert = |lexer: &Lexer| {
         use crate::lexer::strings::types::StringInterp;
-        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(lexer.string_literals().size(), 1);
 
         assert_eq!(
-            lexer.string_literals.last(),
+            lexer.string_literals().last(),
             Some(&StringLiteral::StringInterp(StringInterp::new(
                 Interpolation::new(42),
                 b'"',
@@ -296,7 +296,7 @@ impl OnByte<b'\''> for Lexer {
         let start = self.pos();
         self.skip_byte();
         let token = token!(tSTRING_BEG, loc!(start, start + 1));
-        self.string_literals
+        self.string_literals()
             .push(StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')));
         token
     }
@@ -306,12 +306,12 @@ assert_lex!(
     input = b"'",
     token = token!(tSTRING_BEG, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
-        lexer.curly_nest = 42;
+        *lexer.curly_nest_mut() = 42;
     },
     assert = |lexer: &Lexer| {
-        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(lexer.string_literals().size(), 1);
         assert_eq!(
-            lexer.string_literals.last(),
+            lexer.string_literals().last(),
             Some(&StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')))
         )
     }
@@ -319,7 +319,7 @@ assert_lex!(
 
 impl OnByte<b'?'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        QMark::parse(&mut self.buffer)
+        QMark::parse(&mut self.buffer())
     }
 }
 
@@ -395,7 +395,7 @@ impl OnByte<b'+'> for Lexer {
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'0'..=b'9') => {
-                let mut token = parse_number(&mut self.buffer);
+                let mut token = parse_number(&mut self.buffer());
                 token.loc.start = start;
                 token
             }
@@ -448,12 +448,12 @@ impl OnByte<b'.'> for Lexer {
             }
             Some(b'0'..=b'9') => {
                 let mut end = start;
-                while matches!(self.buffer.byte_at(end), Some(b'0'..=b'9')) {
+                while matches!(self.buffer().byte_at(end), Some(b'0'..=b'9')) {
                     end += 1;
                 }
                 panic!(
                     "no .<digit> floating literal anymore; put 0 before dot ({:?})",
-                    self.buffer.slice(start, end)
+                    self.buffer().slice(start, end)
                 );
             }
             _ => token!(tDOT, loc!(start, start + 1)),
@@ -468,8 +468,8 @@ impl OnByte<b')'> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        if self.paren_nest > 0 {
-            self.paren_nest -= 1;
+        if self.paren_nest() > 0 {
+            *self.paren_nest_mut() -= 1;
         } else {
             panic!("negative paren_nest");
         }
@@ -482,7 +482,7 @@ assert_lex!(
     input = b")",
     token = token!(tRPAREN, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
-        lexer.paren_nest = 1;
+        *lexer.paren_nest_mut() = 1;
     },
     assert = |_lexer: &Lexer| {}
 );
@@ -491,8 +491,8 @@ impl OnByte<b']'> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        if self.brack_nest > 0 {
-            self.brack_nest -= 1;
+        if self.brack_nest() > 0 {
+            *self.brack_nest_mut() -= 1;
         } else {
             panic!("negative brack_nest");
         }
@@ -504,7 +504,7 @@ assert_lex!(
     input = b"]",
     token = token!(tRBRACK, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
-        lexer.brack_nest = 1;
+        *lexer.brack_nest_mut() = 1;
     },
     assert = |_lexer: &Lexer| {}
 );
@@ -513,8 +513,8 @@ impl OnByte<b'}'> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        if self.curly_nest > 0 {
-            self.curly_nest -= 1;
+        if self.curly_nest() > 0 {
+            *self.curly_nest_mut() -= 1;
         } else {
             panic!("negative curly_nest");
         }
@@ -526,7 +526,7 @@ assert_lex!(
     input = b"}",
     token = token!(tRCURLY, loc!(0, 1)),
     setup = |lexer: &mut Lexer| {
-        lexer.curly_nest = 1;
+        *lexer.curly_nest_mut() = 1;
     },
     assert = |_lexer: &Lexer| {}
 );
@@ -544,16 +544,16 @@ impl OnByte<b':'> for Lexer {
                 // :"..." symbol
                 self.skip_byte();
                 let token = token!(tDSYMBEG, loc!(start, start + 2));
-                self.string_literals
-                    .push(StringLiteral::Symbol(Symbol::new(true, self.curly_nest)));
+                self.string_literals()
+                    .push(StringLiteral::Symbol(Symbol::new(true, self.curly_nest())));
                 return token;
             }
             Some(b'\'') => {
                 // :'...' symbol
                 self.skip_byte();
                 let token = token!(tSYMBEG, loc!(start, start + 2));
-                self.string_literals
-                    .push(StringLiteral::Symbol(Symbol::new(false, self.curly_nest)));
+                self.string_literals()
+                    .push(StringLiteral::Symbol(Symbol::new(false, self.curly_nest())));
                 return token;
             }
             _ => {}
@@ -571,14 +571,14 @@ assert_lex!(
     input = b":\"",
     token = token!(tDSYMBEG, loc!(0, 2)),
     setup = |lexer: &mut Lexer| {
-        lexer.curly_nest = 42;
+        *lexer.curly_nest_mut() = 42;
     },
     assert = |lexer: &Lexer| {
         use crate::lexer::strings::types::Symbol;
 
-        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(lexer.string_literals().size(), 1);
         assert_eq!(
-            lexer.string_literals.last(),
+            lexer.string_literals().last(),
             Some(&StringLiteral::Symbol(Symbol::new(true, 42)))
         )
     }
@@ -588,14 +588,14 @@ assert_lex!(
     input = b":'",
     token = token!(tSYMBEG, loc!(0, 2)),
     setup = |lexer: &mut Lexer| {
-        lexer.curly_nest = 42;
+        *lexer.curly_nest_mut() = 42;
     },
     assert = |lexer: &Lexer| {
         use crate::lexer::strings::types::Symbol;
 
-        assert_eq!(lexer.string_literals.size(), 1);
+        assert_eq!(lexer.string_literals().size(), 1);
         assert_eq!(
-            lexer.string_literals.last(),
+            lexer.string_literals().last(),
             Some(&StringLiteral::Symbol(Symbol::new(false, 42)))
         )
     }
@@ -669,7 +669,7 @@ impl OnByte<b'('> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        self.paren_nest += 1;
+        *self.paren_nest_mut() += 1;
         token!(tLPAREN, loc!(start, start + 1))
     }
 }
@@ -679,7 +679,7 @@ impl OnByte<b'['> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        self.brack_nest += 1;
+        *self.brack_nest_mut() += 1;
         token!(tLBRACK, loc!(start, start + 1))
     }
 }
@@ -689,7 +689,7 @@ impl OnByte<b'{'> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
-        self.curly_nest += 1;
+        *self.curly_nest_mut() += 1;
         token!(tLCURLY, loc!(start, start + 1))
     }
 }
@@ -744,21 +744,21 @@ impl OnByte<b'_'> for Lexer {
 
         let prev_byte = start
             .checked_sub(1)
-            .map(|idx| self.buffer.byte_at(idx))
+            .map(|idx| self.buffer().byte_at(idx))
             .flatten();
         match prev_byte {
             // prev byte is either
             //   + None (i.e. it's the first byte of the file)
             //   + Some(b'\n')
             // AND it's "__END__" sequence
-            None | Some(b'\n') if self.buffer.lookahead(b"__END__") => {
+            None | Some(b'\n') if self.buffer().lookahead(b"__END__") => {
                 return token!(tEOF, loc!(start, start));
             }
             _ => {}
         }
 
         // otherwise it's a `_foo`/`_foo?`/`_foo!` identifier
-        Ident::parse(&mut self.buffer)
+        Ident::parse(&mut self.buffer())
     }
 }
 assert_lex!(test_tEOF_at__END__, b"__END__", token!(tEOF, loc!(0, 0)));

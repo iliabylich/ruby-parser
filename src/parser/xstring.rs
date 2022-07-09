@@ -22,9 +22,9 @@ where
         // now we need to manually push a xstring literal
         // Lexer is not capable of doing it
         self.lexer
-            .string_literals
+            .string_literals()
             .push(StringLiteral::StringInterp(StringInterp::new(
-                Interpolation::new(self.lexer.curly_nest),
+                Interpolation::new(self.lexer.curly_nest()),
                 b'`',
                 b'`',
             )));

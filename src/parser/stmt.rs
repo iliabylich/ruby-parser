@@ -152,7 +152,7 @@ where
                     }
                     _ => {
                         // rollback, expr can be more that just an lvar get
-                        self.restore_checkpoint(checkpoint);
+                        checkpoint.restore();
                         None
                     }
                 }
