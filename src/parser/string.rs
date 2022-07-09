@@ -9,12 +9,12 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_strings(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_strings(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_char())
             .or_else(|| self.try_string_seq())
     }
 
-    fn try_char(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_char(&mut self) -> Option<Box<Node>> {
         if self.current_token().is(TokenKind::tCHAR) {
             let char_t = self.take_token();
             Some(Builder::<C>::character(char_t))
@@ -23,7 +23,7 @@ where
         }
     }
 
-    fn try_string_seq(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_string_seq(&mut self) -> Option<Box<Node>> {
         let mut parts = vec![];
         while let Some(string) = self.try_string1() {
             parts.push(*string);
@@ -35,7 +35,7 @@ where
         }
     }
 
-    fn try_string1(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_string1(&mut self) -> Option<Box<Node>> {
         let string_beg_t = None
             .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
             .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
@@ -51,7 +51,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_string_contents(&mut self) -> Vec<Node<'a>> {
+    pub(crate) fn parse_string_contents(&mut self) -> Vec<Node> {
         let mut strings = vec![];
         while let Some(string_content) = self.try_string_content() {
             strings.push(*string_content);
@@ -59,7 +59,7 @@ where
         strings
     }
 
-    pub(crate) fn try_string_content(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_string_content(&mut self) -> Option<Box<Node>> {
         match self.current_token().kind() {
             TokenKind::tSTRING_CONTENT => {
                 let string_content_t = self.take_token();

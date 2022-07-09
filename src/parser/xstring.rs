@@ -14,7 +14,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_xstring(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_xstring(&mut self) -> Option<Box<Node>> {
         let xstring_beg_t = None
             .or_else(|| self.read_backtick_identifier_as_xstring_beg())
             .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))?;
@@ -39,7 +39,7 @@ where
     }
 
     // This rule can be `none`
-    fn parse_xstring_contents(&mut self) -> Vec<Node<'a>> {
+    fn parse_xstring_contents(&mut self) -> Vec<Node> {
         let mut contents = vec![];
         while let Some(content) = self.try_string_content() {
             contents.push(*content)

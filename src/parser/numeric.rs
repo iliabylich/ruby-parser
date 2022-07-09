@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_numeric(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_numeric(&mut self) -> Option<Box<Node>> {
         if let Some(uminus_num) = self.try_token(TokenKind::tUMINUS) {
             // If there's no number after `-` is still could be `-expr`,
             // that's fine, here we handle only numeric literals
@@ -24,7 +24,7 @@ where
         }
     }
 
-    pub(crate) fn try_simple_numeric(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_simple_numeric(&mut self) -> Option<Box<Node>> {
         None.or_else(|| {
             let integer_t = self.try_token(TokenKind::tINTEGER)?;
             Some(Builder::<C>::integer(integer_t, self.buffer()))

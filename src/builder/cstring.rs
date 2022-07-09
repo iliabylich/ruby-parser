@@ -28,7 +28,7 @@ impl From<&[u8]> for CString {
     }
 }
 
-impl From<CString> for StringContent<'_> {
+impl From<CString> for StringContent {
     fn from(cstring: CString) -> Self {
         StringContent::from(Vec::from(cstring))
     }

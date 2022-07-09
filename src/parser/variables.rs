@@ -9,37 +9,37 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_gvar(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_gvar(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tGVAR)
             .map(|gvar_t| Builder::<C>::gvar(gvar_t, self.buffer()))
     }
 
-    pub(crate) fn try_back_ref(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_back_ref(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tBACK_REF)
             .map(|back_ref_t| Builder::<C>::back_ref(back_ref_t, self.buffer()))
     }
 
-    pub(crate) fn try_nth_ref(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_nth_ref(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tNTH_REF)
             .map(|nth_ref_t| Builder::<C>::nth_ref(nth_ref_t, self.buffer()))
     }
 
-    pub(crate) fn try_lvar(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_lvar(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tIDENTIFIER)
             .map(|ident_t| Builder::<C>::lvar(ident_t, self.buffer()))
     }
 
-    pub(crate) fn try_ivar(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_ivar(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tIVAR)
             .map(|ident_t| Builder::<C>::ivar(ident_t, self.buffer()))
     }
 
-    pub(crate) fn try_cvar(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_cvar(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tCVAR)
             .map(|ident_t| Builder::<C>::cvar(ident_t, self.buffer()))
     }
 
-    pub(crate) fn try_t_const(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_t_const(&mut self) -> Option<Box<Node>> {
         self.try_token(TokenKind::tCONSTANT)
             .map(|ident_t| Builder::<C>::const_(ident_t, self.buffer()))
     }

@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_top_compstmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_top_compstmt(&mut self) -> Option<Box<Node>> {
         let top_stmts = self.parse_top_stmts();
         self.parse_opt_terms();
         if top_stmts.is_empty() {
@@ -20,7 +20,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node<'a>> {
+    pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node> {
         let mut top_stmts = vec![];
         while let Some(top_stmt) = self.try_top_stmt() {
             top_stmts.push(*top_stmt);
@@ -28,12 +28,12 @@ where
         top_stmts
     }
 
-    pub(crate) fn try_top_stmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_top_stmt(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_preexe())
             .or_else(|| self.try_stmt())
     }
 
-    pub(crate) fn try_bodystmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_bodystmt(&mut self) -> Option<Box<Node>> {
         let compstmt = self.try_compstmt()?;
         let rescue_bodies = self.try_opt_rescue();
         let opt_else = self.try_opt_else();
@@ -46,7 +46,7 @@ where
         ))
     }
 
-    pub(crate) fn try_compstmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_compstmt(&mut self) -> Option<Box<Node>> {
         let stmts = self.parse_stmts();
         self.parse_opt_terms();
         if stmts.is_empty() {
@@ -57,7 +57,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_stmts(&mut self) -> Vec<Node<'a>> {
+    pub(crate) fn parse_stmts(&mut self) -> Vec<Node> {
         let mut stmts = vec![];
         while let Some(stmt) = self.try_stmt() {
             stmts.push(*stmt);
@@ -69,7 +69,7 @@ where
         stmts
     }
 
-    pub(crate) fn try_stmt(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_stmt(&mut self) -> Option<Box<Node>> {
         let stmt = self.try_stmt_head()?;
 
         match self.current_token().kind() {
@@ -97,7 +97,7 @@ where
         }
     }
 
-    fn try_stmt_head(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_stmt_head(&mut self) -> Option<Box<Node>> {
         if let Some(alias) = self.try_alias() {
             return Some(alias);
         } else if let Some(undef) = self.try_undef() {
@@ -113,7 +113,7 @@ where
         self.try_expr()
     }
 
-    fn try_assignment(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_assignment(&mut self) -> Option<Box<Node>> {
         let checkpoint = self.new_checkpoint();
 
         match self.parse_mlhs() {

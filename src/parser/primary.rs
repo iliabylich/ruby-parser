@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_primary(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_primary(&mut self) -> Option<Box<Node>> {
         let node = None
             .or_else(|| self.try_literal())
             .or_else(|| self.try_strings())
@@ -94,7 +94,7 @@ where
         Some(node)
     }
 
-    pub(crate) fn try_primary_value(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_primary_value(&mut self) -> Option<Box<Node>> {
         self.try_primary()
     }
 }
@@ -102,14 +102,14 @@ where
 fn try_keyword_cmd<'a, C: Constructor>(
     parser: &mut Parser<'a, C>,
     expected: TokenKind,
-) -> Option<Box<Node<'a>>> {
+) -> Option<Box<Node>> {
     let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)
 }
 
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
-fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     let not_t = parser.try_token(TokenKind::kNOT)?;
     let checkpoint = parser.new_checkpoint();
     if let Some(lparen_t) = parser.try_token(TokenKind::tLPAREN) {

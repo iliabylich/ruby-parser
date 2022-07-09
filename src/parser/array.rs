@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_array(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_array(&mut self) -> Option<Box<Node>> {
         let lbrack_t = self.try_token(TokenKind::tLBRACK)?;
         let aref_args = self.try_aref_args();
         let rbrack_t = self.expect_token(TokenKind::tRBRACK);

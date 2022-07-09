@@ -9,10 +9,10 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_command(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_command(&mut self) -> Option<Box<Node>> {
         let checkpoint = self.new_checkpoint();
 
-        let maybe_call_with_command_args = None::<Box<Node<'a>>>
+        let maybe_call_with_command_args = None::<Box<Node>>
             .or_else(|| {
                 let checkpoint = self.new_checkpoint();
                 let fcall = self.try_fcall()?;
@@ -97,30 +97,28 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn try_command_args(&mut self) -> Option<Vec<Node<'a>>> {
+    pub(crate) fn try_command_args(&mut self) -> Option<Vec<Node>> {
         self.try_call_args()
     }
 
-    pub(crate) fn try_brace_body(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_brace_body(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_brace_body")
     }
 
     // This rule can be `none`
-    pub(crate) fn try_call_args(&mut self) -> Option<Vec<Node<'a>>> {
+    pub(crate) fn try_call_args(&mut self) -> Option<Vec<Node>> {
         todo!("parser.try_call_args")
     }
 }
 
 #[derive(Debug)]
-struct CmdBraceBlock<'a> {
+struct CmdBraceBlock {
     begin_t: Token,
-    brace_body: Option<Box<Node<'a>>>,
+    brace_body: Option<Box<Node>>,
     end_t: Token,
 }
 
-fn try_cmd_brace_block<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
-) -> Option<CmdBraceBlock<'a>> {
+fn try_cmd_brace_block<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<CmdBraceBlock> {
     let begin_t = parser.try_token(TokenKind::tLCURLY)?;
     if let Some(brace_body) = parser.try_brace_body() {
         let end_t = parser.expect_token(TokenKind::tRCURLY);

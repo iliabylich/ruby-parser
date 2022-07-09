@@ -9,11 +9,11 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_symbol(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_symbol(&mut self) -> Option<Box<Node>> {
         self.try_ssym().or_else(|| self.try_dsym())
     }
 
-    fn try_ssym(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_ssym(&mut self) -> Option<Box<Node>> {
         match self.current_token().kind() {
             TokenKind::tCOLON => {
                 // maybe a plain symbol
@@ -47,7 +47,7 @@ where
         }
     }
 
-    fn try_dsym(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_dsym(&mut self) -> Option<Box<Node>> {
         let symbeg_t = self.try_token(TokenKind::tDSYMBEG)?;
         let contents = self.parse_string_contents();
         let string_end_t = self.expect_token(TokenKind::tSTRING_END);

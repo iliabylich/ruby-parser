@@ -11,7 +11,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_regexp(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_regexp(&mut self) -> Option<Box<Node>> {
         let begin_t = self.try_token(TokenKind::tREGEXP_BEG).or_else(|| {
             let token = self.read_div_as_heredoc_beg()?;
 
@@ -38,7 +38,7 @@ where
     }
 
     // This rule can be `none`
-    fn try_regexp_contents(&mut self) -> Vec<Node<'a>> {
+    fn try_regexp_contents(&mut self) -> Vec<Node> {
         let mut strings = vec![];
         while let Some(string_content) = self.try_string_content() {
             strings.push(*string_content);

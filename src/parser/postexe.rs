@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_postexe(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_postexe(&mut self) -> Option<Box<Node>> {
         let postexe_t = self.try_token(TokenKind::klEND)?;
         let lcurly_t = self.expect_token(TokenKind::tLCURLY);
         let compstmt = self.try_compstmt();

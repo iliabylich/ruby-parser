@@ -96,11 +96,11 @@ where
         }
     }
 
-    pub fn parse(&mut self) -> Option<Box<Node<'a>>> {
+    pub fn parse(&mut self) -> Option<Box<Node>> {
         self.try_program()
     }
 
-    fn try_program(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_program(&mut self) -> Option<Box<Node>> {
         self.try_top_compstmt()
     }
 
@@ -113,7 +113,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    fn try_command_rhs(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_command_rhs(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_command_rhs")
     }
 
@@ -125,24 +125,24 @@ where
         todo!("parser.parse_defn_head")
     }
 
-    fn parse_defs_head(&mut self) -> (Token, Node<'a>, Token, Token) {
+    fn parse_defs_head(&mut self) -> (Token, Node, Token, Token) {
         todo!("parser.parse_defs_head")
     }
 
-    fn try_expr_value(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_expr_value(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_expr_value")
     }
 
-    fn try_expr_value_do(&mut self) -> Option<(Node<'a>, Token)> {
+    fn try_expr_value_do(&mut self) -> Option<(Node, Token)> {
         todo!("parser.try_expr_value_do")
     }
 
-    fn try_command_call(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_command_call(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_command())
             .or_else(|| self.try_block_command())
     }
 
-    fn try_block_command(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_block_command(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_block_command")
     }
 
@@ -167,7 +167,7 @@ where
             .or_else(|| self.try_op())
             .or_else(|| self.try_reswords())
     }
-    fn try_fitem(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_fitem(&mut self) -> Option<Box<Node>> {
         self.try_fname()
             .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
             .or_else(|| self.try_symbol())
@@ -248,7 +248,7 @@ where
             .or_else(|| self.try_token(TokenKind::kWHILE))
             .or_else(|| self.try_token(TokenKind::kUNTIL))
     }
-    fn try_arg(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_arg(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_arg")
     }
     fn parse_relop(&mut self) {
@@ -260,7 +260,7 @@ where
     fn parse_arg_value(&mut self) {
         todo!("parser.parse_arg_value")
     }
-    fn try_aref_args(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_aref_args(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_aref_args")
     }
     fn parse_arg_rhs(&mut self) {
@@ -281,10 +281,10 @@ where
     fn parse_args(&mut self) {
         todo!("parser.parse_args")
     }
-    fn try_mrhs_arg(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_mrhs_arg(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_mrhs_arg")
     }
-    fn try_mrhs(&mut self) -> Option<Vec<Node<'a>>> {
+    fn try_mrhs(&mut self) -> Option<Vec<Node>> {
         todo!("parser.try_mrhs")
     }
     fn try_k_begin(&mut self) -> Option<Token> {
@@ -404,7 +404,7 @@ where
     fn parse_bvar(&mut self) {
         todo!("parser.parse_bvar")
     }
-    fn try_lambda(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_lambda(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_lambda")
     }
     fn parse_f_larglist(&mut self) {
@@ -416,15 +416,15 @@ where
     fn parse_do_block(&mut self) {
         todo!("parser.parse_do_block")
     }
-    fn try_block_call(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_block_call(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_block_call")
     }
-    fn try_method_call(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_method_call(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_method_call")
     }
 
     // TODO: return ArgsType instead of ()
-    fn try_brace_block(&mut self) -> Option<(Token, (), Option<Box<Node<'a>>>, Token)> {
+    fn try_brace_block(&mut self) -> Option<(Token, (), Option<Box<Node>>, Token)> {
         todo!("parser.try_brace_block")
     }
     fn parse_do_body(&mut self) {
@@ -448,7 +448,7 @@ where
     fn parse_p_top_expr(&mut self) {
         todo!("parser.parse_p_top_expr")
     }
-    fn try_p_top_expr_body(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_p_top_expr_body(&mut self) -> Option<Box<Node>> {
         todo!("parser.try_p_top_expr_body")
     }
     fn parse_p_expr(&mut self) {
@@ -529,28 +529,28 @@ where
     fn parse_p_const(&mut self) {
         todo!("parser.parse_p_const")
     }
-    fn parse_opt_ensure(&mut self) -> Option<(Token, Box<Node<'a>>)> {
+    fn parse_opt_ensure(&mut self) -> Option<(Token, Box<Node>)> {
         todo!("parser.parse_opt_ensure")
     }
-    fn try_literal(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_literal(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
     }
-    fn try_user_variable(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_user_variable(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_lvar())
             .or_else(|| self.try_ivar())
             .or_else(|| self.try_gvar())
             .or_else(|| self.try_t_const())
             .or_else(|| self.try_cvar())
     }
-    fn try_var_ref(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_var_ref(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
     }
-    fn try_var_lhs(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_var_lhs(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
             .map(|node| Builder::<C>::assignable(node))
@@ -648,7 +648,7 @@ where
     fn parse_singleton(&mut self) {
         todo!("parser.parse_singleton")
     }
-    fn parse_assoc_list(&mut self) -> Vec<Box<Node<'a>>> {
+    fn parse_assoc_list(&mut self) -> Vec<Box<Node>> {
         todo!("parser.parse_assoc_list")
     }
     fn parse_assocs(&mut self) {

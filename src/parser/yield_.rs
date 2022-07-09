@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_yield(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_yield(&mut self) -> Option<Box<Node>> {
         let yield_t = self.try_token(TokenKind::kYIELD)?;
         if let Some(lparen_t) = self.try_token(TokenKind::tLPAREN) {
             let call_args = self.try_call_args().unwrap_or_else(|| vec![]);

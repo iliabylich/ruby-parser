@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_module(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_module(&mut self) -> Option<Box<Node>> {
         todo!("k_module cpath bodystmt k_end")
     }
 }

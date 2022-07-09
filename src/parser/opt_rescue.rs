@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     // This rule can be `none`
-    pub(crate) fn try_opt_rescue(&mut self) -> Vec<Node<'a>> {
+    pub(crate) fn try_opt_rescue(&mut self) -> Vec<Node> {
         let mut nodes = vec![];
         while let Some(node) = try_opt_rescue1(self) {
             nodes.push(*node)
@@ -33,7 +33,7 @@ where
             })
     }
 
-    pub(crate) fn try_lhs(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_lhs(&mut self) -> Option<Box<Node>> {
         None.or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
             .or_else(|| self.try_back_ref())
@@ -69,12 +69,12 @@ where
             })
     }
 
-    fn try_arg_value(&mut self) -> Option<Box<Node<'a>>> {
+    fn try_arg_value(&mut self) -> Option<Box<Node>> {
         self.try_arg()
     }
 }
 
-fn try_opt_rescue1<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+fn try_opt_rescue1<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     let rescue_t = parser.try_token(TokenKind::kRESCUE)?;
     let exc_list = try_exc_list(parser);
     let exc_var = try_exc_var(parser);
@@ -85,11 +85,11 @@ fn try_opt_rescue1<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box
     ))
 }
 
-fn try_exc_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Vec<Node<'a>>> {
+fn try_exc_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Vec<Node>> {
     None.or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
 }
-fn try_exc_var<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node<'a>>)> {
+fn try_exc_var<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node>)> {
     let assoc_t = parser.try_token(TokenKind::tASSOC)?;
     if let Some(lhs) = parser.try_lhs() {
         Some((assoc_t, lhs))

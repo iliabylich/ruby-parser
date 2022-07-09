@@ -6,21 +6,13 @@ use crate::nodes::*;
 /// Generic combination of all known nodes.
 #[allow(missing_docs)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Node<'a> {
+pub enum Node {
 {%- for node in nodes %}
-    {%- assign generic = "" -%}
-    {%- for field in node.fields -%}
-        {%- case field.field_type -%}
-        {%- when "StringValue" or "Str" or "RawStr" or "MaybeStr" or "Chars" or "Node" or "Nodes" or "MaybeNode" -%}
-            {%- assign generic = "<'a>" -%}
-            {%- break -%}
-        {%- endcase -%}
-    {%- endfor %}
-    {{ node.camelcase_name }}({{ node.camelcase_name }}{{ generic }}),
+    {{ node.camelcase_name }}({{ node.camelcase_name }}),
 {%- endfor %}
 }
 
-impl<'a> Node<'a> {
+impl Node {
     pub(crate) fn inner_ref(&self) -> &dyn InnerNode {
         match &self {
 {%- for node in nodes %}

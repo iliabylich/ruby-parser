@@ -1,100 +1,68 @@
 #[derive(Debug, Clone, Eq)]
-pub enum StringContent<'a> {
-    Borrowed(&'a [u8]),
-    Owned(Vec<u8>),
+pub struct StringContent {
+    bytes: Vec<u8>,
 }
 
-impl<'a> From<&'a [u8]> for StringContent<'a> {
-    fn from(bytes: &'a [u8]) -> Self {
-        Self::Borrowed(bytes)
+impl From<&[u8]> for StringContent {
+    fn from(bytes: &[u8]) -> Self {
+        Self {
+            bytes: bytes.to_vec(),
+        }
     }
 }
 
-impl<'a> From<&'a str> for StringContent<'a> {
-    fn from(s: &'a str) -> Self {
-        Self::Borrowed(s.as_bytes())
+impl From<&str> for StringContent {
+    fn from(s: &str) -> Self {
+        Self::from(s.as_bytes())
     }
 }
 
-impl<'a> From<String> for StringContent<'a> {
+impl From<String> for StringContent {
     fn from(s: String) -> Self {
         Self::from(s.into_bytes())
     }
 }
 
-impl From<Vec<u8>> for StringContent<'_> {
+impl From<Vec<u8>> for StringContent {
     fn from(bytes: Vec<u8>) -> Self {
-        Self::Owned(bytes)
+        Self { bytes }
     }
 }
 
-impl From<TokenValue> for StringContent<'_> {
+impl From<TokenValue> for StringContent {
     fn from(token_value: TokenValue) -> Self {
         Self::from(token_value.into_bytes())
     }
 }
 
-impl<'a> StringContent<'a> {
-    fn into_bytes(self) -> Vec<u8> {
-        match self {
-            StringContent::Borrowed(borrowed) => borrowed.to_vec(),
-            StringContent::Owned(owned) => owned,
-        }
-    }
-
-    fn as_bytes(&self) -> &[u8] {
-        match self {
-            StringContent::Borrowed(borrowed) => borrowed,
-            StringContent::Owned(owned) => owned.as_slice(),
-        }
-    }
-}
-
-impl PartialEq for StringContent<'_> {
+impl PartialEq for StringContent {
     fn eq(&self, other: &Self) -> bool {
         self.as_bytes() == other.as_bytes()
     }
 }
 
-impl<const N: usize> PartialEq<[u8; N]> for StringContent<'_> {
+impl<const N: usize> PartialEq<[u8; N]> for StringContent {
     fn eq(&self, other: &[u8; N]) -> bool {
         self.as_bytes() == other
     }
 }
 
-use std::ops::{Add, AddAssign};
-
 use crate::token::TokenValue;
 
-impl<'a> Add for StringContent<'a> {
-    type Output = Self;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        let mut lhs = self.into_bytes();
-        let mut rhs = rhs.into_bytes();
-        lhs.append(&mut rhs);
-        Self::Owned(lhs)
+impl StringContent {
+    pub fn into_bytes(self) -> Vec<u8> {
+        self.bytes
     }
-}
 
-impl<'a> AddAssign for StringContent<'a> {
-    fn add_assign(&mut self, rhs: Self) {
-        let mut bytes = match self {
-            StringContent::Borrowed(borrowed) => borrowed.to_vec(),
-            StringContent::Owned(bytes) => std::mem::take(bytes),
-        };
-
-        bytes.extend_from_slice(rhs.as_bytes());
-        *self = StringContent::Owned(bytes)
+    pub fn as_bytes(&self) -> &[u8] {
+        self.bytes.as_slice()
     }
-}
 
-impl<'a> StringContent<'a> {
-    pub(crate) fn to_string_lossy(&self) -> String {
+    pub fn to_string_lossy(&self) -> String {
         String::from_utf8_lossy(self.as_bytes()).into_owned()
     }
 
-    pub(crate) fn as_str(&self) -> &str {
+    pub fn as_str(&self) -> &str {
         std::str::from_utf8(self.as_bytes()).unwrap()
     }
 }

@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_defined(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_defined(&mut self) -> Option<Box<Node>> {
         let defined_t = self.try_token(TokenKind::kDEFINED)?;
         let _ = self.try_opt_nl();
         let lparen_t = self.expect_token(TokenKind::tLPAREN);

@@ -3,12 +3,10 @@
 use crate::nodes::InnerNode;
 use crate::nodes::InspectVec;
 use crate::Loc;
-{%- assign has_string_content = false %}
 {% for field in node.fields -%}
     {%- case field.field_type -%}
     {%- when "Node" or "Nodes" or "MaybeNode" -%}
         use crate::Node;
-        {%- assign has_string_content = true -%}
         {%- break -%}
     {%- endcase -%}
 {%- endfor %}
@@ -17,42 +15,35 @@ use crate::Loc;
     {%- case field.field_type -%}
     {%- when "StringValue" or "Str" or "RawStr" or "MaybeStr" or "Chars" -%}
         use crate::string_content::StringContent;
-        {%- assign has_string_content = true -%}
         {%- break -%}
     {%- endcase -%}
 {%- endfor %}
 
-{% if has_string_content -%}
-    {%- assign generic = "<'a>" -%}
-{%- else -%}
-    {%- assign generic = "" -%}
-{%- endif -%}
-
 {{ node.comment | render_comment: "///", 0 }}
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[repr(C)]
-pub struct {{ node.camelcase_name }}{{ generic }} {
+pub struct {{ node.camelcase_name }} {
 {%- for field in node.fields %}
     {{ field.comment | render_comment: "///", 4 }}
     pub {{ field.snakecase_name | escape_rust_keyword }}:
     {{- " " -}}
     {%- case field.field_type -%}
     {%- when "Node" -%}
-        Box<Node<'a>>
+        Box<Node>
     {%- when "Nodes" -%}
-        Vec<Node<'a>>
+        Vec<Node>
     {%- when "MaybeNode" or "RegexpOptions" -%}
-        Option<Box<Node<'a>>>
+        Option<Box<Node>>
     {%- when "Loc" -%}
         Loc
     {%- when "MaybeLoc" -%}
         Option<Loc>
     {%- when "Str" or "RawStr" -%}
-        StringContent<'a>
+        StringContent
     {%- when "MaybeStr" or "Chars" -%}
-        Option<StringContent<'a>>
+        Option<StringContent>
     {%- when "StringValue" -%}
-        StringContent<'a>
+        StringContent
     {%- when "U8" -%}
         u8
     {%- else -%}
@@ -61,7 +52,7 @@ pub struct {{ node.camelcase_name }}{{ generic }} {
 {% endfor %}
 }
 
-impl{{ generic }} InnerNode for {{ node.camelcase_name }}{{ generic }} {
+impl InnerNode for {{ node.camelcase_name }} {
     fn expression(&self) -> &Loc {
         &self.expression_l
     }

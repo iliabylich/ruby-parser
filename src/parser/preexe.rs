@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_preexe(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_preexe(&mut self) -> Option<Box<Node>> {
         let begin_t = self.try_token(TokenKind::klBEGIN)?;
         let lcurly = self.expect_token(TokenKind::tLCURLY);
         let top_compstmt = self.try_top_compstmt();

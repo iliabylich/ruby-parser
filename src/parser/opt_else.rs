@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_opt_else(&mut self) -> Option<(Token, Option<Box<Node<'a>>>)> {
+    pub(crate) fn try_opt_else(&mut self) -> Option<(Token, Option<Box<Node>>)> {
         let else_t = self.try_token(TokenKind::kELSE)?;
         let compstmt = self.try_compstmt();
         Some((else_t, compstmt))

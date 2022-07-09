@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_expr(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_expr(&mut self) -> Option<Box<Node>> {
         let mut lhs = try_expr_head(self)?;
         while let Some((op_t, rhs)) = try_expr_tail(self) {
             lhs = Builder::<C>::logical_op(lhs, op_t, rhs)
@@ -18,7 +18,7 @@ where
     }
 }
 
-fn try_expr_head<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+fn try_expr_head<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     None.or_else(|| parser.try_command_call())
         .or_else(|| try_not_expr(parser))
         .or_else(|| try_bang_command_call(parser))
@@ -26,7 +26,7 @@ fn try_expr_head<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<N
         .or_else(|| try_arg_in_p_expr_body(parser))
         .or_else(|| parser.try_arg())
 }
-fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     let checkpoint = parser.new_checkpoint();
     let not_t = parser.try_token(TokenKind::kNOT)?;
     let _ = parser.try_opt_nl();
@@ -36,7 +36,7 @@ fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<No
     parser.restore_checkpoint(checkpoint);
     None
 }
-fn try_bang_command_call<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+fn try_bang_command_call<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     let checkpoint = parser.new_checkpoint();
     let bang_t = parser.try_token(TokenKind::tBANG)?;
     if let Some(command_call) = parser.try_command_call() {
@@ -45,9 +45,7 @@ fn try_bang_command_call<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Opti
     parser.restore_checkpoint(checkpoint);
     None
 }
-fn try_arg_assoc_p_expr_body<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
-) -> Option<Box<Node<'a>>> {
+fn try_arg_assoc_p_expr_body<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     let checkpoint = parser.new_checkpoint();
     let arg = parser.try_arg()?;
     if let Some(assoc_t) = parser.try_token(TokenKind::tASSOC) {
@@ -63,7 +61,7 @@ fn try_arg_assoc_p_expr_body<'a, C: Constructor>(
     parser.restore_checkpoint(checkpoint);
     None
 }
-fn try_arg_in_p_expr_body<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node<'a>>> {
+fn try_arg_in_p_expr_body<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     let checkpoint = parser.new_checkpoint();
     let arg = parser.try_arg()?;
     if let Some(in_t) = parser.try_token(TokenKind::kIN) {
@@ -80,7 +78,7 @@ fn try_arg_in_p_expr_body<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Opt
     None
 }
 
-fn try_expr_tail<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node<'a>>)> {
+fn try_expr_tail<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node>)> {
     let op_t = None
         .or_else(|| parser.try_token(TokenKind::kAND))
         .or_else(|| parser.try_token(TokenKind::kOR))?;

@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_hash(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_hash(&mut self) -> Option<Box<Node>> {
         let lcurly_t = self.try_token(TokenKind::tLCURLY)?;
         let assoc_list = self.parse_assoc_list();
         let rbrace_t = self.expect_token(TokenKind::tRCURLY);

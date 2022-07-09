@@ -9,7 +9,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn parse_mlhs(&mut self) -> MLHS<'a> {
+    pub(crate) fn parse_mlhs(&mut self) -> MLHS {
         match parse_mlhs_internal(self) {
             MlhsInternal::DefinitelyMlhsNode(node) => MLHS::DefinitelyMlhs { node },
             MlhsInternal::DefinitelyMlhsList {
@@ -29,7 +29,7 @@ where
     }
 }
 
-fn parse_mlhs_internal<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsInternal<'a> {
+fn parse_mlhs_internal<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsInternal {
     let mut items = vec![];
     let mut has_splat = false;
     let mut definitely_mlhs = false;
@@ -90,7 +90,7 @@ fn parse_mlhs_internal<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsIn
     }
 }
 
-fn parse_mlhs_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsItem<'a> {
+fn parse_mlhs_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsItem {
     if let Some(lparen_t) = parser.try_token(TokenKind::tLPAREN) {
         match parse_mlhs_internal(parser) {
             MlhsInternal::DefinitelyMlhsNode(inner) => {
@@ -132,23 +132,21 @@ fn parse_mlhs_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsItem<'
     }
 }
 
-fn try_mlhs_primitive_item<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
-) -> Option<Box<Node<'a>>> {
+fn try_mlhs_primitive_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
     parser.try_lhs()
 }
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) enum MLHS<'a> {
+pub(crate) enum MLHS {
     // This variant is used if there's at least 1 comma
     // i.e. `a, b` or `((a, b))`
     // even `a,` is an MLHS
-    DefinitelyMlhs { node: Box<Node<'a>> },
+    DefinitelyMlhs { node: Box<Node> },
 
     // This variant is used if it looks like an LHS
     // i.e. has no commas but is techincally assignable
     // like `((a))`
-    MaybeLhs { node: Box<Node<'a>> },
+    MaybeLhs { node: Box<Node> },
 
     // This variant is used if we found something that is
     // absolutely not assignable
@@ -156,19 +154,19 @@ pub(crate) enum MLHS<'a> {
     None,
 }
 
-enum MlhsInternal<'a> {
-    DefinitelyMlhsNode(Box<Node<'a>>),
+enum MlhsInternal {
+    DefinitelyMlhsNode(Box<Node>),
     DefinitelyMlhsList {
-        nodes: Vec<Node<'a>>,
+        nodes: Vec<Node>,
         trailing_comma: Option<Token>,
     },
-    MaybeLhs(Box<Node<'a>>),
+    MaybeLhs(Box<Node>),
     None,
 }
 
-enum MlhsItem<'a> {
-    DefinitelyMlhs(Box<Node<'a>>),
-    MaybeLhs(Box<Node<'a>>),
+enum MlhsItem {
+    DefinitelyMlhs(Box<Node>),
+    MaybeLhs(Box<Node>),
     None,
 }
 

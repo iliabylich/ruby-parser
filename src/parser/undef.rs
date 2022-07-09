@@ -9,13 +9,13 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_undef(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_undef(&mut self) -> Option<Box<Node>> {
         let undef_t = self.try_token(TokenKind::kUNDEF)?;
         let names = self.parse_names();
         Some(Builder::<C>::undef(undef_t, names))
     }
 
-    fn parse_names(&mut self) -> Vec<Node<'a>> {
+    fn parse_names(&mut self) -> Vec<Node> {
         let mut names = vec![];
         if let Some(fitem) = self.try_fitem() {
             names.push(*fitem);

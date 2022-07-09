@@ -10,7 +10,7 @@ impl<'a, C> Parser<'a, C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_words(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_words(&mut self) -> Option<Box<Node>> {
         let begin_t = self.try_token(TokenKind::tWORDS_BEG)?;
         let word_list = self.parse_word_list();
         let end_t = self.expect_token(TokenKind::tSTRING_END);
@@ -18,7 +18,7 @@ where
     }
 
     // This rule can be `none
-    fn parse_word_list(&mut self) -> Vec<Node<'a>> {
+    fn parse_word_list(&mut self) -> Vec<Node> {
         let mut result = vec![];
         while let Some(word) = self.try_word() {
             result.push(*word)
@@ -26,7 +26,7 @@ where
         result
     }
 
-    pub(crate) fn try_word(&mut self) -> Option<Box<Node<'a>>> {
+    pub(crate) fn try_word(&mut self) -> Option<Box<Node>> {
         let mut contents = vec![];
         while let Some(content) = self.try_string_content() {
             contents.push(*content);
