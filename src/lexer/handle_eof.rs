@@ -4,7 +4,7 @@ use crate::{
     token::{token, Token},
 };
 
-impl<'a> Lexer<'a> {
+impl Lexer {
     pub(crate) fn handle_eof(&mut self) -> Option<Token> {
         match self.current_byte() {
             // EOF | NULL      | ^D         | ^Z

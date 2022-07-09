@@ -9,7 +9,7 @@ pub(crate) enum Utf8Char {
     EOF,
 }
 
-impl<'a> Buffer<'a> {
+impl Buffer {
     // Returns size of the UTF-8 char
     pub(crate) fn utf8_char_at(&self, idx: usize) -> Utf8Char {
         if let Some(c) = self.byte_at(idx) {

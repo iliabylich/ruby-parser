@@ -1,6 +1,6 @@
 use crate::lexer::Lexer;
 // buffer shortcut delegators
-impl<'a> Lexer<'a> {
+impl Lexer {
     pub(crate) fn skip_byte(&mut self) {
         self.buffer.skip_byte()
     }
@@ -11,7 +11,7 @@ impl<'a> Lexer<'a> {
         self.buffer.pos()
     }
     #[allow(dead_code)]
-    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&'a [u8]> {
+    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&[u8]> {
         self.buffer.slice(start, end)
     }
 }

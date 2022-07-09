@@ -5,7 +5,7 @@ use crate::{
     token::{Token, TokenKind},
 };
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {
@@ -29,7 +29,7 @@ where
     }
 }
 
-fn parse_mlhs_internal<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsInternal {
+fn parse_mlhs_internal<C: Constructor>(parser: &mut Parser<C>) -> MlhsInternal {
     let mut items = vec![];
     let mut has_splat = false;
     let mut definitely_mlhs = false;
@@ -90,7 +90,7 @@ fn parse_mlhs_internal<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsIn
     }
 }
 
-fn parse_mlhs_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsItem {
+fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> MlhsItem {
     if let Some(lparen_t) = parser.try_token(TokenKind::tLPAREN) {
         match parse_mlhs_internal(parser) {
             MlhsInternal::DefinitelyMlhsNode(inner) => {
@@ -132,7 +132,7 @@ fn parse_mlhs_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> MlhsItem {
     }
 }
 
-fn try_mlhs_primitive_item<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
+fn try_mlhs_primitive_item<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
     parser.try_lhs()
 }
 

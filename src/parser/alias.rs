@@ -5,7 +5,7 @@ use crate::{
     Node,
 };
 
-impl<'a, C: Constructor> Parser<'a, C> {
+impl<C: Constructor> Parser<C> {
     pub(crate) fn try_alias(&mut self) -> Option<Box<Node>> {
         let alias_t = self.try_token(TokenKind::kALIAS)?;
         let (lhs, rhs) = parse_alias_args(self);
@@ -13,15 +13,13 @@ impl<'a, C: Constructor> Parser<'a, C> {
     }
 }
 
-fn parse_alias_args<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> (Box<Node>, Box<Node>) {
+fn parse_alias_args<C: Constructor>(parser: &mut Parser<C>) -> (Box<Node>, Box<Node>) {
     None.or_else(|| try_fitem_fitem(parser))
         .or_else(|| try_gvar_gvar(parser))
         .unwrap_or_else(|| panic!("expected alias on fitems or gvars"))
 }
 
-fn try_fitem_fitem<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
-) -> Option<(Box<Node>, Box<Node>)> {
+fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> Option<(Box<Node>, Box<Node>)> {
     let lhs = parser.try_fitem()?;
     let rhs = parser
         .try_fitem()
@@ -29,7 +27,7 @@ fn try_fitem_fitem<'a, C: Constructor>(
     Some((lhs, rhs))
 }
 
-fn try_gvar_gvar<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Box<Node>, Box<Node>)> {
+fn try_gvar_gvar<C: Constructor>(parser: &mut Parser<C>) -> Option<(Box<Node>, Box<Node>)> {
     let lhs = parser.try_gvar()?;
     let rhs = None
         .or_else(|| parser.try_gvar())

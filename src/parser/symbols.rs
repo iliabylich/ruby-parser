@@ -6,7 +6,7 @@ use crate::{
     Node,
 };
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {
@@ -19,7 +19,7 @@ where
 }
 
 // This rule can be `none`
-fn parse_symbol_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Vec<Node> {
+fn parse_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> Vec<Node> {
     let mut result = vec![];
     while let Some(word) = parser.try_word() {
         result.push(*word);

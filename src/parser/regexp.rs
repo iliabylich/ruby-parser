@@ -7,7 +7,7 @@ use crate::{
     Node,
 };
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {

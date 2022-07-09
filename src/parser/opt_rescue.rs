@@ -5,7 +5,7 @@ use crate::{
     Node,
 };
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {
@@ -74,7 +74,7 @@ where
     }
 }
 
-fn try_opt_rescue1<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
+fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
     let rescue_t = parser.try_token(TokenKind::kRESCUE)?;
     let exc_list = try_exc_list(parser);
     let exc_var = try_exc_var(parser);
@@ -85,11 +85,11 @@ fn try_opt_rescue1<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box
     ))
 }
 
-fn try_exc_list<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Vec<Node>> {
+fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> Option<Vec<Node>> {
     None.or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
 }
-fn try_exc_var<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<(Token, Box<Node>)> {
+fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> Option<(Token, Box<Node>)> {
     let assoc_t = parser.try_token(TokenKind::tASSOC)?;
     if let Some(lhs) = parser.try_lhs() {
         Some((assoc_t, lhs))

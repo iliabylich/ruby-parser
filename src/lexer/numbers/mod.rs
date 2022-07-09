@@ -65,7 +65,7 @@ impl<'a> Into<Token> for Number {
     }
 }
 
-pub(crate) fn parse_number<'a>(buffer: &mut BufferWithCursor<'a>) -> Token {
+pub(crate) fn parse_number<'a>(buffer: &mut BufferWithCursor) -> Token {
     let mut number = Number::new(buffer.pos());
 
     loop {

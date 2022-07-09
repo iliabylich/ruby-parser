@@ -41,18 +41,18 @@ mod words;
 mod xstring;
 mod yield_;
 
-pub struct Parser<'a, C: Constructor = RustConstructor> {
-    lexer: Lexer<'a>,
+pub struct Parser<C: Constructor = RustConstructor> {
+    lexer: Lexer,
     debug: bool,
     phantom: std::marker::PhantomData<C>,
 }
-pub type RustParser<'a> = Parser<'a, RustConstructor>;
+pub type RustParser<'a> = Parser<RustConstructor>;
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub fn new(input: &'a [u8]) -> Self {
+    pub fn new(input: &[u8]) -> Self {
         Self {
             lexer: Lexer::new(input),
             debug: false,
@@ -104,12 +104,12 @@ where
         self.try_top_compstmt()
     }
 
-    pub(crate) fn buffer(&self) -> &Buffer<'a> {
+    pub(crate) fn buffer(&self) -> &Buffer {
         self.lexer.buffer.for_lookahead()
     }
 }
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {

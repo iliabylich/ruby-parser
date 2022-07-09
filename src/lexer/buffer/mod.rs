@@ -5,16 +5,18 @@ pub(crate) mod utf8;
 pub(crate) use pattern::Pattern;
 
 #[derive(Debug)]
-pub struct Buffer<'a> {
-    bytes: &'a [u8],
+pub struct Buffer {
+    bytes: Vec<u8>,
 }
 
-impl<'a> Buffer<'a> {
-    pub(crate) fn new(bytes: &'a [u8]) -> Self {
-        Self { bytes }
+impl Buffer {
+    pub(crate) fn new(bytes: &[u8]) -> Self {
+        Self {
+            bytes: bytes.to_vec(),
+        }
     }
 
-    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&'a [u8]> {
+    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&[u8]> {
         self.bytes.get(start..end)
     }
 
@@ -30,13 +32,13 @@ impl<'a> Buffer<'a> {
     }
 }
 
-pub struct BufferWithCursor<'a> {
-    buffer: Buffer<'a>,
+pub struct BufferWithCursor {
+    buffer: Buffer,
     pos: usize,
 }
 
-impl<'a> BufferWithCursor<'a> {
-    pub(crate) fn new(input: &'a [u8]) -> Self {
+impl BufferWithCursor {
+    pub(crate) fn new(input: &[u8]) -> Self {
         Self {
             buffer: Buffer::new(input),
             pos: 0,
@@ -44,7 +46,7 @@ impl<'a> BufferWithCursor<'a> {
     }
 
     // Delegators
-    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&'a [u8]> {
+    pub(crate) fn slice(&self, start: usize, end: usize) -> Option<&[u8]> {
         self.buffer.slice(start, end)
     }
     pub(crate) fn byte_at(&self, idx: usize) -> Option<u8> {
@@ -52,7 +54,7 @@ impl<'a> BufferWithCursor<'a> {
     }
 
     // Getter for lookahead
-    pub(crate) fn for_lookahead(&self) -> &Buffer<'a> {
+    pub(crate) fn for_lookahead(&self) -> &Buffer {
         &self.buffer
     }
 
@@ -84,7 +86,7 @@ impl<'a> BufferWithCursor<'a> {
     }
 }
 
-impl std::fmt::Debug for BufferWithCursor<'_> {
+impl std::fmt::Debug for BufferWithCursor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let input = &self.buffer.bytes[self.pos..];
         let input = &input[..std::cmp::min(input.len(), 10)];
@@ -97,7 +99,7 @@ impl std::fmt::Debug for BufferWithCursor<'_> {
     }
 }
 
-impl<'a> BufferWithCursor<'a> {}
+impl BufferWithCursor {}
 
 macro_rules! scan_while_matches_pattern {
     ($buffer:expr, $start:expr, $pattern:pat) => {{

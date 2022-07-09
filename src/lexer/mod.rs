@@ -28,8 +28,8 @@ use strings::{action::StringExtendAction, literal::StringLiteral, stack::StringL
 
 pub(crate) use checkpoint::Checkpoint;
 
-pub struct Lexer<'a> {
-    pub(crate) buffer: BufferWithCursor<'a>,
+pub struct Lexer {
+    pub(crate) buffer: BufferWithCursor,
     debug: bool,
     required_new_expr: bool,
 
@@ -42,8 +42,8 @@ pub struct Lexer<'a> {
     pub(crate) brack_nest: usize,
 }
 
-impl<'a> Lexer<'a> {
-    pub fn new(input: &'a [u8]) -> Self {
+impl Lexer {
+    pub fn new(input: &[u8]) -> Self {
         Self {
             buffer: BufferWithCursor::new(input),
             debug: false,
@@ -241,7 +241,7 @@ impl<'a> Lexer<'a> {
     }
 }
 
-pub(crate) trait OnByte<'a, const BYTE: u8> {
+pub(crate) trait OnByte<const BYTE: u8> {
     fn on_byte(&mut self) -> Token;
 }
 

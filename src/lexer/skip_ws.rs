@@ -1,6 +1,6 @@
 use crate::lexer::Lexer;
 
-impl<'a> Lexer<'a> {
+impl Lexer {
     pub(crate) fn skip_ws(&mut self) {
         loop {
             match self.current_byte() {

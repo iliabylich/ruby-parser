@@ -1,6 +1,6 @@
 use crate::{builder::Constructor, lexer::Checkpoint, parser::Parser};
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {

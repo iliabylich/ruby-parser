@@ -21,7 +21,7 @@ macro_rules! node_ptr_to_box {
 fn cstring_value(loc: Loc, buffer: &Buffer) -> CString {
     CString::from(buffer.slice(loc.start, loc.end).unwrap())
 }
-fn string_value<'a>(loc: Loc, buffer: &Buffer<'a>) -> StringContent {
+fn string_value<'a>(loc: Loc, buffer: &Buffer) -> StringContent {
     StringContent::from(buffer.slice(loc.start, loc.end).unwrap())
 }
 
@@ -41,7 +41,7 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     // Numerics
-    pub(crate) fn integer(integer_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn integer(integer_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = integer_t.loc();
         Box::new(Node::Int(Int {
             value: string_value(expression_l, buffer),
@@ -49,7 +49,7 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
-    pub(crate) fn float(float_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn float(float_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = float_t.loc();
         Box::new(Node::Float(Float {
             value: string_value(expression_l, buffer),
@@ -57,7 +57,7 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
-    pub(crate) fn rational(rational_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn rational(rational_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = rational_t.loc();
         Box::new(Node::Rational(Rational {
             value: string_value(expression_l, buffer),
@@ -65,7 +65,7 @@ impl<'a, C: Constructor> Builder<C> {
             expression_l,
         }))
     }
-    pub(crate) fn complex(complex_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn complex(complex_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = complex_t.loc();
         Box::new(Node::Complex(Complex {
             value: string_value(expression_l, buffer),
@@ -74,11 +74,7 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn unary_num(
-        unary_t: Token,
-        mut numeric: Box<Node>,
-        buffer: &Buffer<'a>,
-    ) -> Box<Node> {
+    pub(crate) fn unary_num(unary_t: Token, mut numeric: Box<Node>, buffer: &Buffer) -> Box<Node> {
         let new_operator_l = unary_t.loc();
 
         match &mut *numeric {
@@ -161,7 +157,7 @@ impl<'a, C: Constructor> Builder<C> {
         }
     }
 
-    pub(crate) fn string_internal(string_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn string_internal(string_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = string_t.loc();
         let value = string_value(expression_l, buffer);
         Box::new(Node::Str(Str {
@@ -227,7 +223,7 @@ impl<'a, C: Constructor> Builder<C> {
     }
 
     // Symbols
-    pub(crate) fn symbol(start_t: Token, value_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn symbol(start_t: Token, value_t: Token, buffer: &Buffer) -> Box<Node> {
         let begin_l = start_t.loc();
         let value_l = value_t.loc();
         let expression_l = begin_l.join(&value_l);
@@ -241,7 +237,7 @@ impl<'a, C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn symbol_internal(symbol_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn symbol_internal(symbol_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = symbol_t.loc();
         let value = string_value(expression_l, buffer);
         // TODO: validate_sym_value
@@ -315,7 +311,7 @@ impl<'a, C: Constructor> Builder<C> {
 
     // Regular expressions
 
-    pub(crate) fn regexp_options(regexp_end_t: &Token, buffer: &Buffer<'a>) -> Option<Box<Node>> {
+    pub(crate) fn regexp_options(regexp_end_t: &Token, buffer: &Buffer) -> Option<Box<Node>> {
         let expression_l = regexp_end_t.loc();
 
         if expression_l.size() == 1 {
@@ -488,26 +484,26 @@ impl<'a, C: Constructor> Builder<C> {
         let loc = self_t.loc();
         Box::new(Node::Self_(Self_ { expression_l: loc }))
     }
-    pub(crate) fn lvar(lvar_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn lvar(lvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = lvar_t.loc();
         Box::new(Node::Lvar(Lvar {
             name: string_value(loc, buffer),
             expression_l: loc,
         }))
     }
-    pub(crate) fn ivar(ivar_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn ivar(ivar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = ivar_t.loc();
         Box::new(Node::Ivar(Ivar {
             name: string_value(loc, buffer),
             expression_l: loc,
         }))
     }
-    pub(crate) fn gvar(gvar_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn gvar(gvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = gvar_t.loc();
         let name = cstring_value(loc, buffer);
         unsafe { node_ptr_to_box!(C::gvar_node(name, loc)) }
     }
-    pub(crate) fn cvar(cvar_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn cvar(cvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = cvar_t.loc();
         Box::new(Node::Cvar(Cvar {
             name: string_value(loc, buffer),
@@ -519,7 +515,7 @@ impl<'a, C: Constructor> Builder<C> {
         let name = cstring_value(loc, buffer);
         unsafe { node_ptr_to_box!(C::back_ref_node(name, loc)) }
     }
-    pub(crate) fn nth_ref(nth_ref_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn nth_ref(nth_ref_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = nth_ref_t.loc();
         let name = string_value(expression_l, buffer).to_string_lossy();
         let name = &name[1..];
@@ -546,7 +542,7 @@ impl<'a, C: Constructor> Builder<C> {
         todo!("builder.accessible")
     }
 
-    pub(crate) fn const_(const_t: Token, buffer: &Buffer<'a>) -> Box<Node> {
+    pub(crate) fn const_(const_t: Token, buffer: &Buffer) -> Box<Node> {
         let name_l = const_t.loc();
         let expression_l = name_l;
 

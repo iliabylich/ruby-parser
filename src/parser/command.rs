@@ -5,7 +5,7 @@ use crate::{
     Node,
 };
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {
@@ -118,7 +118,7 @@ struct CmdBraceBlock {
     end_t: Token,
 }
 
-fn try_cmd_brace_block<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<CmdBraceBlock> {
+fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> Option<CmdBraceBlock> {
     let begin_t = parser.try_token(TokenKind::tLCURLY)?;
     if let Some(brace_body) = parser.try_brace_body() {
         let end_t = parser.expect_token(TokenKind::tRCURLY);

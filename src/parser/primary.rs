@@ -5,7 +5,7 @@ use crate::{
     Node,
 };
 
-impl<'a, C> Parser<'a, C>
+impl<C> Parser<C>
 where
     C: Constructor,
 {
@@ -99,8 +99,8 @@ where
     }
 }
 
-fn try_keyword_cmd<'a, C: Constructor>(
-    parser: &mut Parser<'a, C>,
+fn try_keyword_cmd<C: Constructor>(
+    parser: &mut Parser<C>,
     expected: TokenKind,
 ) -> Option<Box<Node>> {
     let token = parser.try_token(expected)?;
@@ -109,7 +109,7 @@ fn try_keyword_cmd<'a, C: Constructor>(
 
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
-fn try_not_expr<'a, C: Constructor>(parser: &mut Parser<'a, C>) -> Option<Box<Node>> {
+fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
     let not_t = parser.try_token(TokenKind::kNOT)?;
     let checkpoint = parser.new_checkpoint();
     if let Some(lparen_t) = parser.try_token(TokenKind::tLPAREN) {
