@@ -36,21 +36,21 @@ impl StateRef {
     pub(crate) fn curly_nest(&self) -> usize {
         self.as_mut().curly_nest
     }
-    pub(crate) fn curly_nest_mut(&mut self) -> &'static mut usize {
+    pub(crate) fn curly_nest_mut(&self) -> &'static mut usize {
         &mut self.as_mut().curly_nest
     }
 
     pub(crate) fn paren_nest(&self) -> usize {
         self.as_mut().paren_nest
     }
-    pub(crate) fn paren_nest_mut(&mut self) -> &'static mut usize {
+    pub(crate) fn paren_nest_mut(&self) -> &'static mut usize {
         &mut self.as_mut().paren_nest
     }
 
     pub(crate) fn brack_nest(&self) -> usize {
         self.as_mut().brack_nest
     }
-    pub(crate) fn brack_nest_mut(&mut self) -> &'static mut usize {
+    pub(crate) fn brack_nest_mut(&self) -> &'static mut usize {
         &mut self.as_mut().brack_nest
     }
 }
@@ -68,7 +68,7 @@ macro_rules! generate_state_ref_delegation {
             pub(crate) fn required_new_expr(&self) -> bool {
                 self.state_ref().required_new_expr()
             }
-            pub(crate) fn required_new_expr_mut(&mut self) -> &'static mut bool {
+            pub(crate) fn required_new_expr_mut(&self) -> &'static mut bool {
                 self.state_ref().required_new_expr_mut()
             }
 
@@ -85,21 +85,21 @@ macro_rules! generate_state_ref_delegation {
             pub(crate) fn curly_nest(&self) -> usize {
                 self.state_ref().curly_nest()
             }
-            pub(crate) fn curly_nest_mut(&mut self) -> &'static mut usize {
+            pub(crate) fn curly_nest_mut(&self) -> &'static mut usize {
                 self.state_ref().curly_nest_mut()
             }
 
             pub(crate) fn paren_nest(&self) -> usize {
                 self.state_ref().paren_nest()
             }
-            pub(crate) fn paren_nest_mut(&mut self) -> &'static mut usize {
+            pub(crate) fn paren_nest_mut(&self) -> &'static mut usize {
                 self.state_ref().paren_nest_mut()
             }
 
             pub(crate) fn brack_nest(&self) -> usize {
                 self.state_ref().brack_nest()
             }
-            pub(crate) fn brack_nest_mut(&mut self) -> &'static mut usize {
+            pub(crate) fn brack_nest_mut(&self) -> &'static mut usize {
                 self.state_ref().brack_nest_mut()
             }
         }

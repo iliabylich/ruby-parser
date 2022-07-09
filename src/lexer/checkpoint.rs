@@ -26,22 +26,15 @@ impl Checkpoint {
         }
     }
 
-    pub(crate) fn restore(self) {
-        let Self {
-            buffer_pos,
-            literals_stack_size,
-            curly_nest,
-            paren_nest,
-            brack_nest,
-            mut state_ref,
-        } = self;
-
-        state_ref.buffer().set_pos(buffer_pos);
-        state_ref.string_literals().truncate(literals_stack_size);
-        *state_ref.current_token() = None;
-        *state_ref.curly_nest_mut() = curly_nest;
-        *state_ref.paren_nest_mut() = paren_nest;
-        *state_ref.brack_nest_mut() = brack_nest;
+    pub(crate) fn restore(&self) {
+        self.state_ref.buffer().set_pos(self.buffer_pos);
+        self.state_ref
+            .string_literals()
+            .truncate(self.literals_stack_size);
+        *self.state_ref.current_token() = None;
+        *self.state_ref.curly_nest_mut() = self.curly_nest;
+        *self.state_ref.paren_nest_mut() = self.paren_nest;
+        *self.state_ref.brack_nest_mut() = self.brack_nest;
     }
 }
 
