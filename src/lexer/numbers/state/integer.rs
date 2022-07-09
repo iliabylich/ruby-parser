@@ -42,7 +42,7 @@ impl ExtendNumber for Integer {
     }
 }
 
-impl<'a> Into<TokenKind> for Integer {
+impl Into<TokenKind> for Integer {
     fn into(self) -> TokenKind {
         TokenKind::tINTEGER
     }

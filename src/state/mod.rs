@@ -3,8 +3,8 @@ use crate::{
     token::Token,
 };
 
-struct State<'a> {
-    pub(crate) buffer: BufferWithCursor<'a>,
+struct State {
+    pub(crate) buffer: BufferWithCursor,
     pub(crate) required_new_expr: bool,
 
     pub(crate) string_literals: StringLiteralStack,
@@ -16,8 +16,8 @@ struct State<'a> {
     pub(crate) brack_nest: usize,
 }
 
-impl<'a> State<'a> {
-    fn new(input: &'a [u8]) -> Self {
+impl State {
+    fn new(input: &[u8]) -> Self {
         Self {
             buffer: BufferWithCursor::new(input),
             required_new_expr: false,
@@ -30,32 +30,32 @@ impl<'a> State<'a> {
     }
 }
 
-pub(crate) struct OwnedState<'a> {
-    inner: Box<State<'a>>,
+pub(crate) struct OwnedState {
+    inner: Box<State>,
 }
 
-impl<'a> OwnedState<'a> {
-    pub(crate) fn new(input: &'a [u8]) -> Self {
+impl OwnedState {
+    pub(crate) fn new(input: &[u8]) -> Self {
         Self {
             inner: Box::new(State::new(input)),
         }
     }
 }
 
-pub(crate) struct StateRef<'a> {
-    state_ref: *mut State<'a>,
+pub(crate) struct StateRef {
+    state_ref: *mut State,
 }
 
-impl<'a> From<&mut OwnedState<'a>> for StateRef<'a> {
-    fn from(owned: &mut OwnedState<'a>) -> Self {
-        let state_ref: *mut State<'a> = owned.inner_mut();
+impl From<&mut OwnedState> for StateRef {
+    fn from(owned: &mut OwnedState) -> Self {
+        let state_ref: *mut State = owned.inner_mut();
         Self { state_ref }
     }
 }
 
-pub(crate) trait StateApi<'a> {
-    fn buffer(&self) -> &BufferWithCursor<'a>;
-    fn buffer_mut(&mut self) -> &mut BufferWithCursor<'a>;
+pub(crate) trait StateApi {
+    fn buffer(&self) -> &BufferWithCursor;
+    fn buffer_mut(&mut self) -> &mut BufferWithCursor;
 
     fn required_new_expr(&self) -> bool;
     fn required_new_expr_mut(&mut self) -> &mut bool;
@@ -76,11 +76,11 @@ pub(crate) trait StateApi<'a> {
     fn brack_nest_mut(&mut self) -> &mut usize;
 }
 
-impl<'a> StateApi<'a> for State<'a> {
-    fn buffer(&self) -> &BufferWithCursor<'a> {
+impl StateApi for State {
+    fn buffer(&self) -> &BufferWithCursor {
         &self.buffer
     }
-    fn buffer_mut(&mut self) -> &mut BufferWithCursor<'a> {
+    fn buffer_mut(&mut self) -> &mut BufferWithCursor {
         &mut self.buffer
     }
 
@@ -129,11 +129,11 @@ impl<'a> StateApi<'a> for State<'a> {
 
 macro_rules! generate_impl_delegation {
     ($for:tt) => {
-        impl<'a> StateApi<'a> for $for<'a> {
-            fn buffer(&self) -> &BufferWithCursor<'a> {
+        impl StateApi for $for {
+            fn buffer(&self) -> &BufferWithCursor {
                 self.inner().buffer()
             }
-            fn buffer_mut(&mut self) -> &mut BufferWithCursor<'a> {
+            fn buffer_mut(&mut self) -> &mut BufferWithCursor {
                 self.inner_mut().buffer_mut()
             }
 
@@ -182,26 +182,26 @@ macro_rules! generate_impl_delegation {
     };
 }
 
-trait HoldsState<'a> {
-    fn inner(&self) -> &State<'a>;
-    fn inner_mut(&mut self) -> &mut State<'a>;
+trait HoldsState {
+    fn inner(&self) -> &State;
+    fn inner_mut(&mut self) -> &mut State;
 }
 
-impl<'a> HoldsState<'a> for OwnedState<'a> {
-    fn inner(&self) -> &State<'a> {
+impl HoldsState for OwnedState {
+    fn inner(&self) -> &State {
         &self.inner
     }
-    fn inner_mut(&mut self) -> &mut State<'a> {
+    fn inner_mut(&mut self) -> &mut State {
         &mut self.inner
     }
 }
 generate_impl_delegation!(OwnedState);
 
-impl<'a> HoldsState<'a> for StateRef<'a> {
-    fn inner(&self) -> &State<'a> {
+impl HoldsState for StateRef {
+    fn inner(&self) -> &State {
         unsafe { self.state_ref.as_ref() }.unwrap()
     }
-    fn inner_mut(&mut self) -> &mut State<'a> {
+    fn inner_mut(&mut self) -> &mut State {
         unsafe { self.state_ref.as_mut() }.unwrap()
     }
 }

@@ -1,0 +1,75 @@
+use crate::{
+    lexer::{buffer::BufferWithCursor, strings::stack::StringLiteralStack},
+    state::State,
+    token::Token,
+};
+
+pub(crate) struct OwnedState {
+    inner: Box<State>,
+}
+
+impl OwnedState {
+    pub(crate) fn new(input: &[u8]) -> Self {
+        Self {
+            inner: Box::new(State::new(input)),
+        }
+    }
+}
+
+impl OwnedState {
+    pub(crate) fn inner(&self) -> &State {
+        &self.inner
+    }
+    pub(crate) fn inner_mut(&mut self) -> &mut State {
+        &mut self.inner
+    }
+
+    pub(crate) fn buffer(&self) -> &BufferWithCursor {
+        self.inner().buffer()
+    }
+    pub(crate) fn buffer_mut(&mut self) -> &mut BufferWithCursor {
+        self.inner_mut().buffer_mut()
+    }
+
+    pub(crate) fn required_new_expr(&self) -> bool {
+        self.inner().required_new_expr()
+    }
+    pub(crate) fn required_new_expr_mut(&mut self) -> &mut bool {
+        self.inner_mut().required_new_expr_mut()
+    }
+
+    pub(crate) fn string_literals(&self) -> &StringLiteralStack {
+        self.inner().string_literals()
+    }
+    pub(crate) fn string_literals_mut(&mut self) -> &mut StringLiteralStack {
+        self.inner_mut().string_literals_mut()
+    }
+
+    pub(crate) fn current_token(&self) -> &Option<Token> {
+        self.inner().current_token()
+    }
+    pub(crate) fn current_token_mut(&mut self) -> &mut Option<Token> {
+        self.inner_mut().current_token_mut()
+    }
+
+    pub(crate) fn curly_nest(&self) -> usize {
+        self.inner().curly_nest()
+    }
+    pub(crate) fn curly_nest_mut(&mut self) -> &mut usize {
+        self.inner_mut().curly_nest_mut()
+    }
+
+    pub(crate) fn paren_nest(&self) -> usize {
+        self.inner().paren_nest()
+    }
+    pub(crate) fn paren_nest_mut(&mut self) -> &mut usize {
+        self.inner_mut().paren_nest_mut()
+    }
+
+    pub(crate) fn brack_nest(&self) -> usize {
+        self.inner().brack_nest()
+    }
+    pub(crate) fn brack_nest_mut(&mut self) -> &mut usize {
+        self.inner_mut().brack_nest_mut()
+    }
+}

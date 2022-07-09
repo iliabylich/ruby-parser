@@ -35,7 +35,7 @@ impl ExtendNumber for IntegerPrefix {
     }
 }
 
-impl<'a> Into<TokenKind> for IntegerPrefix {
+impl Into<TokenKind> for IntegerPrefix {
     fn into(self) -> TokenKind {
         unreachable!("ExtendNumber made an incomplete transition to {:?}", self)
     }

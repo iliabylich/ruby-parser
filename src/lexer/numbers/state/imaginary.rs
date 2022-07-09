@@ -18,7 +18,7 @@ impl ExtendNumber for Imaginary {
     }
 }
 
-impl<'a> Into<TokenKind> for Imaginary {
+impl Into<TokenKind> for Imaginary {
     fn into(self) -> TokenKind {
         TokenKind::tIMAGINARY
     }

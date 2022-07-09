@@ -21,11 +21,11 @@ macro_rules! node_ptr_to_box {
 fn cstring_value(loc: Loc, buffer: &Buffer) -> CString {
     CString::from(buffer.slice(loc.start, loc.end).unwrap())
 }
-fn string_value<'a>(loc: Loc, buffer: &Buffer) -> StringContent {
+fn string_value(loc: Loc, buffer: &Buffer) -> StringContent {
     StringContent::from(buffer.slice(loc.start, loc.end).unwrap())
 }
 
-impl<'a, C: Constructor> Builder<C> {
+impl<C: Constructor> Builder<C> {
     // Singletons
     pub(crate) fn nil(nil_t: Token) -> Box<Node> {
         let loc = nil_t.loc();

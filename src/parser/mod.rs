@@ -46,7 +46,7 @@ pub struct Parser<C: Constructor = RustConstructor> {
     debug: bool,
     phantom: std::marker::PhantomData<C>,
 }
-pub type RustParser<'a> = Parser<RustConstructor>;
+pub type RustParser = Parser<RustConstructor>;
 
 impl<C> Parser<C>
 where
