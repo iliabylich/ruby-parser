@@ -22,3 +22,6 @@ pub use token::{Token, TokenKind};
 #[allow(dead_code, unused_variables)]
 pub(crate) mod builder;
 pub use builder::{CString, Constructor};
+
+mod state;
+pub(crate) use state::{OwnedState, StateApi, StateRef};
