@@ -1,45 +1,47 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::Parser,
+    parser::{ParseError, Parser},
     token::TokenKind,
     Node,
 };
 
 impl<C: Constructor> Parser<C> {
-    pub(crate) fn try_alias(&mut self) -> Option<Box<Node>> {
+    pub(crate) fn try_alias(&mut self) -> Result<Box<Node>, ParseError> {
         let alias_t = self.try_token(TokenKind::kALIAS)?;
-        let (lhs, rhs) = parse_alias_args(self);
-        Some(Builder::<C>::alias(alias_t, lhs, rhs))
+        let (lhs, rhs) = parse_alias_args(self)?;
+        Ok(Builder::<C>::alias(alias_t, lhs, rhs))
     }
 }
 
-fn parse_alias_args<C: Constructor>(parser: &mut Parser<C>) -> (Box<Node>, Box<Node>) {
-    None.or_else(|| try_fitem_fitem(parser))
+fn parse_alias_args<C: Constructor>(
+    parser: &mut Parser<C>,
+) -> Result<(Box<Node>, Box<Node>), ParseError> {
+    parser
+        .chain("alias arguments")
+        .or_else(|| try_fitem_fitem(parser))
         .or_else(|| try_gvar_gvar(parser))
-        .unwrap_or_else(|| panic!("expected alias on fitems or gvars"))
+        .done()
 }
 
-fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> Option<(Box<Node>, Box<Node>)> {
+fn try_fitem_fitem<C: Constructor>(
+    parser: &mut Parser<C>,
+) -> Result<(Box<Node>, Box<Node>), ParseError> {
     let lhs = parser.try_fitem()?;
-    let rhs = parser
-        .try_fitem()
-        .unwrap_or_else(|| panic!("expected fitem, got {:?}", parser.current_token()));
-    Some((lhs, rhs))
+    let rhs = parser.try_fitem()?;
+    Ok((lhs, rhs))
 }
 
-fn try_gvar_gvar<C: Constructor>(parser: &mut Parser<C>) -> Option<(Box<Node>, Box<Node>)> {
+fn try_gvar_gvar<C: Constructor>(
+    parser: &mut Parser<C>,
+) -> Result<(Box<Node>, Box<Node>), ParseError> {
     let lhs = parser.try_gvar()?;
-    let rhs = None
+    let rhs = parser
+        .chain("gvar rhs")
         .or_else(|| parser.try_gvar())
         .or_else(|| parser.try_back_ref())
         .or_else(|| parser.try_nth_ref())
-        .unwrap_or_else(|| {
-            panic!(
-                "expected tGVAR/tBACK_REF/tNTH_REF, got {:?}",
-                parser.current_token()
-            )
-        });
-    Some((lhs, rhs))
+        .done()?;
+    Ok((lhs, rhs))
 }
 
 #[cfg(test)]
@@ -56,7 +58,7 @@ mod tests {
         let mut parser = RustParser::new(b"alias foo bar");
         assert_eq!(
             parser.try_alias(),
-            Some(Box::new(Node::Alias(Alias {
+            Ok(Box::new(Node::Alias(Alias {
                 to: Box::new(Node::Sym(Sym {
                     name: StringContent::from("foo"),
                     begin_l: None,
@@ -80,7 +82,7 @@ mod tests {
         let mut parser = RustParser::new(b"alias :foo :bar");
         assert_eq!(
             parser.try_alias(),
-            Some(Box::new(Node::Alias(Alias {
+            Ok(Box::new(Node::Alias(Alias {
                 to: Box::new(Node::Sym(Sym {
                     name: StringContent::from("foo"),
                     begin_l: Some(loc!(6, 7)),
@@ -104,7 +106,7 @@ mod tests {
         let mut parser = RustParser::new(b"alias $foo $bar");
         assert_eq!(
             parser.try_alias(),
-            Some(Box::new(Node::Alias(Alias {
+            Ok(Box::new(Node::Alias(Alias {
                 to: Box::new(Node::Gvar(Gvar {
                     name: StringContent::from("$foo"),
                     expression_l: loc!(6, 10)

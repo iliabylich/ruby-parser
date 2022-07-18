@@ -5,7 +5,7 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     loc::loc,
-    parser::Parser,
+    parser::{ParseError, Parser},
     token::{token, Token, TokenKind},
     Node,
 };
@@ -14,10 +14,12 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_xstring(&mut self) -> Option<Box<Node>> {
-        let xstring_beg_t = None
+    pub(crate) fn try_xstring(&mut self) -> Result<Box<Node>, ParseError> {
+        let xstring_beg_t = self
+            .chain("executable string begin")
             .or_else(|| self.read_backtick_identifier_as_xstring_beg())
-            .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))?;
+            .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
+            .done()?;
 
         // now we need to manually push a xstring literal
         // Lexer is not capable of doing it
@@ -29,9 +31,9 @@ where
                 b'`',
             )));
 
-        let xstring_contents = self.parse_xstring_contents();
+        let xstring_contents = self.parse_xstring_contents()?;
         let string_end_t = self.expect_token(TokenKind::tSTRING_END);
-        Some(Builder::<C>::xstring_compose(
+        Ok(Builder::<C>::xstring_compose(
             xstring_beg_t,
             xstring_contents,
             string_end_t,
@@ -39,23 +41,22 @@ where
     }
 
     // This rule can be `none`
-    fn parse_xstring_contents(&mut self) -> Vec<Node> {
-        let mut contents = vec![];
-        while let Some(content) = self.try_string_content() {
-            contents.push(*content)
-        }
-        contents
+    fn parse_xstring_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+        self.parse_string_contents()
     }
 
-    fn read_backtick_identifier_as_xstring_beg(&mut self) -> Option<Token> {
+    fn read_backtick_identifier_as_xstring_beg(&mut self) -> Result<Token, ParseError> {
         let loc = self.current_token().loc();
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
                 self.take_token();
-                return Some(token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end)));
+                return Ok(token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end)));
             }
         }
-        None
+        Err(ParseError::lookahead_failed(
+            TokenKind::tXSTRING_BEG,
+            self.current_token().kind(),
+        ))
     }
 }
 
@@ -70,7 +71,7 @@ mod tests {
         let mut parser = RustParser::new(b"`foo`");
         assert_eq!(
             parser.try_xstring(),
-            Some(Box::new(Node::Xstr(Xstr {
+            Ok(Box::new(Node::Xstr(Xstr {
                 parts: vec![Node::Str(Str {
                     value: StringContent::from("foo"),
                     begin_l: None,

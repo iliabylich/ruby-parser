@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::Parser,
+    parser::{ParseError, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,17 +9,18 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_undef(&mut self) -> Option<Box<Node>> {
+    pub(crate) fn try_undef(&mut self) -> Result<Box<Node>, ParseError> {
         let undef_t = self.try_token(TokenKind::kUNDEF)?;
-        let names = self.parse_names();
-        Some(Builder::<C>::undef(undef_t, names))
+        let names = self.parse_names()?;
+        Ok(Builder::<C>::undef(undef_t, names))
     }
 
-    fn parse_names(&mut self) -> Vec<Node> {
+    fn parse_names(&mut self) -> Result<Vec<Node>, ParseError> {
         let mut names = vec![];
-        if let Some(fitem) = self.try_fitem() {
-            names.push(*fitem);
-        }
+
+        let fitem = self.try_fitem()?;
+        names.push(*fitem);
+
         loop {
             if self.current_token().is(TokenKind::tCOMMA) {
                 // consume
@@ -27,12 +28,11 @@ where
             } else {
                 break;
             }
-            match self.try_fitem() {
-                Some(fitem) => names.push(*fitem),
-                None => panic!("expected fitem, got {:?}", self.current_token()),
-            }
+            let fitem = self.try_fitem()?;
+            names.push(*fitem);
         }
-        names
+
+        Ok(names)
     }
 }
 
@@ -47,7 +47,7 @@ fn test_undef() {
     let mut parser = RustParser::new(b"undef a, :b, c");
     assert_eq!(
         parser.try_undef(),
-        Some(Box::new(Node::Undef(Undef {
+        Ok(Box::new(Node::Undef(Undef {
             names: vec![
                 Node::Sym(Sym {
                     name: StringContent::from("a"),

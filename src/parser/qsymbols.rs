@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
-    parser::Parser,
+    parser::{ParseError, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -10,11 +10,11 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_qsymbols(&mut self) -> Option<Box<Node>> {
+    pub(crate) fn try_qsymbols(&mut self) -> Result<Box<Node>, ParseError> {
         let begin_t = self.try_token(TokenKind::tSYMBOLS_BEG)?;
         let word_list = self.parse_qsym_list();
         let end_t = self.expect_token(TokenKind::tSTRING_END);
-        Some(Builder::<C>::symbols_compose(begin_t, word_list, end_t))
+        Ok(Builder::<C>::symbols_compose(begin_t, word_list, end_t))
     }
 
     // This rule can be `None`
@@ -35,12 +35,12 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{loc::loc, string_content::StringContent, Node, RustParser};
+    use crate::{loc::loc, parser::ParseError, string_content::StringContent, Node, RustParser};
 
     #[test]
     fn test_words() {
         let mut parser = RustParser::new(b"%i[foo bar]");
-        assert_eq!(parser.parse(), None);
+        assert_eq!(parser.try_qsymbols(), Err(ParseError::empty()));
         todo!("implement me");
     }
 }

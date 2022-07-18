@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
     loc::loc,
-    parser::Parser,
+    parser::{ParseError, Parser},
     token::{token, Token, TokenKind},
     Node,
 };
@@ -11,48 +11,51 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_regexp(&mut self) -> Option<Box<Node>> {
-        let begin_t = self.try_token(TokenKind::tREGEXP_BEG).or_else(|| {
-            let token = self.read_div_as_heredoc_beg()?;
+    pub(crate) fn try_regexp(&mut self) -> Result<Box<Node>, ParseError> {
+        let begin_t = self
+            .chain("regexp")
+            .or_else(|| self.try_token(TokenKind::tREGEXP_BEG))
+            .or_else(|| {
+                let token = self.read_div_as_heredoc_beg()?;
 
-            // now we need to manually push a xstring literal
-            // Lexer is not capable of doing it
-            self.lexer
-                .string_literals()
-                .push(StringLiteral::Regexp(Regexp::new(
-                    b'/',
-                    b'/',
-                    self.lexer.curly_nest(),
-                )));
+                // now we need to manually push a xstring literal
+                // Lexer is not capable of doing it
+                self.lexer
+                    .string_literals()
+                    .push(StringLiteral::Regexp(Regexp::new(
+                        b'/',
+                        b'/',
+                        self.lexer.curly_nest(),
+                    )));
 
-            Some(token)
-        })?;
+                Ok(token)
+            })
+            .done()?;
 
-        let contents = self.try_regexp_contents();
+        let contents = self.try_regexp_contents()?;
         let end_t = self.expect_token(TokenKind::tSTRING_END);
 
         let options = Builder::<C>::regexp_options(&end_t, self.buffer());
-        Some(Builder::<C>::regexp_compose(
+        Ok(Builder::<C>::regexp_compose(
             begin_t, contents, end_t, options,
         ))
     }
 
     // This rule can be `none`
-    fn try_regexp_contents(&mut self) -> Vec<Node> {
-        let mut strings = vec![];
-        while let Some(string_content) = self.try_string_content() {
-            strings.push(*string_content);
-        }
-        strings
+    fn try_regexp_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+        self.parse_string_contents()
     }
 
-    fn read_div_as_heredoc_beg(&mut self) -> Option<Token> {
+    fn read_div_as_heredoc_beg(&mut self) -> Result<Token, ParseError> {
         let loc = self.current_token().loc();
         if self.current_token().is(TokenKind::tDIVIDE) {
             self.take_token();
-            Some(token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end)))
+            Ok(token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end)))
         } else {
-            None
+            Err(ParseError::lookahead_failed(
+                TokenKind::tREGEXP_BEG,
+                self.current_token().kind(),
+            ))
         }
     }
 }
@@ -71,7 +74,7 @@ mod tests {
         let mut parser = RustParser::new(b"/foo/");
         assert_eq!(
             parser.try_regexp(),
-            Some(Box::new(Node::Regexp(Regexp {
+            Ok(Box::new(Node::Regexp(Regexp {
                 parts: vec![Node::Str(Str {
                     value: StringContent::from("foo"),
                     begin_l: None,
@@ -91,7 +94,7 @@ mod tests {
         let mut parser = RustParser::new(b"/foo/mix");
         assert_eq!(
             parser.try_regexp(),
-            Some(Box::new(Node::Regexp(Regexp {
+            Ok(Box::new(Node::Regexp(Regexp {
                 parts: vec![Node::Str(Str {
                     value: StringContent::from("foo"),
                     begin_l: None,
@@ -114,7 +117,7 @@ mod tests {
         let mut parser = RustParser::new(b"%r{foo}");
         assert_eq!(
             parser.try_regexp(),
-            Some(Box::new(Node::Regexp(Regexp {
+            Ok(Box::new(Node::Regexp(Regexp {
                 parts: vec![Node::Str(Str {
                     value: StringContent::from("foo"),
                     begin_l: None,

@@ -736,7 +736,7 @@ impl<C: Constructor> Builder<C> {
     }
 
     pub(crate) fn begin_body(
-        compound_stmt: Box<Node>,
+        compound_stmt: Option<Box<Node>>,
         rescue_bodies: Vec<Node>,
         opt_else: Option<(Token, Option<Box<Node>>)>,
         opt_ensure: Option<(Token, Option<Box<Node>>)>,

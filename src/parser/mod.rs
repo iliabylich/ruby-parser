@@ -5,7 +5,9 @@ use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 
 mod checkpoint;
+
 mod result;
+use result::{Expectation, ParseError};
 
 mod alias;
 mod array;
@@ -95,19 +97,22 @@ where
         }
     }
 
-    pub(crate) fn try_token(&mut self, expected: TokenKind) -> Option<Token> {
+    pub(crate) fn try_token(&mut self, expected: TokenKind) -> Result<Token, ParseError> {
         if self.current_token().is(expected) {
-            Some(self.take_token())
+            Ok(self.take_token())
         } else {
-            None
+            Err(ParseError::lookahead_failed(
+                expected,
+                self.current_token().kind(),
+            ))
         }
     }
 
     pub fn parse(&mut self) -> Option<Box<Node>> {
-        self.try_program()
+        self.try_program().unwrap()
     }
 
-    fn try_program(&mut self) -> Option<Box<Node>> {
+    fn try_program(&mut self) -> Result<Option<Box<Node>>, ParseError> {
         self.try_top_compstmt()
     }
 
@@ -120,11 +125,11 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    fn try_command_rhs(&mut self) -> Option<Box<Node>> {
+    fn try_command_rhs(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_command_rhs")
     }
 
-    fn try_def_name(&mut self) -> Option<Token> {
+    fn try_def_name(&mut self) -> Result<Token, ParseError> {
         self.try_fname()
     }
 
@@ -136,20 +141,22 @@ where
         todo!("parser.parse_defs_head")
     }
 
-    fn try_expr_value(&mut self) -> Option<Box<Node>> {
+    fn try_expr_value(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_expr_value")
     }
 
-    fn try_expr_value_do(&mut self) -> Option<(Node, Token)> {
+    fn try_expr_value_do(&mut self) -> Result<(Node, Token), ParseError> {
         todo!("parser.try_expr_value_do")
     }
 
-    fn try_command_call(&mut self) -> Option<Box<Node>> {
-        None.or_else(|| self.try_command())
+    fn try_command_call(&mut self) -> Result<Box<Node>, ParseError> {
+        self.chain("command call")
+            .or_else(|| self.try_command())
             .or_else(|| self.try_block_command())
+            .done()
     }
 
-    fn try_block_command(&mut self) -> Option<Box<Node>> {
+    fn try_block_command(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_block_command")
     }
 
@@ -157,7 +164,7 @@ where
         todo!("parser.parse_cmd_brace_block")
     }
 
-    fn try_fcall(&mut self) -> Option<Token> {
+    fn try_fcall(&mut self) -> Result<Token, ParseError> {
         self.try_operation()
     }
 
@@ -167,21 +174,28 @@ where
     fn parse_cpath(&mut self) {
         todo!("parser.parse_cpath")
     }
-    fn try_fname(&mut self) -> Option<Token> {
-        self.try_token(TokenKind::tIDENTIFIER)
+    fn try_fname(&mut self) -> Result<Token, ParseError> {
+        self.chain("fname")
+            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
             .or_else(|| self.try_reswords())
+            .done()
     }
-    fn try_fitem(&mut self) -> Option<Box<Node>> {
-        self.try_fname()
-            .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
+    fn try_fitem(&mut self) -> Result<Box<Node>, ParseError> {
+        self.chain("fitem")
+            .or_else(|| {
+                self.try_fname()
+                    .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
+            })
             .or_else(|| self.try_symbol())
+            .done()
     }
 
-    fn try_op(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tPIPE))
+    fn try_op(&mut self) -> Result<Token, ParseError> {
+        self.chain("operation")
+            .or_else(|| self.try_token(TokenKind::tPIPE))
             .or_else(|| self.try_token(TokenKind::tCARET))
             .or_else(|| self.try_token(TokenKind::tAMPER))
             .or_else(|| self.try_token(TokenKind::tCMP))
@@ -211,9 +225,11 @@ where
             .or_else(|| self.try_token(TokenKind::tAREF))
             .or_else(|| self.try_token(TokenKind::tASET))
             .or_else(|| self.try_token(TokenKind::tBACK_REF))
+            .done()
     }
-    fn try_reswords(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::k__LINE__))
+    fn try_reswords(&mut self) -> Result<Token, ParseError> {
+        self.chain("reserved word")
+            .or_else(|| self.try_token(TokenKind::k__LINE__))
             .or_else(|| self.try_token(TokenKind::k__FILE__))
             .or_else(|| self.try_token(TokenKind::k__ENCODING__))
             .or_else(|| self.try_token(TokenKind::klBEGIN))
@@ -254,8 +270,9 @@ where
             .or_else(|| self.try_token(TokenKind::kUNLESS))
             .or_else(|| self.try_token(TokenKind::kWHILE))
             .or_else(|| self.try_token(TokenKind::kUNTIL))
+            .done()
     }
-    fn try_arg(&mut self) -> Option<Box<Node>> {
+    fn try_arg(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_arg")
     }
     fn parse_relop(&mut self) {
@@ -267,7 +284,7 @@ where
     fn parse_arg_value(&mut self) {
         todo!("parser.parse_arg_value")
     }
-    fn try_aref_args(&mut self) -> Option<Box<Node>> {
+    fn try_aref_args(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_aref_args")
     }
     fn parse_arg_rhs(&mut self) {
@@ -288,67 +305,67 @@ where
     fn parse_args(&mut self) {
         todo!("parser.parse_args")
     }
-    fn try_mrhs_arg(&mut self) -> Option<Box<Node>> {
+    fn try_mrhs_arg(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_mrhs_arg")
     }
-    fn try_mrhs(&mut self) -> Option<Vec<Node>> {
+    fn try_mrhs(&mut self) -> Result<Vec<Node>, ParseError> {
         todo!("parser.try_mrhs")
     }
-    fn try_k_begin(&mut self) -> Option<Token> {
+    fn try_k_begin(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_begin")
     }
-    fn try_k_if(&mut self) -> Option<Token> {
+    fn try_k_if(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_if")
     }
-    fn try_k_unless(&mut self) -> Option<Token> {
+    fn try_k_unless(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_unless")
     }
-    fn try_k_while(&mut self) -> Option<Token> {
+    fn try_k_while(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_while")
     }
-    fn try_k_until(&mut self) -> Option<Token> {
+    fn try_k_until(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_until")
     }
-    fn try_k_case(&mut self) -> Option<Token> {
+    fn try_k_case(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_case")
     }
-    fn try_k_for(&mut self) -> Option<Token> {
+    fn try_k_for(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_for")
     }
-    fn try_k_class(&mut self) -> Option<Token> {
+    fn try_k_class(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_class")
     }
-    fn try_k_module(&mut self) -> Option<Token> {
+    fn try_k_module(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_module")
     }
-    fn try_k_def(&mut self) -> Option<Token> {
+    fn try_k_def(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_def")
     }
-    fn try_k_do(&mut self) -> Option<Token> {
+    fn try_k_do(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_do")
     }
-    fn try_k_do_block(&mut self) -> Option<Token> {
+    fn try_k_do_block(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_do_block")
     }
-    fn try_k_rescue(&mut self) -> Option<Token> {
+    fn try_k_rescue(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_rescue")
     }
-    fn try_k_ensure(&mut self) -> Option<Token> {
+    fn try_k_ensure(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_ensure")
     }
-    fn try_k_when(&mut self) -> Option<Token> {
+    fn try_k_when(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_when")
     }
-    fn try_k_else(&mut self) -> Option<Token> {
+    fn try_k_else(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_else")
     }
-    fn try_k_elsif(&mut self) -> Option<Token> {
+    fn try_k_elsif(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_elsif")
     }
-    fn try_k_end(&mut self) -> Option<Token> {
+    fn try_k_end(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_end")
     }
-    fn try_k_return(&mut self) -> Option<Token> {
+    fn try_k_return(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_return")
     }
     fn parse_then(&mut self) {
@@ -411,7 +428,7 @@ where
     fn parse_bvar(&mut self) {
         todo!("parser.parse_bvar")
     }
-    fn try_lambda(&mut self) -> Option<Box<Node>> {
+    fn try_lambda(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_lambda")
     }
     fn parse_f_larglist(&mut self) {
@@ -423,15 +440,15 @@ where
     fn parse_do_block(&mut self) {
         todo!("parser.parse_do_block")
     }
-    fn try_block_call(&mut self) -> Option<Box<Node>> {
+    fn try_block_call(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_block_call")
     }
-    fn try_method_call(&mut self) -> Option<Box<Node>> {
+    fn try_method_call(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_method_call")
     }
 
     // TODO: return ArgsType instead of ()
-    fn try_brace_block(&mut self) -> Option<(Token, (), Option<Box<Node>>, Token)> {
+    fn try_brace_block(&mut self) -> Result<(Token, (), Option<Box<Node>>, Token), ParseError> {
         todo!("parser.try_brace_block")
     }
     fn parse_do_body(&mut self) {
@@ -455,7 +472,7 @@ where
     fn parse_p_top_expr(&mut self) {
         todo!("parser.parse_p_top_expr")
     }
-    fn try_p_top_expr_body(&mut self) -> Option<Box<Node>> {
+    fn try_p_top_expr_body(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_p_top_expr_body")
     }
     fn parse_p_expr(&mut self) {
@@ -536,30 +553,35 @@ where
     fn parse_p_const(&mut self) {
         todo!("parser.parse_p_const")
     }
-    fn parse_opt_ensure(&mut self) -> Option<(Token, Box<Node>)> {
-        todo!("parser.parse_opt_ensure")
-    }
-    fn try_literal(&mut self) -> Option<Box<Node>> {
-        None.or_else(|| self.try_numeric())
+    fn try_literal(&mut self) -> Result<Box<Node>, ParseError> {
+        self.chain("literal")
+            .or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
+            .done()
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
     }
-    fn try_user_variable(&mut self) -> Option<Box<Node>> {
-        None.or_else(|| self.try_lvar())
+    fn try_user_variable(&mut self) -> Result<Box<Node>, ParseError> {
+        self.chain("user variable")
+            .or_else(|| self.try_lvar())
             .or_else(|| self.try_ivar())
             .or_else(|| self.try_gvar())
             .or_else(|| self.try_t_const())
             .or_else(|| self.try_cvar())
+            .done()
     }
-    fn try_var_ref(&mut self) -> Option<Box<Node>> {
-        None.or_else(|| self.try_user_variable())
+    fn try_var_ref(&mut self) -> Result<Box<Node>, ParseError> {
+        self.chain("variable reference")
+            .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
+            .done()
     }
-    fn try_var_lhs(&mut self) -> Option<Box<Node>> {
-        None.or_else(|| self.try_user_variable())
+    fn try_var_lhs(&mut self) -> Result<Box<Node>, ParseError> {
+        self.chain("variable as LHS in assignment")
+            .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
+            .done()
             .map(|node| Builder::<C>::assignable(node))
     }
     fn parse_superclass(&mut self) {
@@ -664,79 +686,98 @@ where
     fn parse_assoc(&mut self) {
         todo!("parser.parse_assoc")
     }
-    fn try_operation(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tIDENTIFIER))
+    fn try_operation(&mut self) -> Result<Token, ParseError> {
+        self.chain("operation")
+            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tFID))
+            .done()
     }
-    fn try_operation2(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_operation())
+    fn try_operation2(&mut self) -> Result<Token, ParseError> {
+        self.chain("operation 2")
+            .or_else(|| self.try_operation())
             .or_else(|| self.try_op())
+            .done()
     }
-    fn try_operation3(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tIDENTIFIER))
+    fn try_operation3(&mut self) -> Result<Token, ParseError> {
+        self.chain("operation 3")
+            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
+            .done()
     }
-    fn try_dot_or_colon(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tDOT))
+    fn try_dot_or_colon(&mut self) -> Result<Token, ParseError> {
+        self.chain("dot or colon")
+            .or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tCOLON2))
+            .done()
     }
-    fn try_call_op(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tDOT))
+    fn try_call_op(&mut self) -> Result<Token, ParseError> {
+        self.chain("call operation")
+            .or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tANDDOT))
+            .done()
     }
-    fn try_call_op2(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_call_op())
+    fn try_call_op2(&mut self) -> Result<Token, ParseError> {
+        self.chain("call operation 2")
+            .or_else(|| self.try_call_op())
             .or_else(|| self.try_token(TokenKind::tCOLON2))
+            .done()
     }
     fn parse_opt_terms(&mut self) {
         self.parse_terms();
     }
-    fn try_opt_nl(&mut self) -> Option<Token> {
+    fn try_opt_nl(&mut self) -> Result<Token, ParseError> {
         self.try_token(TokenKind::tNL)
     }
-    fn try_rparen(&mut self) -> Option<Token> {
+    fn try_rparen(&mut self) -> Result<Token, ParseError> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
-        if let Some(rparen_t) = self.try_token(TokenKind::tRPAREN) {
-            Some(rparen_t)
-        } else {
-            checkpoint.restore();
-            None
+        match self.try_token(TokenKind::tRPAREN) {
+            err @ Err(_) => {
+                checkpoint.restore();
+                err
+            }
+            ok => ok,
         }
     }
-    fn try_rbracket(&mut self) -> Option<Token> {
+    fn try_rbracket(&mut self) -> Result<Token, ParseError> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
-        if let Some(rbrack_t) = self.try_token(TokenKind::tRBRACK) {
-            Some(rbrack_t)
-        } else {
-            checkpoint.restore();
-            None
+        match self.try_token(TokenKind::tRBRACK) {
+            err @ Err(_) => {
+                checkpoint.restore();
+                err
+            }
+            ok => ok,
         }
     }
-    fn try_rbrace(&mut self) -> Option<Token> {
+    fn try_rbrace(&mut self) -> Result<Token, ParseError> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();
-        if let Some(rbrace_t) = self.try_token(TokenKind::tRCURLY) {
-            Some(rbrace_t)
-        } else {
-            checkpoint.restore();
-            None
+        match self.try_token(TokenKind::tRCURLY) {
+            err @ Err(_) => {
+                checkpoint.restore();
+                err
+            }
+            ok => ok,
         }
     }
-    fn try_trailer(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tNL))
-            .or_else(|| self.try_token(TokenKind::tCOMMA))
-    }
-    fn try_term(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token(TokenKind::tSEMI))
+    fn try_trailer(&mut self) -> Result<Token, ParseError> {
+        self.chain("trailer")
             .or_else(|| self.try_token(TokenKind::tNL))
+            .or_else(|| self.try_token(TokenKind::tCOMMA))
+            .done()
+    }
+    fn try_term(&mut self) -> Result<Token, ParseError> {
+        self.chain("term")
+            .or_else(|| self.try_token(TokenKind::tSEMI))
+            .or_else(|| self.try_token(TokenKind::tNL))
+            .done()
     }
     fn parse_terms(&mut self) -> Vec<Token> {
         let mut terms = vec![];
-        if let Some(term) = self.try_term() {
+        if let Ok(term) = self.try_term() {
             terms.push(term)
         } else {
             return vec![];
@@ -748,7 +789,7 @@ where
                 break;
             }
 
-            if let Some(term) = self.try_term() {
+            if let Ok(term) = self.try_term() {
                 terms.push(term)
             } else {
                 break;
@@ -757,9 +798,9 @@ where
         terms
     }
 
-    fn try_colon2_const(&mut self) -> Option<(Token, Token)> {
+    fn try_colon2_const(&mut self) -> Result<(Token, Token), ParseError> {
         let colon2_t = self.try_token(TokenKind::tCOLON2)?;
         let const_t = self.expect_token(TokenKind::tCONSTANT);
-        Some((colon2_t, const_t))
+        Ok((colon2_t, const_t))
     }
 }

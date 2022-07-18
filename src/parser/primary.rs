@@ -1,16 +1,19 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::Parser,
+    parser::{ParseError, Parser},
     token::TokenKind,
     Node,
 };
+
+use super::result::ParserResultApi;
 
 impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_primary(&mut self) -> Option<Box<Node>> {
-        let node = None
+    pub(crate) fn try_primary(&mut self) -> Result<Box<Node>, ParseError> {
+        let node = self
+            .chain("primary value")
             .or_else(|| self.try_literal())
             .or_else(|| self.try_strings())
             .or_else(|| self.try_xstring())
@@ -33,12 +36,9 @@ where
             })
             .or_else(|| {
                 let lparen_t = self.try_token(TokenKind::tLPAREN)?;
-                let stmt = self.try_stmt();
-                if let Some(rparen_t) = self.try_rparen() {
-                    todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
-                } else {
-                    panic!("expected tRPAREN, got {:?}", self.current_token())
-                }
+                let stmt = self.try_stmt()?;
+                let rparen_t = self.try_rparen()?;
+                todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
             })
             .or_else(|| {
                 let (colon2_t, const_t) = self.try_colon2_const()?;
@@ -52,15 +52,12 @@ where
             .or_else(|| try_not_expr(self))
             .or_else(|| {
                 let fcall = self.try_fcall()?;
-                if let Some(brace_block) = self.try_brace_block() {
-                    todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
-                } else {
-                    None
-                }
+                let brace_block = self.try_brace_block()?;
+                todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
             })
             .or_else(|| {
                 let method_call = self.try_method_call()?;
-                if let Some(brace_block) = self.try_brace_block() {
+                if let Ok(brace_block) = self.try_brace_block() {
                     todo!(
                         "method_call brace_block {:?} {:?}",
                         method_call,
@@ -83,18 +80,25 @@ where
             .or_else(|| try_keyword_cmd(self, TokenKind::kBREAK))
             .or_else(|| try_keyword_cmd(self, TokenKind::kNEXT))
             .or_else(|| try_keyword_cmd(self, TokenKind::kREDO))
-            .or_else(|| try_keyword_cmd(self, TokenKind::kRETRY));
+            .or_else(|| try_keyword_cmd(self, TokenKind::kRETRY))
+            .done()?;
 
-        let node = node?;
-
-        while let Some((colon2_t, const_t)) = self.try_colon2_const() {
-            todo!("append tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t)
+        loop {
+            match self.try_colon2_const().ignore_lookahead_errors()? {
+                Some((colon2_t, const_t)) => {
+                    todo!("append tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t)
+                }
+                None => {
+                    // no match
+                    break;
+                }
+            }
         }
 
-        Some(node)
+        Ok(node)
     }
 
-    pub(crate) fn try_primary_value(&mut self) -> Option<Box<Node>> {
+    pub(crate) fn try_primary_value(&mut self) -> Result<Box<Node>, ParseError> {
         self.try_primary()
     }
 }
@@ -102,31 +106,23 @@ where
 fn try_keyword_cmd<C: Constructor>(
     parser: &mut Parser<C>,
     expected: TokenKind,
-) -> Option<Box<Node>> {
+) -> Result<Box<Node>, ParseError> {
     let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)
 }
 
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
-fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Option<Box<Node>> {
+fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, ParseError> {
     let not_t = parser.try_token(TokenKind::kNOT)?;
-    let checkpoint = parser.new_checkpoint();
-    if let Some(lparen_t) = parser.try_token(TokenKind::tLPAREN) {
-        let expr = parser.try_expr();
-        if let Some(rparen_t) = parser.try_rparen() {
-            todo!(
-                "not_op {:?} {:?} {:?} {:?}",
-                not_t,
-                lparen_t,
-                expr,
-                rparen_t
-            )
-        } else {
-            panic!("expected tRPAREN, got {:?}", parser.current_token());
-        }
-    } else {
-        checkpoint.restore();
-        None
-    }
+    let lparen_t = parser.try_token(TokenKind::tLPAREN)?;
+    let expr = parser.try_expr()?;
+    let rparen_t = parser.try_rparen()?;
+    todo!(
+        "not_op {:?} {:?} {:?} {:?}",
+        not_t,
+        lparen_t,
+        expr,
+        rparen_t
+    )
 }

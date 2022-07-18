@@ -14,7 +14,7 @@ pub(crate) struct Checkpoint {
 
 impl Checkpoint {
     pub(crate) fn new(state_ref: StateRef) -> Self {
-        Self {
+        let mut checkpoint = Self {
             buffer_pos: state_ref.buffer().pos(),
             literals_stack_size: state_ref.string_literals().size(),
 
@@ -23,7 +23,16 @@ impl Checkpoint {
             brack_nest: state_ref.brack_nest(),
 
             state_ref,
+        };
+
+        // TODO: get rid of this. instead, introduce a bi-directional conveyor on the parser level
+        if let Some(token) = state_ref.current_token() {
+            // If there's a cached token
+            // remember position _before_ this token
+            checkpoint.buffer_pos = token.loc().start;
         }
+
+        checkpoint
     }
 
     pub(crate) fn restore(&self) {

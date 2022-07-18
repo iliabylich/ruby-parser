@@ -31,7 +31,12 @@ impl StringLiteralStack {
     }
 
     pub(crate) fn truncate(&mut self, new_size: usize) {
-        debug_assert!(new_size <= self.size());
+        debug_assert!(
+            new_size <= self.size(),
+            "new size is {}, old is {}",
+            new_size,
+            self.size()
+        );
 
         self.stack.truncate(new_size);
     }

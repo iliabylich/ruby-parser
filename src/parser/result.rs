@@ -1,15 +1,20 @@
-use crate::{lexer::Checkpoint, token::TokenKind};
+use crate::{builder::Constructor, lexer::Checkpoint, parser::Parser, token::TokenKind};
 
 #[derive(Debug)]
 pub(crate) struct ParseResultChain<T> {
     checkpoint: Checkpoint,
+    name: &'static str,
     inner: Result<T, ParseError>,
 }
 
-impl<T> ParseResultChain<T> {
-    pub(crate) fn new(checkpoint: Checkpoint) -> Self {
+impl<T> ParseResultChain<T>
+where
+    T: std::fmt::Debug,
+{
+    pub(crate) fn new(name: &'static str, checkpoint: Checkpoint) -> Self {
         Self {
             checkpoint,
+            name,
             inner: Err(ParseError::empty()),
         }
     }
@@ -18,23 +23,29 @@ impl<T> ParseResultChain<T> {
     where
         F: FnOnce() -> Result<T, ParseError>,
     {
-        let Self { checkpoint, inner } = self;
+        let Self {
+            checkpoint,
+            name,
+            inner,
+        } = self;
 
         match inner {
             ok @ Ok(_) => {
                 // we had a match, no need to run anything
                 Self {
                     checkpoint,
+                    name,
                     inner: ok,
                 }
             }
             Err(mut error) => {
                 let fallback = f();
-                match fallback {
+                match dbg!(fallback) {
                     ok @ Ok(_) => {
                         // we've got a match, return it
                         Self {
                             checkpoint,
+                            name,
                             inner: ok,
                         }
                     }
@@ -47,6 +58,7 @@ impl<T> ParseResultChain<T> {
                         // and return an error
                         Self {
                             checkpoint,
+                            name,
                             inner: Err(error),
                         }
                     }
@@ -55,7 +67,7 @@ impl<T> ParseResultChain<T> {
         }
     }
 
-    pub(crate) fn into_parse_result(self) -> Result<T, ParseError> {
+    pub(crate) fn done(self) -> Result<T, ParseError> {
         self.inner
     }
 
@@ -70,6 +82,52 @@ impl<T> ParseResultChain<T> {
                 None
             }
         }
+    }
+
+    pub(crate) fn required(mut self) -> Self {
+        if let Err(error) = &mut self.inner {
+            error.expectations = std::mem::take(&mut error.expectations)
+                .into_iter()
+                .map(|exp| exp.into_required())
+                .collect();
+        }
+        self
+    }
+
+    pub(crate) fn strip(mut self) -> Self {
+        if let Err(error) = &mut self.inner {
+            debug_assert!(
+                !error.expectations.is_empty(),
+                "can't strip empty sequence of expectations"
+            );
+
+            let got_token = error
+                .expectations
+                .iter()
+                .map(|exp| exp.got_token())
+                .next()
+                .unwrap();
+
+            if error.expectations.iter().all(|exp| exp.is_lookahead()) {
+                error.expectations = vec![Expectation::RuleLookaheadFailed {
+                    rule: self.name,
+                    got_token,
+                }]
+            } else {
+                error.expectations = vec![Expectation::ExpectedRule {
+                    rule: self.name,
+                    got_token,
+                }]
+            }
+        }
+
+        self
+    }
+}
+
+impl<C: Constructor> Parser<C> {
+    pub(crate) fn chain<T: std::fmt::Debug>(&self, name: &'static str) -> ParseResultChain<T> {
+        ParseResultChain::new(name, self.new_checkpoint())
     }
 }
 
@@ -93,6 +151,24 @@ impl ParseError {
             }],
         }
     }
+
+    pub(crate) fn expected_rule(rule: &'static str, actual: TokenKind) -> Self {
+        Self {
+            expectations: vec![Expectation::ExpectedRule {
+                rule,
+                got_token: actual,
+            }],
+        }
+    }
+
+    pub(crate) fn lookahead_failed(expected: TokenKind, actual: TokenKind) -> Self {
+        Self {
+            expectations: vec![Expectation::TokenLooakaheadFailed {
+                expected_token: expected,
+                got_token: actual,
+            }],
+        }
+    }
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -103,15 +179,87 @@ pub(crate) enum Expectation {
     },
     ExpectedRule {
         rule: &'static str,
-        expected_token: TokenKind,
         got_token: TokenKind,
     },
 
-    // For initial lookahead
-    LooakaheadFailed {
+    TokenLooakaheadFailed {
         expected_token: TokenKind,
-        got_tokeb: TokenKind,
+        got_token: TokenKind,
     },
+    RuleLookaheadFailed {
+        rule: &'static str,
+        got_token: TokenKind,
+    },
+}
+
+enum ExpectationKind {
+    LookaheadFailed,
+    Expectation,
+}
+
+impl Expectation {
+    fn is_lookahead(&self) -> bool {
+        match self {
+            Self::ExpectedToken { .. } | Self::ExpectedRule { .. } => false,
+            Self::TokenLooakaheadFailed { .. } | Self::RuleLookaheadFailed { .. } => true,
+        }
+    }
+
+    fn into_required(self) -> Self {
+        match self {
+            Self::ExpectedToken { .. } | Self::ExpectedRule { .. } => self,
+            Self::TokenLooakaheadFailed {
+                expected_token,
+                got_token,
+            } => Self::ExpectedToken {
+                expected_token,
+                got_token,
+            },
+            Self::RuleLookaheadFailed { rule, got_token } => Self::ExpectedRule { rule, got_token },
+        }
+    }
+
+    fn got_token(&self) -> TokenKind {
+        match self {
+            Self::ExpectedToken { got_token, .. }
+            | Self::ExpectedRule { got_token, .. }
+            | Self::TokenLooakaheadFailed { got_token, .. }
+            | Self::RuleLookaheadFailed { got_token, .. } => *got_token,
+        }
+    }
+
+    fn kind(&self) -> ExpectationKind {
+        match self {
+            Self::ExpectedToken { .. } | Self::ExpectedRule { .. } => ExpectationKind::Expectation,
+            Self::TokenLooakaheadFailed { .. } | Self::RuleLookaheadFailed { .. } => {
+                ExpectationKind::LookaheadFailed
+            }
+        }
+    }
+}
+
+pub(crate) trait ParserResultApi<T> {
+    fn ignore_lookahead_errors(self) -> Result<Option<T>, ParseError>;
+}
+
+impl<T> ParserResultApi<T> for Result<T, ParseError> {
+    fn ignore_lookahead_errors(self) -> Result<Option<T>, ParseError> {
+        match self {
+            Ok(value) => Ok(Some(value)),
+            Err(mut error) => {
+                error.expectations = error
+                    .expectations
+                    .into_iter()
+                    .filter(|exp| exp.is_lookahead())
+                    .collect();
+                if error.expectations.is_empty() {
+                    Ok(None)
+                } else {
+                    Err(error)
+                }
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -146,7 +294,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::new(checkpoint)
+        let result = ParseResultChain::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
@@ -170,7 +318,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::<i32>::new(checkpoint)
+        let result = ParseResultChain::<i32>::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
@@ -196,7 +344,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::new(checkpoint)
+        let result = ParseResultChain::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
@@ -234,7 +382,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::<i32>::new(checkpoint)
+        let result = ParseResultChain::<i32>::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
