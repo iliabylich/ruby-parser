@@ -17,7 +17,7 @@ fn parse_alias_args<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> Result<(Box<Node>, Box<Node>), ParseError> {
     parser
-        .chain("alias arguments")
+        .one_of("alias arguments")
         .or_else(|| try_fitem_fitem(parser))
         .or_else(|| try_gvar_gvar(parser))
         .done()
@@ -36,7 +36,7 @@ fn try_gvar_gvar<C: Constructor>(
 ) -> Result<(Box<Node>, Box<Node>), ParseError> {
     let lhs = parser.try_gvar()?;
     let rhs = parser
-        .chain("gvar rhs")
+        .one_of("gvar rhs")
         .or_else(|| parser.try_gvar())
         .or_else(|| parser.try_back_ref())
         .or_else(|| parser.try_nth_ref())

@@ -1,13 +1,13 @@
 use crate::{builder::Constructor, lexer::Checkpoint, parser::Parser, token::TokenKind};
 
 #[derive(Debug)]
-pub(crate) struct ParseResultChain<T> {
+pub(crate) struct OneOf<T> {
     checkpoint: Checkpoint,
     name: &'static str,
     inner: Result<T, ParseError>,
 }
 
-impl<T> ParseResultChain<T>
+impl<T> OneOf<T>
 where
     T: std::fmt::Debug,
 {
@@ -126,8 +126,8 @@ where
 }
 
 impl<C: Constructor> Parser<C> {
-    pub(crate) fn chain<T: std::fmt::Debug>(&self, name: &'static str) -> ParseResultChain<T> {
-        ParseResultChain::new(name, self.new_checkpoint())
+    pub(crate) fn one_of<T: std::fmt::Debug>(&self, name: &'static str) -> OneOf<T> {
+        OneOf::new(name, self.new_checkpoint())
     }
 }
 
@@ -264,7 +264,7 @@ impl<T> ParserResultApi<T> for Result<T, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Checkpoint, Expectation, ParseError, ParseResultChain};
+    use super::{Checkpoint, Expectation, OneOf, ParseError};
     use crate::{
         state::{OwnedState, StateRef},
         token::TokenKind,
@@ -294,7 +294,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::new("foo", checkpoint)
+        let result = OneOf::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
@@ -318,7 +318,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::<i32>::new("foo", checkpoint)
+        let result = OneOf::<i32>::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
@@ -344,7 +344,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::new("foo", checkpoint)
+        let result = OneOf::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);
@@ -382,7 +382,7 @@ mod tests {
         let (state, state_ref, checkpoint, initial_pos) = setup();
 
         let mut errors = ParseError::empty();
-        let result = ParseResultChain::<i32>::new("foo", checkpoint)
+        let result = OneOf::<i32>::new("foo", checkpoint)
             .or_else(|| {
                 assert_eq!(state_ref.buffer().pos(), initial_pos);
                 state_ref.buffer().set_pos(initial_pos + 1);

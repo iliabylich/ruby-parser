@@ -45,7 +45,7 @@ where
     }
 
     pub(crate) fn try_const_or_identifier(&mut self) -> Result<Token, ParseError> {
-        self.chain("const or identifier")
+        self.one_of("const or identifier")
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .done()

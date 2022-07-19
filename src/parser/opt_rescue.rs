@@ -27,7 +27,7 @@ where
     }
 
     pub(crate) fn try_then(&mut self) -> Result<Token, ParseError> {
-        self.chain("then ...")
+        self.one_of("then ...")
             .or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kTHEN))
             .or_else(|| {
@@ -39,7 +39,7 @@ where
     }
 
     pub(crate) fn try_lhs(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("lhs")
+        self.one_of("lhs")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
             .or_else(|| self.try_back_ref())
@@ -91,7 +91,7 @@ fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, 
 
 fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>, ParseError> {
     parser
-        .chain("exceptions list")
+        .one_of("exceptions list")
         .or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
         .done()

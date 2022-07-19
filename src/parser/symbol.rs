@@ -10,18 +10,18 @@ where
     C: Constructor,
 {
     pub(crate) fn try_symbol(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("symbol")
+        self.one_of("symbol")
             .or_else(|| self.try_ssym())
             .or_else(|| self.try_dsym())
             .done()
     }
 
     fn try_ssym(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("static symbol")
+        self.one_of("static symbol")
             .or_else(|| {
                 let colon_t = self.try_token(TokenKind::tCOLON)?;
                 let sym_t = self
-                    .chain("static symbol value")
+                    .one_of("static symbol value")
                     .or_else(|| self.try_fname())
                     .or_else(|| self.try_token(TokenKind::tIVAR))
                     .or_else(|| self.try_token(TokenKind::tCVAR))

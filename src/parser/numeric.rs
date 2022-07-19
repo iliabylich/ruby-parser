@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_numeric(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("numeric")
+        self.one_of("numeric")
             .or_else(|| {
                 let uminus_num = self.try_token(TokenKind::tUMINUS)?;
                 // If there's no number after `-` is still could be `-expr`,
@@ -27,7 +27,7 @@ where
     }
 
     pub(crate) fn try_simple_numeric(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("simple numeric (without sign)")
+        self.one_of("simple numeric (without sign)")
             .or_else(|| {
                 let integer_t = self.try_token(TokenKind::tINTEGER)?;
                 Ok(Builder::<C>::integer(integer_t, self.buffer()))

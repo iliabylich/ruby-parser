@@ -13,7 +13,7 @@ where
         let checkpoint = self.new_checkpoint();
 
         let maybe_call_with_command_args: Result<Box<Node>, _> = self
-            .chain("maybe command call with command args")
+            .one_of("maybe command call with command args")
             .or_else(|| {
                 let fcall = self.try_fcall()?;
                 let command_args = self.try_command_args()?;
@@ -22,7 +22,7 @@ where
             .or_else(|| {
                 let primary_value = self.try_primary_value()?;
                 let op_t = self
-                    .chain("::CONSTANT or ::method")
+                    .one_of("::CONSTANT or ::method")
                     .or_else(|| self.try_token(TokenKind::tCOLON2))
                     .or_else(|| self.try_operation2())
                     .done()?;
@@ -67,7 +67,7 @@ where
         }
 
         let keyword_t = self
-            .chain("keyword command")
+            .one_of("keyword command")
             .or_else(|| self.try_k_return())
             .or_else(|| self.try_token(TokenKind::kBREAK))
             .or_else(|| self.try_token(TokenKind::kNEXT))

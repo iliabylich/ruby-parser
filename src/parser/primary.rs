@@ -13,7 +13,7 @@ where
 {
     pub(crate) fn try_primary(&mut self) -> Result<Box<Node>, ParseError> {
         let node = self
-            .chain("primary value")
+            .one_of("primary value")
             .or_else(|| self.try_literal())
             .or_else(|| self.try_strings())
             .or_else(|| self.try_xstring())

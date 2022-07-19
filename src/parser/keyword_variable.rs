@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_keyword_variable(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("keyword variable")
+        self.one_of("keyword variable")
             .or_else(|| self.try_nil())
             .or_else(|| self.try_self())
             .or_else(|| self.try_true())

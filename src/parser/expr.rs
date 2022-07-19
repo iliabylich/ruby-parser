@@ -20,7 +20,7 @@ where
 
 fn try_expr_head<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, ParseError> {
     parser
-        .chain("expression")
+        .one_of("expression")
         .or_else(|| parser.try_command_call())
         .or_else(|| try_not_expr(parser))
         .or_else(|| try_bang_command_call(parser))
@@ -59,7 +59,7 @@ fn try_expr_tail<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> Result<Option<(Token, Box<Node>)>, ParseError> {
     let op_t = parser
-        .chain("expression continuation")
+        .one_of("expression continuation")
         .or_else(|| parser.try_token(TokenKind::kAND))
         .or_else(|| parser.try_token(TokenKind::kOR))
         .done()

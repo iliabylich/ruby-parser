@@ -31,7 +31,7 @@ where
     }
 
     pub(crate) fn try_top_stmt(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("top-level statement")
+        self.one_of("top-level statement")
             .or_else(|| self.try_preexe())
             .or_else(|| self.try_stmt())
             .done()

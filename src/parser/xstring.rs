@@ -16,7 +16,7 @@ where
 {
     pub(crate) fn try_xstring(&mut self) -> Result<Box<Node>, ParseError> {
         let xstring_beg_t = self
-            .chain("executable string begin")
+            .one_of("executable string begin")
             .or_else(|| self.read_backtick_identifier_as_xstring_beg())
             .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
             .done()?;

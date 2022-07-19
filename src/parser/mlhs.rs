@@ -93,7 +93,7 @@ fn parse_mlhs_internal<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsInt
 
 fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, ParseError> {
     parser
-        .chain("mlhs item")
+        .one_of("mlhs item")
         .or_else(|| {
             let lparen_t = parser.try_token(TokenKind::tLPAREN)?;
             match parse_mlhs_internal(parser).ignore_lookahead_errors()? {

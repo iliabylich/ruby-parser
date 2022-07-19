@@ -12,7 +12,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_strings(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("strings")
+        self.one_of("strings")
             .or_else(|| self.try_char())
             .or_else(|| self.try_string_seq())
             .done()
@@ -46,7 +46,7 @@ where
 
     fn try_string1(&mut self) -> Result<Box<Node>, ParseError> {
         let string_beg_t = self
-            .chain("string begin")
+            .one_of("string begin")
             .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
             .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
             .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
@@ -84,7 +84,7 @@ where
     }
 
     pub(crate) fn try_string_content(&mut self) -> Result<Box<Node>, ParseError> {
-        self.chain("string content")
+        self.one_of("string content")
             .or_else(|| {
                 let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
                 Ok(Builder::<C>::string_internal(
