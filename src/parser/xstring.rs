@@ -7,7 +7,7 @@ use crate::{
     loc::loc,
     parser::Parser,
     token::{token, Token, TokenKind},
-    transactions::{Expectation, ParseError, ParseErrorDetails},
+    transactions::ParseError,
     Node,
 };
 
@@ -54,16 +54,11 @@ where
                 return Ok(token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end)));
             }
         }
-        Err(ParseError {
-            name: "try_token",
-            details: ParseErrorDetails::Single {
-                inner: Expectation {
-                    lookahead: true,
-                    expected: TokenKind::tXSTRING_BEG,
-                    got: self.current_token().kind(),
-                    loc: self.current_token().loc(),
-                },
-            },
+        Err(ParseError::TokenError {
+            lookahead: true,
+            expected: TokenKind::tXSTRING_BEG,
+            got: self.current_token().kind,
+            loc: self.current_token().loc,
         })
     }
 }

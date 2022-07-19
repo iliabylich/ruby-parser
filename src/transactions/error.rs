@@ -1,62 +1,40 @@
 use crate::{Loc, Node, Token, TokenKind};
 
 #[derive(Debug, PartialEq, Eq)]
-pub(crate) struct ParseError {
-    pub(crate) name: &'static str,
-    pub(crate) details: ParseErrorDetails,
+pub(crate) enum ParseError {
+    TokenError {
+        lookahead: bool,
+        expected: TokenKind,
+        got: TokenKind,
+        loc: Loc,
+    },
+
+    OneOfError {
+        name: &'static str,
+        variants: Vec<ParseError>,
+    },
+
+    SeqError {
+        name: &'static str,
+        steps: Vec<StepData>,
+        error: Box<ParseError>,
+    },
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum ParseErrorDetails {
-    Multi { variants: Vec<ParseError> },
-    Seq { steps: Vec<StepError> },
-    Single { inner: Expectation },
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) struct StepError {
-    pub(crate) name: &'static str,
-    pub(crate) expectation: Expectation,
-    pub(crate) inner: ParseError,
-    pub(crate) data: StepData,
-}
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum StepData {
     Token(Token),
     Node(Box<Node>),
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) struct Expectation {
-    pub(crate) lookahead: bool,
-    pub(crate) expected: TokenKind,
-    pub(crate) got: TokenKind,
-    pub(crate) loc: Loc,
-}
-
 // is_lookahead
 impl ParseError {
     pub(crate) fn is_lookahead(&self) -> bool {
-        self.details.is_lookahead()
-    }
-}
-impl ParseErrorDetails {
-    pub(crate) fn is_lookahead(&self) -> bool {
         match self {
-            Self::Multi { variants } => variants.iter().all(|v| v.is_lookahead()),
-            Self::Seq { steps } => steps.len() == 1 && steps.first().unwrap().is_lookahead(),
-            Self::Single { inner } => inner.is_lookahead(),
+            Self::TokenError { lookahead, .. } => *lookahead,
+            Self::OneOfError { variants, .. } => variants.iter().all(|v| v.is_lookahead()),
+            Self::SeqError { steps, .. } => !steps.is_empty(),
         }
-    }
-}
-impl StepError {
-    pub(crate) fn is_lookahead(&self) -> bool {
-        self.inner.is_lookahead()
-    }
-}
-impl Expectation {
-    pub(crate) fn is_lookahead(&self) -> bool {
-        self.lookahead
     }
 }
 
@@ -67,38 +45,44 @@ impl ParseError {
             return None;
         }
 
-        match &mut self.details {
-            ParseErrorDetails::Multi { variants } => {
+        match &mut self {
+            Self::OneOfError { variants, .. } => {
                 variants.retain(|v| v.is_lookahead());
             }
 
             // The following variants are kept
             // if they are not lookaheads (checked above)
-            ParseErrorDetails::Seq { .. } => {}
-            ParseErrorDetails::Single { .. } => {}
+            Self::TokenError { .. } => {}
+            Self::SeqError { .. } => {}
         }
 
         Some(self)
     }
 }
 
-// is_empty
+// empty
 impl ParseError {
-    pub(crate) fn is_empty(&self) -> bool {
-        match &self.details {
-            ParseErrorDetails::Multi { variants } => !variants.is_empty(),
-            ParseErrorDetails::Seq { steps } => !steps.is_empty(),
-            ParseErrorDetails::Single { .. } => false,
+    pub(crate) fn empty() -> Self {
+        Self::OneOfError {
+            name: "(empty)",
+            variants: vec![],
         }
     }
 }
 
-// empty
+// into_required
 impl ParseError {
-    pub(crate) fn empty() -> Self {
-        Self {
-            name: "(empty)",
-            details: ParseErrorDetails::Multi { variants: vec![] },
+    pub(crate) fn into_required(&mut self) {
+        match self {
+            ParseError::TokenError { lookahead, .. } => {
+                *lookahead = true;
+            }
+            ParseError::OneOfError { variants, .. } => {
+                variants.iter_mut().for_each(|e| e.into_required());
+            }
+            ParseError::SeqError { error, .. } => {
+                error.into_required();
+            }
         }
     }
 }

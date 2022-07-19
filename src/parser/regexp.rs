@@ -4,7 +4,7 @@ use crate::{
     loc::loc,
     parser::Parser,
     token::{token, Token, TokenKind},
-    transactions::{Expectation, ParseError, ParseErrorDetails},
+    transactions::ParseError,
     Node,
 };
 
@@ -53,16 +53,11 @@ where
             self.take_token();
             Ok(token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end)))
         } else {
-            Err(ParseError {
-                name: "try_token",
-                details: ParseErrorDetails::Single {
-                    inner: Expectation {
-                        lookahead: true,
-                        expected: TokenKind::tREGEXP_BEG,
-                        got: self.current_token().kind(),
-                        loc: self.current_token().loc(),
-                    },
-                },
+            Err(ParseError::TokenError {
+                lookahead: true,
+                expected: TokenKind::tREGEXP_BEG,
+                got: self.current_token().kind,
+                loc: self.current_token().loc,
             })
         }
     }

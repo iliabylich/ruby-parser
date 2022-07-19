@@ -1,7 +1,7 @@
 use crate::{builder::Constructor, lexer::Checkpoint, parser::Parser, token::TokenKind};
 
 mod error;
-pub(crate) use error::{Expectation, ParseError, ParseErrorDetails, StepError};
+pub(crate) use error::{ParseError, StepData};
 
 mod result;
 pub(crate) use result::{ParseResult, ParseResultApi};

@@ -55,11 +55,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        loc::loc,
-        nodes::Sym,
-        parser::{ParseError, ParseErrorDetails},
-        string_content::StringContent,
-        token::TokenKind,
+        loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent, token::TokenKind,
         Node, RustParser,
     };
 
@@ -80,13 +76,7 @@ mod tests {
     #[test]
     fn test_ssym_only_colon() {
         let mut parser = RustParser::new(b":");
-        assert_eq!(
-            parser.try_ssym(),
-            Err(ParseError {
-                name: "foo",
-                details: ParseErrorDetails::Seq { steps: vec![] }
-            })
-        );
+        assert_eq!(parser.try_ssym(), Err(ParseError::empty()));
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
     }

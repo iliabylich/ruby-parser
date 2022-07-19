@@ -1,9 +1,6 @@
 use crate::{
     lexer::Checkpoint,
-    transactions::{
-        error::{ParseError, ParseErrorDetails},
-        result::ParseResult,
-    },
+    transactions::{error::ParseError, result::ParseResult},
 };
 
 #[derive(Debug)]
@@ -36,6 +33,8 @@ impl<T> OneOf<T> {
                     }
                     Err(err) => {
                         errors.push(err);
+                        // perform a rollback
+                        self.checkpoint.restore()
                     }
                 }
                 self
@@ -46,14 +45,18 @@ impl<T> OneOf<T> {
     pub(crate) fn done(self) -> ParseResult<T> {
         match self.inner {
             Ok(value) => Ok(value),
-            Err(errors) => Err(ParseError {
+            Err(errors) => Err(ParseError::OneOfError {
                 name: self.name,
-                details: ParseErrorDetails::Multi { variants: errors },
+                variants: errors,
             }),
         }
     }
 
-    pub(crate) fn required(self) -> Self {
-        todo!()
+    pub(crate) fn required(mut self) -> Self {
+        if let Err(errors) = &mut self.inner {
+            errors.iter_mut().for_each(|e| e.into_required())
+        }
+
+        self
     }
 }
