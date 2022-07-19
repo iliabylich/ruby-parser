@@ -4,9 +4,15 @@ use crate::{
     token::Token,
 };
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub(crate) struct StateRef {
     pub(crate) state_ref: *mut State,
+}
+
+impl std::fmt::Debug for StateRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.as_mut())
+    }
 }
 
 impl StateRef {

@@ -30,6 +30,7 @@ use strings::{action::StringExtendAction, literal::StringLiteral};
 
 pub(crate) use checkpoint::Checkpoint;
 
+#[derive(Debug)]
 pub struct Lexer {
     debug: bool,
     pub(crate) state: StateRef,

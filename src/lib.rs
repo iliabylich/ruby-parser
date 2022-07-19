@@ -1,3 +1,5 @@
+#![feature(backtrace)]
+
 pub(crate) mod precedence;
 
 pub(crate) mod lexer;

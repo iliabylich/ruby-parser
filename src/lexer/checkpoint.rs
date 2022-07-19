@@ -1,6 +1,6 @@
 use crate::state::StateRef;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct Checkpoint {
     buffer_pos: usize,
     literals_stack_size: usize,

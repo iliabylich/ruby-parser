@@ -3,6 +3,7 @@ use crate::{
     token::Token,
 };
 
+#[derive(Debug)]
 pub(crate) struct State {
     pub(crate) buffer: BufferWithCursor,
     pub(crate) required_new_expr: bool,
