@@ -2,8 +2,9 @@ use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
     loc::loc,
-    parser::{ParseError, Parser},
+    parser::Parser,
     token::{token, Token, TokenKind},
+    transactions::{Expectation, ParseError, ParseErrorDetails},
     Node,
 };
 
@@ -52,10 +53,17 @@ where
             self.take_token();
             Ok(token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end)))
         } else {
-            Err(ParseError::lookahead_failed(
-                TokenKind::tREGEXP_BEG,
-                self.current_token().kind(),
-            ))
+            Err(ParseError {
+                name: "try_token",
+                details: ParseErrorDetails::Single {
+                    inner: Expectation {
+                        lookahead: true,
+                        expected: TokenKind::tREGEXP_BEG,
+                        got: self.current_token().kind(),
+                        loc: self.current_token().loc(),
+                    },
+                },
+            })
         }
     }
 }

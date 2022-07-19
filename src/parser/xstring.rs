@@ -5,8 +5,9 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     loc::loc,
-    parser::{ParseError, Parser},
+    parser::Parser,
     token::{token, Token, TokenKind},
+    transactions::{Expectation, ParseError, ParseErrorDetails},
     Node,
 };
 
@@ -53,10 +54,17 @@ where
                 return Ok(token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end)));
             }
         }
-        Err(ParseError::lookahead_failed(
-            TokenKind::tXSTRING_BEG,
-            self.current_token().kind(),
-        ))
+        Err(ParseError {
+            name: "try_token",
+            details: ParseErrorDetails::Single {
+                inner: Expectation {
+                    lookahead: true,
+                    expected: TokenKind::tXSTRING_BEG,
+                    got: self.current_token().kind(),
+                    loc: self.current_token().loc(),
+                },
+            },
+        })
     }
 }
 

@@ -1,8 +1,9 @@
 use crate::{
     builder::{Builder, Constructor},
     nodes::Node,
-    parser::{result::ParserResultApi, ParseError, Parser},
+    parser::Parser,
     token::{Token, TokenKind},
+    transactions::{ParseError, ParseResultApi},
 };
 
 impl<C> Parser<C>

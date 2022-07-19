@@ -1,11 +1,9 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{mlhs, ParseError, Parser},
+    parser::{mlhs, ParseError, ParseResultApi, Parser},
     token::TokenKind,
     Node,
 };
-
-use super::result::ParserResultApi;
 
 impl<C> Parser<C>
 where

@@ -27,7 +27,6 @@ where
                     .or_else(|| self.try_token(TokenKind::tCVAR))
                     .or_else(|| self.try_token(TokenKind::tGVAR))
                     .required()
-                    .strip()
                     .done()?;
                 Ok(Builder::<C>::symbol(colon_t, sym_t, self.buffer()))
             })
@@ -41,7 +40,6 @@ where
                     string_end_t,
                 ))
             })
-            .strip()
             .done()
     }
 
@@ -57,7 +55,11 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent, token::TokenKind,
+        loc::loc,
+        nodes::Sym,
+        parser::{ParseError, ParseErrorDetails},
+        string_content::StringContent,
+        token::TokenKind,
         Node, RustParser,
     };
 
@@ -80,7 +82,10 @@ mod tests {
         let mut parser = RustParser::new(b":");
         assert_eq!(
             parser.try_ssym(),
-            Err(ParseError::expected_rule("static symbol", TokenKind::tEOF))
+            Err(ParseError {
+                name: "foo",
+                details: ParseErrorDetails::Seq { steps: vec![] }
+            })
         );
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);

@@ -3,13 +3,9 @@ use crate::lexer::{buffer::Buffer, Lexer};
 use crate::nodes::Node;
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
+use crate::transactions::{Expectation, ParseError, ParseErrorDetails, ParseResultApi};
 
 mod checkpoint;
-
-mod transactions;
-
-mod result;
-use result::{Expectation, ParseError};
 
 mod alias;
 mod array;
@@ -103,10 +99,17 @@ where
         if self.current_token().is(expected) {
             Ok(self.take_token())
         } else {
-            Err(ParseError::lookahead_failed(
-                expected,
-                self.current_token().kind(),
-            ))
+            Err(ParseError {
+                name: "try_token",
+                details: ParseErrorDetails::Single {
+                    inner: Expectation {
+                        lookahead: true,
+                        expected,
+                        got: self.current_token().kind(),
+                        loc: self.current_token().loc(),
+                    },
+                },
+            })
         }
     }
 
