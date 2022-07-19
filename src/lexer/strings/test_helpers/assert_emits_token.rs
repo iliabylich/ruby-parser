@@ -15,9 +15,7 @@ macro_rules! assert_emits_1_token_and_then_eof {
             post = |action: StringExtendAction| {
                 assert_eq!(
                     action,
-                    StringExtendAction::EmitEOF {
-                        at: $token.loc().end
-                    },
+                    StringExtendAction::EmitEOF { at: $token.loc.end },
                     "expected to emit EOF after token"
                 )
             }

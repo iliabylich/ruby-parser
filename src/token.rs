@@ -8,16 +8,8 @@ pub struct Token {
 }
 
 impl Token {
-    pub fn kind(&self) -> TokenKind {
-        self.kind
-    }
-
     pub fn is(&self, other: TokenKind) -> bool {
         self.kind == other
-    }
-
-    pub fn loc(&self) -> Loc {
-        self.loc
     }
 }
 
@@ -209,7 +201,7 @@ pub enum TokenValue {
     Chars(Vec<char>),
     // Everything that doesn't involve escaping can be taken directly
     // from buffer, that's why it's not stored here.
-    // Simply do `buffer.slice(token.loc())` to get a byte slice of the token
+    // Simply do `buffer.slice(token.loc)` to get a byte slice of the token
 }
 
 impl From<u8> for TokenValue {

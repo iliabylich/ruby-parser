@@ -22,8 +22,11 @@ impl State {
         Self {
             buffer: BufferWithCursor::new(input),
             required_new_expr: false,
+
             string_literals: StringLiteralStack::new(),
+
             current_token: None,
+
             curly_nest: 0,
             paren_nest: 0,
             brack_nest: 0,

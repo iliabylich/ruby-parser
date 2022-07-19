@@ -47,7 +47,7 @@ where
     }
 
     fn read_backtick_identifier_as_xstring_beg(&mut self) -> Result<Token, ParseError> {
-        let loc = self.current_token().loc();
+        let loc = self.current_token().loc;
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
                 self.take_token();

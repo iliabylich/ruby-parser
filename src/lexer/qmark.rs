@@ -116,7 +116,7 @@ impl Lookahead for QMark {
 impl QMark {
     pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
         let QMark { token } = QMark::lookahead(buffer.for_lookahead(), buffer.pos());
-        buffer.set_pos(token.loc().end);
+        buffer.set_pos(token.loc.end);
         token
     }
 }

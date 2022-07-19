@@ -271,9 +271,9 @@ macro_rules! assert_lex {
                 "source of the loc doesn't match"
             );
             assert_eq!(
-                actual_token.loc().end,
+                actual_token.loc.end,
                 lexer.buffer().pos(),
-                "buffer.pos() is not token.loc().end (i.e. input hasn't been consumed)"
+                "buffer.pos() is not token.loc.end (i.e. input hasn't been consumed)"
             );
             $assert(&lexer);
         }

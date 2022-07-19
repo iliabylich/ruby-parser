@@ -29,7 +29,7 @@ impl Checkpoint {
         if let Some(token) = state_ref.current_token() {
             // If there's a cached token
             // remember position _before_ this token
-            checkpoint.buffer_pos = token.loc().start;
+            checkpoint.buffer_pos = token.loc.start;
         }
 
         checkpoint

@@ -127,7 +127,7 @@ impl HeredocId {
         match heredoc_id {
             Ok(heredoc_id) => {
                 let heredoc_id = heredoc_id?;
-                buffer.set_pos(heredoc_id.token.loc().end);
+                buffer.set_pos(heredoc_id.token.loc.end);
                 Some(heredoc_id)
             }
             Err(HeredocIdError::UnterminatedHeredocId) => {

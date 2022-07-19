@@ -149,7 +149,7 @@ impl OnByte<b'<'> for Lexer {
                         .push(StringLiteral::Heredoc(Heredoc::new(
                             interpolated,
                             loc!(id_start, id_end),
-                            token.loc().end,
+                            token.loc.end,
                             squiggly,
                         )));
                     return token;

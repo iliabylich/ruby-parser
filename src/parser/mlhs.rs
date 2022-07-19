@@ -123,7 +123,7 @@ fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, P
                     let node = Builder::<C>::splat(star_t, node);
                     Ok(MlhsItem::DefinitelyMlhs(node))
                 }
-                None => match parser.current_token().kind() {
+                None => match parser.current_token().kind {
                     TokenKind::tCOMMA | TokenKind::tRPAREN => {
                         let node = Builder::<C>::nameless_splat(star_t);
                         Ok(MlhsItem::DefinitelyMlhs(node))

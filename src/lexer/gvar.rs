@@ -149,7 +149,7 @@ impl Gvar {
             }
         };
 
-        buffer.set_pos(token.loc().end);
+        buffer.set_pos(token.loc.end);
         token
     }
 }

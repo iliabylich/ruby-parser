@@ -102,8 +102,8 @@ where
             Err(ParseError::TokenError {
                 lookahead: true,
                 expected,
-                got: self.current_token().kind(),
-                loc: self.current_token().loc(),
+                got: self.current_token().kind,
+                loc: self.current_token().loc,
             })
         }
     }

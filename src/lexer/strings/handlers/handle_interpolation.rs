@@ -42,7 +42,7 @@ fn handle_regular_interpolation(
 
         let token = token!(tSTRING_DBEG, loc!(buffer.pos(), buffer.pos() + 2));
         // consume `#{`
-        buffer.set_pos(token.loc().end);
+        buffer.set_pos(token.loc.end);
         // start interpolation
         interpolation.enabled = true;
 
@@ -65,7 +65,7 @@ fn handle_raw_ivar_or_cvar_interpolation(
             let token = token!(tSTRING_DVAR, loc!(buffer.pos(), buffer.pos() + 1));
 
             // consume `#`
-            buffer.set_pos(token.loc().end);
+            buffer.set_pos(token.loc.end);
 
             return ControlFlow::Break(StringExtendAction::EmitToken { token });
         }
@@ -78,7 +78,7 @@ fn handle_raw_ivar_or_cvar_interpolation(
         // here we (possibly) have already dipsatched `#` of "#@foo" / "#@@foo" interpolation
         if let Ok(AtMark { token }) = AtMark::lookahead(buffer.for_lookahead(), buffer.pos()) {
             // consume variable
-            buffer.set_pos(token.loc().end);
+            buffer.set_pos(token.loc.end);
             return ControlFlow::Break(StringExtendAction::EmitToken { token });
         }
     }
@@ -99,7 +99,7 @@ fn handle_raw_gvar_interpolation(
             let token = token!(tSTRING_DVAR, loc!(buffer.pos(), buffer.pos() + 1));
 
             // consume `#`
-            buffer.set_pos(token.loc().end);
+            buffer.set_pos(token.loc.end);
 
             return ControlFlow::Break(StringExtendAction::EmitToken { token });
         }
@@ -112,7 +112,7 @@ fn handle_raw_gvar_interpolation(
         // here we (possibly) have already dipsatched `#` of "#@foo" / "#@@foo" interpolation
         if let Ok(Gvar { token }) = Gvar::lookahead(buffer.for_lookahead(), buffer.pos()) {
             // consume variable
-            buffer.set_pos(token.loc().end);
+            buffer.set_pos(token.loc.end);
             return ControlFlow::Break(StringExtendAction::EmitToken { token });
         }
     }
