@@ -11,7 +11,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_qsymbols(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self.try_token(TokenKind::tSYMBOLS_BEG)?;
+        let begin_t = self.try_token(TokenKind::tQSYMBOLS_BEG)?;
         let word_list = self.parse_qsym_list();
         let end_t = self.expect_token(TokenKind::tSTRING_END);
         Ok(Builder::<C>::symbols_compose(begin_t, word_list, end_t))

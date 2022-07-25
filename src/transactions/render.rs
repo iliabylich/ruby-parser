@@ -15,8 +15,9 @@ impl ParseError {
                 loc,
             } => {
                 format!(
-                    "{offset}TOKEN expected {expected:?}, got {got:?} (at {at})",
+                    "{offset}TOKEN ({weight}) expected {expected:?}, got {got:?} (at {at})",
                     offset = ws_offset(level),
+                    weight = self.weight(),
                     expected = expected,
                     got = got,
                     at = loc.start
@@ -24,8 +25,9 @@ impl ParseError {
             }
             Self::OneOfError { name, variants } => {
                 format!(
-                    "{offset}ONEOF {rule}\n{variants}",
+                    "{offset}ONEOF ({weight}) {rule}\n{variants}",
                     offset = ws_offset(level),
+                    weight = self.weight(),
                     rule = name,
                     variants = variants
                         .iter()
@@ -36,8 +38,9 @@ impl ParseError {
             }
             Self::SeqError { name, steps, error } => {
                 format!(
-                    "{offset}SEQUENCE {name} (got {steps:?})\n{error}",
+                    "{offset}SEQUENCE ({weight}) {name} (got {steps:?})\n{error}",
                     offset = ws_offset(level),
+                    weight = self.weight(),
                     name = name,
                     steps = steps,
                     error = error.render_with_level(level + 1)
@@ -59,7 +62,10 @@ macro_rules! assert_err_eq {
     ($actual:expr, $expected:literal) => {
         match $actual {
             Ok(value) => panic!("expected Err(...), got Ok({:?}", value),
-            Err(err) => assert_eq!(err.render(), $expected.trim_start().trim_end()),
+            Err(err) => {
+                println!("== Actual error ==\n{}", err.render());
+                assert_eq!(err.render(), $expected.trim_start().trim_end())
+            }
         }
     };
 }

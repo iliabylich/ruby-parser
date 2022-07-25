@@ -67,9 +67,7 @@ impl<T> OneOf<T> {
     // does nothing.
     pub(crate) fn compact(mut self) -> Self {
         if let Err(errors) = &mut self.inner {
-            dbg!(errors.iter().map(|e| e.weight()).collect::<Vec<_>>());
             if let Some(max) = errors.iter().map(|e| e.weight()).max() {
-                dbg!(max);
                 errors.retain(|e| e.weight() == max)
             }
         }

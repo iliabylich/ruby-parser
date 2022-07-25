@@ -140,8 +140,8 @@ mod tests {
         assert_err_eq!(
             parser.try_alias(),
             "
-SEQUENCE alias statement (got [])
-    TOKEN expected kALIAS, got tEOF (at 0)
+SEQUENCE (1) alias statement (got [])
+    TOKEN (1) expected kALIAS, got tEOF (at 0)
 "
         );
     }
@@ -152,13 +152,13 @@ SEQUENCE alias statement (got [])
         assert_err_eq!(
             parser.try_alias(),
             "
-SEQUENCE alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
-    ONEOF alias arguments
-        SEQUENCE gvar -> [gvar | back ref | nth ref] (got [Node(Gvar(Gvar { name: StringContent { bytes: [36, 102, 111, 111] }, expression_l: 6...10 }))])
-            ONEOF gvar rhs
-                TOKEN expected tGVAR, got tEOF (at 10)
-                TOKEN expected tBACK_REF, got tEOF (at 10)
-                TOKEN expected tNTH_REF, got tEOF (at 10)
+SEQUENCE (11) alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
+    ONEOF (11) alias arguments
+        SEQUENCE (11) gvar -> [gvar | back ref | nth ref] (got [Node(Gvar(Gvar { name: StringContent { bytes: [36, 102, 111, 111] }, expression_l: 6...10 }))])
+            ONEOF (1) gvar rhs
+                TOKEN (1) expected tGVAR, got tEOF (at 10)
+                TOKEN (1) expected tBACK_REF, got tEOF (at 10)
+                TOKEN (1) expected tNTH_REF, got tEOF (at 10)
 "
         );
     }

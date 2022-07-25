@@ -54,14 +54,12 @@ impl From<(Box<Node>, Box<Node>)> for StepData {
 // is_lookahead
 impl ParseError {
     pub(crate) fn is_lookahead(&self) -> bool {
-        let r = match self {
+        match self {
             Self::TokenError { lookahead, .. } => *lookahead,
             Self::OneOfError { variants, .. } => variants.iter().all(|v| v.is_lookahead()),
             Self::SeqError { steps, .. } => steps.is_empty(),
             Self::None => false,
-        };
-        println!("{:?} -> {}", self, r);
-        r
+        }
     }
 }
 
@@ -132,7 +130,7 @@ impl ParseError {
             Self::OneOfError { variants, .. } => {
                 variants.iter().map(|v| v.weight()).max().unwrap_or(0)
             }
-            Self::SeqError { steps, .. } => 10 + steps.len(),
+            Self::SeqError { steps, .. } => 10 * steps.len() + 1,
             Self::None => 0,
         }
     }

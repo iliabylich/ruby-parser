@@ -13,6 +13,7 @@ where
         self.one_of("symbol")
             .or_else(|| self.try_ssym())
             .or_else(|| self.try_dsym())
+            .compact()
             .unwrap()
     }
 
@@ -40,6 +41,7 @@ where
                     string_end_t,
                 ))
             })
+            .compact()
             .unwrap()
     }
 
@@ -56,7 +58,7 @@ where
 mod tests {
     use crate::{
         loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent, token::TokenKind,
-        Node, RustParser,
+        transactions::assert_err_eq, Node, RustParser,
     };
 
     #[test]
@@ -76,7 +78,7 @@ mod tests {
     #[test]
     fn test_ssym_only_colon() {
         let mut parser = RustParser::new(b":");
-        assert_eq!(parser.try_ssym(), Err(ParseError::empty()));
+        assert!(parser.try_ssym().is_err(),);
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
     }
@@ -84,25 +86,13 @@ mod tests {
     #[test]
     fn test_ssym_no_colon() {
         let mut parser = RustParser::new(b"");
-        assert_eq!(
+        assert_err_eq!(
             parser.try_ssym(),
-            Err(ParseError::OneOfError {
-                name: "static symbol",
-                variants: vec![
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tCOLON,
-                        got: TokenKind::tEOF,
-                        loc: loc!(0, 0)
-                    },
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tSYMBEG,
-                        got: TokenKind::tEOF,
-                        loc: loc!(0, 0)
-                    }
-                ]
-            })
+            "
+ONEOF (1) static symbol
+    TOKEN (1) expected tCOLON, got tEOF (at 0)
+    TOKEN (1) expected tSYMBEG, got tEOF (at 0)
+"
         );
         assert_eq!(parser.lexer.buffer().pos(), 0);
     }
