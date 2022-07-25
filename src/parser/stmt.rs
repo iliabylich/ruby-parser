@@ -76,22 +76,26 @@ where
 
         match self.current_token().kind {
             TokenKind::kIF => {
-                let k_if = self.take_token();
+                let k_if = self.current_token();
+                self.skip_token();
                 let expr_value = self.try_expr_value()?;
                 panic!("if_mod {:?} {:?} {:?}", stmt, k_if, expr_value);
             }
             TokenKind::kUNLESS => {
-                let k_unless = self.take_token();
+                let k_unless = self.current_token();
+                self.skip_token();
                 let expr_value = self.try_expr_value()?;
                 panic!("unless_mod {:?} {:?} {:?}", stmt, k_unless, expr_value);
             }
             TokenKind::kWHILE => {
-                let k_while = self.take_token();
+                let k_while = self.current_token();
+                self.skip_token();
                 let expr_value = self.try_expr_value()?;
                 panic!("while_mod {:?} {:?} {:?}", stmt, k_while, expr_value);
             }
             TokenKind::kUNTIL => {
-                let k_until = self.take_token();
+                let k_until = self.current_token();
+                self.skip_token();
                 let expr_value = self.try_expr_value()?;
                 panic!("until_mod {:?} {:?} {:?}", stmt, k_until, expr_value);
             }
@@ -148,7 +152,8 @@ where
                 match self.current_token().kind {
                     TokenKind::tEQL | TokenKind::tOP_ASGN => {
                         // definitely an assignment
-                        let op_t = self.take_token();
+                        let op_t = self.current_token();
+                        self.skip_token();
                         let command_rhs = self.try_command_rhs().expect("assignment must have RHS");
                         todo!("assignment {:?} {:?} {:?}", lhs, op_t, command_rhs);
                     }

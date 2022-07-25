@@ -50,8 +50,10 @@ where
     fn read_div_as_heredoc_beg(&mut self) -> Result<Token, ParseError> {
         let loc = self.current_token().loc;
         if self.current_token().is(TokenKind::tDIVIDE) {
-            self.take_token();
-            Ok(token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end)))
+            let token = token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end));
+            self.lexer.tokens_mut()[self.lexer.token_idx()] = token;
+            self.skip_token();
+            Ok(token)
         } else {
             Err(ParseError::TokenError {
                 lookahead: true,

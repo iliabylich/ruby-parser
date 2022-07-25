@@ -84,7 +84,26 @@ mod tests {
     #[test]
     fn test_ssym_no_colon() {
         let mut parser = RustParser::new(b"");
-        assert_eq!(parser.try_ssym(), Err(ParseError::empty()));
+        assert_eq!(
+            parser.try_ssym(),
+            Err(ParseError::OneOfError {
+                name: "static symbol",
+                variants: vec![
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tCOLON,
+                        got: TokenKind::tEOF,
+                        loc: loc!(0, 0)
+                    },
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tSYMBEG,
+                        got: TokenKind::tEOF,
+                        loc: loc!(0, 0)
+                    }
+                ]
+            })
+        );
         assert_eq!(parser.lexer.buffer().pos(), 0);
     }
 
@@ -105,7 +124,15 @@ mod tests {
     #[test]
     fn test_dsym_only_colon() {
         let mut parser = RustParser::new(b":");
-        assert_eq!(parser.try_dsym(), Err(ParseError::empty()));
+        assert_eq!(
+            parser.try_dsym(),
+            Err(ParseError::TokenError {
+                lookahead: true,
+                expected: TokenKind::tDSYMBEG,
+                got: TokenKind::tCOLON,
+                loc: loc!(0, 1)
+            })
+        );
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
     }
@@ -113,7 +140,14 @@ mod tests {
     #[test]
     fn test_dsym_no_colon() {
         let mut parser = RustParser::new(b"");
-        assert_eq!(parser.try_dsym(), Err(ParseError::empty()));
-        assert_eq!(parser.lexer.buffer().pos(), 0);
+        assert_eq!(
+            parser.try_dsym(),
+            Err(ParseError::TokenError {
+                lookahead: true,
+                expected: TokenKind::tDSYMBEG,
+                got: TokenKind::tEOF,
+                loc: loc!(0, 0),
+            })
+        );
     }
 }

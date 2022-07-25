@@ -50,8 +50,10 @@ where
         let loc = self.current_token().loc;
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {
-                self.take_token();
-                return Ok(token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end)));
+                let token = token!(TokenKind::tXSTRING_BEG, loc!(loc.start, loc.end));
+                self.lexer.tokens_mut()[self.lexer.token_idx()] = token;
+                self.skip_token();
+                return Ok(token);
             }
         }
         Err(ParseError::TokenError {

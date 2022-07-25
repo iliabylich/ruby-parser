@@ -35,8 +35,18 @@ impl StateRef {
         &mut self.as_mut().string_literals
     }
 
-    pub(crate) fn current_token(&self) -> &'static mut Option<Token> {
-        &mut self.as_mut().current_token
+    pub(crate) fn tokens(&self) -> &'static [Token] {
+        &self.as_mut().tokens
+    }
+    pub(crate) fn tokens_mut(&self) -> &'static mut Vec<Token> {
+        &mut self.as_mut().tokens
+    }
+
+    pub(crate) fn token_idx(&self) -> usize {
+        self.as_mut().token_idx
+    }
+    pub(crate) fn token_idx_mut(&self) -> &'static mut usize {
+        &mut self.as_mut().token_idx
     }
 
     pub(crate) fn curly_nest(&self) -> usize {
@@ -84,8 +94,18 @@ macro_rules! generate_state_ref_delegation {
                 self.state_ref().string_literals()
             }
 
-            pub(crate) fn current_token(&self) -> &'static mut Option<crate::token::Token> {
-                self.state_ref().current_token()
+            pub(crate) fn tokens(&self) -> &'static [crate::Token] {
+                self.state_ref().tokens()
+            }
+            pub(crate) fn tokens_mut(&self) -> &'static mut Vec<crate::Token> {
+                self.state_ref().tokens_mut()
+            }
+
+            pub(crate) fn token_idx(&self) -> usize {
+                self.state_ref().token_idx()
+            }
+            pub(crate) fn token_idx_mut(&self) -> &mut usize {
+                self.state_ref().token_idx_mut()
             }
 
             pub(crate) fn curly_nest(&self) -> usize {

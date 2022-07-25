@@ -73,19 +73,18 @@ where
         self
     }
 
-    pub(crate) fn current_token(&mut self) -> &Token {
-        self.lexer.get_current_token()
+    pub(crate) fn current_token(&mut self) -> Token {
+        self.lexer.current_token()
     }
     pub(crate) fn skip_token(&mut self) {
         self.lexer.skip_token()
     }
-    pub(crate) fn take_token(&mut self) -> Token {
-        self.lexer.take_token()
-    }
 
     pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Token {
         if self.current_token().is(expected) {
-            self.take_token()
+            let token = self.current_token();
+            self.skip_token();
+            token
         } else {
             panic!(
                 "expected token {:?}, got {:?}",
@@ -97,7 +96,9 @@ where
 
     pub(crate) fn try_token(&mut self, expected: TokenKind) -> Result<Token, ParseError> {
         if self.current_token().is(expected) {
-            Ok(self.take_token())
+            let token = self.current_token();
+            self.skip_token();
+            Ok(token)
         } else {
             Err(ParseError::TokenError {
                 lookahead: true,
@@ -784,7 +785,7 @@ where
         }
         loop {
             if self.current_token().is(TokenKind::tSEMI) {
-                self.take_token();
+                self.skip_token();
             } else {
                 break;
             }

@@ -70,7 +70,8 @@ fn parse_mlhs_internal<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsInt
 
         if trailing_comma.is_none() && parser.current_token().is(TokenKind::tCOMMA) {
             // consume comma after MLHS item
-            trailing_comma = Some(parser.take_token());
+            trailing_comma = Some(parser.current_token());
+            parser.skip_token();
             definitely_mlhs = true;
         } else {
             break;

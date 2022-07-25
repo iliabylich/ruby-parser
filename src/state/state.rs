@@ -10,11 +10,12 @@ pub(crate) struct State {
 
     pub(crate) string_literals: StringLiteralStack,
 
-    pub(crate) current_token: Option<Token>,
-
     pub(crate) curly_nest: usize,
     pub(crate) paren_nest: usize,
     pub(crate) brack_nest: usize,
+
+    pub(crate) tokens: Vec<Token>,
+    pub(crate) token_idx: usize,
 }
 
 impl State {
@@ -25,11 +26,12 @@ impl State {
 
             string_literals: StringLiteralStack::new(),
 
-            current_token: None,
-
             curly_nest: 0,
             paren_nest: 0,
             brack_nest: 0,
+
+            tokens: vec![],
+            token_idx: 0,
         }
     }
 }

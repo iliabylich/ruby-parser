@@ -22,7 +22,8 @@ where
         let mut result = vec![];
         loop {
             if self.current_token().is(TokenKind::tSTRING_CONTENT) {
-                let string_t = self.take_token();
+                let string_t = self.current_token();
+                self.skip_token();
                 let node = Builder::<C>::string_internal(string_t, self.buffer());
                 result.push(*node);
             } else {
@@ -38,7 +39,7 @@ mod tests {
     use crate::{loc::loc, parser::ParseError, string_content::StringContent, Node, RustParser};
 
     #[test]
-    fn test_words() {
+    fn test_qwords() {
         let mut parser = RustParser::new(b"%w[foo bar]");
         assert_eq!(parser.try_qwords(), Err(ParseError::empty()));
         todo!("implement me");

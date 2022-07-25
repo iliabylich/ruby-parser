@@ -32,7 +32,7 @@ mod tests {
     use crate::{loc::loc, parser::ParseError, string_content::StringContent, Node, RustParser};
 
     #[test]
-    fn test_words() {
+    fn test_symbols() {
         let mut parser = RustParser::new(b"%I[foo bar]");
         assert_eq!(parser.try_symbols(), Err(ParseError::empty()));
         todo!("implement me");

@@ -77,7 +77,7 @@ pub(crate) fn parse_percent(
             literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
         }
         b'w' => {
-            token = token!(tWORDS_BEG, loc!(start, end));
+            token = token!(tQWORDS_BEG, loc!(start, end));
             literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
         }
 
@@ -86,7 +86,7 @@ pub(crate) fn parse_percent(
             literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
         }
         b'i' => {
-            token = token!(tSYMBOLS_BEG, loc!(start, end));
+            token = token!(tQSYMBOLS_BEG, loc!(start, end));
             literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
         }
 
@@ -208,7 +208,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_w_lower,
         input = b"%w{",
-        token = tWORDS_BEG,
+        token = tQWORDS_BEG,
         literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
     );
 
@@ -224,7 +224,7 @@ mod tests {
     test_string_literal_start!(
         name = test_tPERCENT_i_lower,
         input = b"%i{",
-        token = tSYMBOLS_BEG,
+        token = tQSYMBOLS_BEG,
         literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
     );
 

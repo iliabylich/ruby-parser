@@ -52,13 +52,6 @@ impl OwnedState {
         &mut self.inner_mut().string_literals
     }
 
-    pub(crate) fn current_token(&self) -> &Option<Token> {
-        &self.inner().current_token
-    }
-    pub(crate) fn current_token_mut(&mut self) -> &mut Option<Token> {
-        &mut self.inner_mut().current_token
-    }
-
     pub(crate) fn curly_nest(&self) -> usize {
         self.inner().curly_nest
     }

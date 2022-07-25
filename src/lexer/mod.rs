@@ -63,14 +63,14 @@ impl Lexer {
         self
     }
 
-    pub fn get_current_token(&mut self) -> &Token {
-        if self.current_token().is_none() {
-            *self.current_token() = Some(self.next_token());
-        }
-
-        match self.current_token().as_ref() {
-            Some(token) => token,
-            None => unreachable!("token has been filled above"),
+    pub fn current_token(&mut self) -> Token {
+        if let Some(current_token) = self.tokens().get(self.token_idx()) {
+            *current_token
+        } else {
+            // get new token
+            let token = self.next_token();
+            self.tokens_mut().push(token);
+            token
         }
     }
 
@@ -88,13 +88,6 @@ impl Lexer {
         *self.required_new_expr_mut() = false;
 
         token
-    }
-
-    pub(crate) fn take_token(&mut self) -> Token {
-        match self.current_token().take() {
-            Some(token) => token,
-            None => self.next_token(),
-        }
     }
 
     #[cfg(test)]
@@ -116,7 +109,7 @@ impl Lexer {
     }
 
     pub(crate) fn skip_token(&mut self) {
-        *self.current_token() = None;
+        *self.state_ref().token_idx_mut() += 1;
     }
 
     fn tokenize_while_in_string(&mut self) -> Token {
@@ -259,7 +252,7 @@ macro_rules! assert_lex {
             let (mut lexer, _state) = Lexer::new_managed($input);
             $pre(&mut lexer);
 
-            let actual_token = lexer.take_token();
+            let actual_token = lexer.current_token();
             let expected_token: Token = $token;
             assert_eq!(
                 actual_token.kind, expected_token.kind,
