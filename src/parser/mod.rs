@@ -728,9 +728,12 @@ where
     fn parse_opt_terms(&mut self) {
         self.parse_terms();
     }
-    fn try_opt_nl(&mut self) -> Result<Token, ParseError> {
-        self.try_token(TokenKind::tNL)
+
+    #[allow(unused_must_use)]
+    fn try_opt_nl(&mut self) {
+        self.try_token(TokenKind::tNL);
     }
+
     fn try_rparen(&mut self) -> Result<Token, ParseError> {
         let checkpoint = self.new_checkpoint();
         self.try_opt_nl();

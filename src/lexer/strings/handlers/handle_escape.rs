@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{BufferWithCursor, Lookahead},
+        buffer::BufferWithCursor,
         strings::{
             action::StringExtendAction,
             escapes::{

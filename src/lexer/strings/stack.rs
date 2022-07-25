@@ -26,10 +26,12 @@ impl StringLiteralStack {
         self.stack.push(literal);
     }
 
+    #[allow(dead_code)]
     pub(crate) fn size(&self) -> usize {
         self.stack.len()
     }
 
+    #[allow(dead_code)]
     pub(crate) fn truncate(&mut self, new_size: usize) {
         debug_assert!(
             new_size <= self.size(),
