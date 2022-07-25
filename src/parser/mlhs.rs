@@ -48,7 +48,7 @@ fn parse_mlhs_internal<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsInt
     }
 
     loop {
-        let item = parse_mlhs_item(parser).ignore_lookahead_errors()?;
+        let item = parse_mlhs_item(parser).ignore_lookaheads()?;
         match item {
             Some(MlhsItem::DefinitelyMlhs(node)) => {
                 definitely_mlhs = true;
@@ -98,7 +98,7 @@ fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, P
         .one_of("mlhs item")
         .or_else(|| {
             let lparen_t = parser.try_token(TokenKind::tLPAREN)?;
-            match parse_mlhs_internal(parser).ignore_lookahead_errors()? {
+            match parse_mlhs_internal(parser).ignore_lookaheads()? {
                 Some(MlhsInternal::DefinitelyMlhsNode(inner)) => {
                     let rparen_t = parser.expect_token(TokenKind::tRPAREN);
                     let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
@@ -119,7 +119,7 @@ fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, P
         })
         .or_else(|| {
             let star_t = parser.try_token(TokenKind::tSTAR)?;
-            match try_mlhs_primitive_item(parser).ignore_lookahead_errors()? {
+            match try_mlhs_primitive_item(parser).ignore_lookaheads()? {
                 Some(node) => {
                     let node = Builder::<C>::splat(star_t, node);
                     Ok(MlhsItem::DefinitelyMlhs(node))
@@ -134,7 +134,7 @@ fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, P
             }
         })
         .or_else(|| {
-            let a = match try_mlhs_primitive_item(parser).ignore_lookahead_errors()? {
+            let a = match try_mlhs_primitive_item(parser).ignore_lookaheads()? {
                 Some(node) => Ok(MlhsItem::MaybeLhs(node)),
                 None => Ok(MlhsItem::None),
             };

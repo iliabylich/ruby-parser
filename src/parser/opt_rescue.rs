@@ -13,7 +13,7 @@ where
     pub(crate) fn try_opt_rescue(&mut self) -> Result<Vec<Node>, ParseError> {
         let mut nodes = vec![];
         loop {
-            match try_opt_rescue1(self).ignore_lookahead_errors()? {
+            match try_opt_rescue1(self).ignore_lookaheads()? {
                 Some(node) => nodes.push(*node),
                 None => {
                     // no match

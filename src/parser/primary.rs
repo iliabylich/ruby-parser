@@ -82,7 +82,7 @@ where
             .unwrap()?;
 
         loop {
-            match self.try_colon2_const().ignore_lookahead_errors()? {
+            match self.try_colon2_const().ignore_lookaheads()? {
                 Some((colon2_t, const_t)) => {
                     todo!("append tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t)
                 }

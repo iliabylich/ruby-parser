@@ -19,6 +19,8 @@ pub(crate) enum ParseError {
         steps: Vec<StepData>,
         error: Box<ParseError>,
     },
+
+    None,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -52,33 +54,40 @@ impl From<(Box<Node>, Box<Node>)> for StepData {
 // is_lookahead
 impl ParseError {
     pub(crate) fn is_lookahead(&self) -> bool {
-        match self {
+        let r = match self {
             Self::TokenError { lookahead, .. } => *lookahead,
             Self::OneOfError { variants, .. } => variants.iter().all(|v| v.is_lookahead()),
             Self::SeqError { steps, .. } => steps.is_empty(),
-        }
+            Self::None => false,
+        };
+        println!("{:?} -> {}", self, r);
+        r
     }
 }
 
-// strip_lookahead_errors
+// strip_lookaheads
 impl ParseError {
-    pub(crate) fn strip_lookahead_errors(mut self) -> Option<Self> {
-        if self.is_lookahead() {
-            return None;
-        }
-
-        match &mut self {
-            Self::OneOfError { variants, .. } => {
-                variants.retain(|v| v.is_lookahead());
+    pub(crate) fn strip_lookaheads(self) -> Self {
+        match self {
+            Self::OneOfError { mut variants, name } => {
+                variants.retain(|v| !v.is_lookahead());
+                if variants.is_empty() {
+                    return Self::None;
+                }
+                Self::OneOfError { name, variants }
             }
 
-            // The following variants are kept
-            // if they are not lookaheads (checked above)
-            Self::TokenError { .. } => {}
-            Self::SeqError { .. } => {}
-        }
+            err @ Self::None | err @ Self::TokenError { .. } => err,
 
-        Some(self)
+            Self::SeqError { error, name, steps } => {
+                let error = error.strip_lookaheads();
+                if error == Self::None {
+                    return Self::None;
+                }
+                let error = Box::new(error);
+                Self::SeqError { name, steps, error }
+            }
+        }
     }
 }
 
@@ -105,11 +114,26 @@ impl ParseError {
             ParseError::SeqError { error, .. } => {
                 error.make_required();
             }
+            ParseError::None => {}
         }
     }
 
     pub(crate) fn into_required(mut self) -> Self {
         self.make_required();
         self
+    }
+}
+
+// weight
+impl ParseError {
+    pub(crate) fn weight(&self) -> usize {
+        match self {
+            Self::TokenError { .. } => 1,
+            Self::OneOfError { variants, .. } => {
+                variants.iter().map(|v| v.weight()).max().unwrap_or(0)
+            }
+            Self::SeqError { steps, .. } => 10 + steps.len(),
+            Self::None => 0,
+        }
     }
 }

@@ -59,4 +59,21 @@ impl<T> OneOf<T> {
 
         self
     }
+
+    // Conditionally removes branches that have less
+    // values than the winner.
+    //
+    // If all branches have the same value this method
+    // does nothing.
+    pub(crate) fn compact(mut self) -> Self {
+        if let Err(errors) = &mut self.inner {
+            dbg!(errors.iter().map(|e| e.weight()).collect::<Vec<_>>());
+            if let Some(max) = errors.iter().map(|e| e.weight()).max() {
+                dbg!(max);
+                errors.retain(|e| e.weight() == max)
+            }
+        }
+
+        self
+    }
 }

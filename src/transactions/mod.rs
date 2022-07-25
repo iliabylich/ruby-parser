@@ -21,3 +21,7 @@ impl<C: Constructor> Parser<C> {
         AllOf::new(name)
     }
 }
+
+mod render;
+#[cfg(test)]
+pub(crate) use render::assert_err_eq;

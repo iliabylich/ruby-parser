@@ -122,7 +122,7 @@ where
     fn try_assignment(&mut self) -> Result<Box<Node>, ParseError> {
         let checkpoint = self.new_checkpoint();
 
-        match self.parse_mlhs().ignore_lookahead_errors()? {
+        match self.parse_mlhs().ignore_lookaheads()? {
             Some(mlhs::MLHS::DefinitelyMlhs { node: mlhs }) => {
                 // definitely an MLHS, can only be assigned via `=`
                 let eql_t = self.expect_token(TokenKind::tEQL);

@@ -24,6 +24,7 @@ fn parse_alias_args<C: Constructor>(
         .or_else(|| try_fitem_fitem(parser))
         .or_else(|| try_gvar_gvar(parser))
         .required()
+        .compact()
         .unwrap()
 }
 
@@ -61,6 +62,7 @@ mod tests {
         loc::loc,
         nodes::{Alias, Gvar, Sym},
         string_content::StringContent,
+        transactions::assert_err_eq,
         Node, RustParser,
     };
 
@@ -129,6 +131,35 @@ mod tests {
                 keyword_l: loc!(0, 5),
                 expression_l: loc!(0, 15)
             })))
+        );
+    }
+
+    #[test]
+    fn test_nothing() {
+        let mut parser = RustParser::new(b"");
+        assert_err_eq!(
+            parser.try_alias(),
+            "
+SEQUENCE alias statement (got [])
+    TOKEN expected kALIAS, got tEOF (at 0)
+"
+        );
+    }
+
+    #[test]
+    fn test_only_alias() {
+        let mut parser = RustParser::new(b"alias $foo");
+        assert_err_eq!(
+            parser.try_alias(),
+            "
+SEQUENCE alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
+    ONEOF alias arguments
+        SEQUENCE gvar -> [gvar | back ref | nth ref] (got [Node(Gvar(Gvar { name: StringContent { bytes: [36, 102, 111, 111] }, expression_l: 6...10 }))])
+            ONEOF gvar rhs
+                TOKEN expected tGVAR, got tEOF (at 10)
+                TOKEN expected tBACK_REF, got tEOF (at 10)
+                TOKEN expected tNTH_REF, got tEOF (at 10)
+"
         );
     }
 }

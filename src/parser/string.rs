@@ -28,7 +28,7 @@ where
         parts.push(*string);
 
         loop {
-            match self.try_string1().ignore_lookahead_errors()? {
+            match self.try_string1().ignore_lookaheads()? {
                 Some(string) => {
                     parts.push(*string);
                 }
@@ -68,7 +68,7 @@ where
                 break;
             }
 
-            match self.try_string_content().ignore_lookahead_errors()? {
+            match self.try_string_content().ignore_lookaheads()? {
                 Some(string) => {
                     strings.push(*string);
                 }
