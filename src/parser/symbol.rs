@@ -119,14 +119,12 @@ ONEOF (1) static symbol
     #[test]
     fn test_dsym_only_colon() {
         let mut parser = RustParser::new(b":");
-        assert_eq!(
+        assert_err_eq!(
             parser.try_dsym(),
-            Err(ParseError::TokenError {
-                lookahead: true,
-                expected: TokenKind::tDSYMBEG,
-                got: TokenKind::tCOLON,
-                loc: loc!(0, 1)
-            })
+            "
+SEQUENCE (1) dynamic symbol (got [])
+    TOKEN (1) expected tDSYMBEG, got tCOLON (at 0)
+"
         );
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
@@ -135,14 +133,12 @@ ONEOF (1) static symbol
     #[test]
     fn test_dsym_no_colon() {
         let mut parser = RustParser::new(b"");
-        assert_eq!(
+        assert_err_eq!(
             parser.try_dsym(),
-            Err(ParseError::TokenError {
-                lookahead: true,
-                expected: TokenKind::tDSYMBEG,
-                got: TokenKind::tEOF,
-                loc: loc!(0, 0),
-            })
+            "
+SEQUENCE (1) dynamic symbol (got [])
+    TOKEN (1) expected tDSYMBEG, got tEOF (at 0)
+"
         );
     }
 }

@@ -32,15 +32,13 @@ fn test_preexe() {
 
 #[test]
 fn test_nothing() {
-    use crate::{loc::loc, parser::RustParser};
+    use crate::{parser::RustParser, transactions::assert_err_eq};
     let mut parser = RustParser::new(b"");
-    assert_eq!(
-        parser.try_preexe(),
-        Err(ParseError::TokenError {
-            lookahead: true,
-            expected: TokenKind::klBEGIN,
-            got: TokenKind::tEOF,
-            loc: loc!(0, 0),
-        })
+    assert_err_eq!(
+        parser.try_postexe(),
+        "
+SEQUENCE (1) postexe (got [])
+    TOKEN (1) expected klEND, got tEOF (at 0)
+    "
     );
 }
