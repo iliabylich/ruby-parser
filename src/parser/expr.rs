@@ -27,7 +27,7 @@ fn try_expr_head<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, Pa
         .or_else(|| try_arg_assoc_p_expr_body(parser))
         .or_else(|| try_arg_in_p_expr_body(parser))
         .or_else(|| parser.try_arg())
-        .done()
+        .unwrap()
 }
 fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, ParseError> {
     let not_t = parser.try_token(TokenKind::kNOT)?;
@@ -62,7 +62,7 @@ fn try_expr_tail<C: Constructor>(
         .one_of("expression continuation")
         .or_else(|| parser.try_token(TokenKind::kAND))
         .or_else(|| parser.try_token(TokenKind::kOR))
-        .done()
+        .unwrap()
         .ok();
     let op_t = if let Some(op_t) = op_t {
         op_t

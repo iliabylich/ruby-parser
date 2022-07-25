@@ -31,7 +31,7 @@ where
 
                 Ok(token)
             })
-            .done()?;
+            .unwrap()?;
 
         let contents = self.try_regexp_contents()?;
         let end_t = self.expect_token(TokenKind::tSTRING_END);

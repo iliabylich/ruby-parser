@@ -33,7 +33,7 @@ where
                 let k_then = self.try_token(TokenKind::kTHEN)?;
                 Ok(k_then)
             })
-            .done()
+            .unwrap()
     }
 
     pub(crate) fn try_lhs(&mut self) -> Result<Box<Node>, ParseError> {
@@ -64,7 +64,7 @@ where
                     primary_value, colon2_t, const_t
                 )
             })
-            .done()
+            .unwrap()
     }
 
     fn try_arg_value(&mut self) -> Result<Box<Node>, ParseError> {
@@ -92,7 +92,7 @@ fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>, Par
         .one_of("exceptions list")
         .or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
-        .done()
+        .unwrap()
 }
 fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> Result<(Token, Box<Node>), ParseError> {
     let assoc_t = parser.try_token(TokenKind::tASSOC)?;

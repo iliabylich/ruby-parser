@@ -23,7 +23,7 @@ where
                 ))
             })
             .or_else(|| self.try_simple_numeric())
-            .done()
+            .unwrap()
     }
 
     pub(crate) fn try_simple_numeric(&mut self) -> Result<Box<Node>, ParseError> {
@@ -44,7 +44,7 @@ where
                 let imaginary_t = self.try_token(TokenKind::tIMAGINARY)?;
                 Ok(Builder::<C>::complex(imaginary_t, self.buffer()))
             })
-            .done()
+            .unwrap()
     }
 }
 

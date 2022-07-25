@@ -7,8 +7,11 @@ use crate::{
 
 impl<C: Constructor> Parser<C> {
     pub(crate) fn try_alias(&mut self) -> Result<Box<Node>, ParseError> {
-        let alias_t = self.try_token(TokenKind::kALIAS)?;
-        let (lhs, rhs) = parse_alias_args(self)?;
+        let (alias_t, (lhs, rhs)) = self
+            .all_of("alias statement")
+            .and(|| self.try_token(TokenKind::kALIAS))
+            .and(|| parse_alias_args(self))
+            .unwrap()?;
         Ok(Builder::<C>::alias(alias_t, lhs, rhs))
     }
 }
@@ -20,28 +23,36 @@ fn parse_alias_args<C: Constructor>(
         .one_of("alias arguments")
         .or_else(|| try_fitem_fitem(parser))
         .or_else(|| try_gvar_gvar(parser))
-        .done()
+        .required()
+        .unwrap()
 }
 
 fn try_fitem_fitem<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> Result<(Box<Node>, Box<Node>), ParseError> {
-    let lhs = parser.try_fitem()?;
-    let rhs = parser.try_fitem()?;
-    Ok((lhs, rhs))
+    parser
+        .all_of("fitem -> fitem")
+        .and(|| parser.try_fitem())
+        .and(|| parser.try_fitem())
+        .unwrap()
 }
 
 fn try_gvar_gvar<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> Result<(Box<Node>, Box<Node>), ParseError> {
-    let lhs = parser.try_gvar()?;
-    let rhs = parser
-        .one_of("gvar rhs")
-        .or_else(|| parser.try_gvar())
-        .or_else(|| parser.try_back_ref())
-        .or_else(|| parser.try_nth_ref())
-        .done()?;
-    Ok((lhs, rhs))
+    parser
+        .all_of("gvar -> [gvar | back ref | nth ref]")
+        .and(|| parser.try_gvar())
+        .and(|| {
+            parser
+                .one_of("gvar rhs")
+                .or_else(|| parser.try_gvar())
+                .or_else(|| parser.try_back_ref())
+                .or_else(|| parser.try_nth_ref())
+                .required()
+                .unwrap()
+        })
+        .unwrap()
 }
 
 #[cfg(test)]

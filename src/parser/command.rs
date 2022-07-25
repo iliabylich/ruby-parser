@@ -25,7 +25,7 @@ where
                     .one_of("::CONSTANT or ::method")
                     .or_else(|| self.try_token(TokenKind::tCOLON2))
                     .or_else(|| self.try_operation2())
-                    .done()?;
+                    .unwrap()?;
 
                 let operation2 = self.try_operation2()?;
                 let command_args = self.try_command_args()?;
@@ -47,7 +47,7 @@ where
                 let command_args = self.try_command_args();
                 todo!("yield {:?} {:?}", yield_t, command_args)
             })
-            .done();
+            .unwrap();
 
         if let Ok(call_with_command_args) = maybe_call_with_command_args {
             match &*call_with_command_args {
@@ -71,7 +71,7 @@ where
             .or_else(|| self.try_k_return())
             .or_else(|| self.try_token(TokenKind::kBREAK))
             .or_else(|| self.try_token(TokenKind::kNEXT))
-            .done()?;
+            .unwrap()?;
         let call_args = self.try_call_args()?;
         todo!("keyword_cmd {:?} {:?}", keyword_t, call_args)
     }

@@ -32,7 +32,7 @@ where
         self.one_of("top-level statement")
             .or_else(|| self.try_preexe())
             .or_else(|| self.try_stmt())
-            .done()
+            .unwrap()
     }
 
     pub(crate) fn try_bodystmt(&mut self) -> Result<Box<Node>, ParseError> {

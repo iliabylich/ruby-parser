@@ -79,7 +79,7 @@ where
             .or_else(|| try_keyword_cmd(self, TokenKind::kNEXT))
             .or_else(|| try_keyword_cmd(self, TokenKind::kREDO))
             .or_else(|| try_keyword_cmd(self, TokenKind::kRETRY))
-            .done()?;
+            .unwrap()?;
 
         loop {
             match self.try_colon2_const().ignore_lookahead_errors()? {

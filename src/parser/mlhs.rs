@@ -140,7 +140,7 @@ fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, P
             };
             a
         })
-        .done()
+        .unwrap()
 }
 
 fn try_mlhs_primitive_item<C: Constructor>(

@@ -154,7 +154,7 @@ where
         self.one_of("command call")
             .or_else(|| self.try_command())
             .or_else(|| self.try_block_command())
-            .done()
+            .unwrap()
     }
 
     fn try_block_command(&mut self) -> Result<Box<Node>, ParseError> {
@@ -182,7 +182,7 @@ where
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
             .or_else(|| self.try_reswords())
-            .done()
+            .unwrap()
     }
     fn try_fitem(&mut self) -> Result<Box<Node>, ParseError> {
         self.one_of("fitem")
@@ -191,7 +191,7 @@ where
                     .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
             })
             .or_else(|| self.try_symbol())
-            .done()
+            .unwrap()
     }
 
     fn try_op(&mut self) -> Result<Token, ParseError> {
@@ -226,7 +226,7 @@ where
             .or_else(|| self.try_token(TokenKind::tAREF))
             .or_else(|| self.try_token(TokenKind::tASET))
             .or_else(|| self.try_token(TokenKind::tBACK_REF))
-            .done()
+            .unwrap()
     }
     fn try_reswords(&mut self) -> Result<Token, ParseError> {
         self.one_of("reserved word")
@@ -271,7 +271,7 @@ where
             .or_else(|| self.try_token(TokenKind::kUNLESS))
             .or_else(|| self.try_token(TokenKind::kWHILE))
             .or_else(|| self.try_token(TokenKind::kUNTIL))
-            .done()
+            .unwrap()
     }
     fn try_arg(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_arg")
@@ -558,7 +558,7 @@ where
         self.one_of("literal")
             .or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
-            .done()
+            .unwrap()
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
@@ -570,19 +570,19 @@ where
             .or_else(|| self.try_gvar())
             .or_else(|| self.try_t_const())
             .or_else(|| self.try_cvar())
-            .done()
+            .unwrap()
     }
     fn try_var_ref(&mut self) -> Result<Box<Node>, ParseError> {
         self.one_of("variable reference")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
-            .done()
+            .unwrap()
     }
     fn try_var_lhs(&mut self) -> Result<Box<Node>, ParseError> {
         self.one_of("variable as LHS in assignment")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
-            .done()
+            .unwrap()
             .map(|node| Builder::<C>::assignable(node))
     }
     fn parse_superclass(&mut self) {
@@ -692,38 +692,38 @@ where
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tFID))
-            .done()
+            .unwrap()
     }
     fn try_operation2(&mut self) -> Result<Token, ParseError> {
         self.one_of("operation 2")
             .or_else(|| self.try_operation())
             .or_else(|| self.try_op())
-            .done()
+            .unwrap()
     }
     fn try_operation3(&mut self) -> Result<Token, ParseError> {
         self.one_of("operation 3")
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
-            .done()
+            .unwrap()
     }
     fn try_dot_or_colon(&mut self) -> Result<Token, ParseError> {
         self.one_of("dot or colon")
             .or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tCOLON2))
-            .done()
+            .unwrap()
     }
     fn try_call_op(&mut self) -> Result<Token, ParseError> {
         self.one_of("call operation")
             .or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tANDDOT))
-            .done()
+            .unwrap()
     }
     fn try_call_op2(&mut self) -> Result<Token, ParseError> {
         self.one_of("call operation 2")
             .or_else(|| self.try_call_op())
             .or_else(|| self.try_token(TokenKind::tCOLON2))
-            .done()
+            .unwrap()
     }
     fn parse_opt_terms(&mut self) {
         self.parse_terms();
@@ -771,13 +771,13 @@ where
         self.one_of("trailer")
             .or_else(|| self.try_token(TokenKind::tNL))
             .or_else(|| self.try_token(TokenKind::tCOMMA))
-            .done()
+            .unwrap()
     }
     fn try_term(&mut self) -> Result<Token, ParseError> {
         self.one_of("term")
             .or_else(|| self.try_token(TokenKind::tSEMI))
             .or_else(|| self.try_token(TokenKind::tNL))
-            .done()
+            .unwrap()
     }
     fn parse_terms(&mut self) -> Vec<Token> {
         let mut terms = vec![];

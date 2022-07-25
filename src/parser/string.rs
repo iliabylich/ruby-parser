@@ -13,7 +13,7 @@ where
         self.one_of("strings")
             .or_else(|| self.try_char())
             .or_else(|| self.try_string_seq())
-            .done()
+            .unwrap()
     }
 
     fn try_char(&mut self) -> Result<Box<Node>, ParseError> {
@@ -48,7 +48,7 @@ where
             .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
             .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
             .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
-            .done()?;
+            .unwrap()?;
 
         let string_contents = self.parse_string_contents()?;
         let string_end_t = self.expect_token(TokenKind::tSTRING_END);
@@ -107,7 +107,7 @@ where
                     string_dbeg_t, compstmt, string_dend_t
                 )
             })
-            .done()
+            .unwrap()
     }
 
     fn try_string_dvar(&mut self) -> Result<Token, ParseError> {

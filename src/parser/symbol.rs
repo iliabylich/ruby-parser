@@ -13,7 +13,7 @@ where
         self.one_of("symbol")
             .or_else(|| self.try_ssym())
             .or_else(|| self.try_dsym())
-            .done()
+            .unwrap()
     }
 
     fn try_ssym(&mut self) -> Result<Box<Node>, ParseError> {
@@ -27,7 +27,7 @@ where
                     .or_else(|| self.try_token(TokenKind::tCVAR))
                     .or_else(|| self.try_token(TokenKind::tGVAR))
                     .required()
-                    .done()?;
+                    .unwrap()?;
                 Ok(Builder::<C>::symbol(colon_t, sym_t, self.buffer()))
             })
             .or_else(|| {
@@ -40,7 +40,7 @@ where
                     string_end_t,
                 ))
             })
-            .done()
+            .unwrap()
     }
 
     fn try_dsym(&mut self) -> Result<Box<Node>, ParseError> {

@@ -42,7 +42,7 @@ impl<T> OneOf<T> {
         }
     }
 
-    pub(crate) fn done(self) -> ParseResult<T> {
+    pub(crate) fn unwrap(self) -> ParseResult<T> {
         match self.inner {
             Ok(value) => Ok(value),
             Err(errors) => Err(ParseError::OneOfError {
@@ -54,7 +54,7 @@ impl<T> OneOf<T> {
 
     pub(crate) fn required(mut self) -> Self {
         if let Err(errors) = &mut self.inner {
-            errors.iter_mut().for_each(|e| e.into_required())
+            errors.iter_mut().for_each(|e| e.make_required());
         }
 
         self
