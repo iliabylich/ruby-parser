@@ -31,7 +31,7 @@ impl From<Vec<u8>> for StringContent {
 
 impl From<TokenValue> for StringContent {
     fn from(token_value: TokenValue) -> Self {
-        Self::from(token_value.into_bytes())
+        Self::from(token_value.to_bytes())
     }
 }
 

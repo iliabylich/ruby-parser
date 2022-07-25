@@ -188,6 +188,9 @@ impl Default for TokenKind {
     }
 }
 
+// Everything that doesn't involve escaping can be taken directly
+// from buffer, that's why it's not stored here.
+// Simply do `buffer.slice(token.loc)` to get a byte slice of the token
 #[derive(Debug, Eq, Clone, Copy)]
 pub enum TokenValue {
     // used for trivial single-byte escape sequences like `\xFF`
@@ -197,18 +200,12 @@ pub enum TokenValue {
     UnescapedChar(char),
 
     // used for "wide" \u escape sequences like `\u{1234 5678}`
-    // only this variant uses heap, so in most cases TokenValue is located on stack
     //
     // This variant is special as it requires boxing.
     // Instead, we write all unescaped multi-char sequences
     // to parser.buffer.unescaped_chars
     //
-    // This case is very special and it prevents using stack structures
-    // and making TokenValue and Token : Copy
     UnescapedChars { loc: Loc, buffer: *const Buffer },
-    // Everything that doesn't involve escaping can be taken directly
-    // from buffer, that's why it's not stored here.
-    // Simply do `buffer.slice(token.loc)` to get a byte slice of the token
 }
 
 impl From<u8> for TokenValue {
@@ -224,7 +221,7 @@ impl From<char> for TokenValue {
 }
 
 impl TokenValue {
-    fn to_bytes(&self) -> Vec<u8> {
+    pub(crate) fn to_bytes(&self) -> Vec<u8> {
         match self {
             TokenValue::UnescapedByte(byte) => vec![*byte],
             TokenValue::UnescapedChar(c) => {
@@ -240,18 +237,6 @@ impl TokenValue {
                     });
                 slice.iter().cloned().collect()
             }
-        }
-    }
-
-    pub(crate) fn into_bytes(self) -> Vec<u8> {
-        match self {
-            TokenValue::UnescapedByte(byte) => vec![byte],
-            TokenValue::UnescapedChar(c) => {
-                let mut buf = vec![0_u8; c.len_utf8()];
-                c.encode_utf8(&mut buf);
-                buf
-            }
-            TokenValue::UnescapedChars { .. } => self.to_bytes(),
         }
     }
 }
