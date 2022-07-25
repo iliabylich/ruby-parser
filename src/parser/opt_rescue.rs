@@ -47,21 +47,11 @@ where
             })
             .or_else(|| {
                 let primary_value = self.try_primary_value()?;
-                let op_t = self.try_call_op()?;
+                let op_t = self.try_call_op2()?;
                 let id_t = self.try_const_or_identifier()?;
                 panic!(
                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                     primary_value, op_t, id_t
-                )
-            })
-            .or_else(|| {
-                let primary_value = self.try_primary_value()?;
-                let colon2_t = self.try_token(TokenKind::tCOLON2)?;
-                let const_t = self.try_const_or_identifier()?;
-
-                panic!(
-                    "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
-                    primary_value, colon2_t, const_t
                 )
             })
             .unwrap()

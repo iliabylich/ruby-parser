@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     nodes::Node,
     parser::Parser,
-    token::{Token, TokenKind},
+    token::{self, Token, TokenKind},
     transactions::{ParseError, ParseResultApi, StepData},
 };
 
@@ -10,189 +10,195 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn parse_mlhs(&mut self) -> Result<MLHS, ParseError> {
-        match parse_mlhs_internal(self)? {
-            MlhsInternal::DefinitelyMlhsNode(node) => Ok(MLHS::DefinitelyMlhs { node }),
-            MlhsInternal::DefinitelyMlhsList {
-                nodes,
-                trailing_comma,
-            } => {
-                let node = if let Some(trailing_comma) = trailing_comma {
-                    Builder::<C>::group_with_trailing_comma(nodes, trailing_comma)
-                } else {
-                    Builder::<C>::group(nodes)
-                };
-                Ok(MLHS::DefinitelyMlhs { node })
-            }
-            MlhsInternal::MaybeLhs(node) => Ok(MLHS::MaybeLhs { node }),
-            MlhsInternal::None => Err(ParseError::empty()),
-        }
-    }
-}
-
-fn parse_mlhs_internal<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsInternal, ParseError> {
-    let mut items = vec![];
-    let mut has_splat = false;
-    let mut definitely_mlhs = false;
-    let mut trailing_comma = None;
-
-    macro_rules! handle_splat_argument {
-        ($node:expr) => {
-            if matches!($node, Node::Splat(_)) {
-                if has_splat {
-                    panic!("two splats in mlhs on the same level")
-                }
-                has_splat = true;
-            }
-        };
+    pub(crate) fn parse_mlhs(&mut self) -> Result<Box<Node>, ParseError> {
+        self.one_of("mlhs")
+            .or_else(|| self.try_mlhs_basic())
+            .or_else(|| {
+                self.all_of("( mlhs inner )")
+                    .and(|| self.try_token(TokenKind::tLPAREN))
+                    .and(|| self.try_mlhs_inner())
+                    .and(|| self.try_rparen())
+                    .unwrap()
+                    .map(|(lparen_t, exprs, rparen_t)| todo!())
+            })
+            .unwrap()
     }
 
-    loop {
-        let item = parse_mlhs_item(parser).ignore_lookaheads()?;
-        match item {
-            Some(MlhsItem::DefinitelyMlhs(node)) => {
-                definitely_mlhs = true;
-                trailing_comma = None;
-
-                handle_splat_argument!(&*node);
-
-                items.push(*node);
-            }
-
-            Some(MlhsItem::MaybeLhs(node)) => {
-                trailing_comma = None;
-
-                items.push(*node);
-            }
-
-            Some(MlhsItem::None) | None => break,
-        }
-
-        if trailing_comma.is_none() && parser.current_token().is(TokenKind::tCOMMA) {
-            // consume comma after MLHS item
-            trailing_comma = Some(parser.current_token());
-            parser.skip_token();
-            definitely_mlhs = true;
-        } else {
-            break;
-        }
+    fn try_mlhs_inner(&mut self) -> Result<Box<Node>, ParseError> {
+        self.one_of("mlhs_basic")
+            .or_else(|| self.try_mlhs_basic())
+            .or_else(|| {
+                self.all_of("( mlhs inner )")
+                    .and(|| self.try_token(TokenKind::tLPAREN))
+                    .and(|| self.try_mlhs_inner())
+                    .and(|| self.try_rparen())
+                    .unwrap()
+                    .map(|(lparen_t, exprs, rparen_t)| todo!())
+            })
+            .unwrap()
     }
 
-    if items.is_empty() {
-        Ok(MlhsInternal::None)
-    } else if definitely_mlhs {
-        Ok(MlhsInternal::DefinitelyMlhsList {
-            nodes: items,
-            trailing_comma,
-        })
-    } else {
-        debug_assert_eq!(items.len(), 1);
-
-        let node = items.into_iter().next().unwrap();
-        Ok(MlhsInternal::MaybeLhs(Box::new(node)))
-    }
-}
-
-fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, ParseError> {
-    parser
-        .one_of("mlhs item")
-        .or_else(|| {
-            let (lparen_t, statements, rparen_t) = parser
-                .all_of("( mlhs )")
-                .and(|| parser.try_token(TokenKind::tLPAREN))
-                .and(|| {
-                    parse_mlhs_internal(parser).map(|mlhs| match mlhs {
-                        MlhsInternal::DefinitelyMlhsNode(node) => vec![*node],
-                        MlhsInternal::DefinitelyMlhsList { nodes, .. } => nodes,
-                        MlhsInternal::MaybeLhs(node) => vec![*node],
-                        MlhsInternal::None => vec![],
+    fn try_mlhs_basic(&mut self) -> Result<Box<Node>, ParseError> {
+        self.one_of("mlhs_basic")
+            .or_else(|| {
+                self.all_of("mlhs head + tail")
+                    .and(|| self.try_mlhs_head())
+                    .and(|| {
+                        self.one_of("mlhs head or tail")
+                            .or_else(|| self.try_mlhs_item().map(|node| Some(node)))
+                            .or_else(|| self.try_mlhs_tail().map(|node| Some(node)))
+                            .or_else(|| Ok(None))
+                            .unwrap()
                     })
-                })
-                .and(|| parser.expect_token(TokenKind::tRPAREN))
-                .unwrap()?;
-
-            if statements.is_empty() {
-                Ok(MlhsItem::None)
-            } else {
-                let node = Builder::<C>::begin(lparen_t, statements, rparen_t);
-                Ok(MlhsItem::DefinitelyMlhs(node))
-            }
-        })
-        .or_else(|| {
-            let (star_t, value) = parser
-                .all_of("splat")
-                .and(|| parser.try_token(TokenKind::tSTAR))
-                .and(|| {
-                    parser
-                        .one_of("splat argument")
-                        .or_else(|| try_mlhs_primitive_item(parser).map(|v| Some(v)))
-                        .or_else(|| parser.try_token(TokenKind::tCOMMA).map(|_| None))
-                        .or_else(|| parser.try_token(TokenKind::tRPAREN).map(|_| None))
-                        .unwrap()
-                })
-                .unwrap()?;
-
-            if let Some(value) = value {
-                let node = Builder::<C>::splat(star_t, value);
-                Ok(MlhsItem::DefinitelyMlhs(node))
-            } else {
-                // nameless splat
-
-                // return back observed token
-                *parser.lexer.token_idx_mut() -= 1;
-
-                let node = Builder::<C>::nameless_splat(star_t);
-                Ok(MlhsItem::DefinitelyMlhs(node))
-            }
-        })
-        .unwrap()
-}
-
-fn try_mlhs_primitive_item<C: Constructor>(
-    parser: &mut Parser<C>,
-) -> Result<Box<Node>, ParseError> {
-    parser.try_lhs()
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum MLHS {
-    // This variant is used if there's at least 1 comma
-    // i.e. `a, b` or `((a, b))`
-    // even `a,` is an MLHS
-    DefinitelyMlhs { node: Box<Node> },
-
-    // This variant is used if it looks like an LHS
-    // i.e. has no commas but is techincally assignable
-    // like `((a))`
-    MaybeLhs { node: Box<Node> },
-}
-
-enum MlhsInternal {
-    DefinitelyMlhsNode(Box<Node>),
-    DefinitelyMlhsList {
-        nodes: Vec<Node>,
-        trailing_comma: Option<Token>,
-    },
-    MaybeLhs(Box<Node>),
-    None,
-}
-
-impl From<MlhsInternal> for StepData {
-    fn from(mlhs: MlhsInternal) -> Self {
-        match mlhs {
-            MlhsInternal::DefinitelyMlhsNode(node) => StepData::from(node),
-            MlhsInternal::DefinitelyMlhsList { nodes, .. } => StepData::from(nodes),
-            MlhsInternal::MaybeLhs(node) => StepData::from(node),
-            MlhsInternal::None => StepData::None,
-        }
+                    .unwrap()
+                    .map(|(head, tail)| panic!("{:?} {:?}", head, tail))
+            })
+            .or_else(|| self.try_mlhs_tail())
+            .unwrap()
     }
-}
 
-#[derive(Debug)]
-enum MlhsItem {
-    DefinitelyMlhs(Box<Node>),
-    MaybeLhs(Box<Node>),
-    None,
+    fn try_mlhs_tail(&mut self) -> Result<Box<Node>, ParseError> {
+        let (star_t, maybe_splat_arg, maybe_post) = self
+            .all_of("mlhs_tail")
+            .and(|| self.try_token(TokenKind::tSTAR))
+            .and(|| {
+                self.one_of("splat argument")
+                    .or_else(|| self.try_mlhs_node().map(|node| Some(node)))
+                    .or_else(|| Ok(None))
+                    .unwrap()
+            })
+            .and(|| {
+                self.one_of("post-splat")
+                    .or_else(|| {
+                        self.all_of("comma -> mlhs post")
+                            .and(|| self.try_token(TokenKind::tCOMMA))
+                            .and(|| self.try_mlhs_post())
+                            .unwrap()
+                            .map(|(star_t, maybe_arg)| todo!("{:?} {:?}", star_t, maybe_arg))
+                    })
+                    .or_else(|| Ok(None))
+                    .unwrap()
+            })
+            .unwrap()?;
+
+        todo!("{:?} {:?} {:?}", star_t, maybe_splat_arg, maybe_post)
+    }
+
+    fn try_mlhs_item(&mut self) -> Result<Box<Node>, ParseError> {
+        self.one_of("mlhs item")
+            .or_else(|| self.try_mlhs_node())
+            .or_else(|| {
+                self.all_of("( mlhs inner )")
+                    .and(|| self.try_token(TokenKind::tLPAREN))
+                    .and(|| self.try_mlhs_inner())
+                    .and(|| self.try_rparen())
+                    .unwrap()
+                    .map(|(lparen_t, exprs, rparen_t)| {
+                        todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
+                    })
+            })
+            .unwrap()
+    }
+
+    fn try_mlhs_head(&mut self) -> Result<Vec<Node>, ParseError> {
+        let build_steps = |head: Vec<Node>, commas: Vec<Token>| {
+            let mut steps = vec![];
+            steps.extend(head.into_iter().map(|node| StepData::from(Box::new(node))));
+            steps.extend(commas.into_iter().map(|token| StepData::from(token)));
+            steps
+        };
+
+        let parse_item_and_comma = |parser: &mut Parser<C>| {
+            parser
+                .all_of("mlhs item and comma")
+                .and(|| parser.try_mlhs_item())
+                .and(|| parser.try_token(TokenKind::tCOMMA))
+                .unwrap()
+        };
+
+        let mut head = vec![];
+        let mut commas = vec![];
+        let (item, comma) = parse_item_and_comma(self)?;
+        head.push(*item);
+        commas.push(comma);
+
+        loop {
+            let item_and_comma = parse_item_and_comma(self);
+
+            match item_and_comma {
+                Ok((item, comma)) => {
+                    head.push(*item);
+                    commas.push(comma);
+                }
+                Err(_) => break,
+            }
+        }
+
+        Ok(head)
+    }
+
+    fn try_mlhs_post(&mut self) -> Result<Vec<Node>, ParseError> {
+        let build_steps = |post: Vec<Node>, commas: Vec<Token>| {
+            let mut steps = vec![];
+            steps.extend(post.into_iter().map(|node| StepData::from(Box::new(node))));
+            steps.extend(commas.into_iter().map(|token| StepData::from(token)));
+            steps
+        };
+
+        let mut post = vec![];
+        let mut commas = vec![];
+        let item = self.try_mlhs_item()?;
+        post.push(*item);
+
+        loop {
+            let comma_and_item = self
+                .all_of("comma and mlhs item")
+                .and(|| self.try_token(TokenKind::tCOMMA))
+                .and(|| self.try_mlhs_item())
+                .unwrap();
+
+            match comma_and_item {
+                Ok((comma, item)) => {
+                    post.push(*item);
+                    commas.push(comma);
+                }
+                Err(error) => break,
+            }
+        }
+
+        Ok(post)
+    }
+
+    fn try_mlhs_node(&mut self) -> Result<Box<Node>, ParseError> {
+        self.one_of("mlhs node")
+            .or_else(|| self.try_user_variable())
+            .or_else(|| self.try_keyword_variable())
+            .or_else(|| self.try_back_ref())
+            .or_else(|| {
+                let (colon2_t, const_t) = self.try_colon2_const()?;
+                panic!("const {:?} {:?}", colon2_t, const_t)
+            })
+            .or_else(|| {
+                let primary_value = self.try_primary_value()?;
+                let op_t = self.try_call_op()?;
+                let id_t = self.try_const_or_identifier()?;
+                panic!(
+                    "primary_value call_op tIDENT {:?} {:?} {:?}",
+                    primary_value, op_t, id_t
+                )
+            })
+            .or_else(|| {
+                let primary_value = self.try_primary_value()?;
+                let colon2_t = self.try_token(TokenKind::tCOLON2)?;
+                let const_t = self.try_const_or_identifier()?;
+
+                panic!(
+                    "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
+                    primary_value, colon2_t, const_t
+                )
+            })
+            .unwrap()
+    }
 }
 
 #[cfg(test)]
@@ -202,16 +208,8 @@ use crate::{loc::loc, parser::RustParser, string_content::StringContent};
 fn test_lhs_user_variable() {
     use crate::nodes::Lvar;
 
-    let mut parser = RustParser::new(b"a");
-    assert_eq!(
-        parser.parse_mlhs(),
-        Ok(MLHS::MaybeLhs {
-            node: Box::new(Node::Lvar(Lvar {
-                name: StringContent::from("a"),
-                expression_l: loc!(0, 1)
-            }))
-        })
-    );
+    let mut parser = RustParser::new(b"a, b");
+    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
@@ -219,25 +217,7 @@ fn test_lhs_parenthesized() {
     use crate::nodes::{Begin, Lvar};
 
     let mut parser = RustParser::new(b"((a))");
-    assert_eq!(
-        parser.parse_mlhs(),
-        Ok(MLHS::MaybeLhs {
-            node: Box::new(Node::Begin(Begin {
-                statements: vec![Node::Begin(Begin {
-                    statements: vec![Node::Lvar(Lvar {
-                        name: StringContent::from("a"),
-                        expression_l: loc!(2, 3)
-                    })],
-                    begin_l: Some(loc!(1, 2)),
-                    end_l: Some(loc!(3, 4)),
-                    expression_l: loc!(1, 4)
-                })],
-                begin_l: Some(loc!(0, 1)),
-                end_l: Some(loc!(4, 5)),
-                expression_l: loc!(0, 5)
-            }))
-        })
-    );
+    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
@@ -245,34 +225,7 @@ fn test_mlhs_without_parens() {
     use crate::nodes::{Begin, Lvar, Splat};
 
     let mut parser = RustParser::new(b"a, *b, c");
-    assert_eq!(
-        parser.parse_mlhs(),
-        Ok(MLHS::DefinitelyMlhs {
-            node: Box::new(Node::Begin(Begin {
-                statements: vec![
-                    Node::Lvar(Lvar {
-                        name: StringContent::from("a"),
-                        expression_l: loc!(0, 1)
-                    }),
-                    Node::Splat(Splat {
-                        value: Some(Box::new(Node::Lvar(Lvar {
-                            name: StringContent::from("b"),
-                            expression_l: loc!(4, 5)
-                        }))),
-                        operator_l: loc!(3, 4),
-                        expression_l: loc!(3, 5)
-                    }),
-                    Node::Lvar(Lvar {
-                        name: StringContent::from("c"),
-                        expression_l: loc!(7, 8)
-                    })
-                ],
-                begin_l: Some(loc!(0, 1)),
-                end_l: Some(loc!(8, 9)),
-                expression_l: loc!(0, 9)
-            }))
-        })
-    );
+    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
@@ -280,39 +233,7 @@ fn test_mlhs_with_parens() {
     use crate::nodes::{Begin, Gvar, Ivar, Lvar, Splat};
 
     let mut parser = RustParser::new(b"((*a), $x, @c)");
-    assert_eq!(
-        parser.parse_mlhs(),
-        Ok(MLHS::DefinitelyMlhs {
-            node: Box::new(Node::Begin(Begin {
-                statements: vec![
-                    Node::Begin(Begin {
-                        statements: vec![Node::Splat(Splat {
-                            value: Some(Box::new(Node::Lvar(Lvar {
-                                name: StringContent::from("a"),
-                                expression_l: loc!(3, 4)
-                            }))),
-                            operator_l: loc!(2, 3),
-                            expression_l: loc!(2, 4)
-                        })],
-                        begin_l: Some(loc!(1, 2)),
-                        end_l: Some(loc!(4, 5)),
-                        expression_l: loc!(1, 5)
-                    }),
-                    Node::Gvar(Gvar {
-                        name: StringContent::from("$x"),
-                        expression_l: loc!(7, 9)
-                    }),
-                    Node::Ivar(Ivar {
-                        name: StringContent::from("@c"),
-                        expression_l: loc!(11, 13)
-                    })
-                ],
-                begin_l: Some(loc!(0, 1)),
-                end_l: Some(loc!(13, 14)),
-                expression_l: loc!(0, 14)
-            }))
-        })
-    );
+    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]

@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{mlhs, ParseError, ParseResultApi, Parser},
     token::TokenKind,
-    Node,
+    Node, Token,
 };
 
 impl<C> Parser<C>
@@ -119,55 +119,102 @@ where
         self.try_expr()
     }
 
-    fn try_assignment(&mut self) -> Result<Box<Node>, ParseError> {
-        let checkpoint = self.new_checkpoint();
+    fn rescue_stmt(&mut self) -> Result<(Token, Box<Node>), ParseError> {
+        todo!()
+    }
 
-        match self.parse_mlhs().ignore_lookaheads()? {
-            Some(mlhs::MLHS::DefinitelyMlhs { node: mlhs }) => {
-                // definitely an MLHS, can only be assigned via `=`
-                let eql_t = self.expect_token(TokenKind::tEQL);
-                if let Ok(command_call) = self.try_command_call() {
-                    todo!("mlhs = rhs {:?} {:?} {:?}", mlhs, eql_t, command_call);
-                } else if let Ok(mrhs_arg) = self.try_mrhs_arg() {
-                    if let Ok(rescue_t) = self.try_token(TokenKind::kRESCUE) {
-                        let stmt = self.try_stmt().expect("mlhs -> kRESCUE requires stmt");
-                        todo!(
-                            "mlhs = rhs rescue stmt {:?} {:?} {:?} {:?} {:?}",
-                            mlhs,
-                            eql_t,
-                            mrhs_arg,
-                            rescue_t,
-                            stmt
-                        )
-                    } else {
-                        todo!("mlhs = rhs {:?} {:?} {:?}", mlhs, eql_t, mrhs_arg)
-                    }
-                } else {
-                    todo!("mlhs -> tEQL requires rhs")
-                }
-            }
-            Some(mlhs::MLHS::MaybeLhs { node: lhs }) => {
-                // maybe a plain assignment,
-                // but maybe just an expression (that is fully parsed later in `parse_expr`)
-                match self.current_token().kind {
-                    TokenKind::tEQL | TokenKind::tOP_ASGN => {
-                        // definitely an assignment
-                        let op_t = self.current_token();
-                        self.skip_token();
-                        let command_rhs = self.try_command_rhs().expect("assignment must have RHS");
-                        todo!("assignment {:?} {:?} {:?}", lhs, op_t, command_rhs);
-                    }
-                    _ => {
-                        // rollback, expr can be more that just an lvar get
-                        checkpoint.restore();
-                        Err(ParseError::empty())
-                    }
-                }
-            }
-            None => {
-                // well, it's not an MLHS, then it's definitely an expression
-                Err(ParseError::empty())
-            }
-        }
+    fn try_assignment(&mut self) -> Result<Box<Node>, ParseError> {
+        self.one_of("assignment")
+            .or_else(|| self.try_mass_assignment())
+            .or_else(|| self.try_simple_assignment())
+            .or_else(|| {
+                let (lhs, op_t, rhs) = self
+                    .all_of("operation assignment")
+                    .and(|| {
+                        self.one_of("operation assignment lhs")
+                            .or_else(|| {
+                                let (primary_value, op_t, id_t) = self
+                                    .all_of("primary call_op2 tIDENTIFIER")
+                                    .and(|| self.try_primary_value())
+                                    .and(|| self.try_call_op2())
+                                    .and(|| self.try_const_or_identifier())
+                                    .unwrap()?;
+                                panic!(
+                                    "primary_value call_op tIDENT {:?} {:?} {:?}",
+                                    primary_value, op_t, id_t
+                                )
+                            })
+                            .or_else(|| {
+                                let (primary_value, lbrack_t, opt_call_args, rbrack_t) = self
+                                    .all_of("primary [ args ]")
+                                    .and(|| self.try_primary_value())
+                                    .and(|| self.expect_token(TokenKind::tLBRACK))
+                                    .and(|| self.try_opt_call_args())
+                                    .and(|| self.try_rparen())
+                                    .unwrap()?;
+                                todo!(
+                                    "{:?} {:?} {:?} {:?}",
+                                    primary_value,
+                                    lbrack_t,
+                                    opt_call_args,
+                                    rbrack_t
+                                )
+                            })
+                            .or_else(|| self.try_var_lhs())
+                            .or_else(|| self.try_back_ref())
+                            .unwrap()
+                    })
+                    .and(|| self.expect_token(TokenKind::tOP_ASGN))
+                    .and(|| self.try_command_rhs())
+                    .unwrap()?;
+
+                todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
+            })
+            .unwrap()
+    }
+
+    fn try_mass_assignment(&mut self) -> Result<Box<Node>, ParseError> {
+        let (mlhs, eql_t, rhs) = self
+            .all_of("mass-assignment")
+            .and(|| self.parse_mlhs())
+            .and(|| self.expect_token(TokenKind::tEQL))
+            .and(|| {
+                self.one_of("mass-assginemtn rhs")
+                    .or_else(|| self.try_command_call())
+                    .or_else(|| {
+                        self.all_of("mrhs_arg [rescue stmt]")
+                            .and(|| self.try_mrhs_arg())
+                            .and(|| {
+                                let maybe_rescut_stmt = self
+                                    .one_of("[rescue stmt]")
+                                    .or_else(|| self.rescue_stmt().map(|data| Some(data)))
+                                    .or_else(|| Ok(None))
+                                    .unwrap()?;
+                                let node: Box<Node> = todo!("{:?}", maybe_rescut_stmt);
+                                Ok(node)
+                            })
+                            .unwrap()
+                            .map(|(value, rescue)| todo!("{:?} {:?}", value, rescue))
+                    })
+                    .unwrap()
+            })
+            .unwrap()?;
+        todo!("{:?} {:?} {:?}", mlhs, eql_t, rhs)
+    }
+
+    fn try_simple_assignment(&mut self) -> Result<Box<Node>, ParseError> {
+        let (lhs, eql_t, rhs) = self
+            .all_of("simple assignment")
+            .and(|| self.try_lhs())
+            .and(|| self.expect_token(TokenKind::tEQL))
+            .and(|| {
+                self.one_of("simple assignment rhs")
+                    .or_else(|| self.try_command_call())
+                    .or_else(|| self.try_command_rhs())
+                    .unwrap()
+            })
+            .unwrap()?;
+
+        todo!("{:?} {:?} {:?}", lhs, eql_t, rhs)
     }
 }

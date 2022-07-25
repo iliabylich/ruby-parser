@@ -88,6 +88,11 @@ where
     pub(crate) fn try_call_args(&mut self) -> Result<Vec<Node>, ParseError> {
         todo!("parser.try_call_args")
     }
+
+    // This rule can be `none`
+    pub(crate) fn try_opt_call_args(&mut self) -> Result<Vec<Node>, ParseError> {
+        todo!("parser.try_call_args")
+    }
 }
 
 #[derive(Debug)]
