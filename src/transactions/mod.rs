@@ -14,10 +14,12 @@ use all_of::AllOf;
 
 impl<C: Constructor> Parser<C> {
     pub(crate) fn one_of<T>(&self, name: &'static str) -> OneOf<T> {
+        // eprintln!("constructing one_of {:?}", name);
         OneOf::new(name, self.new_checkpoint())
     }
 
     pub(crate) fn all_of(&self, name: &'static str) -> AllOf {
+        // eprintln!("constructing all_of {:?}", name);
         AllOf::new(name)
     }
 }

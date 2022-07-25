@@ -53,18 +53,19 @@ where
                 let brace_block = self.try_brace_block()?;
                 todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
             })
-            .or_else(|| {
-                let method_call = self.try_method_call()?;
-                if let Ok(brace_block) = self.try_brace_block() {
-                    todo!(
-                        "method_call brace_block {:?} {:?}",
-                        method_call,
-                        brace_block
-                    )
-                } else {
-                    todo!("method_call {:?}", method_call)
-                }
-            })
+            // FIXME: this rule is left-recursive, this must be extracted to a post-rule
+            // .or_else(|| {
+            //     let method_call = self.try_method_call()?;
+            //     if let Ok(brace_block) = self.try_brace_block() {
+            //         todo!(
+            //             "method_call brace_block {:?} {:?}",
+            //             method_call,
+            //             brace_block
+            //         )
+            //     } else {
+            //         todo!("method_call {:?}", method_call)
+            //     }
+            // })
             .or_else(|| self.try_lambda())
             .or_else(|| self.try_if_expr())
             .or_else(|| self.try_unless_expr())

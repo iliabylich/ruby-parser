@@ -11,7 +11,7 @@ where
 {
     pub(crate) fn try_top_compstmt(&mut self) -> Result<Option<Box<Node>>, ParseError> {
         let top_stmts = self.parse_top_stmts();
-        self.parse_opt_terms();
+        self.try_opt_terms();
         if top_stmts.is_empty() {
             Ok(None)
         } else {
@@ -50,7 +50,7 @@ where
 
     pub(crate) fn try_compstmt(&mut self) -> Result<Option<Box<Node>>, ParseError> {
         let stmts = self.parse_stmts();
-        self.parse_opt_terms();
+        self.try_opt_terms();
         if stmts.is_empty() {
             Ok(None)
         } else {

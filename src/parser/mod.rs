@@ -136,12 +136,12 @@ where
         self.try_fname()
     }
 
-    fn parse_defn_head(&mut self) -> (Token, Token) {
-        todo!("parser.parse_defn_head")
+    fn try_defn_head(&mut self) -> (Token, Token) {
+        todo!("parser.try_defn_head")
     }
 
-    fn parse_defs_head(&mut self) -> (Token, Node, Token, Token) {
-        todo!("parser.parse_defs_head")
+    fn try_defs_head(&mut self) -> (Token, Node, Token, Token) {
+        todo!("parser.try_defs_head")
     }
 
     fn try_expr_value(&mut self) -> Result<Box<Node>, ParseError> {
@@ -163,19 +163,19 @@ where
         todo!("parser.try_block_command")
     }
 
-    fn parse_cmd_brace_block(&mut self) {
-        todo!("parser.parse_cmd_brace_block")
+    fn try_cmd_brace_block(&mut self) {
+        todo!("parser.try_cmd_brace_block")
     }
 
     fn try_fcall(&mut self) -> Result<Token, ParseError> {
         self.try_operation()
     }
 
-    fn parse_cname(&mut self) {
-        todo!("parser.parse_cname")
+    fn try_cname(&mut self) {
+        todo!("parser.try_cname")
     }
-    fn parse_cpath(&mut self) {
-        todo!("parser.parse_cpath")
+    fn try_cpath(&mut self) {
+        todo!("parser.try_cpath")
     }
     fn try_fname(&mut self) -> Result<Token, ParseError> {
         self.one_of("fname")
@@ -278,35 +278,32 @@ where
     fn try_arg(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_arg")
     }
-    fn parse_relop(&mut self) {
-        todo!("parser.parse_relop")
+    fn try_relop(&mut self) {
+        todo!("parser.try_relop")
     }
-    fn parse_rel_expr(&mut self) {
-        todo!("parser.parse_rel_expr")
-    }
-    fn parse_arg_value(&mut self) {
-        todo!("parser.parse_arg_value")
+    fn try_rel_expr(&mut self) {
+        todo!("parser.try_rel_expr")
     }
     fn try_aref_args(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_aref_args")
     }
-    fn parse_arg_rhs(&mut self) {
-        todo!("parser.parse_arg_rhs")
+    fn try_arg_rhs(&mut self) {
+        todo!("parser.try_arg_rhs")
     }
-    fn parse_paren_args(&mut self) {
-        todo!("parser.parse_paren_args")
+    fn try_paren_args(&mut self) -> Result<Vec<Node>, ParseError> {
+        todo!("parser.try_paren_args")
     }
-    fn parse_opt_paren_args(&mut self) {
-        todo!("parser.parse_opt_paren_args")
+    fn try_opt_paren_args(&mut self) -> Result<Vec<Node>, ParseError> {
+        todo!("parser.try_opt_paren_args")
     }
-    fn parse_block_arg(&mut self) {
-        todo!("parser.parse_block_arg")
+    fn try_block_arg(&mut self) {
+        todo!("parser.try_block_arg")
     }
-    fn parse_opt_block_arg(&mut self) {
-        todo!("parser.parse_opt_block_arg")
+    fn try_opt_block_arg(&mut self) {
+        todo!("parser.try_opt_block_arg")
     }
-    fn parse_args(&mut self) {
-        todo!("parser.parse_args")
+    fn try_args(&mut self) {
+        todo!("parser.try_args")
     }
     fn try_mrhs_arg(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_mrhs_arg")
@@ -371,190 +368,246 @@ where
     fn try_k_return(&mut self) -> Result<Token, ParseError> {
         todo!("parser.try_k_return")
     }
-    fn parse_then(&mut self) {
-        todo!("parser.parse_then")
+    fn try_do(&mut self) {
+        todo!("parser.try_do")
     }
-    fn parse_do(&mut self) {
-        todo!("parser.parse_do")
+    fn try_if_tail(&mut self) {
+        todo!("parser.try_if_tail")
     }
-    fn parse_if_tail(&mut self) {
-        todo!("parser.parse_if_tail")
+    fn try_for_var(&mut self) {
+        todo!("parser.try_for_var")
     }
-    fn parse_opt_else(&mut self) {
-        todo!("parser.parse_opt_else")
+    fn try_f_marg(&mut self) {
+        todo!("parser.try_f_marg")
     }
-    fn parse_for_var(&mut self) {
-        todo!("parser.parse_for_var")
+    fn try_f_marg_list(&mut self) {
+        todo!("parser.try_f_marg_list")
     }
-    fn parse_f_marg(&mut self) {
-        todo!("parser.parse_f_marg")
+    fn try_f_margs(&mut self) {
+        todo!("parser.try_f_margs")
     }
-    fn parse_f_marg_list(&mut self) {
-        todo!("parser.parse_f_marg_list")
+    fn try_f_rest_marg(&mut self) {
+        todo!("parser.try_f_rest_marg")
     }
-    fn parse_f_margs(&mut self) {
-        todo!("parser.parse_f_margs")
+    fn try_f_any_kwrest(&mut self) {
+        todo!("parser.try_f_any_kwrest")
     }
-    fn parse_f_rest_marg(&mut self) {
-        todo!("parser.parse_f_rest_marg")
+    fn try_f_eq(&mut self) {
+        todo!("parser.try_f_eq")
     }
-    fn parse_f_any_kwrest(&mut self) {
-        todo!("parser.parse_f_any_kwrest")
+    fn try_block_args_tail(&mut self) {
+        todo!("parser.try_block_args_tail")
     }
-    fn parse_f_eq(&mut self) {
-        todo!("parser.parse_f_eq")
+    fn try_opt_block_args_tail(&mut self) {
+        todo!("parser.try_opt_block_args_tail")
     }
-    fn parse_block_args_tail(&mut self) {
-        todo!("parser.parse_block_args_tail")
+    fn try_excessed_comma(&mut self) {
+        todo!("parser.try_excessed_comma")
     }
-    fn parse_opt_block_args_tail(&mut self) {
-        todo!("parser.parse_opt_block_args_tail")
+    fn try_block_param(&mut self) {
+        todo!("parser.try_block_param")
     }
-    fn parse_excessed_comma(&mut self) {
-        todo!("parser.parse_excessed_comma")
+    fn try_opt_block_param(&mut self) {
+        todo!("parser.try_opt_block_param")
     }
-    fn parse_block_param(&mut self) {
-        todo!("parser.parse_block_param")
+    fn try_block_param_def(&mut self) {
+        todo!("parser.try_block_param_def")
     }
-    fn parse_opt_block_param(&mut self) {
-        todo!("parser.parse_opt_block_param")
+    fn try_opt_bv_decl(&mut self) {
+        todo!("parser.try_opt_bv_decl")
     }
-    fn parse_block_param_def(&mut self) {
-        todo!("parser.parse_block_param_def")
+    fn try_bv_decls(&mut self) {
+        todo!("parser.try_bv_decls")
     }
-    fn parse_opt_bv_decl(&mut self) {
-        todo!("parser.parse_opt_bv_decl")
-    }
-    fn parse_bv_decls(&mut self) {
-        todo!("parser.parse_bv_decls")
-    }
-    fn parse_bvar(&mut self) {
-        todo!("parser.parse_bvar")
+    fn try_bvar(&mut self) {
+        todo!("parser.try_bvar")
     }
     fn try_lambda(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_lambda")
     }
-    fn parse_f_larglist(&mut self) {
-        todo!("parser.parse_f_larglist")
+    fn try_f_larglist(&mut self) {
+        todo!("parser.try_f_larglist")
     }
-    fn parse_lambda_body(&mut self) {
-        todo!("parser.parse_lambda_body")
+    fn try_lambda_body(&mut self) {
+        todo!("parser.try_lambda_body")
     }
-    fn parse_do_block(&mut self) {
-        todo!("parser.parse_do_block")
+    fn try_do_block(&mut self) {
+        todo!("parser.try_do_block")
     }
     fn try_block_call(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_block_call")
     }
     fn try_method_call(&mut self) -> Result<Box<Node>, ParseError> {
-        todo!("parser.try_method_call")
+        self.one_of("method call")
+            .or_else(|| {
+                let (fcall, paren_args) = self
+                    .all_of("fcall (args)")
+                    .and(|| self.try_fcall())
+                    .and(|| self.try_paren_args())
+                    .unwrap()?;
+                todo!("{:?} {:?}", fcall, paren_args)
+            })
+            .or_else(|| {
+                let (primary_value, lbrack_t, opt_call_args, rbrack_t) = self
+                    .all_of("primary [opt call args]")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.expect_token(TokenKind::tLBRACK))
+                    .and(|| self.try_opt_call_args())
+                    .and(|| self.try_rbracket())
+                    .unwrap()?;
+                todo!(
+                    "{:?} {:?} {:?} {:?}",
+                    primary_value,
+                    lbrack_t,
+                    opt_call_args,
+                    rbrack_t
+                )
+            })
+            .or_else(|| {
+                let (primary_value, call_t, paren_args) = self
+                    .all_of("primary call_op2 paren_args")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.try_call_op2())
+                    .and(|| self.try_paren_args())
+                    .unwrap()?;
+                todo!("{:?} {:?} {:?}", primary_value, call_t, paren_args)
+            })
+            .or_else(|| {
+                let (primary_value, call_t, op_t, opt_paren_args) = self
+                    .all_of("primary call_op2 operation2 opt_paren_args")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.try_call_op2())
+                    .and(|| self.try_operation2())
+                    .and(|| self.try_opt_paren_args())
+                    .unwrap()?;
+                todo!(
+                    "{:?} {:?} {:?} {:?}",
+                    primary_value,
+                    call_t,
+                    op_t,
+                    opt_paren_args
+                )
+            })
+            .or_else(|| {
+                let (super_t, paren_args) = self
+                    .all_of("super(args)")
+                    .and(|| self.try_token(TokenKind::kSUPER))
+                    .and(|| self.try_paren_args())
+                    .unwrap()?;
+                todo!("{:?} {:?}", super_t, paren_args)
+            })
+            .or_else(|| {
+                let super_t = self.try_token(TokenKind::kSUPER)?;
+                todo!("{:?}", super_t)
+            })
+            .unwrap()
     }
 
     // TODO: return ArgsType instead of ()
     fn try_brace_block(&mut self) -> Result<(Token, (), Option<Box<Node>>, Token), ParseError> {
         todo!("parser.try_brace_block")
     }
-    fn parse_do_body(&mut self) {
-        todo!("parser.parse_do_body")
+    fn try_do_body(&mut self) {
+        todo!("parser.try_do_body")
     }
-    fn parse_case_args(&mut self) {
-        todo!("parser.parse_case_args")
+    fn try_case_args(&mut self) {
+        todo!("parser.try_case_args")
     }
-    fn parse_case_body(&mut self) {
-        todo!("parser.parse_case_body")
+    fn try_case_body(&mut self) {
+        todo!("parser.try_case_body")
     }
-    fn parse_cases(&mut self) {
-        todo!("parser.parse_cases")
+    fn try_cases(&mut self) {
+        todo!("parser.try_cases")
     }
-    fn parse_p_case_body(&mut self) {
-        todo!("parser.parse_p_case_body")
+    fn try_p_case_body(&mut self) {
+        todo!("parser.try_p_case_body")
     }
-    fn parse_p_cases(&mut self) {
-        todo!("parser.parse_p_cases")
+    fn try_p_cases(&mut self) {
+        todo!("parser.try_p_cases")
     }
-    fn parse_p_top_expr(&mut self) {
-        todo!("parser.parse_p_top_expr")
+    fn try_p_top_expr(&mut self) {
+        todo!("parser.try_p_top_expr")
     }
     fn try_p_top_expr_body(&mut self) -> Result<Box<Node>, ParseError> {
         todo!("parser.try_p_top_expr_body")
     }
-    fn parse_p_expr(&mut self) {
-        todo!("parser.parse_p_expr")
+    fn try_p_expr(&mut self) {
+        todo!("parser.try_p_expr")
     }
-    fn parse_p_as(&mut self) {
-        todo!("parser.parse_p_as")
+    fn try_p_as(&mut self) {
+        todo!("parser.try_p_as")
     }
-    fn parse_p_alt(&mut self) {
-        todo!("parser.parse_p_alt")
+    fn try_p_alt(&mut self) {
+        todo!("parser.try_p_alt")
     }
-    fn parse_p_lparen(&mut self) {
-        todo!("parser.parse_p_lparen")
+    fn try_p_lparen(&mut self) {
+        todo!("parser.try_p_lparen")
     }
-    fn parse_p_lbracket(&mut self) {
-        todo!("parser.parse_p_lbracket")
+    fn try_p_lbracket(&mut self) {
+        todo!("parser.try_p_lbracket")
     }
-    fn parse_p_expr_basic(&mut self) {
-        todo!("parser.parse_p_expr_basic")
+    fn try_p_expr_basic(&mut self) {
+        todo!("parser.try_p_expr_basic")
     }
-    fn parse_p_args(&mut self) {
-        todo!("parser.parse_p_args")
+    fn try_p_args(&mut self) {
+        todo!("parser.try_p_args")
     }
-    fn parse_p_args_head(&mut self) {
-        todo!("parser.parse_p_args_head")
+    fn try_p_args_head(&mut self) {
+        todo!("parser.try_p_args_head")
     }
-    fn parse_p_args_tail(&mut self) {
-        todo!("parser.parse_p_args_tail")
+    fn try_p_args_tail(&mut self) {
+        todo!("parser.try_p_args_tail")
     }
-    fn parse_p_find(&mut self) {
-        todo!("parser.parse_p_find")
+    fn try_p_find(&mut self) {
+        todo!("parser.try_p_find")
     }
-    fn parse_p_rest(&mut self) {
-        todo!("parser.parse_p_rest")
+    fn try_p_rest(&mut self) {
+        todo!("parser.try_p_rest")
     }
-    fn parse_p_args_post(&mut self) {
-        todo!("parser.parse_p_args_post")
+    fn try_p_args_post(&mut self) {
+        todo!("parser.try_p_args_post")
     }
-    fn parse_p_arg(&mut self) {
-        todo!("parser.parse_p_arg")
+    fn try_p_arg(&mut self) {
+        todo!("parser.try_p_arg")
     }
-    fn parse_p_kwargs(&mut self) {
-        todo!("parser.parse_p_kwargs")
+    fn try_p_kwargs(&mut self) {
+        todo!("parser.try_p_kwargs")
     }
-    fn parse_p_kwarg(&mut self) {
-        todo!("parser.parse_p_kwarg")
+    fn try_p_kwarg(&mut self) {
+        todo!("parser.try_p_kwarg")
     }
-    fn parse_p_kw(&mut self) {
-        todo!("parser.parse_p_kw")
+    fn try_p_kw(&mut self) {
+        todo!("parser.try_p_kw")
     }
-    fn parse_p_kw_label(&mut self) {
-        todo!("parser.parse_p_kw_label")
+    fn try_p_kw_label(&mut self) {
+        todo!("parser.try_p_kw_label")
     }
-    fn parse_p_kwrest(&mut self) {
-        todo!("parser.parse_p_kwrest")
+    fn try_p_kwrest(&mut self) {
+        todo!("parser.try_p_kwrest")
     }
-    fn parse_p_kwnorest(&mut self) {
-        todo!("parser.parse_p_kwnorest")
+    fn try_p_kwnorest(&mut self) {
+        todo!("parser.try_p_kwnorest")
     }
-    fn parse_p_any_kwrest(&mut self) {
-        todo!("parser.parse_p_any_kwrest")
+    fn try_p_any_kwrest(&mut self) {
+        todo!("parser.try_p_any_kwrest")
     }
-    fn parse_p_value(&mut self) {
-        todo!("parser.parse_p_value")
+    fn try_p_value(&mut self) {
+        todo!("parser.try_p_value")
     }
-    fn parse_p_primitive(&mut self) {
-        todo!("parser.parse_p_primitive")
+    fn try_p_primitive(&mut self) {
+        todo!("parser.try_p_primitive")
     }
-    fn parse_p_variable(&mut self) {
-        todo!("parser.parse_p_variable")
+    fn try_p_variable(&mut self) {
+        todo!("parser.try_p_variable")
     }
-    fn parse_p_var_ref(&mut self) {
-        todo!("parser.parse_p_var_ref")
+    fn try_p_var_ref(&mut self) {
+        todo!("parser.try_p_var_ref")
     }
-    fn parse_p_expr_ref(&mut self) {
-        todo!("parser.parse_p_expr_ref")
+    fn try_p_expr_ref(&mut self) {
+        todo!("parser.try_p_expr_ref")
     }
-    fn parse_p_const(&mut self) {
-        todo!("parser.parse_p_const")
+    fn try_p_const(&mut self) {
+        todo!("parser.try_p_const")
     }
     fn try_literal(&mut self) -> Result<Box<Node>, ParseError> {
         self.one_of("literal")
@@ -562,8 +615,8 @@ where
             .or_else(|| self.try_symbol())
             .unwrap()
     }
-    fn parse_nonlocal_var(&mut self) {
-        todo!("parser.parse_nonlocal_var")
+    fn try_nonlocal_var(&mut self) {
+        todo!("parser.try_nonlocal_var")
     }
     fn try_user_variable(&mut self) -> Result<Box<Node>, ParseError> {
         self.one_of("user variable")
@@ -587,107 +640,107 @@ where
             .unwrap()
             .map(|node| Builder::<C>::assignable(node))
     }
-    fn parse_superclass(&mut self) {
-        todo!("parser.parse_superclass")
+    fn try_superclass(&mut self) {
+        todo!("parser.try_superclass")
     }
-    fn parse_f_opt_paren_args(&mut self) {
-        todo!("parser.parse_f_opt_paren_args")
+    fn try_f_opt_paren_args(&mut self) {
+        todo!("parser.try_f_opt_paren_args")
     }
-    fn parse_f_paren_args(&mut self) {
-        todo!("parser.parse_f_paren_args")
+    fn try_f_paren_args(&mut self) {
+        todo!("parser.try_f_paren_args")
     }
-    fn parse_f_arglist(&mut self) {
-        todo!("parser.parse_f_arglist")
+    fn try_f_arglist(&mut self) {
+        todo!("parser.try_f_arglist")
     }
-    fn parse_args_tail(&mut self) {
-        todo!("parser.parse_args_tail")
+    fn try_args_tail(&mut self) {
+        todo!("parser.try_args_tail")
     }
-    fn parse_opt_args_tail(&mut self) {
-        todo!("parser.parse_opt_args_tail")
+    fn try_opt_args_tail(&mut self) {
+        todo!("parser.try_opt_args_tail")
     }
-    fn parse_f_args(&mut self) {
-        todo!("parser.parse_f_args")
+    fn try_f_args(&mut self) {
+        todo!("parser.try_f_args")
     }
-    fn parse_args_forward(&mut self) {
-        todo!("parser.parse_args_forward")
+    fn try_args_forward(&mut self) {
+        todo!("parser.try_args_forward")
     }
-    fn parse_f_bad_arg(&mut self) {
-        todo!("parser.parse_f_bad_arg")
+    fn try_f_bad_arg(&mut self) {
+        todo!("parser.try_f_bad_arg")
     }
-    fn parse_f_norm_arg(&mut self) {
-        todo!("parser.parse_f_norm_arg")
+    fn try_f_norm_arg(&mut self) {
+        todo!("parser.try_f_norm_arg")
     }
-    fn parse_f_arg_asgn(&mut self) {
-        todo!("parser.parse_f_arg_asgn")
+    fn try_f_arg_asgn(&mut self) {
+        todo!("parser.try_f_arg_asgn")
     }
-    fn parse_f_arg_item(&mut self) {
-        todo!("parser.parse_f_arg_item")
+    fn try_f_arg_item(&mut self) {
+        todo!("parser.try_f_arg_item")
     }
-    fn parse_f_arg(&mut self) {
-        todo!("parser.parse_f_arg")
+    fn try_f_arg(&mut self) {
+        todo!("parser.try_f_arg")
     }
-    fn parse_f_label(&mut self) {
-        todo!("parser.parse_f_label")
+    fn try_f_label(&mut self) {
+        todo!("parser.try_f_label")
     }
-    fn parse_f_kw(&mut self) {
-        todo!("parser.parse_f_kw")
+    fn try_f_kw(&mut self) {
+        todo!("parser.try_f_kw")
     }
-    fn parse_f_block_kw(&mut self) {
-        todo!("parser.parse_f_block_kw")
+    fn try_f_block_kw(&mut self) {
+        todo!("parser.try_f_block_kw")
     }
-    fn parse_f_block_kwarg(&mut self) {
-        todo!("parser.parse_f_block_kwarg")
+    fn try_f_block_kwarg(&mut self) {
+        todo!("parser.try_f_block_kwarg")
     }
-    fn parse_f_kwarg(&mut self) {
-        todo!("parser.parse_f_kwarg")
+    fn try_f_kwarg(&mut self) {
+        todo!("parser.try_f_kwarg")
     }
-    fn parse_kwrest_mark(&mut self) {
-        todo!("parser.parse_kwrest_mark")
+    fn try_kwrest_mark(&mut self) {
+        todo!("parser.try_kwrest_mark")
     }
-    fn parse_f_no_kwarg(&mut self) {
-        todo!("parser.parse_f_no_kwarg")
+    fn try_f_no_kwarg(&mut self) {
+        todo!("parser.try_f_no_kwarg")
     }
-    fn parse_f_kwrest(&mut self) {
-        todo!("parser.parse_f_kwrest")
+    fn try_f_kwrest(&mut self) {
+        todo!("parser.try_f_kwrest")
     }
-    fn parse_f_opt(&mut self) {
-        todo!("parser.parse_f_opt")
+    fn try_f_opt(&mut self) {
+        todo!("parser.try_f_opt")
     }
-    fn parse_f_block_opt(&mut self) {
-        todo!("parser.parse_f_block_opt")
+    fn try_f_block_opt(&mut self) {
+        todo!("parser.try_f_block_opt")
     }
-    fn parse_f_block_optarg(&mut self) {
-        todo!("parser.parse_f_block_optarg")
+    fn try_f_block_optarg(&mut self) {
+        todo!("parser.try_f_block_optarg")
     }
-    fn parse_f_optarg(&mut self) {
-        todo!("parser.parse_f_optarg")
+    fn try_f_optarg(&mut self) {
+        todo!("parser.try_f_optarg")
     }
-    fn parse_restarg_mark(&mut self) {
-        todo!("parser.parse_restarg_mark")
+    fn try_restarg_mark(&mut self) {
+        todo!("parser.try_restarg_mark")
     }
-    fn parse_f_rest_arg(&mut self) {
-        todo!("parser.parse_f_rest_arg")
+    fn try_f_rest_arg(&mut self) {
+        todo!("parser.try_f_rest_arg")
     }
-    fn parse_blkarg_mark(&mut self) {
-        todo!("parser.parse_blkarg_mark")
+    fn try_blkarg_mark(&mut self) {
+        todo!("parser.try_blkarg_mark")
     }
-    fn parse_f_block_arg(&mut self) {
-        todo!("parser.parse_f_block_arg")
+    fn try_f_block_arg(&mut self) {
+        todo!("parser.try_f_block_arg")
     }
-    fn parse_opt_f_block_arg(&mut self) {
-        todo!("parser.parse_opt_f_block_arg")
+    fn try_opt_f_block_arg(&mut self) {
+        todo!("parser.try_opt_f_block_arg")
     }
-    fn parse_singleton(&mut self) {
-        todo!("parser.parse_singleton")
+    fn try_singleton(&mut self) {
+        todo!("parser.try_singleton")
     }
-    fn parse_assoc_list(&mut self) -> Vec<Box<Node>> {
-        todo!("parser.parse_assoc_list")
+    fn try_assoc_list(&mut self) -> Vec<Box<Node>> {
+        todo!("parser.try_assoc_list")
     }
-    fn parse_assocs(&mut self) {
-        todo!("parser.parse_assocs")
+    fn try_assocs(&mut self) {
+        todo!("parser.try_assocs")
     }
-    fn parse_assoc(&mut self) {
-        todo!("parser.parse_assoc")
+    fn try_assoc(&mut self) {
+        todo!("parser.try_assoc")
     }
     fn try_operation(&mut self) -> Result<Token, ParseError> {
         self.one_of("operation")
@@ -727,8 +780,8 @@ where
             .or_else(|| self.try_token(TokenKind::tCOLON2))
             .unwrap()
     }
-    fn parse_opt_terms(&mut self) {
-        self.parse_terms();
+    fn try_opt_terms(&mut self) {
+        self.try_terms();
     }
 
     #[allow(unused_must_use)]
@@ -781,7 +834,7 @@ where
             .or_else(|| self.try_token(TokenKind::tNL))
             .unwrap()
     }
-    fn parse_terms(&mut self) -> Vec<Token> {
+    fn try_terms(&mut self) -> Vec<Token> {
         let mut terms = vec![];
         if let Ok(term) = self.try_term() {
             terms.push(term)
