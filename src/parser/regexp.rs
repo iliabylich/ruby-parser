@@ -13,28 +13,31 @@ where
     C: Constructor,
 {
     pub(crate) fn try_regexp(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self
-            .one_of("regexp")
-            .or_else(|| self.try_token(TokenKind::tREGEXP_BEG))
-            .or_else(|| {
-                let token = self.read_div_as_heredoc_beg()?;
+        let (begin_t, contents, end_t) = self
+            .all_of("regexp")
+            .and(|| {
+                self.one_of("regexp")
+                    .or_else(|| self.try_token(TokenKind::tREGEXP_BEG))
+                    .or_else(|| {
+                        let token = self.read_div_as_heredoc_beg()?;
 
-                // now we need to manually push a xstring literal
-                // Lexer is not capable of doing it
-                self.lexer
-                    .string_literals()
-                    .push(StringLiteral::Regexp(Regexp::new(
-                        b'/',
-                        b'/',
-                        self.lexer.curly_nest(),
-                    )));
+                        // now we need to manually push a xstring literal
+                        // Lexer is not capable of doing it
+                        self.lexer
+                            .string_literals()
+                            .push(StringLiteral::Regexp(Regexp::new(
+                                b'/',
+                                b'/',
+                                self.lexer.curly_nest(),
+                            )));
 
-                Ok(token)
+                        Ok(token)
+                    })
+                    .unwrap()
             })
+            .and(|| self.try_regexp_contents())
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
-
-        let contents = self.try_regexp_contents()?;
-        let end_t = self.expect_token(TokenKind::tSTRING_END);
 
         let options = Builder::<C>::regexp_options(&end_t, self.buffer());
         Ok(Builder::<C>::regexp_compose(

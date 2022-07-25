@@ -80,17 +80,19 @@ where
         self.lexer.skip_token()
     }
 
-    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Token {
-        if self.current_token().is(expected) {
-            let token = self.current_token();
-            self.skip_token();
-            token
+    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Result<Token, ParseError> {
+        let token = self.current_token();
+        self.skip_token();
+
+        if token.is(expected) {
+            Ok(token)
         } else {
-            panic!(
-                "expected token {:?}, got {:?}",
+            Err(ParseError::TokenError {
+                lookahead: true,
                 expected,
-                self.current_token()
-            )
+                got: token.kind,
+                loc: token.loc,
+            })
         }
     }
 
@@ -803,8 +805,9 @@ where
     }
 
     fn try_colon2_const(&mut self) -> Result<(Token, Token), ParseError> {
-        let colon2_t = self.try_token(TokenKind::tCOLON2)?;
-        let const_t = self.expect_token(TokenKind::tCONSTANT);
-        Ok((colon2_t, const_t))
+        self.all_of("::CONST")
+            .and(|| self.try_token(TokenKind::tCOLON2))
+            .and(|| self.try_token(TokenKind::tCONSTANT))
+            .unwrap()
     }
 }

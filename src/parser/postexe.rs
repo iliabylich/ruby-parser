@@ -10,10 +10,14 @@ where
     C: Constructor,
 {
     pub(crate) fn try_postexe(&mut self) -> Result<Box<Node>, ParseError> {
-        let postexe_t = self.try_token(TokenKind::klEND)?;
-        let lcurly_t = self.expect_token(TokenKind::tLCURLY);
-        let compstmt = self.try_compstmt()?;
-        let rcurly_t = self.expect_token(TokenKind::tRCURLY);
+        let (postexe_t, lcurly_t, compstmt, rcurly_t) = self
+            .all_of("postexe")
+            .and(|| self.try_token(TokenKind::klEND))
+            .and(|| self.expect_token(TokenKind::tLCURLY))
+            .and(|| self.try_compstmt())
+            .and(|| self.expect_token(TokenKind::tRCURLY))
+            .unwrap()?;
+
         Ok(Builder::<C>::postexe(
             postexe_t, lcurly_t, compstmt, rcurly_t,
         ))

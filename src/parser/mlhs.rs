@@ -3,7 +3,7 @@ use crate::{
     nodes::Node,
     parser::Parser,
     token::{Token, TokenKind},
-    transactions::{ParseError, ParseResultApi},
+    transactions::{ParseError, ParseResultApi, StepData},
 };
 
 impl<C> Parser<C>
@@ -97,48 +97,53 @@ fn parse_mlhs_item<C: Constructor>(parser: &mut Parser<C>) -> Result<MlhsItem, P
     parser
         .one_of("mlhs item")
         .or_else(|| {
-            let lparen_t = parser.try_token(TokenKind::tLPAREN)?;
-            match parse_mlhs_internal(parser).ignore_lookaheads()? {
-                Some(MlhsInternal::DefinitelyMlhsNode(inner)) => {
-                    let rparen_t = parser.expect_token(TokenKind::tRPAREN);
-                    let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
-                    Ok(MlhsItem::DefinitelyMlhs(node))
-                }
-                Some(MlhsInternal::DefinitelyMlhsList { nodes, .. }) => {
-                    let rparen_t = parser.expect_token(TokenKind::tRPAREN);
-                    let node = Builder::<C>::begin(lparen_t, nodes, rparen_t);
-                    Ok(MlhsItem::DefinitelyMlhs(node))
-                }
-                Some(MlhsInternal::MaybeLhs(inner)) => {
-                    let rparen_t = parser.expect_token(TokenKind::tRPAREN);
-                    let node = Builder::<C>::begin(lparen_t, vec![*inner], rparen_t);
-                    Ok(MlhsItem::MaybeLhs(node))
-                }
-                Some(MlhsInternal::None) | None => Ok(MlhsItem::None),
+            let (lparen_t, statements, rparen_t) = parser
+                .all_of("( mlhs )")
+                .and(|| parser.try_token(TokenKind::tLPAREN))
+                .and(|| {
+                    parse_mlhs_internal(parser).map(|mlhs| match mlhs {
+                        MlhsInternal::DefinitelyMlhsNode(node) => vec![*node],
+                        MlhsInternal::DefinitelyMlhsList { nodes, .. } => nodes,
+                        MlhsInternal::MaybeLhs(node) => vec![*node],
+                        MlhsInternal::None => vec![],
+                    })
+                })
+                .and(|| parser.expect_token(TokenKind::tRPAREN))
+                .unwrap()?;
+
+            if statements.is_empty() {
+                Ok(MlhsItem::None)
+            } else {
+                let node = Builder::<C>::begin(lparen_t, statements, rparen_t);
+                Ok(MlhsItem::DefinitelyMlhs(node))
             }
         })
         .or_else(|| {
-            let star_t = parser.try_token(TokenKind::tSTAR)?;
-            match try_mlhs_primitive_item(parser).ignore_lookaheads()? {
-                Some(node) => {
-                    let node = Builder::<C>::splat(star_t, node);
-                    Ok(MlhsItem::DefinitelyMlhs(node))
-                }
-                None => match parser.current_token().kind {
-                    TokenKind::tCOMMA | TokenKind::tRPAREN => {
-                        let node = Builder::<C>::nameless_splat(star_t);
-                        Ok(MlhsItem::DefinitelyMlhs(node))
-                    }
-                    _ => Ok(MlhsItem::None),
-                },
+            let (star_t, value) = parser
+                .all_of("splat")
+                .and(|| parser.try_token(TokenKind::tSTAR))
+                .and(|| {
+                    parser
+                        .one_of("splat argument")
+                        .or_else(|| try_mlhs_primitive_item(parser).map(|v| Some(v)))
+                        .or_else(|| parser.try_token(TokenKind::tCOMMA).map(|_| None))
+                        .or_else(|| parser.try_token(TokenKind::tRPAREN).map(|_| None))
+                        .unwrap()
+                })
+                .unwrap()?;
+
+            if let Some(value) = value {
+                let node = Builder::<C>::splat(star_t, value);
+                Ok(MlhsItem::DefinitelyMlhs(node))
+            } else {
+                // nameless splat
+
+                // return back observed token
+                *parser.lexer.token_idx_mut() -= 1;
+
+                let node = Builder::<C>::nameless_splat(star_t);
+                Ok(MlhsItem::DefinitelyMlhs(node))
             }
-        })
-        .or_else(|| {
-            let a = match try_mlhs_primitive_item(parser).ignore_lookaheads()? {
-                Some(node) => Ok(MlhsItem::MaybeLhs(node)),
-                None => Ok(MlhsItem::None),
-            };
-            a
         })
         .unwrap()
 }
@@ -170,6 +175,17 @@ enum MlhsInternal {
     },
     MaybeLhs(Box<Node>),
     None,
+}
+
+impl From<MlhsInternal> for StepData {
+    fn from(mlhs: MlhsInternal) -> Self {
+        match mlhs {
+            MlhsInternal::DefinitelyMlhsNode(node) => StepData::from(node),
+            MlhsInternal::DefinitelyMlhsList { nodes, .. } => StepData::from(nodes),
+            MlhsInternal::MaybeLhs(node) => StepData::from(node),
+            MlhsInternal::None => StepData::None,
+        }
+    }
 }
 
 #[derive(Debug)]

@@ -100,9 +100,13 @@ struct CmdBraceBlock {
 fn try_cmd_brace_block<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> Result<CmdBraceBlock, ParseError> {
-    let begin_t = parser.try_token(TokenKind::tLCURLY)?;
-    let brace_body = parser.try_brace_body()?;
-    let end_t = parser.expect_token(TokenKind::tRCURLY);
+    let (begin_t, brace_body, end_t) = parser
+        .all_of("cmd brace block")
+        .and(|| parser.try_token(TokenKind::tLCURLY))
+        .and(|| parser.try_brace_body())
+        .and(|| parser.expect_token(TokenKind::tRCURLY))
+        .unwrap()?;
+
     Ok(CmdBraceBlock {
         begin_t,
         brace_body,

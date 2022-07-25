@@ -11,10 +11,14 @@ where
     C: Constructor,
 {
     pub(crate) fn try_symbols(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self.try_token(TokenKind::tSYMBOLS_BEG)?;
-        let word_list = parse_symbol_list(self)?;
-        let end_t = self.expect_token(TokenKind::tSTRING_END);
-        Ok(Builder::<C>::symbols_compose(begin_t, word_list, end_t))
+        let (begin_t, elements, end_t) = self
+            .all_of("symbols")
+            .and(|| self.try_token(TokenKind::tSYMBOLS_BEG))
+            .and(|| parse_symbol_list(self))
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
+            .unwrap()?;
+
+        Ok(Builder::<C>::symbols_compose(begin_t, elements, end_t))
     }
 }
 

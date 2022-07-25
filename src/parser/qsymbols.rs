@@ -11,9 +11,13 @@ where
     C: Constructor,
 {
     pub(crate) fn try_qsymbols(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self.try_token(TokenKind::tQSYMBOLS_BEG)?;
-        let word_list = self.parse_qsym_list();
-        let end_t = self.expect_token(TokenKind::tSTRING_END);
+        let (begin_t, word_list, end_t) = self
+            .all_of("qsymbols")
+            .and(|| self.try_token(TokenKind::tQSYMBOLS_BEG))
+            .and(|| Ok(self.parse_qsym_list()))
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
+            .unwrap()?;
+
         Ok(Builder::<C>::symbols_compose(begin_t, word_list, end_t))
     }
 

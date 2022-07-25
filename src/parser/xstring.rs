@@ -16,29 +16,31 @@ where
     C: Constructor,
 {
     pub(crate) fn try_xstring(&mut self) -> Result<Box<Node>, ParseError> {
-        let xstring_beg_t = self
-            .one_of("executable string begin")
-            .or_else(|| self.read_backtick_identifier_as_xstring_beg())
-            .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
+        let (begin_t, parts, end_t) = self
+            .all_of("xstring")
+            .and(|| {
+                self.one_of("executable string begin")
+                    .or_else(|| self.read_backtick_identifier_as_xstring_beg())
+                    .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
+                    .unwrap()
+                    .and_then(|tok| {
+                        // now we need to manually push a xstring literal
+                        // Lexer is not capable of doing it
+                        self.lexer
+                            .string_literals()
+                            .push(StringLiteral::StringInterp(StringInterp::new(
+                                Interpolation::new(self.lexer.curly_nest()),
+                                b'`',
+                                b'`',
+                            )));
+                        Ok(tok)
+                    })
+            })
+            .and(|| self.parse_xstring_contents())
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
-        // now we need to manually push a xstring literal
-        // Lexer is not capable of doing it
-        self.lexer
-            .string_literals()
-            .push(StringLiteral::StringInterp(StringInterp::new(
-                Interpolation::new(self.lexer.curly_nest()),
-                b'`',
-                b'`',
-            )));
-
-        let xstring_contents = self.parse_xstring_contents()?;
-        let string_end_t = self.expect_token(TokenKind::tSTRING_END);
-        Ok(Builder::<C>::xstring_compose(
-            xstring_beg_t,
-            xstring_contents,
-            string_end_t,
-        ))
+        Ok(Builder::<C>::xstring_compose(begin_t, parts, end_t))
     }
 
     // This rule can be `none`

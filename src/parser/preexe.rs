@@ -10,16 +10,15 @@ where
     C: Constructor,
 {
     pub(crate) fn try_preexe(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self.try_token(TokenKind::klBEGIN)?;
-        let lcurly_t = self.expect_token(TokenKind::tLCURLY);
-        let top_compstmt = self.try_top_compstmt()?;
-        let rcurly_t = self.expect_token(TokenKind::tRCURLY);
-        Ok(Builder::<C>::preexe(
-            begin_t,
-            lcurly_t,
-            top_compstmt,
-            rcurly_t,
-        ))
+        let (preexe_t, lcurly_t, body, rcurly_t) = self
+            .all_of("preexe")
+            .and(|| self.try_token(TokenKind::klBEGIN))
+            .and(|| self.expect_token(TokenKind::tLCURLY))
+            .and(|| self.try_top_compstmt())
+            .and(|| self.expect_token(TokenKind::tRCURLY))
+            .unwrap()?;
+
+        Ok(Builder::<C>::preexe(preexe_t, lcurly_t, body, rcurly_t))
     }
 }
 

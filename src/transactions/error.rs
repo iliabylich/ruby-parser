@@ -50,6 +50,14 @@ impl From<(Box<Node>, Box<Node>)> for StepData {
         Self::Nodes(vec![*a, *b])
     }
 }
+impl From<Option<Box<Node>>> for StepData {
+    fn from(maybe_node: Option<Box<Node>>) -> Self {
+        match maybe_node {
+            Some(node) => Self::from(node),
+            None => Self::None,
+        }
+    }
+}
 
 // is_lookahead
 impl ParseError {

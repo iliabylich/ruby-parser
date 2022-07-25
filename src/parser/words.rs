@@ -11,10 +11,14 @@ where
     C: Constructor,
 {
     pub(crate) fn try_words(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self.try_token(TokenKind::tWORDS_BEG)?;
-        let word_list = self.parse_word_list()?;
-        let end_t = self.expect_token(TokenKind::tSTRING_END);
-        Ok(Builder::<C>::words_compose(begin_t, word_list, end_t))
+        let (begin_t, elements, end_t) = self
+            .all_of("words")
+            .and(|| self.try_token(TokenKind::tWORDS_BEG))
+            .and(|| self.parse_word_list())
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
+            .unwrap()?;
+
+        Ok(Builder::<C>::words_compose(begin_t, elements, end_t))
     }
 
     // This rule can be `none

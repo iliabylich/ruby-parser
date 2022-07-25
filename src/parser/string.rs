@@ -43,20 +43,24 @@ where
     }
 
     fn try_string1(&mut self) -> Result<Box<Node>, ParseError> {
-        let string_beg_t = self
-            .one_of("string begin")
-            .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
-            .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
-            .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
+        let (begin_t, parts, end_t) = self
+            .all_of("string1")
+            .and(|| {
+                self.one_of("string begin")
+                    .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
+                    .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
+                    .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
+                    .unwrap()
+            })
+            .and(|| self.parse_string_contents())
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
-        let string_contents = self.parse_string_contents()?;
-        let string_end_t = self.expect_token(TokenKind::tSTRING_END);
         // TODO: dedent_heredoc
         Ok(Builder::<C>::string_compose(
-            Some(string_beg_t),
-            string_contents,
-            Some(string_end_t),
+            Some(begin_t),
+            parts,
+            Some(end_t),
         ))
     }
 

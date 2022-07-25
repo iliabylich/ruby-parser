@@ -685,13 +685,13 @@ impl<C: Constructor> Builder<C> {
     // BEGIN, END
     pub(crate) fn preexe(
         preexe_t: Token,
-        lbrace_t: Token,
+        lcurly_t: Token,
         body: Option<Box<Node>>,
-        rbrace_t: Token,
+        rcurly_t: Token,
     ) -> Box<Node> {
         let keyword_l = preexe_t.loc;
-        let begin_l = lbrace_t.loc;
-        let end_l = rbrace_t.loc;
+        let begin_l = lcurly_t.loc;
+        let end_l = rcurly_t.loc;
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Preexe(Preexe {
@@ -704,13 +704,13 @@ impl<C: Constructor> Builder<C> {
     }
     pub(crate) fn postexe(
         postexe_t: Token,
-        lbrace_t: Token,
+        lcurly_t: Token,
         body: Option<Box<Node>>,
-        rbrace_t: Token,
+        rcurly_t: Token,
     ) -> Box<Node> {
         let keyword_l = postexe_t.loc;
-        let begin_l = lbrace_t.loc;
-        let end_l = rbrace_t.loc;
+        let begin_l = lcurly_t.loc;
+        let end_l = rcurly_t.loc;
         let expression_l = keyword_l.join(&end_l);
 
         Box::new(Node::Postexe(Postexe {

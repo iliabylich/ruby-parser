@@ -11,9 +11,13 @@ where
     C: Constructor,
 {
     pub(crate) fn try_qwords(&mut self) -> Result<Box<Node>, ParseError> {
-        let begin_t = self.try_token(TokenKind::tQWORDS_BEG)?;
-        let word_list = self.parse_qword_list();
-        let end_t = self.expect_token(TokenKind::tSTRING_END);
+        let (begin_t, word_list, end_t) = self
+            .all_of("qwords")
+            .and(|| self.try_token(TokenKind::tQWORDS_BEG))
+            .and(|| Ok(self.parse_qword_list()))
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
+            .unwrap()?;
+
         Ok(Builder::<C>::words_compose(begin_t, word_list, end_t))
     }
 

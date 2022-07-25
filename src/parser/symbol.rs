@@ -32,24 +32,28 @@ where
                 Ok(Builder::<C>::symbol(colon_t, sym_t, self.buffer()))
             })
             .or_else(|| {
-                let symbeg_t = self.try_token(TokenKind::tSYMBEG)?;
-                let contents = self.parse_string_contents()?;
-                let string_end_t = self.expect_token(TokenKind::tSTRING_END);
-                Ok(Builder::<C>::symbol_compose(
-                    symbeg_t,
-                    contents,
-                    string_end_t,
-                ))
+                let (begin_t, parts, end_t) = self
+                    .all_of("dynamic symbol value")
+                    .and(|| self.try_token(TokenKind::tSYMBEG))
+                    .and(|| self.parse_string_contents())
+                    .and(|| self.expect_token(TokenKind::tSTRING_END))
+                    .unwrap()?;
+
+                Ok(Builder::<C>::symbol_compose(begin_t, parts, end_t))
             })
             .compact()
             .unwrap()
     }
 
     fn try_dsym(&mut self) -> Result<Box<Node>, ParseError> {
-        let symbeg_t = self.try_token(TokenKind::tDSYMBEG)?;
-        let contents = self.parse_string_contents()?;
-        let string_end_t = self.expect_token(TokenKind::tSTRING_END);
-        let node = Builder::<C>::symbol_compose(symbeg_t, contents, string_end_t);
+        let (begin_t, parts, end_t) = self
+            .all_of("dynamic symbol")
+            .and(|| self.try_token(TokenKind::tDSYMBEG))
+            .and(|| self.parse_string_contents())
+            .and(|| self.expect_token(TokenKind::tSTRING_END))
+            .unwrap()?;
+
+        let node = Builder::<C>::symbol_compose(begin_t, parts, end_t);
         Ok(node)
     }
 }
@@ -91,7 +95,8 @@ mod tests {
             "
 ONEOF (1) static symbol
     TOKEN (1) expected tCOLON, got tEOF (at 0)
-    TOKEN (1) expected tSYMBEG, got tEOF (at 0)
+    SEQUENCE (1) dynamic symbol value (got [])
+        TOKEN (1) expected tSYMBEG, got tEOF (at 0)
 "
         );
         assert_eq!(parser.lexer.buffer().pos(), 0);
