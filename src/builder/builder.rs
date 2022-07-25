@@ -561,7 +561,114 @@ impl<C: Constructor> Builder<C> {
 
     // Assignments
     pub(crate) fn assignable(node: Box<Node>) -> Box<Node> {
-        todo!("builder.assignable")
+        let node = match *node {
+            Node::Cvar(Cvar { name, expression_l }) => Node::Cvasgn(Cvasgn {
+                name,
+                value: None,
+                name_l: expression_l,
+                operator_l: None,
+                expression_l,
+            }),
+            Node::Ivar(Ivar { name, expression_l }) => Node::Ivasgn(Ivasgn {
+                name,
+                value: None,
+                name_l: expression_l,
+                operator_l: None,
+                expression_l,
+            }),
+            Node::Gvar(Gvar { name, expression_l }) => Node::Gvasgn(Gvasgn {
+                name,
+                value: None,
+                name_l: expression_l,
+                operator_l: None,
+                expression_l,
+            }),
+            Node::Const(Const {
+                scope,
+                name,
+                double_colon_l,
+                name_l,
+                expression_l,
+            }) => {
+                // TODO: check dynamic constant assignment
+                Node::Casgn(Casgn {
+                    scope,
+                    name,
+                    value: None,
+                    double_colon_l,
+                    name_l,
+                    operator_l: None,
+                    expression_l,
+                })
+            }
+            Node::Lvar(Lvar { name, expression_l }) => {
+                // TODO: check assignment to numparam
+                // TODO: check if name is reserved for numparam
+
+                // TODO: save `name` as local variable
+
+                Node::Lvasgn(Lvasgn {
+                    name,
+                    value: None,
+                    name_l: expression_l,
+                    operator_l: None,
+                    expression_l,
+                })
+            }
+            Node::MatchVar(MatchVar {
+                name,
+                name_l,
+                expression_l,
+            }) => {
+                // TODO: check assignment to numparam
+                // TODO: check if name is reserved for numparam
+
+                Node::MatchVar(MatchVar {
+                    name,
+                    name_l,
+                    expression_l,
+                })
+            }
+            node @ Node::Self_(Self_ { .. }) => {
+                // TODO: report assignment to `self`
+                node
+            }
+            node @ Node::Nil(Nil { .. }) => {
+                // TODO: report assignment to `nil`
+                node
+            }
+            node @ Node::True(True { .. }) => {
+                // TODO: report assignment to `true`
+                node
+            }
+            node @ Node::False(False { .. }) => {
+                // TODO: report assignment to `false`
+                node
+            }
+            node @ Node::File(File { .. }) => {
+                // TODO: report assignment to `__FILE__`
+                node
+            }
+            node @ Node::Line(Line { .. }) => {
+                // TODO: report assignment to `__LINE__`
+                node
+            }
+            node @ Node::Encoding(Encoding { .. }) => {
+                // TODO: report assignment to `__ENCODING__`
+                node
+            }
+            node @ Node::BackRef(BackRef { .. }) => {
+                // TODO: report assignment to back ref
+                node
+            }
+            node @ Node::NthRef(NthRef { .. }) => {
+                // TODO: report assignment to nth ref
+                node
+            }
+            other => unreachable!("{:?} can't be used in assignment", other),
+        };
+
+        Box::new(node)
     }
 
     pub(crate) fn const_op_assignable(node: Box<Node>) -> Box<Node> {
