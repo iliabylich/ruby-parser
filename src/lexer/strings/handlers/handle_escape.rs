@@ -12,7 +12,7 @@ use crate::{
             handlers::handle_processed_string_content,
         },
     },
-    loc::loc,
+    loc::{loc, Loc},
     token::{token, TokenValue},
 };
 
@@ -28,14 +28,21 @@ pub(crate) fn handle_escape(
         handle_processed_string_content(buffer.for_lookahead(), start, buffer.pos())?;
     }
 
-    match Escape::lookahead(buffer.for_lookahead(), buffer.pos()) {
+    let lookahead_start = buffer.pos();
+    match Escape::lookahead(buffer.for_lookahead_mut(), lookahead_start) {
         Ok(None) => {
             return ControlFlow::Continue(());
         }
 
         Ok(Some(escape)) => match escape {
-            Escape::SlashU(SlashU::Wide { codepoints, length }) => {
-                escape_content = TokenValue::from(codepoints);
+            Escape::SlashU(SlashU::Wide {
+                escaped_loc,
+                length,
+            }) => {
+                escape_content = TokenValue::UnescapedChars {
+                    loc: escaped_loc,
+                    buffer: buffer.for_lookahead(),
+                };
                 escape_length = length;
             }
             Escape::SlashU(SlashU::Short { codepoint, length }) => {
@@ -54,25 +61,27 @@ pub(crate) fn handle_escape(
         Err(err) => {
             // in case of error:
             // 1. record all valid codepoints (if any)
-            let valid_codepoints;
+            let escaped_loc;
 
             match &err {
                 EscapeError::SlashUError(SlashUError {
-                    codepoints: Some(captured_codepoints),
-                    ..
-                }) => {
-                    valid_codepoints = captured_codepoints.clone();
+                    escaped_loc: loc, ..
+                }) if !loc.is_empty() => {
+                    escaped_loc = *loc;
                 }
-                _ => valid_codepoints = vec![],
+                _ => escaped_loc = Loc { start: 0, end: 0 },
             }
 
             match &err {
                 EscapeError::SlashUError(SlashUError {
-                    codepoints,
+                    escaped_loc,
                     errors,
                     length,
                 }) => {
-                    eprintln!("Got \\u errors: {:?} {:?} {:?}", codepoints, errors, length);
+                    eprintln!(
+                        "Got \\u errors: {:?} {:?} {:?}",
+                        escaped_loc, errors, length
+                    );
                     for error in errors {
                         match error {
                             SlashUPerCodepointError::Expected4Got { start, length } => {
@@ -102,7 +111,10 @@ pub(crate) fn handle_escape(
             }
             // 2. TODO: report `err`
 
-            escape_content = TokenValue::from(valid_codepoints);
+            escape_content = TokenValue::UnescapedChars {
+                loc: escaped_loc,
+                buffer: buffer.for_lookahead(),
+            };
 
             escape_length = match err {
                 EscapeError::SlashUError(SlashUError { length, .. })

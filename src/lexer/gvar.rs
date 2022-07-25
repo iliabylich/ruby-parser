@@ -137,7 +137,8 @@ impl Lookahead for Gvar {
 
 impl Gvar {
     pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
-        let token = match Gvar::lookahead(buffer.for_lookahead(), buffer.pos()) {
+        let start = buffer.pos();
+        let token = match Gvar::lookahead(buffer.for_lookahead(), start) {
             Ok(Gvar { token }) => token,
             Err(GvarError::InvalidVarName(token)) => {
                 // TODO: report __invalid__ ivar/cvar name

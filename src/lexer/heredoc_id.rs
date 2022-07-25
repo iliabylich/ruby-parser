@@ -123,7 +123,8 @@ impl Lookahead for HeredocId {
 
 impl HeredocId {
     pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Option<Self> {
-        let heredoc_id = Self::lookahead(buffer.for_lookahead(), buffer.pos());
+        let start = buffer.pos();
+        let heredoc_id = Self::lookahead(buffer.for_lookahead(), start);
         match heredoc_id {
             Ok(heredoc_id) => {
                 let heredoc_id = heredoc_id?;

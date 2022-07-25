@@ -4,23 +4,20 @@ use short::{CodepointShort, CodepointShortError};
 mod wide;
 use wide::{CodepointWide, CodepointWideError};
 
-use crate::lexer::buffer::{scan_while_matches_pattern, Buffer, Lookahead, LookaheadResult};
+use crate::{
+    lexer::buffer::{scan_while_matches_pattern, Buffer, Lookahead, LookaheadResult},
+    Loc,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) enum SlashU {
-    Short {
-        codepoint: char,
-        length: usize,
-    },
-    Wide {
-        codepoints: Vec<char>,
-        length: usize,
-    },
+    Short { codepoint: char, length: usize },
+    Wide { escaped_loc: Loc, length: usize },
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashUError {
-    pub(crate) codepoints: Option<Vec<char>>,
+    pub(crate) escaped_loc: Loc,
     pub(crate) errors: Vec<SlashUPerCodepointError>,
     pub(crate) length: usize,
 }
@@ -33,10 +30,11 @@ pub(crate) enum SlashUPerCodepointError {
     NoRCurly { start: usize },
 }
 
-impl Lookahead for SlashU {
-    type Output = Result<Option<Self>, SlashUError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl SlashU {
+    pub(crate) fn lookahead(
+        buffer: &mut Buffer,
+        start: usize,
+    ) -> Result<Option<Self>, SlashUError> {
         if buffer.byte_at(start) != Some(b'\\') || buffer.byte_at(start + 1) != Some(b'u') {
             return Ok(None);
         }
@@ -52,7 +50,8 @@ impl Lookahead for SlashU {
         let mut errors = vec![];
 
         if wide {
-            let mut codepoints = vec![];
+            let mut escaped_loc = Loc { start: 0, end: 0 };
+
             loop {
                 if let LookaheadResult::Some { length } =
                     scan_while_matches_pattern!(buffer, pos, b' ' | b'\t')
@@ -66,10 +65,7 @@ impl Lookahead for SlashU {
                         break;
                     }
                     Ok(CodepointWide { length }) => {
-                        read_codepoint_to(
-                            buffer.slice(pos, pos + length).expect("bug"),
-                            &mut codepoints,
-                        );
+                        read_codepoint_wide(buffer, pos, pos + length, &mut escaped_loc);
                         pos += length;
                     }
                     Err(CodepointWideError::NonHexErr { length }) => {
@@ -92,17 +88,12 @@ impl Lookahead for SlashU {
 
             if errors.is_empty() {
                 return Ok(Some(SlashU::Wide {
-                    codepoints,
+                    escaped_loc,
                     length: pos - start,
                 }));
             } else {
-                let codepoints = if codepoints.is_empty() {
-                    None
-                } else {
-                    Some(codepoints)
-                };
                 return Err(SlashUError {
-                    codepoints,
+                    escaped_loc,
                     errors,
                     length: pos - start,
                 });
@@ -113,7 +104,8 @@ impl Lookahead for SlashU {
                 Ok(CodepointShort { length }) => {
                     debug_assert_eq!(length, 4);
 
-                    let codepoint = read_codepoint(buffer.slice(pos, pos + length).expect("bug"));
+                    let codepoint =
+                        read_codepoint_short(buffer.slice(pos, pos + length).expect("bug"));
                     pos += length;
 
                     return Ok(Some(SlashU::Short {
@@ -126,7 +118,7 @@ impl Lookahead for SlashU {
                     pos += length;
 
                     return Err(SlashUError {
-                        codepoints: None,
+                        escaped_loc: Loc { start: 0, end: 0 },
                         errors,
                         length: pos - start,
                     });
@@ -136,15 +128,29 @@ impl Lookahead for SlashU {
     }
 }
 
-fn read_codepoint(hex_bytes: &[u8]) -> char {
+fn read_codepoint_short(hex_bytes: &[u8]) -> char {
     let s = std::str::from_utf8(hex_bytes).unwrap();
     let codepoint = u32::from_str_radix(s, 16).unwrap();
     char::from_u32(codepoint).unwrap()
 }
 
-fn read_codepoint_to(hex_bytes: &[u8], dest: &mut Vec<char>) {
-    let c = read_codepoint(hex_bytes);
-    dest.push(c);
+fn read_codepoint_wide(buffer: &mut Buffer, start: usize, end: usize, escaped_loc: &mut Loc) {
+    let hex_bytes = buffer.slice(start, end).expect("bug");
+    let s = std::str::from_utf8(hex_bytes).unwrap();
+    let codepoint = u32::from_str_radix(s, 16).unwrap();
+    let c = char::from_u32(codepoint).unwrap();
+    let s = String::from(c);
+    let mut bytes = s.into_bytes();
+
+    let start = buffer.unescaped_len();
+    buffer.append_unesscaped(&mut bytes);
+    let end = buffer.unescaped_len();
+
+    if escaped_loc.is_empty() {
+        *escaped_loc = Loc { start, end }
+    } else {
+        escaped_loc.end = end;
+    }
 }
 
 #[cfg(test)]

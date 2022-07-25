@@ -80,7 +80,8 @@ impl Lookahead for AtMark {
 
 impl AtMark {
     pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
-        let token = match AtMark::lookahead(buffer.for_lookahead(), buffer.pos()) {
+        let start = buffer.pos();
+        let token = match AtMark::lookahead(buffer.for_lookahead(), start) {
             Ok(AtMark { token }) => token,
             Err(AtMarkError::InvalidVarName(token)) => {
                 // TODO: report __invalid__ ivar/cvar name

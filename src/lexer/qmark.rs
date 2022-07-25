@@ -16,10 +16,8 @@ pub(crate) struct QMark {
     token: Token,
 }
 
-impl Lookahead for QMark {
-    type Output = Self;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl QMark {
+    pub(crate) fn lookahead(buffer: &mut Buffer, start: usize) -> Self {
         match buffer.byte_at(start + 1) {
             Some(byte) => {
                 if (byte.is_ascii_alphanumeric() || byte == b'_')
@@ -41,10 +39,13 @@ impl Lookahead for QMark {
                         Ok(Some(escape)) => match escape {
                             // single char `?f` syntax doesn't support wide \u escapes
                             // because they may have multiple codepoints
-                            Escape::SlashU(SlashU::Wide { codepoints, length }) => {
+                            Escape::SlashU(SlashU::Wide {
+                                escaped_loc,
+                                length,
+                            }) => {
                                 panic!(
                                     "wide codepoint in ?\\u syntax: {:?}, {}",
-                                    codepoints, length
+                                    escaped_loc, length
                                 );
                             }
 
@@ -68,13 +69,13 @@ impl Lookahead for QMark {
                         },
                         Err(err) => match err {
                             EscapeError::SlashUError(SlashUError {
-                                codepoints,
+                                escaped_loc,
                                 errors,
                                 length,
                             }) => {
                                 panic!(
                                     "SlashUError {:?} / {:?} / {:?}",
-                                    codepoints, errors, length
+                                    escaped_loc, errors, length
                                 );
                             }
                             EscapeError::SlashXError(SlashXError { length }) => {
@@ -115,7 +116,8 @@ impl Lookahead for QMark {
 
 impl QMark {
     pub(crate) fn parse(buffer: &mut BufferWithCursor) -> Token {
-        let QMark { token } = QMark::lookahead(buffer.for_lookahead(), buffer.pos());
+        let start = buffer.pos();
+        let QMark { token } = QMark::lookahead(buffer.for_lookahead_mut(), start);
         buffer.set_pos(token.loc.end);
         token
     }
