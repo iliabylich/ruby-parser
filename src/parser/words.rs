@@ -1,8 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
-    lexer::strings::{literal::StringLiteral, types::Regexp},
     parser::{ParseError, Parser},
-    token::{Token, TokenKind},
+    token::TokenKind,
     Node,
 };
 
@@ -14,7 +13,7 @@ where
         let (begin_t, elements, end_t) = self
             .all_of("words")
             .and(|| self.try_token(TokenKind::tWORDS_BEG))
-            .and(|| self.parse_word_list())
+            .and(|| self.try_word_list())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -22,7 +21,7 @@ where
     }
 
     // This rule can be `none
-    fn parse_word_list(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_word_list(&mut self) -> Result<Vec<Node>, ParseError> {
         let mut result = vec![];
         while let Some(word) = self.try_word()? {
             result.push(*word)
@@ -31,7 +30,7 @@ where
     }
 
     pub(crate) fn try_word(&mut self) -> Result<Option<Box<Node>>, ParseError> {
-        let mut contents = self.parse_string_contents()?;
+        let contents = self.try_string_contents()?;
         if contents.is_empty() {
             Ok(None)
         } else {
@@ -42,7 +41,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{loc::loc, parser::ParseError, string_content::StringContent, Node, RustParser};
+    use crate::{parser::ParseError, RustParser};
 
     #[test]
     fn test_words() {

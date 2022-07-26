@@ -1,8 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
-    lexer::strings::{literal::StringLiteral, types::Regexp},
     parser::{ParseError, Parser},
-    token::{Token, TokenKind},
+    token::TokenKind,
     Node,
 };
 
@@ -14,7 +13,7 @@ where
         let (begin_t, word_list, end_t) = self
             .all_of("qsymbols")
             .and(|| self.try_token(TokenKind::tQSYMBOLS_BEG))
-            .and(|| Ok(self.parse_qsym_list()))
+            .and(|| Ok(self.try_qsym_list()))
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -22,7 +21,7 @@ where
     }
 
     // This rule can be `None`
-    fn parse_qsym_list(&mut self) -> Vec<Node> {
+    fn try_qsym_list(&mut self) -> Vec<Node> {
         let mut result = vec![];
         loop {
             if self.current_token().is(TokenKind::tSTRING_CONTENT) {
@@ -40,7 +39,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{loc::loc, parser::ParseError, string_content::StringContent, Node, RustParser};
+    use crate::{parser::ParseError, RustParser};
 
     #[test]
     fn test_qsymbols() {

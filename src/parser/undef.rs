@@ -11,11 +11,11 @@ where
 {
     pub(crate) fn try_undef(&mut self) -> Result<Box<Node>, ParseError> {
         let undef_t = self.try_token(TokenKind::kUNDEF)?;
-        let names = self.parse_names()?;
+        let names = self.try_names()?;
         Ok(Builder::<C>::undef(undef_t, names))
     }
 
-    fn parse_names(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_names(&mut self) -> Result<Vec<Node>, ParseError> {
         let mut names = vec![];
 
         let fitem = self.try_fitem()?;

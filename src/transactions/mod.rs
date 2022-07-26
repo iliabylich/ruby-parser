@@ -1,4 +1,4 @@
-use crate::{builder::Constructor, lexer::Checkpoint, parser::Parser, token::TokenKind};
+use crate::{builder::Constructor, parser::Parser};
 
 mod error;
 pub(crate) use error::{ParseError, StepData};

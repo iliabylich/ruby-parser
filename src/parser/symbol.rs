@@ -35,7 +35,7 @@ where
                 let (begin_t, parts, end_t) = self
                     .all_of("dynamic symbol value")
                     .and(|| self.try_token(TokenKind::tSYMBEG))
-                    .and(|| self.parse_string_contents())
+                    .and(|| self.try_string_contents())
                     .and(|| self.expect_token(TokenKind::tSTRING_END))
                     .unwrap()?;
 
@@ -49,7 +49,7 @@ where
         let (begin_t, parts, end_t) = self
             .all_of("dynamic symbol")
             .and(|| self.try_token(TokenKind::tDSYMBEG))
-            .and(|| self.parse_string_contents())
+            .and(|| self.try_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -61,7 +61,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::{
-        loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent, token::TokenKind,
+        loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent,
         transactions::assert_err_eq, Node, RustParser,
     };
 

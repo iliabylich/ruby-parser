@@ -1,5 +1,5 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Constructor,
     parser::{ParseError, ParseResultApi, Parser},
     token::TokenKind,
     Node,

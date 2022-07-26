@@ -36,7 +36,7 @@ where
                         Ok(tok)
                     })
             })
-            .and(|| self.parse_xstring_contents())
+            .and(|| self.try_xstring_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -44,8 +44,8 @@ where
     }
 
     // This rule can be `none`
-    fn parse_xstring_contents(&mut self) -> Result<Vec<Node>, ParseError> {
-        self.parse_string_contents()
+    fn try_xstring_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+        self.try_string_contents()
     }
 
     fn read_backtick_identifier_as_xstring_beg(&mut self) -> Result<Token, ParseError> {

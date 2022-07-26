@@ -47,7 +47,7 @@ where
 
     // This rule can be `none`
     fn try_regexp_contents(&mut self) -> Result<Vec<Node>, ParseError> {
-        self.parse_string_contents()
+        self.try_string_contents()
     }
 
     fn read_div_as_heredoc_beg(&mut self) -> Result<Token, ParseError> {

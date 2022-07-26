@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{mlhs, ParseError, ParseResultApi, Parser},
+    parser::{ParseError, Parser},
     token::TokenKind,
     Node, Token,
 };
@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     pub(crate) fn try_top_compstmt(&mut self) -> Result<Option<Box<Node>>, ParseError> {
-        let top_stmts = self.parse_top_stmts();
+        let top_stmts = self.try_top_stmts();
         self.try_opt_terms();
         if top_stmts.is_empty() {
             Ok(None)
@@ -20,7 +20,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_top_stmts(&mut self) -> Vec<Node> {
+    pub(crate) fn try_top_stmts(&mut self) -> Vec<Node> {
         let mut top_stmts = vec![];
         while let Ok(top_stmt) = self.try_top_stmt() {
             top_stmts.push(*top_stmt);
@@ -49,7 +49,7 @@ where
     }
 
     pub(crate) fn try_compstmt(&mut self) -> Result<Option<Box<Node>>, ParseError> {
-        let stmts = self.parse_stmts();
+        let stmts = self.try_stmts();
         self.try_opt_terms();
         if stmts.is_empty() {
             Ok(None)
@@ -59,7 +59,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_stmts(&mut self) -> Vec<Node> {
+    pub(crate) fn try_stmts(&mut self) -> Vec<Node> {
         let mut stmts = vec![];
         while let Ok(stmt) = self.try_stmt() {
             stmts.push(*stmt);
@@ -176,7 +176,7 @@ where
     fn try_mass_assignment(&mut self) -> Result<Box<Node>, ParseError> {
         let (mlhs, eql_t, rhs) = self
             .all_of("mass-assignment")
-            .and(|| self.parse_mlhs())
+            .and(|| self.try_mlhs())
             .and(|| self.expect_token(TokenKind::tEQL))
             .and(|| {
                 self.one_of("mass-assginemtn rhs")
@@ -190,8 +190,8 @@ where
                                     .or_else(|| self.rescue_stmt().map(|data| Some(data)))
                                     .or_else(|| Ok(None))
                                     .unwrap()?;
-                                let node: Box<Node> = todo!("{:?}", maybe_rescut_stmt);
-                                Ok(node)
+                                #[allow(unreachable_code)]
+                                Ok(todo!("{:?}", maybe_rescut_stmt) as Box<Node>)
                             })
                             .unwrap()
                             .map(|(value, rescue)| todo!("{:?} {:?}", value, rescue))

@@ -1,16 +1,12 @@
 use crate::{
-    builder::{Builder, Constructor},
-    nodes::Node,
-    parser::Parser,
-    token::{self, Token, TokenKind},
-    transactions::{ParseError, ParseResultApi, StepData},
+    builder::Constructor, nodes::Node, parser::Parser, token::TokenKind, transactions::ParseError,
 };
 
 impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn parse_mlhs(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_mlhs(&mut self) -> Result<Box<Node>, ParseError> {
         self.one_of("mlhs")
             .or_else(|| self.try_mlhs_basic())
             .or_else(|| {
@@ -19,7 +15,9 @@ where
                     .and(|| self.try_mlhs_inner())
                     .and(|| self.try_rparen())
                     .unwrap()
-                    .map(|(lparen_t, exprs, rparen_t)| todo!())
+                    .map(|(lparen_t, exprs, rparen_t)| {
+                        todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
+                    })
             })
             .unwrap()
     }
@@ -33,7 +31,9 @@ where
                     .and(|| self.try_mlhs_inner())
                     .and(|| self.try_rparen())
                     .unwrap()
-                    .map(|(lparen_t, exprs, rparen_t)| todo!())
+                    .map(|(lparen_t, exprs, rparen_t)| {
+                        todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
+                    })
             })
             .unwrap()
     }
@@ -101,14 +101,7 @@ where
     }
 
     fn try_mlhs_head(&mut self) -> Result<Vec<Node>, ParseError> {
-        let build_steps = |head: Vec<Node>, commas: Vec<Token>| {
-            let mut steps = vec![];
-            steps.extend(head.into_iter().map(|node| StepData::from(Box::new(node))));
-            steps.extend(commas.into_iter().map(|token| StepData::from(token)));
-            steps
-        };
-
-        let parse_item_and_comma = |parser: &mut Parser<C>| {
+        let try_item_and_comma = |parser: &mut Parser<C>| {
             parser
                 .all_of("mlhs item and comma")
                 .and(|| parser.try_mlhs_item())
@@ -118,12 +111,12 @@ where
 
         let mut head = vec![];
         let mut commas = vec![];
-        let (item, comma) = parse_item_and_comma(self)?;
+        let (item, comma) = try_item_and_comma(self)?;
         head.push(*item);
         commas.push(comma);
 
         loop {
-            let item_and_comma = parse_item_and_comma(self);
+            let item_and_comma = try_item_and_comma(self);
 
             match item_and_comma {
                 Ok((item, comma)) => {
@@ -138,13 +131,6 @@ where
     }
 
     fn try_mlhs_post(&mut self) -> Result<Vec<Node>, ParseError> {
-        let build_steps = |post: Vec<Node>, commas: Vec<Token>| {
-            let mut steps = vec![];
-            steps.extend(post.into_iter().map(|node| StepData::from(Box::new(node))));
-            steps.extend(commas.into_iter().map(|token| StepData::from(token)));
-            steps
-        };
-
         let mut post = vec![];
         let mut commas = vec![];
         let item = self.try_mlhs_item()?;
@@ -162,7 +148,7 @@ where
                     post.push(*item);
                     commas.push(comma);
                 }
-                Err(error) => break,
+                Err(_) => break,
             }
         }
 
@@ -202,42 +188,34 @@ where
 }
 
 #[cfg(test)]
-use crate::{loc::loc, parser::RustParser, string_content::StringContent};
+use crate::parser::RustParser;
 
 #[test]
 fn test_lhs_user_variable() {
-    use crate::nodes::Lvar;
-
     let mut parser = RustParser::new(b"a, b");
-    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
+    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
 fn test_lhs_parenthesized() {
-    use crate::nodes::{Begin, Lvar};
-
     let mut parser = RustParser::new(b"((a))");
-    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
+    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
 fn test_mlhs_without_parens() {
-    use crate::nodes::{Begin, Lvar, Splat};
-
     let mut parser = RustParser::new(b"a, *b, c");
-    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
+    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
 fn test_mlhs_with_parens() {
-    use crate::nodes::{Begin, Gvar, Ivar, Lvar, Splat};
-
     let mut parser = RustParser::new(b"((*a), $x, @c)");
-    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()));
+    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
 }
 
 #[test]
 fn test_nameless_splat() {
     let mut parser = RustParser::new(b"*");
-    assert_eq!(parser.parse_mlhs(), Err(ParseError::empty()))
+    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()))
 }

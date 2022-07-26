@@ -90,12 +90,14 @@ impl Loc {
         self.start == self.end
     }
 
-    pub(crate) fn start_line_col(&self, input: &Buffer) -> Option<(usize, usize)> {
+    #[allow(dead_code)]
+    pub(crate) fn start_line_col(&self, _input: &Buffer) -> Option<(usize, usize)> {
         todo!("loc.start_line_col")
         // input.line_col_for_pos(self.start)
     }
 
-    pub(crate) fn expand_to_line(&self, input: &Buffer) -> Option<(usize, Loc)> {
+    #[allow(dead_code)]
+    pub(crate) fn expand_to_line(&self, _input: &Buffer) -> Option<(usize, Loc)> {
         todo!("loc.expand_to_line")
         // let (start_line, _) = self.start_line_col(input)?;
         // let line_no = start_line;
@@ -104,12 +106,13 @@ impl Loc {
     }
 
     /// Returns source code of the current `Loc` on a given `Input`
-    pub fn source(&self, input: &Buffer) -> Option<String> {
+    pub fn source(&self, _input: &Buffer) -> Option<String> {
         todo!("loc.source")
         // let bytes = input.substr_at(self.start, self.end)?;
         // Some(String::from_utf8_lossy(bytes).into_owned())
     }
 
+    #[allow(dead_code)]
     pub(crate) fn print(&self, name: &str) {
         println!(
             "{}{} {}",

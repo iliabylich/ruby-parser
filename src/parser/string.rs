@@ -52,7 +52,7 @@ where
                     .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
                     .unwrap()
             })
-            .and(|| self.parse_string_contents())
+            .and(|| self.try_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -65,7 +65,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn parse_string_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+    pub(crate) fn try_string_contents(&mut self) -> Result<Vec<Node>, ParseError> {
         let mut strings = vec![];
         loop {
             if self.current_token().is(TokenKind::tSTRING_END) {

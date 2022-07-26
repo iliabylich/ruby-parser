@@ -10,13 +10,13 @@ impl<C: Constructor> Parser<C> {
         let (alias_t, (lhs, rhs)) = self
             .all_of("alias statement")
             .and(|| self.try_token(TokenKind::kALIAS))
-            .and(|| parse_alias_args(self))
+            .and(|| try_alias_args(self))
             .unwrap()?;
         Ok(Builder::<C>::alias(alias_t, lhs, rhs))
     }
 }
 
-fn parse_alias_args<C: Constructor>(
+fn try_alias_args<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> Result<(Box<Node>, Box<Node>), ParseError> {
     parser

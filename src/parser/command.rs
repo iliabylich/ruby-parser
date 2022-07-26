@@ -1,5 +1,5 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Constructor,
     parser::{ParseError, Parser},
     token::{Token, TokenKind},
     Node,
@@ -10,8 +10,6 @@ where
     C: Constructor,
 {
     pub(crate) fn try_command(&mut self) -> Result<Box<Node>, ParseError> {
-        let checkpoint = self.new_checkpoint();
-
         let maybe_call_with_command_args: Result<Box<Node>, _> = self
             .one_of("maybe command call with command args")
             .or_else(|| {

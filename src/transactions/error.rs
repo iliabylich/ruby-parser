@@ -99,6 +99,7 @@ impl ParseError {
 
 // empty
 impl ParseError {
+    #[cfg(test)]
     pub(crate) fn empty() -> Self {
         Self::OneOfError {
             name: "(empty)",
@@ -124,10 +125,10 @@ impl ParseError {
         }
     }
 
-    pub(crate) fn into_required(mut self) -> Self {
-        self.make_required();
-        self
-    }
+    // pub(crate) fn into_required(mut self) -> Self {
+    //     self.make_required();
+    //     self
+    // }
 }
 
 // weight

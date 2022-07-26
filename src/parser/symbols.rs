@@ -1,8 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
-    lexer::strings::{literal::StringLiteral, types::Regexp},
     parser::{ParseError, Parser},
-    token::{Token, TokenKind},
+    token::TokenKind,
     Node,
 };
 
@@ -14,7 +13,7 @@ where
         let (begin_t, elements, end_t) = self
             .all_of("symbols")
             .and(|| self.try_token(TokenKind::tSYMBOLS_BEG))
-            .and(|| parse_symbol_list(self))
+            .and(|| try_symbol_list(self))
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -23,7 +22,7 @@ where
 }
 
 // This rule can be `none`
-fn parse_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>, ParseError> {
+fn try_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>, ParseError> {
     let mut result = vec![];
     while let Some(word) = parser.try_word()? {
         result.push(*word);
@@ -33,7 +32,7 @@ fn parse_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>
 
 #[cfg(test)]
 mod tests {
-    use crate::{loc::loc, parser::ParseError, string_content::StringContent, Node, RustParser};
+    use crate::{parser::ParseError, RustParser};
 
     #[test]
     fn test_symbols() {

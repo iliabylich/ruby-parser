@@ -76,6 +76,7 @@ pub(crate) trait HasStateRef {
 }
 macro_rules! generate_state_ref_delegation {
     ($for:tt) => {
+        #[allow(dead_code)]
         impl $for {
             pub(crate) fn buffer(&self) -> &'static mut crate::lexer::buffer::BufferWithCursor {
                 self.state_ref().buffer()
