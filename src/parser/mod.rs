@@ -314,9 +314,6 @@ where
     fn try_k_begin(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_begin")
     }
-    fn try_k_for(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_for")
-    }
     fn try_k_class(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_class")
     }
@@ -355,9 +352,6 @@ where
     }
     fn try_do(&mut self) {
         todo!("parser.try_do")
-    }
-    fn try_for_var(&mut self) {
-        todo!("parser.try_for_var")
     }
     fn try_f_marg(&mut self) {
         todo!("parser.try_f_marg")
