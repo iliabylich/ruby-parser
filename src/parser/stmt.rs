@@ -1,7 +1,8 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseResult, Parser},
+    parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
+    transactions::StepData,
     Node, Token,
 };
 
@@ -10,8 +11,12 @@ where
     C: Constructor,
 {
     pub(crate) fn try_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
-        let top_stmts = self.try_top_stmts();
-        self.try_opt_terms();
+        let (top_stmts, _opt_terms) = self
+            .all_of("top_compstmt")
+            .and(|| self.try_top_stmts())
+            .and(|| self.try_opt_terms())
+            .unwrap()?;
+
         if top_stmts.is_empty() {
             Ok(None)
         } else {
@@ -20,12 +25,28 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn try_top_stmts(&mut self) -> Vec<Node> {
+    pub(crate) fn try_top_stmts(&mut self) -> ParseResult<Vec<Node>> {
         let mut top_stmts = vec![];
-        while let Ok(top_stmt) = self.try_top_stmt() {
-            top_stmts.push(*top_stmt);
+        loop {
+            match self.try_top_stmt() {
+                Ok(top_stmt) => top_stmts.push(*top_stmt),
+                Err(error) => {
+                    if error.is_lookahead() {
+                        break;
+                    }
+
+                    return Err(ParseError::SeqError {
+                        name: "top stmts",
+                        steps: top_stmts
+                            .into_iter()
+                            .map(|top_stmt| StepData::from(Box::new(top_stmt)))
+                            .collect::<Vec<_>>(),
+                        error: Box::new(error),
+                    });
+                }
+            }
         }
-        top_stmts
+        Ok(top_stmts)
     }
 
     pub(crate) fn try_top_stmt(&mut self) -> ParseResult<Box<Node>> {
@@ -49,8 +70,11 @@ where
     }
 
     pub(crate) fn try_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
-        let stmts = self.try_stmts();
-        self.try_opt_terms();
+        let (stmts, _opt_terms) = self
+            .all_of("compstmt")
+            .and(|| self.try_stmts())
+            .and(|| self.try_opt_terms())
+            .unwrap()?;
         if stmts.is_empty() {
             Ok(None)
         } else {
@@ -59,7 +83,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn try_stmts(&mut self) -> Vec<Node> {
+    pub(crate) fn try_stmts(&mut self) -> ParseResult<Vec<Node>> {
         let mut stmts = vec![];
         while let Ok(stmt) = self.try_stmt() {
             stmts.push(*stmt);
@@ -68,7 +92,7 @@ where
         if let Ok(begin_block) = self.try_preexe() {
             stmts.push(*begin_block);
         }
-        stmts
+        Ok(stmts)
     }
 
     pub(crate) fn try_stmt(&mut self) -> ParseResult<Box<Node>> {

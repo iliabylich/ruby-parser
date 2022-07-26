@@ -733,7 +733,7 @@ where
     fn try_singleton(&mut self) {
         todo!("parser.try_singleton")
     }
-    fn try_assoc_list(&mut self) -> Vec<Box<Node>> {
+    fn try_assoc_list(&mut self) -> ParseResult<Vec<Box<Node>>> {
         todo!("parser.try_assoc_list")
     }
     fn try_assocs(&mut self) {
@@ -780,8 +780,8 @@ where
             .or_else(|| self.try_token(TokenKind::tCOLON2))
             .unwrap()
     }
-    fn try_opt_terms(&mut self) {
-        self.try_terms();
+    fn try_opt_terms(&mut self) -> ParseResult<Vec<Token>> {
+        self.try_terms()
     }
 
     #[allow(unused_must_use)]
@@ -834,17 +834,15 @@ where
             .or_else(|| self.try_token(TokenKind::tNL))
             .unwrap()
     }
-    fn try_terms(&mut self) -> Vec<Token> {
+    fn try_terms(&mut self) -> ParseResult<Vec<Token>> {
         let mut terms = vec![];
         if let Ok(term) = self.try_term() {
             terms.push(term)
         } else {
-            return vec![];
+            return Ok(vec![]);
         }
         loop {
-            if self.current_token().is(TokenKind::tSEMI) {
-                self.skip_token();
-            } else {
+            if let Err(_) = self.try_token(TokenKind::tSEMI) {
                 break;
             }
 
@@ -854,7 +852,7 @@ where
                 break;
             }
         }
-        terms
+        Ok(terms)
     }
 
     fn try_colon2_const(&mut self) -> ParseResult<(Token, Token)> {

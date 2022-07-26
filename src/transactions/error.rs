@@ -28,6 +28,7 @@ pub(crate) enum StepData {
     Token(Token),
     Node(Box<Node>),
     Nodes(Vec<Node>),
+    Tokens(Vec<Token>),
     None,
 }
 impl From<Token> for StepData {
@@ -56,6 +57,11 @@ impl From<Option<Box<Node>>> for StepData {
             Some(node) => Self::from(node),
             None => Self::None,
         }
+    }
+}
+impl From<Vec<Token>> for StepData {
+    fn from(tokens: Vec<Token>) -> Self {
+        Self::Tokens(tokens)
     }
 }
 

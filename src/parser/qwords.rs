@@ -13,7 +13,7 @@ where
         let (begin_t, word_list, end_t) = self
             .all_of("qwords")
             .and(|| self.try_token(TokenKind::tQWORDS_BEG))
-            .and(|| Ok(self.try_qword_list()))
+            .and(|| self.try_qword_list())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .unwrap()?;
 
@@ -21,19 +21,17 @@ where
     }
 
     // This rule can be `None`
-    fn try_qword_list(&mut self) -> Vec<Node> {
+    fn try_qword_list(&mut self) -> ParseResult<Vec<Node>> {
         let mut result = vec![];
         loop {
-            if self.current_token().is(TokenKind::tSTRING_CONTENT) {
-                let string_t = self.current_token();
-                self.skip_token();
+            if let Ok(string_t) = self.try_token(TokenKind::tSTRING_CONTENT) {
                 let node = Builder::<C>::string_internal(string_t, self.buffer());
                 result.push(*node);
             } else {
                 break;
             }
         }
-        result
+        Ok(result)
     }
 }
 
