@@ -174,9 +174,6 @@ where
     fn try_cname(&mut self) {
         todo!("parser.try_cname")
     }
-    fn try_cpath(&mut self) {
-        todo!("parser.try_cpath")
-    }
     fn try_fname(&mut self) -> ParseResult<Token> {
         self.one_of("fname")
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
@@ -313,12 +310,6 @@ where
     }
     fn try_k_begin(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_begin")
-    }
-    fn try_k_class(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_class")
-    }
-    fn try_k_module(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_module")
     }
     fn try_k_def(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_def")
@@ -613,9 +604,6 @@ where
             .or_else(|| self.try_keyword_variable())
             .unwrap()
             .map(|node| Builder::<C>::assignable(node))
-    }
-    fn try_superclass(&mut self) {
-        todo!("parser.try_superclass")
     }
     fn try_f_opt_paren_args(&mut self) {
         todo!("parser.try_f_opt_paren_args")
