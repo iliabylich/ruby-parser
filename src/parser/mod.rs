@@ -152,7 +152,28 @@ where
     }
 
     fn try_block_command(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_block_command")
+        let (block_call, maybe_args) = self
+            .all_of("block command")
+            .and(|| self.try_block_call())
+            .and(|| {
+                self.one_of("block call arguments")
+                    .or_else(|| {
+                        let a = self
+                            .all_of("required block call arguments")
+                            .and(|| self.try_call_op2())
+                            .and(|| self.try_operation2())
+                            .and(|| self.try_command_args())
+                            .unwrap()
+                            .map(|values| Some(values))?;
+
+                        Ok(a)
+                    })
+                    .or_else(|| Ok(None))
+                    .unwrap()
+            })
+            .unwrap()?;
+
+        panic!("{:?} {:?}", block_call, maybe_args)
     }
 
     fn try_cmd_brace_block(&mut self) {
@@ -397,11 +418,37 @@ where
     fn try_lambda_body(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_lambda_body")
     }
-    fn try_do_block(&mut self) {
+    fn try_do_block(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_do_block")
     }
     fn try_block_call(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_block_call")
+        let (head, tail) = self
+            .all_of("block_call")
+            .and(|| self.try_block_call_head())
+            .and(|| {
+                self.one_of("block call tail")
+                    .or_else(|| self.try_block_call_tail().map(|value| Some(value)))
+                    .or_else(|| Ok(None))
+                    .unwrap()
+            })
+            .unwrap()?;
+
+        todo!("{:?} {:?}", head, tail)
+    }
+    fn try_block_call_head(&mut self) -> ParseResult<Box<Node>> {
+        let (command, do_block) = self
+            .all_of("command do_block")
+            .and(|| self.try_command())
+            .and(|| self.try_do_block())
+            .unwrap()?;
+
+        todo!("{:?} {:?}", command, do_block)
+    }
+    fn try_block_call_tail(&mut self) -> ParseResult<Box<Node>> {
+        // | call_op2 operation2 opt_paren_args
+        // | call_op2 operation2 opt_paren_args brace_block
+        // | call_op2 operation2 command_args do_block
+        todo!("try_block_call_tail")
     }
     fn try_method_call(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("method call")

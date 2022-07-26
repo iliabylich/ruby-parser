@@ -104,6 +104,34 @@ where
         ])
     }
 }
+// Option<tuple> as Mixed variant
+impl<A, B> From<Option<(A, B)>> for StepData
+where
+    StepData: From<A>,
+    StepData: From<B>,
+{
+    fn from(data: Option<(A, B)>) -> Self {
+        if let Some((a, b)) = data {
+            Self::from((a, b))
+        } else {
+            Self::Mixed(vec![])
+        }
+    }
+}
+impl<A, B, C> From<Option<(A, B, C)>> for StepData
+where
+    StepData: From<A>,
+    StepData: From<B>,
+    StepData: From<C>,
+{
+    fn from(data: Option<(A, B, C)>) -> Self {
+        if let Some((a, b, c)) = data {
+            Self::from((a, b, c))
+        } else {
+            Self::Mixed(vec![])
+        }
+    }
+}
 
 // is_lookahead
 impl ParseError {
