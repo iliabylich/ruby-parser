@@ -22,7 +22,7 @@ where
                 self.one_of("executable string begin")
                     .or_else(|| self.read_backtick_identifier_as_xstring_beg())
                     .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
-                    .unwrap()
+                    .stop()
                     .and_then(|tok| {
                         // now we need to manually push a xstring literal
                         // Lexer is not capable of doing it
@@ -38,7 +38,7 @@ where
             })
             .and(|| self.try_xstring_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::xstring_compose(begin_t, parts, end_t))
     }

@@ -19,7 +19,7 @@ where
                     .and(|| self.try_opt_terms())
                     .and(|| self.try_case_body())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?}",
@@ -37,7 +37,7 @@ where
                     .and(|| self.try_opt_terms())
                     .and(|| self.try_case_body())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!("{:?} {:?} {:?} {:?}", case_t, _opt_terms, body, end_t)
             })
@@ -49,7 +49,7 @@ where
                     .and(|| self.try_opt_terms())
                     .and(|| self.try_p_case_body())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?}",
@@ -60,7 +60,7 @@ where
                     end_t
                 )
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_case_args(&mut self) {

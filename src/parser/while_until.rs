@@ -16,7 +16,7 @@ where
             .and(|| self.try_expr_value_do())
             .and(|| self.try_compstmt())
             .and(|| self.try_k_end())
-            .unwrap()?;
+            .stop()?;
 
         todo!(
             "{:?} {:?} {:?} {:?}",
@@ -34,7 +34,7 @@ where
             .and(|| self.try_expr_value_do())
             .and(|| self.try_compstmt())
             .and(|| self.try_k_end())
-            .unwrap()?;
+            .stop()?;
 
         todo!(
             "{:?} {:?} {:?} {:?}",

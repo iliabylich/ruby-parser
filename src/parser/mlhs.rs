@@ -17,12 +17,12 @@ where
                     .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.try_mlhs_inner())
                     .and(|| self.try_rparen())
-                    .unwrap()
+                    .stop()
                     .map(|(lparen_t, exprs, rparen_t)| {
                         todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
                     })
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_mlhs_inner(&mut self) -> ParseResult<Box<Node>> {
@@ -33,12 +33,12 @@ where
                     .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.try_mlhs_inner())
                     .and(|| self.try_rparen())
-                    .unwrap()
+                    .stop()
                     .map(|(lparen_t, exprs, rparen_t)| {
                         todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
                     })
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_mlhs_basic(&mut self) -> ParseResult<Box<Node>> {
@@ -51,13 +51,13 @@ where
                             .or_else(|| self.try_mlhs_item().map(|node| Some(node)))
                             .or_else(|| self.try_mlhs_tail().map(|node| Some(node)))
                             .or_else(|| Ok(None))
-                            .unwrap()
+                            .stop()
                     })
-                    .unwrap()
+                    .stop()
                     .map(|(head, tail)| panic!("{:?} {:?}", head, tail))
             })
             .or_else(|| self.try_mlhs_tail())
-            .unwrap()
+            .stop()
     }
 
     fn try_mlhs_tail(&mut self) -> ParseResult<Box<Node>> {
@@ -68,7 +68,7 @@ where
                 self.one_of("splat argument")
                     .or_else(|| self.try_mlhs_node().map(|node| Some(node)))
                     .or_else(|| Ok(None))
-                    .unwrap()
+                    .stop()
             })
             .and(|| {
                 let maybe_splat: Option<Box<Node>> = self
@@ -77,15 +77,15 @@ where
                         self.all_of("comma -> mlhs post")
                             .and(|| self.try_token(TokenKind::tCOMMA))
                             .and(|| self.try_mlhs_post())
-                            .unwrap()
+                            .stop()
                             .map(|(star_t, maybe_arg)| todo!("{:?} {:?}", star_t, maybe_arg))
                     })
                     .or_else(|| Ok(None))
-                    .unwrap()?;
+                    .stop()?;
 
                 Ok(maybe_splat)
             })
-            .unwrap()?;
+            .stop()?;
 
         todo!("{:?} {:?} {:?}", star_t, maybe_splat_arg, maybe_post)
     }
@@ -99,10 +99,10 @@ where
                     .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.try_mlhs_inner())
                     .and(|| self.try_rparen())
-                    .unwrap()?;
+                    .stop()?;
                 todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_mlhs_head(&mut self) -> ParseResult<Vec<Node>> {
@@ -111,7 +111,7 @@ where
                 .all_of("mlhs item and comma")
                 .and(|| parser.try_mlhs_item())
                 .and(|| parser.try_token(TokenKind::tCOMMA))
-                .unwrap()
+                .stop()
         };
 
         let mut head = vec![];
@@ -146,7 +146,7 @@ where
                 .all_of("comma and mlhs item")
                 .and(|| self.try_token(TokenKind::tCOMMA))
                 .and(|| self.try_mlhs_item())
-                .unwrap();
+                .stop();
 
             match comma_and_item {
                 Ok((comma, item)) => {
@@ -175,7 +175,7 @@ where
                     .and(|| self.try_primary_value())
                     .and(|| self.try_call_op())
                     .and(|| self.try_const_or_identifier())
-                    .unwrap()?;
+                    .stop()?;
 
                 panic!(
                     "primary_value call_op tIDENT {:?} {:?} {:?}",
@@ -188,14 +188,14 @@ where
                     .and(|| self.try_primary_value())
                     .and(|| self.expect_token(TokenKind::tCOLON2))
                     .and(|| self.try_const_or_identifier())
-                    .unwrap()?;
+                    .stop()?;
 
                 panic!(
                     "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
                     primary_value, colon2_t, const_t
                 )
             })
-            .unwrap()
+            .stop()
     }
 }
 

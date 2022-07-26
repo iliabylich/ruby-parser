@@ -13,7 +13,7 @@ where
         self.all_of("opt else")
             .and(|| self.try_token(TokenKind::kELSE))
             .and(|| self.try_compstmt())
-            .unwrap()
+            .stop()
     }
 }
 

@@ -48,7 +48,7 @@ where
         self.one_of("const or identifier")
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
-            .unwrap()
+            .stop()
     }
 }
 

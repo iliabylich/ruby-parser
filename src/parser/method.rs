@@ -18,7 +18,7 @@ where
                     .and(|| self.try_f_arglist())
                     .and(|| self.try_bodystmt())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!("{:?} {:?} {:?} {:?} {:?}", def_t, name_t, args, body, end_t)
             })
@@ -29,7 +29,7 @@ where
                     .and(|| self.try_f_arglist())
                     .and(|| self.try_bodystmt())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",
@@ -42,14 +42,14 @@ where
                     end_t
                 )
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_defn_head(&mut self) -> ParseResult<(Token, Token)> {
         self.all_of("instance method definition start")
             .and(|| self.try_k_def())
             .and(|| self.try_def_name())
-            .unwrap()
+            .stop()
     }
 
     fn try_defs_head(&mut self) -> ParseResult<(Token, Box<Node>, Token, Token)> {
@@ -58,7 +58,7 @@ where
             .and(|| self.try_singleton())
             .and(|| self.try_dot_or_colon())
             .and(|| self.try_def_name())
-            .unwrap()
+            .stop()
     }
 
     fn try_k_def(&mut self) -> ParseResult<Token> {
@@ -78,9 +78,9 @@ where
                     .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.try_expr())
                     .and(|| self.try_rparen())
-                    .unwrap()?;
+                    .stop()?;
                 todo!("{:?} {:?} {:?}", lparen_t, expr, rparen_t)
             })
-            .unwrap()
+            .stop()
     }
 }

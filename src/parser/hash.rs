@@ -15,7 +15,7 @@ where
             .and(|| self.try_token(TokenKind::tLCURLY))
             .and(|| self.try_assoc_list())
             .and(|| self.expect_token(TokenKind::tRCURLY))
-            .unwrap()?;
+            .stop()?;
 
         todo!("hash {:?} {:?} {:?}", lcurly_t, assoc_list, rcurly_t);
     }

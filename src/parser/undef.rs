@@ -15,7 +15,7 @@ where
             .all_of("undef ...")
             .and(|| self.try_token(TokenKind::kUNDEF))
             .and(|| self.try_names())
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::undef(undef_t, names))
     }

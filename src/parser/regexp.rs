@@ -33,11 +33,11 @@ where
 
                         Ok(token)
                     })
-                    .unwrap()
+                    .stop()
             })
             .and(|| self.try_regexp_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .unwrap()?;
+            .stop()?;
 
         let options = Builder::<C>::regexp_options(&end_t, self.buffer());
         Ok(Builder::<C>::regexp_compose(

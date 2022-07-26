@@ -16,7 +16,7 @@ where
             .and(|| self.try_cpath())
             .and(|| self.try_bodystmt())
             .and(|| self.try_k_end())
-            .unwrap()?;
+            .stop()?;
 
         todo!("{:?} {:?} {:?} {:?}", module_t, cpath, body, end_t)
     }

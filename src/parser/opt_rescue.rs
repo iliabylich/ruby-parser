@@ -33,10 +33,10 @@ where
                     .all_of("term then")
                     .and(|| self.try_term())
                     .and(|| self.try_token(TokenKind::kTHEN))
-                    .unwrap()?;
+                    .stop()?;
                 Ok(then_t)
             })
-            .unwrap()
+            .stop()
     }
 
     pub(crate) fn try_lhs(&mut self) -> ParseResult<Box<Node>> {
@@ -54,14 +54,14 @@ where
                     .and(|| self.try_primary_value())
                     .and(|| self.try_call_op2())
                     .and(|| self.try_const_or_identifier())
-                    .unwrap()?;
+                    .stop()?;
 
                 panic!(
                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                     primary_value, op_t, id_t
                 )
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_arg_value(&mut self) -> ParseResult<Box<Node>> {
@@ -80,10 +80,10 @@ fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<No
                 .one_of("optional then")
                 .or_else(|| parser.try_then().map(|tok| Some(tok)))
                 .or_else(|| Ok(None))
-                .unwrap()
+                .stop()
         })
         .and(|| parser.try_compstmt())
-        .unwrap()?;
+        .stop()?;
 
     Ok(Builder::<C>::rescue_body(
         rescue_t, exc_list, exc_var, then, compstmt,
@@ -95,7 +95,7 @@ fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<Node>
         .one_of("exceptions list")
         .or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
-        .unwrap()
+        .stop()
 }
 fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Option<(Token, Box<Node>)>> {
     parser
@@ -105,11 +105,11 @@ fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Option<(To
                 .all_of("exc var")
                 .and(|| parser.try_token(TokenKind::tASSOC))
                 .and(|| parser.try_lhs())
-                .unwrap()?;
+                .stop()?;
             Ok(Some((assoc_t, lhs)))
         })
         .or_else(|| Ok(None))
-        .unwrap()
+        .stop()
 }
 
 #[cfg(test)]

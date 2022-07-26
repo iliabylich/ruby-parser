@@ -11,7 +11,7 @@ impl<C: Constructor> Parser<C> {
             .all_of("alias statement")
             .and(|| self.try_token(TokenKind::kALIAS))
             .and(|| try_alias_args(self))
-            .unwrap()?;
+            .stop()?;
         Ok(Builder::<C>::alias(alias_t, lhs, rhs))
     }
 }
@@ -23,7 +23,7 @@ fn try_alias_args<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<No
         .or_else(|| try_gvar_gvar(parser))
         .required()
         .compact()
-        .unwrap()
+        .stop()
 }
 
 fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
@@ -31,7 +31,7 @@ fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<N
         .all_of("fitem -> fitem")
         .and(|| parser.try_fitem())
         .and(|| parser.try_fitem())
-        .unwrap()
+        .stop()
 }
 
 fn try_gvar_gvar<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
@@ -45,9 +45,9 @@ fn try_gvar_gvar<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Nod
                 .or_else(|| parser.try_back_ref())
                 .or_else(|| parser.try_nth_ref())
                 .required()
-                .unwrap()
+                .stop()
         })
-        .unwrap()
+        .stop()
 }
 
 #[cfg(test)]

@@ -18,7 +18,7 @@ where
             .or_else(|| self.try__file__())
             .or_else(|| self.try__line__())
             .or_else(|| self.try__encoding__())
-            .unwrap()
+            .stop()
     }
 
     pub(crate) fn try_nil(&mut self) -> ParseResult<Box<Node>> {

@@ -148,7 +148,7 @@ where
         self.one_of("command call")
             .or_else(|| self.try_command())
             .or_else(|| self.try_block_command())
-            .unwrap()
+            .stop()
     }
 
     fn try_block_command(&mut self) -> ParseResult<Box<Node>> {
@@ -163,15 +163,15 @@ where
                             .and(|| self.try_call_op2())
                             .and(|| self.try_operation2())
                             .and(|| self.try_command_args())
-                            .unwrap()
+                            .stop()
                             .map(|values| Some(values))?;
 
                         Ok(a)
                     })
                     .or_else(|| Ok(None))
-                    .unwrap()
+                    .stop()
             })
-            .unwrap()?;
+            .stop()?;
 
         panic!("{:?} {:?}", block_call, maybe_args)
     }
@@ -194,7 +194,7 @@ where
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
             .or_else(|| self.try_reswords())
-            .unwrap()
+            .stop()
     }
     fn try_fitem(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("fitem")
@@ -203,7 +203,7 @@ where
                     .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
             })
             .or_else(|| self.try_symbol())
-            .unwrap()
+            .stop()
     }
 
     fn try_op(&mut self) -> ParseResult<Token> {
@@ -238,7 +238,7 @@ where
             .or_else(|| self.try_token(TokenKind::tAREF))
             .or_else(|| self.try_token(TokenKind::tASET))
             .or_else(|| self.try_token(TokenKind::tBACK_REF))
-            .unwrap()
+            .stop()
     }
     fn try_reswords(&mut self) -> ParseResult<Token> {
         self.one_of("reserved word")
@@ -283,7 +283,7 @@ where
             .or_else(|| self.try_token(TokenKind::kUNLESS))
             .or_else(|| self.try_token(TokenKind::kWHILE))
             .or_else(|| self.try_token(TokenKind::kUNTIL))
-            .unwrap()
+            .stop()
     }
     fn try_arg(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_arg")
@@ -355,7 +355,7 @@ where
         self.one_of("do")
             .or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kDO))
-            .unwrap()
+            .stop()
     }
     fn try_f_marg(&mut self) {
         todo!("parser.try_f_marg")
@@ -408,7 +408,7 @@ where
             .and(|| self.try_token(TokenKind::tLAMBDA))
             .and(|| self.try_f_larglist())
             .and(|| self.try_lambda_body())
-            .unwrap()?;
+            .stop()?;
 
         todo!("builder.lambda {:?} {:?} {:?}", lambda_t, arglist, body)
     }
@@ -429,9 +429,9 @@ where
                 self.one_of("block call tail")
                     .or_else(|| self.try_block_call_tail().map(|value| Some(value)))
                     .or_else(|| Ok(None))
-                    .unwrap()
+                    .stop()
             })
-            .unwrap()?;
+            .stop()?;
 
         todo!("{:?} {:?}", head, tail)
     }
@@ -440,7 +440,7 @@ where
             .all_of("command do_block")
             .and(|| self.try_command())
             .and(|| self.try_do_block())
-            .unwrap()?;
+            .stop()?;
 
         todo!("{:?} {:?}", command, do_block)
     }
@@ -457,7 +457,7 @@ where
                     .all_of("fcall (args)")
                     .and(|| self.try_fcall())
                     .and(|| self.try_paren_args())
-                    .unwrap()?;
+                    .stop()?;
                 todo!("{:?} {:?}", fcall, paren_args)
             })
             .or_else(|| {
@@ -467,7 +467,7 @@ where
                     .and(|| self.expect_token(TokenKind::tLBRACK))
                     .and(|| self.try_opt_call_args())
                     .and(|| self.try_rbracket())
-                    .unwrap()?;
+                    .stop()?;
                 todo!(
                     "{:?} {:?} {:?} {:?}",
                     primary_value,
@@ -482,7 +482,7 @@ where
                     .and(|| self.try_primary_value())
                     .and(|| self.try_call_op2())
                     .and(|| self.try_paren_args())
-                    .unwrap()?;
+                    .stop()?;
                 todo!("{:?} {:?} {:?}", primary_value, call_t, paren_args)
             })
             .or_else(|| {
@@ -492,7 +492,7 @@ where
                     .and(|| self.try_call_op2())
                     .and(|| self.try_operation2())
                     .and(|| self.try_opt_paren_args())
-                    .unwrap()?;
+                    .stop()?;
                 todo!(
                     "{:?} {:?} {:?} {:?}",
                     primary_value,
@@ -506,14 +506,14 @@ where
                     .all_of("super(args)")
                     .and(|| self.try_token(TokenKind::kSUPER))
                     .and(|| self.try_paren_args())
-                    .unwrap()?;
+                    .stop()?;
                 todo!("{:?} {:?}", super_t, paren_args)
             })
             .or_else(|| {
                 let super_t = self.try_token(TokenKind::kSUPER)?;
                 todo!("{:?}", super_t)
             })
-            .unwrap()
+            .stop()
     }
 
     // TODO: return ArgsType instead of ()
@@ -617,7 +617,7 @@ where
         self.one_of("literal")
             .or_else(|| self.try_numeric())
             .or_else(|| self.try_symbol())
-            .unwrap()
+            .stop()
     }
     fn try_nonlocal_var(&mut self) {
         todo!("parser.try_nonlocal_var")
@@ -629,19 +629,19 @@ where
             .or_else(|| self.try_gvar())
             .or_else(|| self.try_t_const())
             .or_else(|| self.try_cvar())
-            .unwrap()
+            .stop()
     }
     fn try_var_ref(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("variable reference")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
-            .unwrap()
+            .stop()
     }
     fn try_var_lhs(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("variable as LHS in assignment")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
-            .unwrap()
+            .stop()
             .map(|node| Builder::<C>::assignable(node))
     }
     fn try_f_opt_paren_args(&mut self) {
@@ -742,38 +742,38 @@ where
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tCONSTANT))
             .or_else(|| self.try_token(TokenKind::tFID))
-            .unwrap()
+            .stop()
     }
     fn try_operation2(&mut self) -> ParseResult<Token> {
         self.one_of("operation 2")
             .or_else(|| self.try_operation())
             .or_else(|| self.try_op())
-            .unwrap()
+            .stop()
     }
     fn try_operation3(&mut self) -> ParseResult<Token> {
         self.one_of("operation 3")
             .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .or_else(|| self.try_token(TokenKind::tFID))
             .or_else(|| self.try_op())
-            .unwrap()
+            .stop()
     }
     fn try_dot_or_colon(&mut self) -> ParseResult<Token> {
         self.one_of("dot or colon")
             .or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tCOLON2))
-            .unwrap()
+            .stop()
     }
     fn try_call_op(&mut self) -> ParseResult<Token> {
         self.one_of("call operation")
             .or_else(|| self.try_token(TokenKind::tDOT))
             .or_else(|| self.try_token(TokenKind::tANDDOT))
-            .unwrap()
+            .stop()
     }
     fn try_call_op2(&mut self) -> ParseResult<Token> {
         self.one_of("call operation 2")
             .or_else(|| self.try_call_op())
             .or_else(|| self.try_token(TokenKind::tCOLON2))
-            .unwrap()
+            .stop()
     }
     fn try_opt_terms(&mut self) -> ParseResult<Vec<Token>> {
         self.try_terms()
@@ -788,7 +788,7 @@ where
             .all_of("rparen")
             .and(|| self.try_opt_nl())
             .and(|| self.expect_token(TokenKind::tRPAREN))
-            .unwrap()?;
+            .stop()?;
 
         Ok(rparen_t)
     }
@@ -797,7 +797,7 @@ where
             .all_of("rbrack")
             .and(|| self.try_opt_nl())
             .and(|| self.expect_token(TokenKind::tRBRACK))
-            .unwrap()?;
+            .stop()?;
 
         Ok(rbrack_t)
     }
@@ -806,7 +806,7 @@ where
             .all_of("rbrace")
             .and(|| self.try_opt_nl())
             .and(|| self.expect_token(TokenKind::tRCURLY))
-            .unwrap()?;
+            .stop()?;
 
         Ok(rbrace_t)
     }
@@ -814,13 +814,13 @@ where
         self.one_of("trailer")
             .or_else(|| self.try_token(TokenKind::tNL))
             .or_else(|| self.try_token(TokenKind::tCOMMA))
-            .unwrap()
+            .stop()
     }
     fn try_term(&mut self) -> ParseResult<Token> {
         self.one_of("term")
             .or_else(|| self.try_token(TokenKind::tSEMI))
             .or_else(|| self.try_token(TokenKind::tNL))
-            .unwrap()
+            .stop()
     }
     fn try_terms(&mut self) -> ParseResult<Vec<Token>> {
         let mut terms = vec![];
@@ -847,6 +847,6 @@ where
         self.all_of("::CONST")
             .and(|| self.try_token(TokenKind::tCOLON2))
             .and(|| self.try_token(TokenKind::tCONSTANT))
-            .unwrap()
+            .stop()
     }
 }

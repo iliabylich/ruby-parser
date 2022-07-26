@@ -14,7 +14,7 @@ where
             .or_else(|| self.try_ssym())
             .or_else(|| self.try_dsym())
             .compact()
-            .unwrap()
+            .stop()
     }
 
     fn try_ssym(&mut self) -> ParseResult<Box<Node>> {
@@ -30,9 +30,9 @@ where
                             .or_else(|| self.try_token(TokenKind::tCVAR))
                             .or_else(|| self.try_token(TokenKind::tGVAR))
                             .required()
-                            .unwrap()
+                            .stop()
                     })
-                    .unwrap()?;
+                    .stop()?;
 
                 Ok(Builder::<C>::symbol(colon_t, sym_t, self.buffer()))
             })
@@ -42,12 +42,12 @@ where
                     .and(|| self.try_token(TokenKind::tSYMBEG))
                     .and(|| self.try_string_contents())
                     .and(|| self.expect_token(TokenKind::tSTRING_END))
-                    .unwrap()?;
+                    .stop()?;
 
                 Ok(Builder::<C>::symbol_compose(begin_t, parts, end_t))
             })
             .compact()
-            .unwrap()
+            .stop()
     }
 
     fn try_dsym(&mut self) -> ParseResult<Box<Node>> {
@@ -56,7 +56,7 @@ where
             .and(|| self.try_token(TokenKind::tDSYMBEG))
             .and(|| self.try_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .unwrap()?;
+            .stop()?;
 
         let node = Builder::<C>::symbol_compose(begin_t, parts, end_t);
         Ok(node)

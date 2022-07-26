@@ -16,7 +16,7 @@ where
             .and(|| self.expect_token(TokenKind::tLCURLY))
             .and(|| self.try_top_compstmt())
             .and(|| self.expect_token(TokenKind::tRCURLY))
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::preexe(preexe_t, lcurly_t, body, rcurly_t))
     }

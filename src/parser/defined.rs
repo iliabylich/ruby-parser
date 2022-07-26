@@ -17,7 +17,7 @@ where
             .and(|| self.expect_token(TokenKind::tLPAREN))
             .and(|| self.try_expr())
             .and(|| self.expect_token(TokenKind::tRPAREN))
-            .unwrap()?;
+            .stop()?;
 
         todo!(
             "defined {:?} {:?} {:?} {:?}",

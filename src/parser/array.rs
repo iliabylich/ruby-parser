@@ -15,7 +15,7 @@ where
             .and(|| self.try_token(TokenKind::tLBRACK))
             .and(|| self.try_aref_args())
             .and(|| self.expect_token(TokenKind::tRBRACK))
-            .unwrap()?;
+            .stop()?;
 
         todo!("array {:?} {:?} {:?}", lbrack_t, elements, rbrack_t);
     }

@@ -42,7 +42,7 @@ impl<T> OneOf<T> {
         }
     }
 
-    pub(crate) fn unwrap(self) -> ParseResult<T> {
+    pub(crate) fn stop(self) -> ParseResult<T> {
         match self.inner {
             Ok(value) => Ok(value),
             Err(errors) => Err(ParseError::OneOfError {

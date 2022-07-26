@@ -16,7 +16,7 @@ where
                     .all_of("fcall")
                     .and(|| self.try_fcall())
                     .and(|| try_command_args_and_cmd_brace_block(self))
-                    .unwrap()?;
+                    .stop()?;
                 #[allow(unreachable_code)]
                 Ok(todo!(
                     "{:?} {:?} {:?}",
@@ -32,7 +32,7 @@ where
                     .and(|| self.try_call_op2())
                     .and(|| self.try_operation2())
                     .and(|| try_command_args_and_cmd_brace_block(self))
-                    .unwrap()?;
+                    .stop()?;
 
                 #[allow(unreachable_code)]
                 Ok(todo!(
@@ -49,7 +49,7 @@ where
                     .all_of("super args")
                     .and(|| self.try_token(TokenKind::kSUPER))
                     .and(|| self.try_command_args())
-                    .unwrap()?;
+                    .stop()?;
 
                 #[allow(unreachable_code)]
                 Ok(todo!("{:?} {:?}", super_t, args))
@@ -59,7 +59,7 @@ where
                     .all_of("yield args")
                     .and(|| self.try_token(TokenKind::kYIELD))
                     .and(|| self.try_command_args())
-                    .unwrap()?;
+                    .stop()?;
 
                 #[allow(unreachable_code)]
                 Ok(todo!("{:?} {:?}", yield_t, args))
@@ -69,7 +69,7 @@ where
                     .all_of("return args")
                     .and(|| self.try_k_return())
                     .and(|| self.try_call_args())
-                    .unwrap()?;
+                    .stop()?;
 
                 #[allow(unreachable_code)]
                 Ok(todo!("{:?} {:?}", return_t, args))
@@ -79,7 +79,7 @@ where
                     .all_of("break args")
                     .and(|| self.try_token(TokenKind::kBREAK))
                     .and(|| self.try_call_args())
-                    .unwrap()?;
+                    .stop()?;
 
                 #[allow(unreachable_code)]
                 Ok(todo!("{:?} {:?}", break_t, args))
@@ -89,12 +89,12 @@ where
                     .all_of("next args")
                     .and(|| self.try_token(TokenKind::kNEXT))
                     .and(|| self.try_call_args())
-                    .unwrap()?;
+                    .stop()?;
 
                 #[allow(unreachable_code)]
                 Ok(todo!("{:?} {:?}", next_t, args))
             })
-            .unwrap()
+            .stop()
     }
 
     pub(crate) fn try_command_args(&mut self) -> ParseResult<Vec<Node>> {
@@ -129,9 +129,9 @@ fn try_command_args_and_cmd_brace_block<C: Constructor>(
                 .one_of("maybe command_args")
                 .or_else(|| try_cmd_brace_block(parser).map(|block| Some(block)))
                 .or_else(|| Ok(None))
-                .unwrap()
+                .stop()
         })
-        .unwrap()
+        .stop()
 }
 
 fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<CmdBraceBlock> {
@@ -140,7 +140,7 @@ fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Cm
         .and(|| parser.try_token(TokenKind::tLCURLY))
         .and(|| parser.try_brace_body())
         .and(|| parser.expect_token(TokenKind::tRCURLY))
-        .unwrap()?;
+        .stop()?;
 
     Ok((begin_t, brace_body, end_t))
 }

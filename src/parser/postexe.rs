@@ -16,7 +16,7 @@ where
             .and(|| self.expect_token(TokenKind::tLCURLY))
             .and(|| self.try_compstmt())
             .and(|| self.expect_token(TokenKind::tRCURLY))
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::postexe(
             postexe_t, lcurly_t, compstmt, rcurly_t,

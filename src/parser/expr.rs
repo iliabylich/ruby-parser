@@ -28,7 +28,7 @@ fn try_expr_head<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node
         .or_else(|| try_arg_assoc_p_expr_body(parser))
         .or_else(|| try_arg_in_p_expr_body(parser))
         .or_else(|| parser.try_arg())
-        .unwrap()
+        .stop()
 }
 fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
     let (not_t, _opt_nl, expr) = parser
@@ -36,7 +36,7 @@ fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>
         .and(|| parser.try_token(TokenKind::kNOT))
         .and(|| parser.try_opt_nl())
         .and(|| parser.try_expr())
-        .unwrap()?;
+        .stop()?;
 
     Ok(Builder::<C>::not_op(not_t, None, Some(expr), None))
 }
@@ -45,7 +45,7 @@ fn try_bang_command_call<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<
         .all_of("! command_call")
         .and(|| parser.try_token(TokenKind::tBANG))
         .and(|| parser.try_command_call())
-        .unwrap()?;
+        .stop()?;
 
     Ok(Builder::<C>::not_op(bang_t, None, Some(command_call), None))
 }
@@ -55,7 +55,7 @@ fn try_arg_assoc_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> ParseRes
         .and(|| parser.try_arg())
         .and(|| parser.try_token(TokenKind::tASSOC))
         .and(|| parser.try_p_top_expr_body())
-        .unwrap()?;
+        .stop()?;
 
     Ok(Builder::<C>::match_pattern(arg, assoc_t, p_top_expr_body))
 }
@@ -65,7 +65,7 @@ fn try_arg_in_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> ParseResult
         .and(|| parser.try_arg())
         .and(|| parser.try_token(TokenKind::kIN))
         .and(|| parser.try_p_top_expr_body())
-        .unwrap()?;
+        .stop()?;
 
     Ok(Builder::<C>::match_pattern_p(arg, in_t, p_top_expr_body))
 }
@@ -80,15 +80,15 @@ fn try_expr_tail<C: Constructor>(
                 .all_of("and expr")
                 .and(|| parser.try_token(TokenKind::kAND))
                 .and(|| parser.try_expr())
-                .unwrap()
+                .stop()
         })
         .or_else(|| {
             parser
                 .all_of("or expr")
                 .and(|| parser.try_token(TokenKind::kOR))
                 .and(|| parser.try_expr())
-                .unwrap()
+                .stop()
         })
-        .unwrap()
+        .stop()
         .ignore_lookaheads()
 }

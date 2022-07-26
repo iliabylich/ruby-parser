@@ -54,7 +54,7 @@ macro_rules! gen_all_of {
                 }
             }
 
-            pub(crate) fn unwrap(self) -> Result<($($generic),+), ParseError> {
+            pub(crate) fn stop(self) -> Result<($($generic),+), ParseError> {
                 let Self { inner, name } = self;
                 match inner {
                     Ok(($($field),+)) => Ok(($($field),+)),

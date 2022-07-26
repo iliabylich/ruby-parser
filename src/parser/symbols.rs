@@ -15,7 +15,7 @@ where
             .and(|| self.try_token(TokenKind::tSYMBOLS_BEG))
             .and(|| try_symbol_list(self))
             .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::symbols_compose(begin_t, elements, end_t))
     }

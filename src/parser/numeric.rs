@@ -16,7 +16,7 @@ where
                     .all_of("-numeric")
                     .and(|| self.try_token(TokenKind::tUMINUS))
                     .and(|| self.try_simple_numeric())
-                    .unwrap()?;
+                    .stop()?;
 
                 Ok(Builder::<C>::unary_num(
                     uminus_num,
@@ -25,7 +25,7 @@ where
                 ))
             })
             .or_else(|| self.try_simple_numeric())
-            .unwrap()
+            .stop()
     }
 
     pub(crate) fn try_simple_numeric(&mut self) -> ParseResult<Box<Node>> {
@@ -46,7 +46,7 @@ where
                 let imaginary_t = self.try_token(TokenKind::tIMAGINARY)?;
                 Ok(Builder::<C>::complex(imaginary_t, self.buffer()))
             })
-            .unwrap()
+            .stop()
     }
 }
 

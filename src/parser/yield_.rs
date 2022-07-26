@@ -18,7 +18,7 @@ where
                     .and(|| self.expect_token(TokenKind::tLPAREN))
                     .and(|| self.try_call_args())
                     .and(|| self.try_rparen())
-                    .unwrap()?;
+                    .stop()?;
                 todo!(
                     "yield {:?} {:?} {:?} {:?}",
                     yield_t,
@@ -31,6 +31,6 @@ where
                 let yield_t = self.try_token(TokenKind::kYIELD)?;
                 todo!("yield {:?}", yield_t)
             })
-            .unwrap()
+            .stop()
     }
 }

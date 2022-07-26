@@ -15,7 +15,7 @@ where
             .all_of("top_compstmt")
             .and(|| self.try_top_stmts())
             .and(|| self.try_opt_terms())
-            .unwrap()?;
+            .stop()?;
 
         if top_stmts.is_empty() {
             Ok(None)
@@ -53,7 +53,7 @@ where
         self.one_of("top-level statement")
             .or_else(|| self.try_preexe())
             .or_else(|| self.try_stmt())
-            .unwrap()
+            .stop()
     }
 
     pub(crate) fn try_bodystmt(&mut self) -> ParseResult<Box<Node>> {
@@ -63,7 +63,7 @@ where
             .and(|| self.try_opt_rescue())
             .and(|| self.try_opt_else())
             .and(|| self.try_opt_ensure())
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::begin_body(
             compstmt,
@@ -78,7 +78,7 @@ where
             .all_of("compstmt")
             .and(|| self.try_stmts())
             .and(|| self.try_opt_terms())
-            .unwrap()?;
+            .stop()?;
         if stmts.is_empty() {
             Ok(None)
         } else {
@@ -136,27 +136,27 @@ where
                 self.all_of("if_mod expr")
                     .and(|| self.try_token(TokenKind::kIF))
                     .and(|| self.try_expr_value())
-                    .unwrap()
+                    .stop()
             })
             .or_else(|| {
                 self.all_of("unless_mod expr")
                     .and(|| self.try_token(TokenKind::kUNLESS))
                     .and(|| self.try_expr_value())
-                    .unwrap()
+                    .stop()
             })
             .or_else(|| {
                 self.all_of("while_mod expr")
                     .and(|| self.try_token(TokenKind::kWHILE))
                     .and(|| self.try_expr_value())
-                    .unwrap()
+                    .stop()
             })
             .or_else(|| {
                 self.all_of("until_mod expr")
                     .and(|| self.try_token(TokenKind::kUNTIL))
                     .and(|| self.try_expr_value())
-                    .unwrap()
+                    .stop()
             })
-            .unwrap()
+            .stop()
     }
 
     fn rescue_stmt(&mut self) -> ParseResult<(Token, Box<Node>)> {
@@ -178,7 +178,7 @@ where
                                     .and(|| self.try_primary_value())
                                     .and(|| self.try_call_op2())
                                     .and(|| self.try_const_or_identifier())
-                                    .unwrap()?;
+                                    .stop()?;
                                 panic!(
                                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                                     primary_value, op_t, id_t
@@ -191,7 +191,7 @@ where
                                     .and(|| self.expect_token(TokenKind::tLBRACK))
                                     .and(|| self.try_opt_call_args())
                                     .and(|| self.try_rparen())
-                                    .unwrap()?;
+                                    .stop()?;
                                 todo!(
                                     "{:?} {:?} {:?} {:?}",
                                     primary_value,
@@ -202,15 +202,15 @@ where
                             })
                             .or_else(|| self.try_var_lhs())
                             .or_else(|| self.try_back_ref())
-                            .unwrap()
+                            .stop()
                     })
                     .and(|| self.expect_token(TokenKind::tOP_ASGN))
                     .and(|| self.try_command_rhs())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_mass_assignment(&mut self) -> ParseResult<Box<Node>> {
@@ -229,16 +229,16 @@ where
                                     .one_of("[rescue stmt]")
                                     .or_else(|| self.rescue_stmt().map(|data| Some(data)))
                                     .or_else(|| Ok(None))
-                                    .unwrap()?;
+                                    .stop()?;
                                 #[allow(unreachable_code)]
                                 Ok(todo!("{:?}", maybe_rescut_stmt) as Box<Node>)
                             })
-                            .unwrap()
+                            .stop()
                             .map(|(value, rescue)| todo!("{:?} {:?}", value, rescue))
                     })
-                    .unwrap()
+                    .stop()
             })
-            .unwrap()?;
+            .stop()?;
         todo!("{:?} {:?} {:?}", mlhs, eql_t, rhs)
     }
 
@@ -251,9 +251,9 @@ where
                 self.one_of("simple assignment rhs")
                     .or_else(|| self.try_command_call())
                     .or_else(|| self.try_command_rhs())
-                    .unwrap()
+                    .stop()
             })
-            .unwrap()?;
+            .stop()?;
 
         todo!("{:?} {:?} {:?}", lhs, eql_t, rhs)
     }

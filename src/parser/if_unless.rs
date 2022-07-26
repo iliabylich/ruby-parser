@@ -18,7 +18,7 @@ where
             .and(|| self.try_compstmt())
             .and(|| self.try_if_tail())
             .and(|| self.try_k_end())
-            .unwrap()?;
+            .stop()?;
 
         todo!(
             "{:?} {:?} {:?} {:?} {:?} {:?}",
@@ -40,7 +40,7 @@ where
             .and(|| self.try_compstmt())
             .and(|| self.try_opt_else())
             .and(|| self.try_k_end())
-            .unwrap()?;
+            .stop()?;
 
         todo!(
             "{:?} {:?} {:?} {:?} {:?} {:?}",

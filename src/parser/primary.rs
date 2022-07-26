@@ -33,7 +33,7 @@ where
                     .and(|| self.try_token(TokenKind::kBEGIN))
                     .and(|| self.try_bodystmt())
                     .and(|| self.expect_token(TokenKind::kEND))
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!("begin {:?} {:?} {:?}", begin_t, bodystmt, end_t);
             })
@@ -43,7 +43,7 @@ where
                     .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.try_stmt())
                     .and(|| self.try_rparen())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
             })
@@ -62,7 +62,7 @@ where
                     .all_of("fcall brace_block")
                     .and(|| self.try_fcall())
                     .and(|| self.try_brace_block())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
             })
@@ -93,7 +93,7 @@ where
             .or_else(|| try_keyword_cmd(self, TokenKind::kNEXT))
             .or_else(|| try_keyword_cmd(self, TokenKind::kREDO))
             .or_else(|| try_keyword_cmd(self, TokenKind::kRETRY))
-            .unwrap()?;
+            .stop()?;
 
         loop {
             match self.try_colon2_const().ignore_lookaheads()? {
@@ -132,7 +132,7 @@ fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>
         .and(|| parser.try_token(TokenKind::tLPAREN))
         .and(|| parser.try_expr())
         .and(|| parser.try_rparen())
-        .unwrap()?;
+        .stop()?;
 
     todo!(
         "not_op {:?} {:?} {:?} {:?}",

@@ -15,7 +15,7 @@ where
             .and(|| self.try_token(TokenKind::tWORDS_BEG))
             .and(|| self.try_word_list())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .unwrap()?;
+            .stop()?;
 
         Ok(Builder::<C>::words_compose(begin_t, elements, end_t))
     }

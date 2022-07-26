@@ -19,7 +19,7 @@ where
                     .and(|| self.try_superclass())
                     .and(|| self.try_bodystmt())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?}",
@@ -39,7 +39,7 @@ where
                     .and(|| self.try_term())
                     .and(|| self.try_bodystmt())
                     .and(|| self.try_k_end())
-                    .unwrap()?;
+                    .stop()?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?} {:?}",
@@ -51,7 +51,7 @@ where
                     end_t
                 )
             })
-            .unwrap()
+            .stop()
     }
 
     pub(crate) fn try_cpath(&mut self) -> ParseResult<Box<Node>> {

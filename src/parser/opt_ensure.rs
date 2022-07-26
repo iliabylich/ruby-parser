@@ -13,7 +13,7 @@ where
         self.all_of("opt ensure")
             .and(|| self.try_token(TokenKind::kENSURE))
             .and(|| self.try_compstmt())
-            .unwrap()
+            .stop()
     }
 }
 

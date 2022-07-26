@@ -13,7 +13,7 @@ where
         self.one_of("strings")
             .or_else(|| self.try_char())
             .or_else(|| self.try_string_seq())
-            .unwrap()
+            .stop()
     }
 
     fn try_char(&mut self) -> ParseResult<Box<Node>> {
@@ -50,11 +50,11 @@ where
                     .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
                     .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
                     .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
-                    .unwrap()
+                    .stop()
             })
             .and(|| self.try_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .unwrap()?;
+            .stop()?;
 
         // TODO: dedent_heredoc
         Ok(Builder::<C>::string_compose(
@@ -99,7 +99,7 @@ where
                     .all_of("string dvar")
                     .and(|| self.try_token(TokenKind::tSTRING_DVAR))
                     .and(|| self.try_string_dvar())
-                    .unwrap()?;
+                    .stop()?;
 
                 panic!(
                     "tSTRING_DVAR string_dvar {:?} {:?}",
@@ -112,14 +112,14 @@ where
                     .and(|| self.try_token(TokenKind::tSTRING_DBEG))
                     .and(|| self.try_compstmt())
                     .and(|| self.expect_token(TokenKind::tSTRING_DEND))
-                    .unwrap()?;
+                    .stop()?;
 
                 panic!(
                     "tSTRING_DBEG compstmt tSTRING_DEND {:?} {:?} {:?}",
                     string_dbeg_t, compstmt, string_dend_t
                 )
             })
-            .unwrap()
+            .stop()
     }
 
     fn try_string_dvar(&mut self) -> ParseResult<Token> {
