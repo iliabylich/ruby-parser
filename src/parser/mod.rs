@@ -148,7 +148,7 @@ where
         todo!("parser.try_expr_value")
     }
 
-    fn try_expr_value_do(&mut self) -> ParseResult<(Node, Token)> {
+    fn try_expr_value_do(&mut self) -> ParseResult<(Box<Node>, Token)> {
         todo!("parser.try_expr_value_do")
     }
 
@@ -313,15 +313,6 @@ where
     }
     fn try_k_begin(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_begin")
-    }
-    fn try_k_while(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_while")
-    }
-    fn try_k_until(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_until")
-    }
-    fn try_k_case(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_case")
     }
     fn try_k_for(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_for")
@@ -508,16 +499,7 @@ where
     fn try_do_body(&mut self) {
         todo!("parser.try_do_body")
     }
-    fn try_case_args(&mut self) {
-        todo!("parser.try_case_args")
-    }
-    fn try_case_body(&mut self) {
-        todo!("parser.try_case_body")
-    }
-    fn try_cases(&mut self) {
-        todo!("parser.try_cases")
-    }
-    fn try_p_case_body(&mut self) {
+    fn try_p_case_body(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_p_case_body")
     }
     fn try_p_cases(&mut self) {

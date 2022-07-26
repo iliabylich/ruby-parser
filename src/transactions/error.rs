@@ -78,6 +78,11 @@ impl From<(Token, Option<Box<Node>>)> for StepData {
         Self::Mixed(vec![Self::from(token), Self::from(maybe_node)])
     }
 }
+impl From<(Box<Node>, Token)> for StepData {
+    fn from((node, token): (Box<Node>, Token)) -> Self {
+        Self::Mixed(vec![Self::from(node), Self::from(token)])
+    }
+}
 
 // is_lookahead
 impl ParseError {
