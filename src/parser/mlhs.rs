@@ -71,7 +71,8 @@ where
                     .unwrap()
             })
             .and(|| {
-                self.one_of("post-splat")
+                let maybe_splat: Option<Box<Node>> = self
+                    .one_of("post-splat")
                     .or_else(|| {
                         self.all_of("comma -> mlhs post")
                             .and(|| self.try_token(TokenKind::tCOMMA))
@@ -80,7 +81,9 @@ where
                             .map(|(star_t, maybe_arg)| todo!("{:?} {:?}", star_t, maybe_arg))
                     })
                     .or_else(|| Ok(None))
-                    .unwrap()
+                    .unwrap()?;
+
+                Ok(maybe_splat)
             })
             .unwrap()?;
 

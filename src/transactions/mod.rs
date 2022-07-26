@@ -10,7 +10,7 @@ mod one_of;
 use one_of::OneOf;
 
 mod all_of;
-use all_of::AllOf;
+use all_of::AllOf0 as AllOf;
 
 impl<C: Constructor> Parser<C> {
     pub(crate) fn one_of<T>(&self, name: &'static str) -> OneOf<T> {

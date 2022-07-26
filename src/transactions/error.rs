@@ -24,21 +24,26 @@ pub(crate) enum ParseError {
 }
 
 #[derive(Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub(crate) enum StepData {
-    Token(Token),
     Node(Box<Node>),
+    MaybeNode(Option<Box<Node>>),
     Nodes(Vec<Node>),
+
+    Token(Token),
+    MaybeToken(Option<Token>),
     Tokens(Vec<Token>),
-    None,
-}
-impl From<Token> for StepData {
-    fn from(token: Token) -> Self {
-        Self::Token(token)
-    }
+
+    Mixed(Vec<StepData>),
 }
 impl From<Box<Node>> for StepData {
     fn from(node: Box<Node>) -> Self {
         Self::Node(node)
+    }
+}
+impl From<Option<Box<Node>>> for StepData {
+    fn from(maybe_node: Option<Box<Node>>) -> Self {
+        Self::MaybeNode(maybe_node)
     }
 }
 impl From<Vec<Node>> for StepData {
@@ -46,22 +51,31 @@ impl From<Vec<Node>> for StepData {
         Self::Nodes(nodes)
     }
 }
-impl From<(Box<Node>, Box<Node>)> for StepData {
-    fn from((a, b): (Box<Node>, Box<Node>)) -> Self {
-        Self::Nodes(vec![*a, *b])
+
+impl From<Token> for StepData {
+    fn from(token: Token) -> Self {
+        Self::Token(token)
     }
 }
-impl From<Option<Box<Node>>> for StepData {
-    fn from(maybe_node: Option<Box<Node>>) -> Self {
-        match maybe_node {
-            Some(node) => Self::from(node),
-            None => Self::None,
-        }
+impl From<Option<Token>> for StepData {
+    fn from(maybe_token: Option<Token>) -> Self {
+        Self::MaybeToken(maybe_token)
     }
 }
 impl From<Vec<Token>> for StepData {
     fn from(tokens: Vec<Token>) -> Self {
         Self::Tokens(tokens)
+    }
+}
+
+impl From<(Box<Node>, Box<Node>)> for StepData {
+    fn from((a, b): (Box<Node>, Box<Node>)) -> Self {
+        Self::Mixed(vec![Self::from(a), Self::from(b)])
+    }
+}
+impl From<(Token, Option<Box<Node>>)> for StepData {
+    fn from((token, maybe_node): (Token, Option<Box<Node>>)) -> Self {
+        Self::Mixed(vec![Self::from(token), Self::from(maybe_node)])
     }
 }
 

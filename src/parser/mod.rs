@@ -314,12 +314,6 @@ where
     fn try_k_begin(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_begin")
     }
-    fn try_k_if(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_if")
-    }
-    fn try_k_unless(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_unless")
-    }
     fn try_k_while(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_while")
     }
@@ -371,9 +365,6 @@ where
     fn try_do(&mut self) {
         todo!("parser.try_do")
     }
-    fn try_if_tail(&mut self) {
-        todo!("parser.try_if_tail")
-    }
     fn try_for_var(&mut self) {
         todo!("parser.try_for_var")
     }
@@ -423,12 +414,19 @@ where
         todo!("parser.try_bvar")
     }
     fn try_lambda(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_lambda")
+        let (lambda_t, arglist, body) = self
+            .all_of("lambda")
+            .and(|| self.try_token(TokenKind::tLAMBDA))
+            .and(|| self.try_f_larglist())
+            .and(|| self.try_lambda_body())
+            .unwrap()?;
+
+        todo!("builder.lambda {:?} {:?} {:?}", lambda_t, arglist, body)
     }
-    fn try_f_larglist(&mut self) {
+    fn try_f_larglist(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_f_larglist")
     }
-    fn try_lambda_body(&mut self) {
+    fn try_lambda_body(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_lambda_body")
     }
     fn try_do_block(&mut self) {
