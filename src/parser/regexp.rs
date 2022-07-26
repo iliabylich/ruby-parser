@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     lexer::strings::{literal::StringLiteral, types::Regexp},
     loc::loc,
-    parser::Parser,
+    parser::{ParseResult, Parser},
     token::{token, Token, TokenKind},
     transactions::ParseError,
     Node,
@@ -12,7 +12,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_regexp(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_regexp(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, contents, end_t) = self
             .all_of("regexp")
             .and(|| {
@@ -46,11 +46,11 @@ where
     }
 
     // This rule can be `none`
-    fn try_regexp_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_regexp_contents(&mut self) -> ParseResult<Vec<Node>> {
         self.try_string_contents()
     }
 
-    fn read_div_as_heredoc_beg(&mut self) -> Result<Token, ParseError> {
+    fn read_div_as_heredoc_beg(&mut self) -> ParseResult<Token> {
         let loc = self.current_token().loc;
         if self.current_token().is(TokenKind::tDIVIDE) {
             let token = token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end));

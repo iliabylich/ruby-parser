@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_symbol(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_symbol(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("symbol")
             .or_else(|| self.try_ssym())
             .or_else(|| self.try_dsym())
@@ -17,7 +17,7 @@ where
             .unwrap()
     }
 
-    fn try_ssym(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_ssym(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("static symbol")
             .or_else(|| {
                 let colon_t = self.try_token(TokenKind::tCOLON)?;
@@ -45,7 +45,7 @@ where
             .unwrap()
     }
 
-    fn try_dsym(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_dsym(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("dynamic symbol")
             .and(|| self.try_token(TokenKind::tDSYMBEG))

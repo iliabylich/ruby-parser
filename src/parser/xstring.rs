@@ -5,7 +5,7 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     loc::loc,
-    parser::Parser,
+    parser::{ParseResult, Parser},
     token::{token, Token, TokenKind},
     transactions::ParseError,
     Node,
@@ -15,7 +15,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_xstring(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_xstring(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("xstring")
             .and(|| {
@@ -44,11 +44,11 @@ where
     }
 
     // This rule can be `none`
-    fn try_xstring_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_xstring_contents(&mut self) -> ParseResult<Vec<Node>> {
         self.try_string_contents()
     }
 
-    fn read_backtick_identifier_as_xstring_beg(&mut self) -> Result<Token, ParseError> {
+    fn read_backtick_identifier_as_xstring_beg(&mut self) -> ParseResult<Token> {
         let loc = self.current_token().loc;
         if self.current_token().is(TokenKind::tIDENTIFIER) {
             if self.buffer().slice(loc.start, loc.end) == Some(b"`") {

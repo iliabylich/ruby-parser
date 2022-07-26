@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node, Token,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_top_compstmt(&mut self) -> Result<Option<Box<Node>>, ParseError> {
+    pub(crate) fn try_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let top_stmts = self.try_top_stmts();
         self.try_opt_terms();
         if top_stmts.is_empty() {
@@ -28,14 +28,14 @@ where
         top_stmts
     }
 
-    pub(crate) fn try_top_stmt(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_top_stmt(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("top-level statement")
             .or_else(|| self.try_preexe())
             .or_else(|| self.try_stmt())
             .unwrap()
     }
 
-    pub(crate) fn try_bodystmt(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_bodystmt(&mut self) -> ParseResult<Box<Node>> {
         let compstmt = self.try_compstmt()?;
         let rescue_bodies = self.try_opt_rescue()?;
         let opt_else = self.try_opt_else()?;
@@ -48,7 +48,7 @@ where
         ))
     }
 
-    pub(crate) fn try_compstmt(&mut self) -> Result<Option<Box<Node>>, ParseError> {
+    pub(crate) fn try_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let stmts = self.try_stmts();
         self.try_opt_terms();
         if stmts.is_empty() {
@@ -71,7 +71,7 @@ where
         stmts
     }
 
-    pub(crate) fn try_stmt(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_stmt(&mut self) -> ParseResult<Box<Node>> {
         let stmt = self.try_stmt_head()?;
 
         match self.current_token().kind {
@@ -103,7 +103,7 @@ where
         }
     }
 
-    fn try_stmt_head(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_stmt_head(&mut self) -> ParseResult<Box<Node>> {
         if let Ok(alias) = self.try_alias() {
             return Ok(alias);
         } else if let Ok(undef) = self.try_undef() {
@@ -119,11 +119,11 @@ where
         self.try_expr()
     }
 
-    fn rescue_stmt(&mut self) -> Result<(Token, Box<Node>), ParseError> {
+    fn rescue_stmt(&mut self) -> ParseResult<(Token, Box<Node>)> {
         todo!()
     }
 
-    fn try_assignment(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_assignment(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("assignment")
             .or_else(|| self.try_mass_assignment())
             .or_else(|| self.try_simple_assignment())
@@ -173,7 +173,7 @@ where
             .unwrap()
     }
 
-    fn try_mass_assignment(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_mass_assignment(&mut self) -> ParseResult<Box<Node>> {
         let (mlhs, eql_t, rhs) = self
             .all_of("mass-assignment")
             .and(|| self.try_mlhs())
@@ -202,7 +202,7 @@ where
         todo!("{:?} {:?} {:?}", mlhs, eql_t, rhs)
     }
 
-    fn try_simple_assignment(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_simple_assignment(&mut self) -> ParseResult<Box<Node>> {
         let (lhs, eql_t, rhs) = self
             .all_of("simple assignment")
             .and(|| self.try_lhs())

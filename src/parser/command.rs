@@ -1,6 +1,6 @@
 use crate::{
     builder::Constructor,
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_command(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_command(&mut self) -> ParseResult<Box<Node>> {
         let maybe_call_with_command_args: Result<Box<Node>, _> = self
             .one_of("maybe command call with command args")
             .or_else(|| {
@@ -74,21 +74,21 @@ where
         todo!("keyword_cmd {:?} {:?}", keyword_t, call_args)
     }
 
-    pub(crate) fn try_command_args(&mut self) -> Result<Vec<Node>, ParseError> {
+    pub(crate) fn try_command_args(&mut self) -> ParseResult<Vec<Node>> {
         self.try_call_args()
     }
 
-    pub(crate) fn try_brace_body(&mut self) -> Result<Option<Box<Node>>, ParseError> {
+    pub(crate) fn try_brace_body(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_brace_body")
     }
 
     // This rule can be `none`
-    pub(crate) fn try_call_args(&mut self) -> Result<Vec<Node>, ParseError> {
+    pub(crate) fn try_call_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_call_args")
     }
 
     // This rule can be `none`
-    pub(crate) fn try_opt_call_args(&mut self) -> Result<Vec<Node>, ParseError> {
+    pub(crate) fn try_opt_call_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_call_args")
     }
 }
@@ -100,9 +100,7 @@ struct CmdBraceBlock {
     end_t: Token,
 }
 
-fn try_cmd_brace_block<C: Constructor>(
-    parser: &mut Parser<C>,
-) -> Result<CmdBraceBlock, ParseError> {
+fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<CmdBraceBlock> {
     let (begin_t, brace_body, end_t) = parser
         .all_of("cmd brace block")
         .and(|| parser.try_token(TokenKind::tLCURLY))

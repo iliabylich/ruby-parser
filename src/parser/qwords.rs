@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_qwords(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_qwords(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, word_list, end_t) = self
             .all_of("qwords")
             .and(|| self.try_token(TokenKind::tQWORDS_BEG))

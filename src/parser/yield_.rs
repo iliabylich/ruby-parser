@@ -1,6 +1,6 @@
 use crate::{
     builder::Constructor,
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_yield(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_yield(&mut self) -> ParseResult<Box<Node>> {
         let yield_t = self.try_token(TokenKind::kYIELD)?;
         if let Ok(lparen_t) = self.try_token(TokenKind::tLPAREN) {
             let call_args = self.try_call_args()?;

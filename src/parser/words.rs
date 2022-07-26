@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_words(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_words(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, elements, end_t) = self
             .all_of("words")
             .and(|| self.try_token(TokenKind::tWORDS_BEG))
@@ -21,7 +21,7 @@ where
     }
 
     // This rule can be `none
-    fn try_word_list(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_word_list(&mut self) -> ParseResult<Vec<Node>> {
         let mut result = vec![];
         while let Some(word) = self.try_word()? {
             result.push(*word)
@@ -29,7 +29,7 @@ where
         Ok(result)
     }
 
-    pub(crate) fn try_word(&mut self) -> Result<Option<Box<Node>>, ParseError> {
+    pub(crate) fn try_word(&mut self) -> ParseResult<Option<Box<Node>>> {
         let contents = self.try_string_contents()?;
         if contents.is_empty() {
             Ok(None)

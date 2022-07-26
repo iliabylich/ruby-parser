@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_numeric(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_numeric(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("numeric")
             .or_else(|| {
                 let uminus_num = self.try_token(TokenKind::tUMINUS)?;
@@ -26,7 +26,7 @@ where
             .unwrap()
     }
 
-    pub(crate) fn try_simple_numeric(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_simple_numeric(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("simple numeric (without sign)")
             .or_else(|| {
                 let integer_t = self.try_token(TokenKind::tINTEGER)?;

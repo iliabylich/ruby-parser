@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, ParseResultApi, Parser},
+    parser::{ParseResult, ParseResultApi, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -9,19 +9,19 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_strings(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_strings(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("strings")
             .or_else(|| self.try_char())
             .or_else(|| self.try_string_seq())
             .unwrap()
     }
 
-    fn try_char(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_char(&mut self) -> ParseResult<Box<Node>> {
         let char_t = self.try_token(TokenKind::tCHAR)?;
         Ok(Builder::<C>::character(char_t))
     }
 
-    fn try_string_seq(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_string_seq(&mut self) -> ParseResult<Box<Node>> {
         let mut parts = vec![];
 
         let string = self.try_string1()?;
@@ -42,7 +42,7 @@ where
         Ok(Builder::<C>::string_compose(None, parts, None))
     }
 
-    fn try_string1(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_string1(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("string1")
             .and(|| {
@@ -65,7 +65,7 @@ where
     }
 
     // This rule can be `none`
-    pub(crate) fn try_string_contents(&mut self) -> Result<Vec<Node>, ParseError> {
+    pub(crate) fn try_string_contents(&mut self) -> ParseResult<Vec<Node>> {
         let mut strings = vec![];
         loop {
             if self.current_token().is(TokenKind::tSTRING_END) {
@@ -85,7 +85,7 @@ where
         Ok(strings)
     }
 
-    pub(crate) fn try_string_content(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_string_content(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("string content")
             .or_else(|| {
                 let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
@@ -114,7 +114,7 @@ where
             .unwrap()
     }
 
-    fn try_string_dvar(&mut self) -> Result<Token, ParseError> {
+    fn try_string_dvar(&mut self) -> ParseResult<Token> {
         todo!()
     }
 }

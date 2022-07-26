@@ -1,6 +1,6 @@
 use crate::{
     builder::Constructor,
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_hash(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_hash(&mut self) -> ParseResult<Box<Node>> {
         let lcurly_t = self.try_token(TokenKind::tLCURLY)?;
         let assoc_list = self.try_assoc_list();
         let rcurly_t = self.expect_token(TokenKind::tRCURLY);

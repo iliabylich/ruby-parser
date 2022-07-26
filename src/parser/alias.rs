@@ -1,12 +1,12 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl<C: Constructor> Parser<C> {
-    pub(crate) fn try_alias(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_alias(&mut self) -> ParseResult<Box<Node>> {
         let (alias_t, (lhs, rhs)) = self
             .all_of("alias statement")
             .and(|| self.try_token(TokenKind::kALIAS))
@@ -16,9 +16,7 @@ impl<C: Constructor> Parser<C> {
     }
 }
 
-fn try_alias_args<C: Constructor>(
-    parser: &mut Parser<C>,
-) -> Result<(Box<Node>, Box<Node>), ParseError> {
+fn try_alias_args<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .one_of("alias arguments")
         .or_else(|| try_fitem_fitem(parser))
@@ -28,9 +26,7 @@ fn try_alias_args<C: Constructor>(
         .unwrap()
 }
 
-fn try_fitem_fitem<C: Constructor>(
-    parser: &mut Parser<C>,
-) -> Result<(Box<Node>, Box<Node>), ParseError> {
+fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("fitem -> fitem")
         .and(|| parser.try_fitem())
@@ -38,9 +34,7 @@ fn try_fitem_fitem<C: Constructor>(
         .unwrap()
 }
 
-fn try_gvar_gvar<C: Constructor>(
-    parser: &mut Parser<C>,
-) -> Result<(Box<Node>, Box<Node>), ParseError> {
+fn try_gvar_gvar<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("gvar -> [gvar | back ref | nth ref]")
         .and(|| parser.try_gvar())

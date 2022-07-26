@@ -1,12 +1,15 @@
 use crate::{
-    builder::Constructor, nodes::Node, parser::Parser, token::TokenKind, transactions::ParseError,
+    builder::Constructor,
+    nodes::Node,
+    parser::{ParseResult, Parser},
+    token::TokenKind,
 };
 
 impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_mlhs(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_mlhs(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs")
             .or_else(|| self.try_mlhs_basic())
             .or_else(|| {
@@ -22,7 +25,7 @@ where
             .unwrap()
     }
 
-    fn try_mlhs_inner(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_mlhs_inner(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs_basic")
             .or_else(|| self.try_mlhs_basic())
             .or_else(|| {
@@ -38,7 +41,7 @@ where
             .unwrap()
     }
 
-    fn try_mlhs_basic(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_mlhs_basic(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs_basic")
             .or_else(|| {
                 self.all_of("mlhs head + tail")
@@ -57,7 +60,7 @@ where
             .unwrap()
     }
 
-    fn try_mlhs_tail(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_mlhs_tail(&mut self) -> ParseResult<Box<Node>> {
         let (star_t, maybe_splat_arg, maybe_post) = self
             .all_of("mlhs_tail")
             .and(|| self.try_token(TokenKind::tSTAR))
@@ -84,7 +87,7 @@ where
         todo!("{:?} {:?} {:?}", star_t, maybe_splat_arg, maybe_post)
     }
 
-    fn try_mlhs_item(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_mlhs_item(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs item")
             .or_else(|| self.try_mlhs_node())
             .or_else(|| {
@@ -100,7 +103,7 @@ where
             .unwrap()
     }
 
-    fn try_mlhs_head(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_mlhs_head(&mut self) -> ParseResult<Vec<Node>> {
         let try_item_and_comma = |parser: &mut Parser<C>| {
             parser
                 .all_of("mlhs item and comma")
@@ -130,7 +133,7 @@ where
         Ok(head)
     }
 
-    fn try_mlhs_post(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_mlhs_post(&mut self) -> ParseResult<Vec<Node>> {
         let mut post = vec![];
         let mut commas = vec![];
         let item = self.try_mlhs_item()?;
@@ -155,7 +158,7 @@ where
         Ok(post)
     }
 
-    fn try_mlhs_node(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_mlhs_node(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs node")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
@@ -188,34 +191,36 @@ where
 }
 
 #[cfg(test)]
-use crate::parser::RustParser;
+mod tests {
+    use crate::parser::{ParseError, RustParser};
 
-#[test]
-fn test_lhs_user_variable() {
-    let mut parser = RustParser::new(b"a, b");
-    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
-}
+    #[test]
+    fn test_lhs_user_variable() {
+        let mut parser = RustParser::new(b"a, b");
+        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+    }
 
-#[test]
-fn test_lhs_parenthesized() {
-    let mut parser = RustParser::new(b"((a))");
-    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
-}
+    #[test]
+    fn test_lhs_parenthesized() {
+        let mut parser = RustParser::new(b"((a))");
+        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+    }
 
-#[test]
-fn test_mlhs_without_parens() {
-    let mut parser = RustParser::new(b"a, *b, c");
-    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
-}
+    #[test]
+    fn test_mlhs_without_parens() {
+        let mut parser = RustParser::new(b"a, *b, c");
+        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+    }
 
-#[test]
-fn test_mlhs_with_parens() {
-    let mut parser = RustParser::new(b"((*a), $x, @c)");
-    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
-}
+    #[test]
+    fn test_mlhs_with_parens() {
+        let mut parser = RustParser::new(b"((*a), $x, @c)");
+        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+    }
 
-#[test]
-fn test_nameless_splat() {
-    let mut parser = RustParser::new(b"*");
-    assert_eq!(parser.try_mlhs(), Err(ParseError::empty()))
+    #[test]
+    fn test_nameless_splat() {
+        let mut parser = RustParser::new(b"*");
+        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()))
+    }
 }

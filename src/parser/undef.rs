@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,13 +9,13 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_undef(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_undef(&mut self) -> ParseResult<Box<Node>> {
         let undef_t = self.try_token(TokenKind::kUNDEF)?;
         let names = self.try_names()?;
         Ok(Builder::<C>::undef(undef_t, names))
     }
 
-    fn try_names(&mut self) -> Result<Vec<Node>, ParseError> {
+    fn try_names(&mut self) -> ParseResult<Vec<Node>> {
         let mut names = vec![];
 
         let fitem = self.try_fitem()?;

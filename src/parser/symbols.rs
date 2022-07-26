@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_symbols(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_symbols(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, elements, end_t) = self
             .all_of("symbols")
             .and(|| self.try_token(TokenKind::tSYMBOLS_BEG))
@@ -22,7 +22,7 @@ where
 }
 
 // This rule can be `none`
-fn try_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>, ParseError> {
+fn try_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<Node>> {
     let mut result = vec![];
     while let Some(word) = parser.try_word()? {
         result.push(*word);

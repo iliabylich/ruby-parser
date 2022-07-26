@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, Parser},
+    parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_preexe(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_preexe(&mut self) -> ParseResult<Box<Node>> {
         let (preexe_t, lcurly_t, body, rcurly_t) = self
             .all_of("preexe")
             .and(|| self.try_token(TokenKind::klBEGIN))
@@ -24,7 +24,7 @@ where
 
 #[test]
 fn test_preexe() {
-    use crate::parser::RustParser;
+    use crate::parser::{ParseError, RustParser};
     let mut parser = RustParser::new(b"BEGIN {}").debug();
     assert_eq!(parser.try_preexe(), Err(ParseError::empty()));
     todo!("implement me");

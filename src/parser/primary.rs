@@ -1,6 +1,6 @@
 use crate::{
     builder::Constructor,
-    parser::{ParseError, ParseResultApi, Parser},
+    parser::{ParseResult, ParseResultApi, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,7 +9,7 @@ impl<C> Parser<C>
 where
     C: Constructor,
 {
-    pub(crate) fn try_primary(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_primary(&mut self) -> ParseResult<Box<Node>> {
         let node = self
             .one_of("primary value")
             .or_else(|| self.try_literal())
@@ -97,7 +97,7 @@ where
         Ok(node)
     }
 
-    pub(crate) fn try_primary_value(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_primary_value(&mut self) -> ParseResult<Box<Node>> {
         self.try_primary()
     }
 }
@@ -105,14 +105,14 @@ where
 fn try_keyword_cmd<C: Constructor>(
     parser: &mut Parser<C>,
     expected: TokenKind,
-) -> Result<Box<Node>, ParseError> {
+) -> ParseResult<Box<Node>> {
     let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)
 }
 
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
-fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, ParseError> {
+fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
     let not_t = parser.try_token(TokenKind::kNOT)?;
     let lparen_t = parser.try_token(TokenKind::tLPAREN)?;
     let expr = parser.try_expr()?;

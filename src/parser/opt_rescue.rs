@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseError, ParseResultApi, Parser},
+    parser::{ParseResult, ParseResultApi, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -10,7 +10,7 @@ where
     C: Constructor,
 {
     // This rule can be `none`
-    pub(crate) fn try_opt_rescue(&mut self) -> Result<Vec<Node>, ParseError> {
+    pub(crate) fn try_opt_rescue(&mut self) -> ParseResult<Vec<Node>> {
         let mut nodes = vec![];
         loop {
             match try_opt_rescue1(self).ignore_lookaheads()? {
@@ -24,7 +24,7 @@ where
         Ok(nodes)
     }
 
-    pub(crate) fn try_then(&mut self) -> Result<Token, ParseError> {
+    pub(crate) fn try_then(&mut self) -> ParseResult<Token> {
         self.one_of("then ...")
             .or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kTHEN))
@@ -36,7 +36,7 @@ where
             .unwrap()
     }
 
-    pub(crate) fn try_lhs(&mut self) -> Result<Box<Node>, ParseError> {
+    pub(crate) fn try_lhs(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("lhs")
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
@@ -57,12 +57,12 @@ where
             .unwrap()
     }
 
-    fn try_arg_value(&mut self) -> Result<Box<Node>, ParseError> {
+    fn try_arg_value(&mut self) -> ParseResult<Box<Node>> {
         self.try_arg()
     }
 }
 
-fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, ParseError> {
+fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
     let rescue_t = parser.try_token(TokenKind::kRESCUE)?;
     let exc_list = try_exc_list(parser)?;
     let exc_var = try_exc_var(parser)?;
@@ -77,14 +77,14 @@ fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> Result<Box<Node>, 
     ))
 }
 
-fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> Result<Vec<Node>, ParseError> {
+fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<Node>> {
     parser
         .one_of("exceptions list")
         .or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
         .unwrap()
 }
-fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> Result<(Token, Box<Node>), ParseError> {
+fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Token, Box<Node>)> {
     let assoc_t = parser.try_token(TokenKind::tASSOC)?;
     let lhs = parser.try_lhs()?;
     Ok((assoc_t, lhs))
