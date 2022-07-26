@@ -304,34 +304,37 @@ where
         todo!("parser.try_k_begin")
     }
     fn try_k_do(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_do")
+        self.try_token(TokenKind::kDO)
     }
     fn try_k_do_block(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_do_block")
+        self.try_token(TokenKind::kDO)
     }
     fn try_k_rescue(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_rescue")
+        self.try_token(TokenKind::kRESCUE)
     }
     fn try_k_ensure(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_ensure")
+        self.try_token(TokenKind::kENSURE)
     }
     fn try_k_when(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_when")
+        self.try_token(TokenKind::kWHEN)
     }
     fn try_k_else(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_else")
+        self.try_token(TokenKind::kELSE)
     }
     fn try_k_elsif(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_elsif")
+        self.try_token(TokenKind::kELSIF)
     }
     fn try_k_end(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_end")
+        self.try_token(TokenKind::kEND)
     }
     fn try_k_return(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_return")
+        self.try_token(TokenKind::kRETURN)
     }
-    fn try_do(&mut self) {
-        todo!("parser.try_do")
+    fn try_do(&mut self) -> ParseResult<Token> {
+        self.one_of("do")
+            .or_else(|| self.try_term())
+            .or_else(|| self.try_token(TokenKind::kDO))
+            .unwrap()
     }
     fn try_f_marg(&mut self) {
         todo!("parser.try_f_marg")
