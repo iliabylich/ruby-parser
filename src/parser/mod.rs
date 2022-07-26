@@ -136,14 +136,6 @@ where
         self.try_fname()
     }
 
-    fn try_defn_head(&mut self) -> (Token, Token) {
-        todo!("parser.try_defn_head")
-    }
-
-    fn try_defs_head(&mut self) -> (Token, Node, Token, Token) {
-        todo!("parser.try_defs_head")
-    }
-
     fn try_expr_value(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_expr_value")
     }
@@ -310,9 +302,6 @@ where
     }
     fn try_k_begin(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_begin")
-    }
-    fn try_k_def(&mut self) -> ParseResult<Token> {
-        todo!("parser.try_k_def")
     }
     fn try_k_do(&mut self) -> ParseResult<Token> {
         todo!("parser.try_k_do")
@@ -611,9 +600,6 @@ where
     fn try_f_paren_args(&mut self) {
         todo!("parser.try_f_paren_args")
     }
-    fn try_f_arglist(&mut self) {
-        todo!("parser.try_f_arglist")
-    }
     fn try_args_tail(&mut self) {
         todo!("parser.try_args_tail")
     }
@@ -691,9 +677,6 @@ where
     }
     fn try_opt_f_block_arg(&mut self) {
         todo!("parser.try_opt_f_block_arg")
-    }
-    fn try_singleton(&mut self) {
-        todo!("parser.try_singleton")
     }
     fn try_assoc_list(&mut self) -> ParseResult<Vec<Box<Node>>> {
         todo!("parser.try_assoc_list")

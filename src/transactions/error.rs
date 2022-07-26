@@ -68,19 +68,40 @@ impl From<Vec<Token>> for StepData {
     }
 }
 
-impl From<(Box<Node>, Box<Node>)> for StepData {
-    fn from((a, b): (Box<Node>, Box<Node>)) -> Self {
+// tuples as Mixed variant
+impl<A, B> From<(A, B)> for StepData
+where
+    StepData: From<A>,
+    StepData: From<B>,
+{
+    fn from((a, b): (A, B)) -> Self {
         Self::Mixed(vec![Self::from(a), Self::from(b)])
     }
 }
-impl From<(Token, Option<Box<Node>>)> for StepData {
-    fn from((token, maybe_node): (Token, Option<Box<Node>>)) -> Self {
-        Self::Mixed(vec![Self::from(token), Self::from(maybe_node)])
+impl<A, B, C> From<(A, B, C)> for StepData
+where
+    StepData: From<A>,
+    StepData: From<B>,
+    StepData: From<C>,
+{
+    fn from((a, b, c): (A, B, C)) -> Self {
+        Self::Mixed(vec![Self::from(a), Self::from(b), Self::from(c)])
     }
 }
-impl From<(Box<Node>, Token)> for StepData {
-    fn from((node, token): (Box<Node>, Token)) -> Self {
-        Self::Mixed(vec![Self::from(node), Self::from(token)])
+impl<A, B, C, D> From<(A, B, C, D)> for StepData
+where
+    StepData: From<A>,
+    StepData: From<B>,
+    StepData: From<C>,
+    StepData: From<D>,
+{
+    fn from((a, b, c, d): (A, B, C, D)) -> Self {
+        Self::Mixed(vec![
+            Self::from(a),
+            Self::from(b),
+            Self::from(c),
+            Self::from(d),
+        ])
     }
 }
 
