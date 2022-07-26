@@ -10,9 +10,13 @@ where
     C: Constructor,
 {
     pub(crate) fn try_hash(&mut self) -> ParseResult<Box<Node>> {
-        let lcurly_t = self.try_token(TokenKind::tLCURLY)?;
-        let assoc_list = self.try_assoc_list();
-        let rcurly_t = self.expect_token(TokenKind::tRCURLY);
+        let (lcurly_t, assoc_list, rcurly_t) = self
+            .all_of("hash")
+            .and(|| self.try_token(TokenKind::tLCURLY))
+            .and(|| self.try_assoc_list())
+            .and(|| self.expect_token(TokenKind::tRCURLY))
+            .unwrap()?;
+
         todo!("hash {:?} {:?} {:?}", lcurly_t, assoc_list, rcurly_t);
     }
 }

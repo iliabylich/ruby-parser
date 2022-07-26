@@ -10,68 +10,91 @@ where
     C: Constructor,
 {
     pub(crate) fn try_command(&mut self) -> ParseResult<Box<Node>> {
-        let maybe_call_with_command_args: Result<Box<Node>, _> = self
-            .one_of("maybe command call with command args")
+        self.one_of("command")
             .or_else(|| {
-                let fcall = self.try_fcall()?;
-                let command_args = self.try_command_args()?;
-                todo!("call_method {:?} {:?}", fcall, command_args)
+                let (fcall, (command_args, cmd_brace_block)) = self
+                    .all_of("fcall")
+                    .and(|| self.try_fcall())
+                    .and(|| try_command_args_and_cmd_brace_block(self))
+                    .unwrap()?;
+                #[allow(unreachable_code)]
+                Ok(todo!(
+                    "{:?} {:?} {:?}",
+                    fcall,
+                    command_args,
+                    cmd_brace_block
+                ))
             })
             .or_else(|| {
-                let primary_value = self.try_primary_value()?;
-                let op_t = self
-                    .one_of("::CONSTANT or ::method")
-                    .or_else(|| self.try_token(TokenKind::tCOLON2))
-                    .or_else(|| self.try_operation2())
+                let (primary, call_op_t, op_t, (command_args, cmd_brace_block)) = self
+                    .all_of("primary call_op2 operation command_args")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.try_call_op2())
+                    .and(|| self.try_operation2())
+                    .and(|| try_command_args_and_cmd_brace_block(self))
                     .unwrap()?;
 
-                let operation2 = self.try_operation2()?;
-                let command_args = self.try_command_args()?;
-                todo!(
-                    "return call_method {:?} {:?} {:?} {:?}",
-                    primary_value,
+                #[allow(unreachable_code)]
+                Ok(todo!(
+                    "{:?} {:?} {:?} {:?} {:?}",
+                    primary,
+                    call_op_t,
                     op_t,
-                    operation2,
-                    command_args
-                )
+                    command_args,
+                    cmd_brace_block
+                ))
             })
             .or_else(|| {
-                let super_t = self.try_token(TokenKind::kSUPER)?;
-                let command_args = self.try_command_args()?;
-                todo!("super {:?} {:?}", super_t, command_args)
+                let (super_t, args) = self
+                    .all_of("super args")
+                    .and(|| self.try_token(TokenKind::kSUPER))
+                    .and(|| self.try_command_args())
+                    .unwrap()?;
+
+                #[allow(unreachable_code)]
+                Ok(todo!("{:?} {:?}", super_t, args))
             })
             .or_else(|| {
-                let yield_t = self.try_token(TokenKind::kYIELD)?;
-                let command_args = self.try_command_args();
-                todo!("yield {:?} {:?}", yield_t, command_args)
+                let (yield_t, args) = self
+                    .all_of("yield args")
+                    .and(|| self.try_token(TokenKind::kYIELD))
+                    .and(|| self.try_command_args())
+                    .unwrap()?;
+
+                #[allow(unreachable_code)]
+                Ok(todo!("{:?} {:?}", yield_t, args))
             })
-            .unwrap();
+            .or_else(|| {
+                let (return_t, args) = self
+                    .all_of("return args")
+                    .and(|| self.try_k_return())
+                    .and(|| self.try_call_args())
+                    .unwrap()?;
 
-        if let Ok(call_with_command_args) = maybe_call_with_command_args {
-            match &*call_with_command_args {
-                Node::Super(_) | Node::ZSuper(_) | Node::Yield(_) => {
-                    // these nodes can't take block
-                    return Ok(call_with_command_args);
-                }
-                _ => {
-                    if let Ok(cmd_brace_block) = try_cmd_brace_block(self) {
-                        panic!(
-                            "block_call {:?} {:?}",
-                            call_with_command_args, cmd_brace_block
-                        )
-                    }
-                }
-            }
-        }
+                #[allow(unreachable_code)]
+                Ok(todo!("{:?} {:?}", return_t, args))
+            })
+            .or_else(|| {
+                let (break_t, args) = self
+                    .all_of("break args")
+                    .and(|| self.try_token(TokenKind::kBREAK))
+                    .and(|| self.try_call_args())
+                    .unwrap()?;
 
-        let keyword_t = self
-            .one_of("keyword command")
-            .or_else(|| self.try_k_return())
-            .or_else(|| self.try_token(TokenKind::kBREAK))
-            .or_else(|| self.try_token(TokenKind::kNEXT))
-            .unwrap()?;
-        let call_args = self.try_call_args()?;
-        todo!("keyword_cmd {:?} {:?}", keyword_t, call_args)
+                #[allow(unreachable_code)]
+                Ok(todo!("{:?} {:?}", break_t, args))
+            })
+            .or_else(|| {
+                let (next_t, args) = self
+                    .all_of("next args")
+                    .and(|| self.try_token(TokenKind::kNEXT))
+                    .and(|| self.try_call_args())
+                    .unwrap()?;
+
+                #[allow(unreachable_code)]
+                Ok(todo!("{:?} {:?}", next_t, args))
+            })
+            .unwrap()
     }
 
     pub(crate) fn try_command_args(&mut self) -> ParseResult<Vec<Node>> {
@@ -93,11 +116,22 @@ where
     }
 }
 
-#[derive(Debug)]
-struct CmdBraceBlock {
-    begin_t: Token,
-    brace_body: Option<Box<Node>>,
-    end_t: Token,
+type CmdBraceBlock = (Token, Option<Box<Node>>, Token);
+
+fn try_command_args_and_cmd_brace_block<C: Constructor>(
+    parser: &mut Parser<C>,
+) -> ParseResult<(Vec<Node>, Option<CmdBraceBlock>)> {
+    parser
+        .all_of("command_args [+ cmd_brace_block]")
+        .and(|| parser.try_command_args())
+        .and(|| {
+            parser
+                .one_of("maybe command_args")
+                .or_else(|| try_cmd_brace_block(parser).map(|block| Some(block)))
+                .or_else(|| Ok(None))
+                .unwrap()
+        })
+        .unwrap()
 }
 
 fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<CmdBraceBlock> {
@@ -108,9 +142,5 @@ fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Cm
         .and(|| parser.expect_token(TokenKind::tRCURLY))
         .unwrap()?;
 
-    Ok(CmdBraceBlock {
-        begin_t,
-        brace_body,
-        end_t,
-    })
+    Ok((begin_t, brace_body, end_t))
 }

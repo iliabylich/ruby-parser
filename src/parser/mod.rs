@@ -517,7 +517,7 @@ where
     }
 
     // TODO: return ArgsType instead of ()
-    fn try_brace_block(&mut self) -> ParseResult<(Token, (), Option<Box<Node>>, Token)> {
+    fn try_brace_block(&mut self) -> ParseResult<(Token, Option<Box<Node>>, Token)> {
         todo!("parser.try_brace_block")
     }
     fn try_do_body(&mut self) {
@@ -728,7 +728,7 @@ where
     fn try_opt_f_block_arg(&mut self) {
         todo!("parser.try_opt_f_block_arg")
     }
-    fn try_assoc_list(&mut self) -> ParseResult<Vec<Box<Node>>> {
+    fn try_assoc_list(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_assoc_list")
     }
     fn try_assocs(&mut self) {
@@ -779,43 +779,36 @@ where
         self.try_terms()
     }
 
-    #[allow(unused_must_use)]
-    fn try_opt_nl(&mut self) {
-        self.try_token(TokenKind::tNL);
+    fn try_opt_nl(&mut self) -> ParseResult<Token> {
+        self.try_token(TokenKind::tNL)
     }
 
     fn try_rparen(&mut self) -> ParseResult<Token> {
-        let checkpoint = self.new_checkpoint();
-        self.try_opt_nl();
-        match self.try_token(TokenKind::tRPAREN) {
-            err @ Err(_) => {
-                checkpoint.restore();
-                err
-            }
-            ok => ok,
-        }
+        let (_, rparen_t) = self
+            .all_of("rparen")
+            .and(|| self.try_opt_nl())
+            .and(|| self.expect_token(TokenKind::tRPAREN))
+            .unwrap()?;
+
+        Ok(rparen_t)
     }
     fn try_rbracket(&mut self) -> ParseResult<Token> {
-        let checkpoint = self.new_checkpoint();
-        self.try_opt_nl();
-        match self.try_token(TokenKind::tRBRACK) {
-            err @ Err(_) => {
-                checkpoint.restore();
-                err
-            }
-            ok => ok,
-        }
+        let (_, rbrack_t) = self
+            .all_of("rbrack")
+            .and(|| self.try_opt_nl())
+            .and(|| self.expect_token(TokenKind::tRBRACK))
+            .unwrap()?;
+
+        Ok(rbrack_t)
     }
     fn try_rbrace(&mut self) -> ParseResult<Token> {
-        let checkpoint = self.new_checkpoint();
-        self.try_opt_nl();
-        match self.try_token(TokenKind::tRCURLY) {
-            err @ Err(_) => {
-                checkpoint.restore();
-                err
-            }
-            ok => ok,
-        }
+        let (_, rbrace_t) = self
+            .all_of("rbrace")
+            .and(|| self.try_opt_nl())
+            .and(|| self.expect_token(TokenKind::tRCURLY))
+            .unwrap()?;
+
+        Ok(rbrace_t)
     }
     fn try_trailer(&mut self) -> ParseResult<Token> {
         self.one_of("trailer")

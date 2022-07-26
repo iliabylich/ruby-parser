@@ -10,9 +10,10 @@ where
     C: Constructor,
 {
     pub(crate) fn try_opt_else(&mut self) -> ParseResult<(Token, Option<Box<Node>>)> {
-        let else_t = self.try_token(TokenKind::kELSE)?;
-        let compstmt = self.try_compstmt()?;
-        Ok((else_t, compstmt))
+        self.all_of("opt else")
+            .and(|| self.try_token(TokenKind::kELSE))
+            .and(|| self.try_compstmt())
+            .unwrap()
     }
 }
 

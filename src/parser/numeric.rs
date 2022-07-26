@@ -12,10 +12,12 @@ where
     pub(crate) fn try_numeric(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("numeric")
             .or_else(|| {
-                let uminus_num = self.try_token(TokenKind::tUMINUS)?;
-                // If there's no number after `-` is still could be `-expr`,
-                // that's fine, here we handle only numeric literals
-                let simple_numeric = self.try_simple_numeric()?;
+                let (uminus_num, simple_numeric) = self
+                    .all_of("-numeric")
+                    .and(|| self.try_token(TokenKind::tUMINUS))
+                    .and(|| self.try_simple_numeric())
+                    .unwrap()?;
+
                 Ok(Builder::<C>::unary_num(
                     uminus_num,
                     simple_numeric,

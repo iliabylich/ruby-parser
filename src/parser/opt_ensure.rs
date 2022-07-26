@@ -10,9 +10,10 @@ where
     C: Constructor,
 {
     pub(crate) fn try_opt_ensure(&mut self) -> ParseResult<(Token, Option<Box<Node>>)> {
-        let ensure_t = self.try_token(TokenKind::kENSURE)?;
-        let compsmt = self.try_compstmt()?;
-        Ok((ensure_t, compsmt))
+        self.all_of("opt ensure")
+            .and(|| self.try_token(TokenKind::kENSURE))
+            .and(|| self.try_compstmt())
+            .unwrap()
     }
 }
 

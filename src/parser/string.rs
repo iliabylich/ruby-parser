@@ -95,17 +95,25 @@ where
                 ))
             })
             .or_else(|| {
-                let string_dvar_t = self.try_token(TokenKind::tSTRING_DVAR)?;
-                let string_dvar = self.try_string_dvar()?;
+                let (string_dvar_t, string_dvar) = self
+                    .all_of("string dvar")
+                    .and(|| self.try_token(TokenKind::tSTRING_DVAR))
+                    .and(|| self.try_string_dvar())
+                    .unwrap()?;
+
                 panic!(
                     "tSTRING_DVAR string_dvar {:?} {:?}",
                     string_dvar_t, string_dvar
                 )
             })
             .or_else(|| {
-                let string_dbeg_t = self.try_token(TokenKind::tSTRING_DBEG)?;
-                let compstmt = self.try_compstmt()?;
-                let string_dend_t = self.expect_token(TokenKind::tSTRING_DEND);
+                let (string_dbeg_t, compstmt, string_dend_t) = self
+                    .all_of("#{ stmt }")
+                    .and(|| self.try_token(TokenKind::tSTRING_DBEG))
+                    .and(|| self.try_compstmt())
+                    .and(|| self.expect_token(TokenKind::tSTRING_DEND))
+                    .unwrap()?;
+
                 panic!(
                     "tSTRING_DBEG compstmt tSTRING_DEND {:?} {:?} {:?}",
                     string_dbeg_t, compstmt, string_dend_t

@@ -10,11 +10,15 @@ where
     C: Constructor,
 {
     pub(crate) fn try_defined(&mut self) -> ParseResult<Box<Node>> {
-        let defined_t = self.try_token(TokenKind::kDEFINED)?;
-        let _ = self.try_opt_nl();
-        let lparen_t = self.expect_token(TokenKind::tLPAREN);
-        let expr = self.try_expr()?;
-        let rparen_t = self.expect_token(TokenKind::tRPAREN);
+        let (defined_t, _nl, lparen_t, expr, rparen_t) = self
+            .all_of("defined? value")
+            .and(|| self.try_token(TokenKind::kDEFINED))
+            .and(|| self.try_opt_nl())
+            .and(|| self.expect_token(TokenKind::tLPAREN))
+            .and(|| self.try_expr())
+            .and(|| self.expect_token(TokenKind::tRPAREN))
+            .unwrap()?;
+
         todo!(
             "defined {:?} {:?} {:?} {:?}",
             defined_t,

@@ -2,6 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
+    transactions::ParseResultApi,
     Node,
 };
 
@@ -30,44 +31,64 @@ fn try_expr_head<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node
         .unwrap()
 }
 fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    let not_t = parser.try_token(TokenKind::kNOT)?;
-    let _ = parser.try_opt_nl();
-    let expr = parser.try_expr()?;
+    let (not_t, _opt_nl, expr) = parser
+        .all_of("not expr")
+        .and(|| parser.try_token(TokenKind::kNOT))
+        .and(|| parser.try_opt_nl())
+        .and(|| parser.try_expr())
+        .unwrap()?;
+
     Ok(Builder::<C>::not_op(not_t, None, Some(expr), None))
 }
 fn try_bang_command_call<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    let bang_t = parser.try_token(TokenKind::tBANG)?;
-    let command_call = parser.try_command_call()?;
+    let (bang_t, command_call) = parser
+        .all_of("! command_call")
+        .and(|| parser.try_token(TokenKind::tBANG))
+        .and(|| parser.try_command_call())
+        .unwrap()?;
+
     Ok(Builder::<C>::not_op(bang_t, None, Some(command_call), None))
 }
 fn try_arg_assoc_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    let arg = parser.try_arg()?;
-    let assoc_t = parser.try_token(TokenKind::tASSOC)?;
-    let p_top_expr_body = parser.try_p_top_expr_body()?;
+    let (arg, assoc_t, p_top_expr_body) = parser
+        .all_of("arg => pattern")
+        .and(|| parser.try_arg())
+        .and(|| parser.try_token(TokenKind::tASSOC))
+        .and(|| parser.try_p_top_expr_body())
+        .unwrap()?;
+
     Ok(Builder::<C>::match_pattern(arg, assoc_t, p_top_expr_body))
 }
 fn try_arg_in_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    let arg = parser.try_arg()?;
-    let in_t = parser.try_token(TokenKind::kIN)?;
-    let p_top_expr_body = parser.try_p_top_expr_body()?;
+    let (arg, in_t, p_top_expr_body) = parser
+        .all_of("arg in pattern")
+        .and(|| parser.try_arg())
+        .and(|| parser.try_token(TokenKind::kIN))
+        .and(|| parser.try_p_top_expr_body())
+        .unwrap()?;
+
     Ok(Builder::<C>::match_pattern_p(arg, in_t, p_top_expr_body))
 }
 
 fn try_expr_tail<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> ParseResult<Option<(Token, Box<Node>)>> {
-    let op_t = parser
-        .one_of("expression continuation")
-        .or_else(|| parser.try_token(TokenKind::kAND))
-        .or_else(|| parser.try_token(TokenKind::kOR))
+    parser
+        .one_of("[and/or] expr")
+        .or_else(|| {
+            parser
+                .all_of("and expr")
+                .and(|| parser.try_token(TokenKind::kAND))
+                .and(|| parser.try_expr())
+                .unwrap()
+        })
+        .or_else(|| {
+            parser
+                .all_of("or expr")
+                .and(|| parser.try_token(TokenKind::kOR))
+                .and(|| parser.try_expr())
+                .unwrap()
+        })
         .unwrap()
-        .ok();
-    let op_t = if let Some(op_t) = op_t {
-        op_t
-    } else {
-        return Ok(None);
-    };
-
-    let rhs = parser.try_expr()?;
-    Ok(Some((op_t, rhs)))
+        .ignore_lookaheads()
 }

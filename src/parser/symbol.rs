@@ -20,15 +20,20 @@ where
     fn try_ssym(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("static symbol")
             .or_else(|| {
-                let colon_t = self.try_token(TokenKind::tCOLON)?;
-                let sym_t = self
-                    .one_of("static symbol value")
-                    .or_else(|| self.try_fname())
-                    .or_else(|| self.try_token(TokenKind::tIVAR))
-                    .or_else(|| self.try_token(TokenKind::tCVAR))
-                    .or_else(|| self.try_token(TokenKind::tGVAR))
-                    .required()
+                let (colon_t, sym_t) = self
+                    .all_of(":sym")
+                    .and(|| self.try_token(TokenKind::tCOLON))
+                    .and(|| {
+                        self.one_of("static symbol value")
+                            .or_else(|| self.try_fname())
+                            .or_else(|| self.try_token(TokenKind::tIVAR))
+                            .or_else(|| self.try_token(TokenKind::tCVAR))
+                            .or_else(|| self.try_token(TokenKind::tGVAR))
+                            .required()
+                            .unwrap()
+                    })
                     .unwrap()?;
+
                 Ok(Builder::<C>::symbol(colon_t, sym_t, self.buffer()))
             })
             .or_else(|| {
@@ -94,7 +99,8 @@ mod tests {
             parser.try_ssym(),
             "
 ONEOF (1) static symbol
-    TOKEN (1) expected tCOLON, got tEOF (at 0)
+    SEQUENCE (1) :sym (got [])
+        TOKEN (1) expected tCOLON, got tEOF (at 0)
     SEQUENCE (1) dynamic symbol value (got [])
         TOKEN (1) expected tSYMBEG, got tEOF (at 0)
 "

@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
-    transactions::StepData,
+    transactions::{ParseResultApi, StepData},
     Node, Token,
 };
 
@@ -57,10 +57,14 @@ where
     }
 
     pub(crate) fn try_bodystmt(&mut self) -> ParseResult<Box<Node>> {
-        let compstmt = self.try_compstmt()?;
-        let rescue_bodies = self.try_opt_rescue()?;
-        let opt_else = self.try_opt_else()?;
-        let opt_ensure = self.try_opt_ensure()?;
+        let (compstmt, rescue_bodies, opt_else, opt_ensure) = self
+            .all_of("bodystmt")
+            .and(|| self.try_compstmt())
+            .and(|| self.try_opt_rescue())
+            .and(|| self.try_opt_else())
+            .and(|| self.try_opt_ensure())
+            .unwrap()?;
+
         Ok(Builder::<C>::begin_body(
             compstmt,
             rescue_bodies,
@@ -95,36 +99,19 @@ where
         Ok(stmts)
     }
 
+    #[allow(unreachable_code, unused_mut)]
     pub(crate) fn try_stmt(&mut self) -> ParseResult<Box<Node>> {
-        let stmt = self.try_stmt_head()?;
-
-        match self.current_token().kind {
-            TokenKind::kIF => {
-                let k_if = self.current_token();
-                self.skip_token();
-                let expr_value = self.try_expr_value()?;
-                panic!("if_mod {:?} {:?} {:?}", stmt, k_if, expr_value);
+        let mut stmt = self.try_stmt_head()?;
+        if let Some((mod_t, expr)) = self.try_stmt_tail().ignore_lookaheads()? {
+            match mod_t.kind {
+                TokenKind::kIF => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kUNLESS => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kWHILE => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kUNTIL => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                _ => unreachable!("stmt_tail handles only if/unless/while/until modifiers"),
             }
-            TokenKind::kUNLESS => {
-                let k_unless = self.current_token();
-                self.skip_token();
-                let expr_value = self.try_expr_value()?;
-                panic!("unless_mod {:?} {:?} {:?}", stmt, k_unless, expr_value);
-            }
-            TokenKind::kWHILE => {
-                let k_while = self.current_token();
-                self.skip_token();
-                let expr_value = self.try_expr_value()?;
-                panic!("while_mod {:?} {:?} {:?}", stmt, k_while, expr_value);
-            }
-            TokenKind::kUNTIL => {
-                let k_until = self.current_token();
-                self.skip_token();
-                let expr_value = self.try_expr_value()?;
-                panic!("until_mod {:?} {:?} {:?}", stmt, k_until, expr_value);
-            }
-            _ => Ok(stmt),
         }
+        Ok(stmt)
     }
 
     fn try_stmt_head(&mut self) -> ParseResult<Box<Node>> {
@@ -141,6 +128,35 @@ where
         }
 
         self.try_expr()
+    }
+
+    fn try_stmt_tail(&mut self) -> ParseResult<(Token, Box<Node>)> {
+        self.one_of("stmt tail")
+            .or_else(|| {
+                self.all_of("if_mod expr")
+                    .and(|| self.try_token(TokenKind::kIF))
+                    .and(|| self.try_expr_value())
+                    .unwrap()
+            })
+            .or_else(|| {
+                self.all_of("unless_mod expr")
+                    .and(|| self.try_token(TokenKind::kUNLESS))
+                    .and(|| self.try_expr_value())
+                    .unwrap()
+            })
+            .or_else(|| {
+                self.all_of("while_mod expr")
+                    .and(|| self.try_token(TokenKind::kWHILE))
+                    .and(|| self.try_expr_value())
+                    .unwrap()
+            })
+            .or_else(|| {
+                self.all_of("until_mod expr")
+                    .and(|| self.try_token(TokenKind::kUNTIL))
+                    .and(|| self.try_expr_value())
+                    .unwrap()
+            })
+            .unwrap()
     }
 
     fn rescue_stmt(&mut self) -> ParseResult<(Token, Box<Node>)> {

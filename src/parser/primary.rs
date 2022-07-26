@@ -24,18 +24,27 @@ where
             .or_else(|| self.try_back_ref())
             .or_else(|| {
                 let id_t = self.try_token(TokenKind::tFID)?;
+
                 todo!("call_method {:?}", id_t);
             })
             .or_else(|| {
-                let begin_t = self.try_token(TokenKind::kBEGIN)?;
-                let bodystmt = self.try_bodystmt();
-                let end_t = self.expect_token(TokenKind::kEND);
+                let (begin_t, bodystmt, end_t) = self
+                    .all_of("BEGIN { .. }")
+                    .and(|| self.try_token(TokenKind::kBEGIN))
+                    .and(|| self.try_bodystmt())
+                    .and(|| self.expect_token(TokenKind::kEND))
+                    .unwrap()?;
+
                 todo!("begin {:?} {:?} {:?}", begin_t, bodystmt, end_t);
             })
             .or_else(|| {
-                let lparen_t = self.try_token(TokenKind::tLPAREN)?;
-                let stmt = self.try_stmt()?;
-                let rparen_t = self.try_rparen()?;
+                let (lparen_t, stmt, rparen_t) = self
+                    .all_of("( stmt )")
+                    .and(|| self.try_token(TokenKind::tLPAREN))
+                    .and(|| self.try_stmt())
+                    .and(|| self.try_rparen())
+                    .unwrap()?;
+
                 todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
             })
             .or_else(|| {
@@ -49,8 +58,12 @@ where
             .or_else(|| self.try_defined())
             .or_else(|| try_not_expr(self))
             .or_else(|| {
-                let fcall = self.try_fcall()?;
-                let brace_block = self.try_brace_block()?;
+                let (fcall, brace_block) = self
+                    .all_of("fcall brace_block")
+                    .and(|| self.try_fcall())
+                    .and(|| self.try_brace_block())
+                    .unwrap()?;
+
                 todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
             })
             // FIXME: this rule is left-recursive, this must be extracted to a post-rule
@@ -113,10 +126,14 @@ fn try_keyword_cmd<C: Constructor>(
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
 fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    let not_t = parser.try_token(TokenKind::kNOT)?;
-    let lparen_t = parser.try_token(TokenKind::tLPAREN)?;
-    let expr = parser.try_expr()?;
-    let rparen_t = parser.try_rparen()?;
+    let (not_t, lparen_t, expr, rparen_t) = parser
+        .all_of("not ( [expr] )")
+        .and(|| parser.try_token(TokenKind::kNOT))
+        .and(|| parser.try_token(TokenKind::tLPAREN))
+        .and(|| parser.try_expr())
+        .and(|| parser.try_rparen())
+        .unwrap()?;
+
     todo!(
         "not_op {:?} {:?} {:?} {:?}",
         not_t,

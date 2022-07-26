@@ -29,9 +29,12 @@ where
             .or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kTHEN))
             .or_else(|| {
-                let _term = self.try_term();
-                let k_then = self.try_token(TokenKind::kTHEN)?;
-                Ok(k_then)
+                let (_term, then_t) = self
+                    .all_of("term then")
+                    .and(|| self.try_term())
+                    .and(|| self.try_token(TokenKind::kTHEN))
+                    .unwrap()?;
+                Ok(then_t)
             })
             .unwrap()
     }
@@ -46,9 +49,13 @@ where
                 panic!("const {:?} {:?}", colon2_t, const_t)
             })
             .or_else(|| {
-                let primary_value = self.try_primary_value()?;
-                let op_t = self.try_call_op2()?;
-                let id_t = self.try_const_or_identifier()?;
+                let (primary_value, op_t, id_t) = self
+                    .all_of("primary call_op [const/tIDENT]")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.try_call_op2())
+                    .and(|| self.try_const_or_identifier())
+                    .unwrap()?;
+
                 panic!(
                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                     primary_value, op_t, id_t
@@ -63,17 +70,23 @@ where
 }
 
 fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    let rescue_t = parser.try_token(TokenKind::kRESCUE)?;
-    let exc_list = try_exc_list(parser)?;
-    let exc_var = try_exc_var(parser)?;
-    let then = parser.try_then().ok();
-    let compstmt = parser.try_compstmt()?;
+    let (rescue_t, exc_list, exc_var, then, compstmt) = parser
+        .all_of("rescue1")
+        .and(|| parser.try_token(TokenKind::kRESCUE))
+        .and(|| try_exc_list(parser))
+        .and(|| try_exc_var(parser))
+        .and(|| {
+            parser
+                .one_of("optional then")
+                .or_else(|| parser.try_then().map(|tok| Some(tok)))
+                .or_else(|| Ok(None))
+                .unwrap()
+        })
+        .and(|| parser.try_compstmt())
+        .unwrap()?;
+
     Ok(Builder::<C>::rescue_body(
-        rescue_t,
-        Some(exc_list),
-        Some(exc_var),
-        then,
-        compstmt,
+        rescue_t, exc_list, exc_var, then, compstmt,
     ))
 }
 
@@ -84,10 +97,19 @@ fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<Node>
         .or_else(|| parser.try_mrhs())
         .unwrap()
 }
-fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Token, Box<Node>)> {
-    let assoc_t = parser.try_token(TokenKind::tASSOC)?;
-    let lhs = parser.try_lhs()?;
-    Ok((assoc_t, lhs))
+fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Option<(Token, Box<Node>)>> {
+    parser
+        .one_of("[exc var]")
+        .or_else(|| {
+            let (assoc_t, lhs) = parser
+                .all_of("exc var")
+                .and(|| parser.try_token(TokenKind::tASSOC))
+                .and(|| parser.try_lhs())
+                .unwrap()?;
+            Ok(Some((assoc_t, lhs)))
+        })
+        .or_else(|| Ok(None))
+        .unwrap()
 }
 
 #[cfg(test)]

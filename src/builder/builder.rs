@@ -833,12 +833,12 @@ impl<C: Constructor> Builder<C> {
 
     pub(crate) fn rescue_body(
         rescue_t: Token,
-        exc_list: Option<Vec<Node>>,
+        exc_list: Vec<Node>,
         exc_var: Option<(Token, Box<Node>)>,
         then_t: Option<Token>,
         body: Option<Box<Node>>,
     ) -> Box<Node> {
-        let exc_list = exc_list.map(|exc_list| Self::array(None, exc_list, None));
+        let exc_list = Self::array(None, exc_list, None);
         todo!("builder.rescue_body")
     }
 

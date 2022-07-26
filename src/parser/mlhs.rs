@@ -94,14 +94,13 @@ where
         self.one_of("mlhs item")
             .or_else(|| self.try_mlhs_node())
             .or_else(|| {
-                self.all_of("( mlhs inner )")
+                let (lparen_t, exprs, rparen_t) = self
+                    .all_of("( mlhs inner )")
                     .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.try_mlhs_inner())
                     .and(|| self.try_rparen())
-                    .unwrap()
-                    .map(|(lparen_t, exprs, rparen_t)| {
-                        todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
-                    })
+                    .unwrap()?;
+                todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
             })
             .unwrap()
     }
@@ -171,18 +170,25 @@ where
                 panic!("const {:?} {:?}", colon2_t, const_t)
             })
             .or_else(|| {
-                let primary_value = self.try_primary_value()?;
-                let op_t = self.try_call_op()?;
-                let id_t = self.try_const_or_identifier()?;
+                let (primary_value, op_t, id_t) = self
+                    .all_of("primary call_op [const/tIDENT]")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.try_call_op())
+                    .and(|| self.try_const_or_identifier())
+                    .unwrap()?;
+
                 panic!(
                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                     primary_value, op_t, id_t
                 )
             })
             .or_else(|| {
-                let primary_value = self.try_primary_value()?;
-                let colon2_t = self.try_token(TokenKind::tCOLON2)?;
-                let const_t = self.try_const_or_identifier()?;
+                let (primary_value, colon2_t, const_t) = self
+                    .all_of("priamay :: [const/tIDENT")
+                    .and(|| self.try_primary_value())
+                    .and(|| self.expect_token(TokenKind::tCOLON2))
+                    .and(|| self.try_const_or_identifier())
+                    .unwrap()?;
 
                 panic!(
                     "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
