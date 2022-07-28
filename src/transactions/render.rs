@@ -53,18 +53,3 @@ impl ParseError {
 fn ws_offset(level: usize) -> String {
     " ".repeat(level * 4)
 }
-
-#[cfg(test)]
-macro_rules! assert_err_eq {
-    ($actual:expr, $expected:literal) => {
-        match $actual {
-            Ok(value) => panic!("expected Err(...), got Ok({:?}", value),
-            Err(err) => {
-                println!("== Actual error ==\n{}", err.render());
-                assert_eq!(err.render(), $expected.trim_start().trim_end())
-            }
-        }
-    };
-}
-#[cfg(test)]
-pub(crate) use assert_err_eq;

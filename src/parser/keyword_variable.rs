@@ -21,122 +21,78 @@ where
             .stop()
     }
 
-    pub(crate) fn try_nil(&mut self) -> ParseResult<Box<Node>> {
+    fn try_nil(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::kNIL)
             .map(|nil_t| Builder::<C>::nil(nil_t))
     }
-    pub(crate) fn try_self(&mut self) -> ParseResult<Box<Node>> {
+    fn try_self(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::kSELF)
             .map(|self_t| Builder::<C>::self_(self_t))
     }
-    pub(crate) fn try_true(&mut self) -> ParseResult<Box<Node>> {
+    fn try_true(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::kTRUE)
             .map(|true_t| Builder::<C>::true_(true_t))
     }
-    pub(crate) fn try_false(&mut self) -> ParseResult<Box<Node>> {
+    fn try_false(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::kFALSE)
             .map(|false_t| Builder::<C>::false_(false_t))
     }
     #[allow(non_snake_case)]
-    pub(crate) fn try__file__(&mut self) -> ParseResult<Box<Node>> {
+    fn try__file__(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::k__FILE__)
             .map(|file_t| Builder::<C>::__file__(file_t))
     }
     #[allow(non_snake_case)]
-    pub(crate) fn try__line__(&mut self) -> ParseResult<Box<Node>> {
+    fn try__line__(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::k__LINE__)
             .map(|line_t| Builder::<C>::__line__(line_t))
     }
     #[allow(non_snake_case)]
-    pub(crate) fn try__encoding__(&mut self) -> ParseResult<Box<Node>> {
+    fn try__encoding__(&mut self) -> ParseResult<Box<Node>> {
         self.try_token(TokenKind::k__ENCODING__)
             .map(|encoding_t| Builder::<C>::__encoding__(encoding_t))
     }
 }
 
-#[test]
-fn test_nil() {
-    use crate::{loc::loc, nodes::Nil, RustParser};
-    let mut parser = RustParser::new(b"nil");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::Nil(Nil {
-            expression_l: loc!(0, 3)
-        })))
-    )
-}
+#[cfg(test)]
+mod tests {
+    use crate::testing::assert_parses;
 
-#[test]
-fn test_self() {
-    use crate::{loc::loc, nodes::Self_, RustParser};
-    let mut parser = RustParser::new(b"self");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::Self_(Self_ {
-            expression_l: loc!(0, 4)
-        })))
-    )
-}
+    #[test]
+    fn test_nil() {
+        assert_parses!(try_keyword_variable, b"nil", "s(:nil)");
+    }
 
-#[test]
-fn test_true() {
-    use crate::{loc::loc, nodes::True, RustParser};
-    let mut parser = RustParser::new(b"true");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::True(True {
-            expression_l: loc!(0, 4)
-        })))
-    )
-}
+    #[test]
+    fn test_self() {
+        assert_parses!(try_keyword_variable, b"self", "s(:self)");
+    }
 
-#[test]
-fn test_false() {
-    use crate::{loc::loc, nodes::False, RustParser};
-    let mut parser = RustParser::new(b"false");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::False(False {
-            expression_l: loc!(0, 5)
-        })))
-    )
-}
+    #[test]
+    fn test_true() {
+        assert_parses!(try_keyword_variable, b"true", "s(:true)");
+    }
 
-#[test]
-#[allow(non_snake_case)]
-fn test__file__() {
-    use crate::{loc::loc, nodes::File, RustParser};
-    let mut parser = RustParser::new(b"__FILE__");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::File(File {
-            expression_l: loc!(0, 8)
-        })))
-    )
-}
+    #[test]
+    fn test_false() {
+        assert_parses!(try_keyword_variable, b"false", "s(:false)");
+    }
 
-#[test]
-#[allow(non_snake_case)]
-fn test__line__() {
-    use crate::{loc::loc, nodes::Line, RustParser};
-    let mut parser = RustParser::new(b"__LINE__");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::Line(Line {
-            expression_l: loc!(0, 8)
-        })))
-    )
-}
+    #[test]
+    #[allow(non_snake_case)]
+    fn test__file__() {
+        assert_parses!(try_keyword_variable, b"__FILE__", "s(:__FILE__)");
+    }
 
-#[test]
-#[allow(non_snake_case)]
-fn test__encoding__() {
-    use crate::{loc::loc, nodes::Encoding, RustParser};
-    let mut parser = RustParser::new(b"__ENCODING__");
-    assert_eq!(
-        parser.try_keyword_variable(),
-        Ok(Box::new(Node::Encoding(Encoding {
-            expression_l: loc!(0, 12)
-        })))
-    )
+    #[test]
+    #[allow(non_snake_case)]
+    fn test__line__() {
+        assert_parses!(try_keyword_variable, b"__LINE__", "s(:__LINE__)");
+    }
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn test__encoding__() {
+        assert_parses!(try_keyword_variable, b"__ENCODING__", "s(:__ENCODING__)");
+    }
 }

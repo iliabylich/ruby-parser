@@ -19,7 +19,21 @@ where
 
 #[test]
 fn test_opt_ensure() {
-    use crate::parser::{ParseError, RustParser};
-    let mut parser = RustParser::new(b"ensure; foo; end");
-    assert_eq!(parser.try_opt_ensure(), Err(ParseError::empty()));
+    use crate::{loc::loc, nodes::Int, parser::RustParser, string_content::StringContent, Node};
+    let mut parser = RustParser::new(b"ensure 42 end");
+    assert_eq!(
+        parser.try_opt_ensure(),
+        Ok((
+            Token {
+                kind: TokenKind::kENSURE,
+                loc: loc!(0, 6),
+                value: None
+            },
+            Some(Box::new(Node::Int(Int {
+                value: StringContent::from("42"),
+                operator_l: None,
+                expression_l: loc!(7, 9)
+            })))
+        ))
+    );
 }

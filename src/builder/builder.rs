@@ -193,7 +193,26 @@ impl<C: Constructor> Builder<C> {
             _ => {}
         }
 
-        todo!()
+        if is_heredoc(&begin_t) {
+            let (heredoc_body_l, heredoc_end_l, expression_l) =
+                heredoc_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Heredoc(Heredoc {
+                parts,
+                heredoc_body_l,
+                heredoc_end_l,
+                expression_l,
+            }))
+        } else {
+            let (begin_l, end_l, expression_l) = collection_map(&begin_t, &parts, &end_t);
+
+            Box::new(Node::Dstr(Dstr {
+                parts,
+                begin_l,
+                end_l,
+                expression_l,
+            }))
+        }
     }
 
     pub(crate) fn character(char_t: Token) -> Box<Node> {
@@ -955,15 +974,57 @@ impl<C: Constructor> Builder<C> {
         }
     }
 
-    pub(crate) fn begin(begin_t: Token, statements: Vec<Node>, end_t: Token) -> Box<Node> {
-        let begin_l = begin_t.loc;
-        let end_l = end_t.loc;
-        Box::new(Node::Begin(Begin {
-            statements,
-            begin_l: Some(begin_l),
-            end_l: Some(end_l),
-            expression_l: begin_l.join(&end_l),
-        }))
+    pub(crate) fn begin(begin_t: Token, body: Option<Box<Node>>, end_t: Token) -> Box<Node> {
+        let new_begin_l = begin_t.loc;
+        let new_end_l = end_t.loc;
+        let new_expression_l = new_begin_l.join(&new_end_l);
+
+        let new_begin_l = Some(new_begin_l);
+        let new_end_l = Some(new_end_l);
+
+        if let Some(body) = body {
+            let mut body = *body;
+            match &mut body {
+                Node::Mlhs(Mlhs {
+                    begin_l,
+                    end_l,
+                    expression_l,
+                    ..
+                }) => {
+                    // Synthesized (begin) from compstmt "a; b" or (mlhs)
+                    // from multi_lhs "(a, b) = *foo".
+                    *begin_l = new_begin_l;
+                    *end_l = new_end_l;
+                    *expression_l = new_expression_l;
+                    Box::new(body)
+                }
+                Node::Begin(Begin {
+                    begin_l,
+                    end_l,
+                    expression_l,
+                    ..
+                }) if begin_l.is_none() && end_l.is_none() => {
+                    *begin_l = new_begin_l;
+                    *end_l = new_end_l;
+                    *expression_l = new_expression_l;
+                    Box::new(body)
+                }
+                _ => Box::new(Node::Begin(Begin {
+                    statements: vec![body],
+                    begin_l: new_begin_l,
+                    end_l: new_end_l,
+                    expression_l: new_expression_l,
+                })),
+            }
+        } else {
+            // A nil expression: `()'.
+            Box::new(Node::Begin(Begin {
+                statements: vec![],
+                begin_l: new_begin_l,
+                end_l: new_end_l,
+                expression_l: new_expression_l,
+            }))
+        }
     }
 
     pub(crate) fn group(nodes: Vec<Node>) -> Box<Node> {
@@ -1080,6 +1141,13 @@ fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
         (Some(lhs), None) => Some(*lhs),
         (Some(lhs), Some(rhs)) => Some(lhs.join(rhs)),
     }
+}
+
+fn is_heredoc(begin_t: &Option<Token>) -> bool {
+    if let Some(begin_t) = begin_t.as_ref() {
+        return begin_t.kind == TokenKind::tHEREDOC_BEG;
+    }
+    false
 }
 
 fn heredoc_map(begin_t: &Option<Token>, nodes: &[Node], end_t: &Option<Token>) -> (Loc, Loc, Loc) {

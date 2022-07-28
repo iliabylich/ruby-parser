@@ -25,5 +25,3 @@ impl<C: Constructor> Parser<C> {
 }
 
 mod render;
-#[cfg(test)]
-pub(crate) use render::assert_err_eq;

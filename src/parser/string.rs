@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, Constructor},
     parser::{ParseError, ParseResult, Parser},
-    token::{Token, TokenKind},
+    token::TokenKind,
     Node,
 };
 
@@ -123,16 +123,13 @@ where
                 ))
             })
             .or_else(|| {
-                let (string_dvar_t, string_dvar) = self
+                let (_string_dvar_t, string_dvar) = self
                     .all_of("string dvar")
                     .and(|| self.try_token(TokenKind::tSTRING_DVAR))
                     .and(|| self.try_string_dvar())
                     .stop()?;
 
-                panic!(
-                    "tSTRING_DVAR string_dvar {:?} {:?}",
-                    string_dvar_t, string_dvar
-                )
+                Ok(string_dvar)
             })
             .or_else(|| {
                 let (string_dbeg_t, compstmt, string_dend_t) = self
@@ -142,57 +139,48 @@ where
                     .and(|| self.expect_token(TokenKind::tSTRING_DEND))
                     .stop()?;
 
-                panic!(
-                    "tSTRING_DBEG compstmt tSTRING_DEND {:?} {:?} {:?}",
-                    string_dbeg_t, compstmt, string_dend_t
-                )
+                Ok(Builder::<C>::begin(string_dbeg_t, compstmt, string_dend_t))
             })
             .stop()
     }
 
-    fn try_string_dvar(&mut self) -> ParseResult<Token> {
-        todo!()
+    fn try_string_dvar(&mut self) -> ParseResult<Box<Node>> {
+        self.one_of("string_dvar")
+            .or_else(|| self.try_gvar())
+            .or_else(|| self.try_ivar())
+            .or_else(|| self.try_cvar())
+            .or_else(|| self.try_back_ref())
+            .stop()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        loc::loc, nodes::Str, parser::ParseError, string_content::StringContent, Node, RustParser,
-    };
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_char() {
-        let mut parser = RustParser::new(b"?\\u0001");
-        assert_eq!(
-            parser.try_strings(),
-            Ok(Box::new(Node::Str(Str {
-                value: StringContent::from("\u{0001}"),
-                begin_l: Some(loc!(0, 1)),
-                end_l: None,
-                expression_l: loc!(0, 7)
-            })))
-        );
+        assert_parses!(try_strings, b"?\\u0001", "s(:str, \"\\u{1}\")")
     }
 
     #[test]
     fn test_string1_plain() {
-        let mut parser = RustParser::new(b"'foo'");
-        assert_eq!(
-            parser.try_strings(),
-            Ok(Box::new(Node::Str(Str {
-                value: StringContent::from("foo"),
-                begin_l: Some(loc!(0, 1)),
-                end_l: Some(loc!(4, 5)),
-                expression_l: loc!(0, 5)
-            })))
-        );
+        assert_parses!(try_strings, b"'foo'", "s(:str, \"foo\")");
     }
 
     #[test]
     fn test_string1_interp() {
-        let mut parser = RustParser::new(b"\"foo #{42} #@bar\"");
-        assert_eq!(parser.try_strings(), Err(ParseError::empty()));
-        todo!("implement me");
+        assert_parses!(
+            try_strings,
+            b"\"foo #{42} #@bar\"",
+            r#"
+s(:dstr,
+  s(:str, "foo "),
+  s(:begin,
+    s(:int, "42")),
+  s(:str, " "),
+  s(:ivar, "@bar"))
+            "#
+        );
     }
 }

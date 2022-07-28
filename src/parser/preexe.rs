@@ -22,23 +22,36 @@ where
     }
 }
 
-#[test]
-fn test_preexe() {
-    use crate::parser::{ParseError, RustParser};
-    let mut parser = RustParser::new(b"BEGIN {}").debug();
-    assert_eq!(parser.try_preexe(), Err(ParseError::empty()));
-    todo!("implement me");
-}
+#[cfg(test)]
+mod tests {
+    use crate::testing::{assert_parses, assert_parses_with_error};
 
-#[test]
-fn test_nothing() {
-    use crate::{parser::RustParser, transactions::assert_err_eq};
-    let mut parser = RustParser::new(b"");
-    assert_err_eq!(
-        parser.try_postexe(),
-        "
+    #[test]
+    fn test_preexe() {
+        assert_parses!(
+            try_preexe,
+            b"BEGIN { 42 }",
+            r#"
+s(:preexe,
+  s(:int, "42"))
+        "#
+        );
+    }
+
+    #[test]
+    fn test_preexe_empty() {
+        assert_parses!(try_preexe, b"BEGIN {}", "s(:preexe)");
+    }
+
+    #[test]
+    fn test_nothing() {
+        assert_parses_with_error!(
+            try_postexe,
+            b"",
+            "
 SEQUENCE (1) postexe (got [])
     TOKEN (1) expected klEND, got tEOF (at 0)
     "
-    );
+        );
+    }
 }

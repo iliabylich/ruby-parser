@@ -400,17 +400,17 @@ fn build_binary_call<C: Constructor>(
 
 #[test]
 fn test_arg() {
-    use crate::{parser::RustParser, testing::assert_parses};
-    let result = RustParser::new(b"1 + 2 * 3").debug().try_arg();
+    use crate::testing::assert_parses;
 
     assert_parses!(
-        result,
+        try_arg,
+        b"1 + 2 * 3",
         r#"
-        s(:send,
-        s(:int, "1"), "+",
-        s(:send,
-            s(:int, "2"), "*",
-            s(:int, "3")))
+s(:send,
+  s(:int, "1"), "+",
+  s(:send,
+    s(:int, "2"), "*",
+    s(:int, "3")))
         "#
     );
 }

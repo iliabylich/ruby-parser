@@ -67,7 +67,7 @@ where
 mod tests {
     use crate::{
         loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent,
-        transactions::assert_err_eq, Node, RustParser,
+        testing::assert_parses_with_error, Node, RustParser,
     };
 
     #[test]
@@ -94,9 +94,9 @@ mod tests {
 
     #[test]
     fn test_ssym_no_colon() {
-        let mut parser = RustParser::new(b"");
-        assert_err_eq!(
-            parser.try_ssym(),
+        let parser = assert_parses_with_error!(
+            try_ssym,
+            b"",
             "
 ONEOF (1) static symbol
     SEQUENCE (1) :sym (got [])
@@ -124,9 +124,9 @@ ONEOF (1) static symbol
 
     #[test]
     fn test_dsym_only_colon() {
-        let mut parser = RustParser::new(b":");
-        assert_err_eq!(
-            parser.try_dsym(),
+        let parser = assert_parses_with_error!(
+            try_dsym,
+            b":",
             "
 SEQUENCE (1) dynamic symbol (got [])
     TOKEN (1) expected tDSYMBEG, got tCOLON (at 0)
@@ -138,9 +138,9 @@ SEQUENCE (1) dynamic symbol (got [])
 
     #[test]
     fn test_dsym_no_colon() {
-        let mut parser = RustParser::new(b"");
-        assert_err_eq!(
-            parser.try_dsym(),
+        assert_parses_with_error!(
+            try_dsym,
+            b"",
             "
 SEQUENCE (1) dynamic symbol (got [])
     TOKEN (1) expected tDSYMBEG, got tEOF (at 0)

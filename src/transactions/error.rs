@@ -154,7 +154,13 @@ impl ParseError {
                 Some(Self::OneOfError { name, variants })
             }
 
-            err @ Self::TokenError { .. } => Some(err),
+            err @ Self::TokenError { .. } => {
+                if err.is_lookahead() {
+                    None
+                } else {
+                    Some(err)
+                }
+            }
 
             Self::SeqError { error, name, steps } => {
                 let error = error.strip_lookaheads()?;

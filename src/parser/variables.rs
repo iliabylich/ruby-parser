@@ -10,38 +10,38 @@ where
     C: Constructor,
 {
     pub(crate) fn try_gvar(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tGVAR)
-            .map(|gvar_t| Builder::<C>::gvar(gvar_t, self.buffer()))
+        let gvar_t = self.try_token(TokenKind::tGVAR)?;
+        Ok(Builder::<C>::gvar(gvar_t, self.buffer()))
     }
 
     pub(crate) fn try_back_ref(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tBACK_REF)
-            .map(|back_ref_t| Builder::<C>::back_ref(back_ref_t, self.buffer()))
+        let back_ref_t = self.try_token(TokenKind::tBACK_REF)?;
+        Ok(Builder::<C>::back_ref(back_ref_t, self.buffer()))
     }
 
     pub(crate) fn try_nth_ref(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tNTH_REF)
-            .map(|nth_ref_t| Builder::<C>::nth_ref(nth_ref_t, self.buffer()))
+        let nth_ref_t = self.try_token(TokenKind::tNTH_REF)?;
+        Ok(Builder::<C>::nth_ref(nth_ref_t, self.buffer()))
     }
 
     pub(crate) fn try_lvar(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tIDENTIFIER)
-            .map(|ident_t| Builder::<C>::lvar(ident_t, self.buffer()))
+        let lvar_t = self.try_token(TokenKind::tIDENTIFIER)?;
+        Ok(Builder::<C>::lvar(lvar_t, self.buffer()))
     }
 
     pub(crate) fn try_ivar(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tIVAR)
-            .map(|ident_t| Builder::<C>::ivar(ident_t, self.buffer()))
+        let ivar_t = self.try_token(TokenKind::tIVAR)?;
+        Ok(Builder::<C>::ivar(ivar_t, self.buffer()))
     }
 
     pub(crate) fn try_cvar(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tCVAR)
-            .map(|ident_t| Builder::<C>::cvar(ident_t, self.buffer()))
+        let cvar_t = self.try_token(TokenKind::tCVAR)?;
+        Ok(Builder::<C>::cvar(cvar_t, self.buffer()))
     }
 
     pub(crate) fn try_t_const(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::tCONSTANT)
-            .map(|ident_t| Builder::<C>::const_(ident_t, self.buffer()))
+        let const_t = self.try_token(TokenKind::tCONSTANT)?;
+        Ok(Builder::<C>::const_(const_t, self.buffer()))
     }
 
     pub(crate) fn try_const_or_identifier(&mut self) -> ParseResult<Token> {
@@ -52,96 +52,42 @@ where
     }
 }
 
-#[test]
-fn test_gvar() {
-    use crate::{loc::loc, nodes::Gvar, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"$foo");
-    assert_eq!(
-        parser.try_gvar(),
-        Ok(Box::new(Node::Gvar(Gvar {
-            name: StringContent::from("$foo"),
-            expression_l: loc!(0, 4)
-        })))
-    );
-}
+#[cfg(test)]
+mod tests {
+    use crate::testing::assert_parses;
 
-#[test]
-fn test_back_ref() {
-    use crate::{loc::loc, nodes::BackRef, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"$+");
-    assert_eq!(
-        parser.try_back_ref(),
-        Ok(Box::new(Node::BackRef(BackRef {
-            name: StringContent::from("$+"),
-            expression_l: loc!(0, 2)
-        })))
-    );
-}
+    #[test]
+    fn test_gvar() {
+        assert_parses!(try_gvar, b"$foo", "s(:gvar, \"$foo\")");
+    }
 
-#[test]
-fn test_nth_ref() {
-    use crate::{loc::loc, nodes::NthRef, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"$1");
-    assert_eq!(
-        parser.try_nth_ref(),
-        Ok(Box::new(Node::NthRef(NthRef {
-            name: StringContent::from("1"),
-            expression_l: loc!(0, 2)
-        })))
-    );
-}
+    #[test]
+    fn test_back_ref() {
+        assert_parses!(try_back_ref, b"$+", "s(:back_ref, \"$+\")");
+    }
 
-#[test]
-fn test_lvar() {
-    use crate::{loc::loc, nodes::Lvar, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"foo");
-    assert_eq!(
-        parser.try_lvar(),
-        Ok(Box::new(Node::Lvar(Lvar {
-            name: StringContent::from("foo"),
-            expression_l: loc!(0, 3)
-        })))
-    );
-}
+    #[test]
+    fn test_nth_ref() {
+        assert_parses!(try_nth_ref, b"$1", "s(:nth_ref, 1)");
+    }
 
-#[test]
-fn test_ivar() {
-    use crate::{loc::loc, nodes::Ivar, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"@foo");
-    assert_eq!(
-        parser.try_ivar(),
-        Ok(Box::new(Node::Ivar(Ivar {
-            name: StringContent::from("@foo"),
-            expression_l: loc!(0, 4)
-        })))
-    );
-}
+    #[test]
+    fn test_lvar() {
+        assert_parses!(try_lvar, b"foo", "s(:lvar, \"foo\")");
+    }
 
-#[test]
-fn test_cvar() {
-    use crate::{loc::loc, nodes::Cvar, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"@@foo");
-    assert_eq!(
-        parser.try_cvar(),
-        Ok(Box::new(Node::Cvar(Cvar {
-            name: StringContent::from("@@foo"),
-            expression_l: loc!(0, 5)
-        })))
-    );
-}
+    #[test]
+    fn test_ivar() {
+        assert_parses!(try_ivar, b"@foo", "s(:ivar, \"@foo\")");
+    }
 
-#[test]
-fn test_const() {
-    use crate::{loc::loc, nodes::Const, string_content::StringContent, Node, RustParser};
-    let mut parser = RustParser::new(b"Foo");
-    assert_eq!(
-        parser.try_t_const(),
-        Ok(Box::new(Node::Const(Const {
-            name: StringContent::from("Foo"),
-            scope: None,
-            double_colon_l: None,
-            name_l: loc!(0, 3),
-            expression_l: loc!(0, 3)
-        })))
-    );
+    #[test]
+    fn test_cvar() {
+        assert_parses!(try_cvar, b"@@foo", "s(:cvar, \"@@foo\")");
+    }
+
+    #[test]
+    fn test_const() {
+        assert_parses!(try_t_const, b"Foo", "s(:const, nil, \"Foo\")");
+    }
 }

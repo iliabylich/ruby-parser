@@ -24,10 +24,24 @@ where
     }
 }
 
-#[test]
-fn test_postexe() {
-    use crate::{parser::ParseError, RustParser};
-    let mut parser = RustParser::new(b"END { 42 }");
-    assert_eq!(parser.try_postexe(), Err(ParseError::empty()));
-    todo!("implement me");
+#[cfg(test)]
+mod tests {
+    use crate::testing::assert_parses;
+
+    #[test]
+    fn test_postexe() {
+        assert_parses!(
+            try_postexe,
+            b"END { 42 }",
+            r#"
+s(:postexe,
+  s(:int, "42"))
+        "#
+        )
+    }
+
+    #[test]
+    fn test_postexe_empty() {
+        assert_parses!(try_postexe, b"END {}", "s(:postexe)")
+    }
 }
