@@ -46,9 +46,6 @@ impl ParseError {
                     error = error.render_with_level(level + 1)
                 )
             }
-            Self::None => {
-                format!("{offset}NONE", offset = ws_offset(level))
-            }
         }
     }
 }

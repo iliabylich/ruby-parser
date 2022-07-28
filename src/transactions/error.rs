@@ -19,8 +19,6 @@ pub(crate) enum ParseError {
         steps: Vec<StepData>,
         error: Box<ParseError>,
     },
-
-    None,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -140,32 +138,28 @@ impl ParseError {
             Self::TokenError { lookahead, .. } => *lookahead,
             Self::OneOfError { variants, .. } => variants.iter().all(|v| v.is_lookahead()),
             Self::SeqError { steps, .. } => steps.is_empty(),
-            Self::None => false,
         }
     }
 }
 
 // strip_lookaheads
 impl ParseError {
-    pub(crate) fn strip_lookaheads(self) -> Self {
+    pub(crate) fn strip_lookaheads(self) -> Option<Self> {
         match self {
             Self::OneOfError { mut variants, name } => {
                 variants.retain(|v| !v.is_lookahead());
                 if variants.is_empty() {
-                    return Self::None;
+                    return None;
                 }
-                Self::OneOfError { name, variants }
+                Some(Self::OneOfError { name, variants })
             }
 
-            err @ Self::None | err @ Self::TokenError { .. } => err,
+            err @ Self::TokenError { .. } => Some(err),
 
             Self::SeqError { error, name, steps } => {
-                let error = error.strip_lookaheads();
-                if error == Self::None {
-                    return Self::None;
-                }
+                let error = error.strip_lookaheads()?;
                 let error = Box::new(error);
-                Self::SeqError { name, steps, error }
+                Some(Self::SeqError { name, steps, error })
             }
         }
     }
@@ -195,7 +189,6 @@ impl ParseError {
             ParseError::SeqError { error, .. } => {
                 error.make_required();
             }
-            ParseError::None => {}
         }
     }
 
@@ -214,7 +207,6 @@ impl ParseError {
                 variants.iter().map(|v| v.weight()).max().unwrap_or(0)
             }
             Self::SeqError { steps, .. } => 10 * steps.len() + 1,
-            Self::None => 0,
         }
     }
 }

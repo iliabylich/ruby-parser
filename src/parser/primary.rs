@@ -101,15 +101,18 @@ where
                     todo!("append tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t)
                 }
                 Err(error) => {
-                    if error.is_lookahead() {
-                        // no match
-                        break;
-                    } else {
-                        return Err(ParseError::SeqError {
-                            name: "primary -> ::CONST",
-                            steps: vec![node.into()],
-                            error: Box::new(error),
-                        });
+                    match error.strip_lookaheads() {
+                        None => {
+                            // no match
+                            break;
+                        }
+                        Some(error) => {
+                            return Err(ParseError::SeqError {
+                                name: "primary -> ::CONST",
+                                steps: vec![node.into()],
+                                error: Box::new(error),
+                            });
+                        }
                     }
                 }
             }

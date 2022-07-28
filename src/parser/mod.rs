@@ -3,7 +3,7 @@ use crate::lexer::{buffer::Buffer, Lexer};
 use crate::nodes::Node;
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
-use crate::transactions::{ParseError, ParseResult, ParseResultApi};
+use crate::transactions::{ParseError, ParseResult};
 
 mod checkpoint;
 

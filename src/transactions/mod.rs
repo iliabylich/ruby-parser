@@ -4,7 +4,7 @@ mod error;
 pub(crate) use error::{ParseError, StepData};
 
 mod result;
-pub(crate) use result::{ParseResult, ParseResultApi};
+pub(crate) use result::ParseResult;
 
 mod one_of;
 use one_of::OneOf;

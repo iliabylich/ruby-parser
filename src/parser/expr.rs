@@ -2,7 +2,6 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
-    transactions::ParseResultApi,
     Node,
 };
 
@@ -73,7 +72,7 @@ fn try_arg_in_p_expr_body<C: Constructor>(parser: &mut Parser<C>) -> ParseResult
 fn try_expr_tail<C: Constructor>(
     parser: &mut Parser<C>,
 ) -> ParseResult<Option<(Token, Box<Node>)>> {
-    parser
+    let expr_tail = parser
         .one_of("[and/or] expr")
         .or_else(|| {
             parser
@@ -89,6 +88,18 @@ fn try_expr_tail<C: Constructor>(
                 .and(|| parser.try_expr())
                 .stop()
         })
-        .stop()
-        .ignore_lookaheads()
+        .stop();
+
+    match expr_tail {
+        Ok(data) => Ok(Some(data)),
+        Err(error) => {
+            match error.strip_lookaheads() {
+                Some(error) => Err(error),
+                None => {
+                    // no match
+                    Ok(None)
+                }
+            }
+        }
+    }
 }

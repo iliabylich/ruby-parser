@@ -1,7 +1,8 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseResult, ParseResultApi, Parser},
+    parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
+    transactions::StepData,
     Node,
 };
 
@@ -13,11 +14,25 @@ where
     pub(crate) fn try_opt_rescue(&mut self) -> ParseResult<Vec<Node>> {
         let mut nodes = vec![];
         loop {
-            match try_opt_rescue1(self).ignore_lookaheads()? {
-                Some(node) => nodes.push(*node),
-                None => {
-                    // no match
-                    break;
+            match try_opt_rescue1(self) {
+                Ok(node) => nodes.push(*node),
+                Err(error) => {
+                    match error.strip_lookaheads() {
+                        None => {
+                            // no match
+                            break;
+                        }
+                        Some(error) => {
+                            return Err(ParseError::SeqError {
+                                name: "opt rescue",
+                                steps: nodes
+                                    .into_iter()
+                                    .map(|node| StepData::from(Box::new(node)))
+                                    .collect(),
+                                error: Box::new(error),
+                            });
+                        }
+                    }
                 }
             }
         }

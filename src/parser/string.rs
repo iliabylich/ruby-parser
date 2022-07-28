@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    parser::{ParseResult, ParseResultApi, Parser},
+    parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -28,13 +28,27 @@ where
         parts.push(*string);
 
         loop {
-            match self.try_string1().ignore_lookaheads()? {
-                Some(string) => {
+            match self.try_string1() {
+                Ok(string) => {
                     parts.push(*string);
                 }
-                None => {
-                    // no match
-                    break;
+                Err(error) => {
+                    match error.strip_lookaheads() {
+                        None => {
+                            // no match
+                            break;
+                        }
+                        Some(error) => {
+                            return Err(ParseError::SeqError {
+                                name: "string1",
+                                steps: parts
+                                    .into_iter()
+                                    .map(|node| Box::new(node).into())
+                                    .collect(),
+                                error: Box::new(error),
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -72,13 +86,27 @@ where
                 break;
             }
 
-            match self.try_string_content().ignore_lookaheads()? {
-                Some(string) => {
+            match self.try_string_content() {
+                Ok(string) => {
                     strings.push(*string);
                 }
-                None => {
-                    // no match
-                    break;
+                Err(error) => {
+                    match error.strip_lookaheads() {
+                        None => {
+                            // no match
+                            break;
+                        }
+                        Some(error) => {
+                            return Err(ParseError::SeqError {
+                                name: "string content",
+                                steps: strings
+                                    .into_iter()
+                                    .map(|node| Box::new(node).into())
+                                    .collect(),
+                                error: Box::new(error),
+                            });
+                        }
+                    }
                 }
             }
         }

@@ -2,7 +2,7 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
-    transactions::{ParseResultApi, StepData},
+    transactions::StepData,
     Node, Token,
 };
 
@@ -31,18 +31,22 @@ where
             match self.try_top_stmt() {
                 Ok(top_stmt) => top_stmts.push(*top_stmt),
                 Err(error) => {
-                    if error.is_lookahead() {
-                        break;
+                    match error.strip_lookaheads() {
+                        None => {
+                            // no match
+                            break;
+                        }
+                        Some(error) => {
+                            return Err(ParseError::SeqError {
+                                name: "top stmts",
+                                steps: top_stmts
+                                    .into_iter()
+                                    .map(|top_stmt| StepData::from(Box::new(top_stmt)))
+                                    .collect::<Vec<_>>(),
+                                error: Box::new(error),
+                            });
+                        }
                     }
-
-                    return Err(ParseError::SeqError {
-                        name: "top stmts",
-                        steps: top_stmts
-                            .into_iter()
-                            .map(|top_stmt| StepData::from(Box::new(top_stmt)))
-                            .collect::<Vec<_>>(),
-                        error: Box::new(error),
-                    });
                 }
             }
         }
@@ -102,16 +106,28 @@ where
     #[allow(unreachable_code, unused_mut)]
     pub(crate) fn try_stmt(&mut self) -> ParseResult<Box<Node>> {
         let mut stmt = self.try_stmt_head()?;
-        if let Some((mod_t, expr)) = self.try_stmt_tail().ignore_lookaheads()? {
-            match mod_t.kind {
-                TokenKind::kIF => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
-                TokenKind::kUNLESS => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
-                TokenKind::kWHILE => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
-                TokenKind::kUNTIL => stmt = todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+        match self.try_stmt_tail() {
+            Ok((mod_t, expr)) => match mod_t.kind {
+                TokenKind::kIF => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kUNLESS => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kWHILE => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kUNTIL => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
                 _ => unreachable!("stmt_tail handles only if/unless/while/until modifiers"),
+            },
+            Err(error) => {
+                match error.strip_lookaheads() {
+                    None => {
+                        // ignore
+                        Ok(stmt)
+                    }
+                    Some(error) => Err(ParseError::SeqError {
+                        name: "stmt tail",
+                        steps: vec![stmt.into()],
+                        error: Box::new(error),
+                    }),
+                }
             }
         }
-        Ok(stmt)
     }
 
     fn try_stmt_head(&mut self) -> ParseResult<Box<Node>> {
