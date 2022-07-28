@@ -1,6 +1,5 @@
 use crate::{
     lexer::{
-        assert_lex,
         buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
     },
@@ -155,120 +154,158 @@ impl Gvar {
     }
 }
 
-assert_lex!(
-    test_tGVAR_underscore_digits,
-    b"$_42",
-    token!(tGVAR, loc!(0, 4))
-);
-assert_lex!(
-    test_tGVAR_underscore_ascii_id,
-    b"$_foo",
-    token!(tGVAR, loc!(0, 5))
-);
-assert_lex!(
-    test_tGVAR_underscore_utf8_id,
-    // $_абв
-    b"$_\xD0\xB0\xD0\xB1\xD0\xB2",
-    token!(tGVAR, loc!(0, 8)) // foo
-);
-assert_lex!(
-    test_tGVAR_underscore_invalid_bytes,
-    &[b'$', b'_', 255],
-    token!(tGVAR, loc!(0, 2))
-);
+#[cfg(test)]
+mod tests {
+    use crate::{testing::assert_lex, token::token};
 
-// Special gvars
-assert_lex!(test_tGVAR_match_data, b"$~", token!(tGVAR, loc!(0, 2)));
-assert_lex!(test_tGVAR_argv, b"$*", token!(tGVAR, loc!(0, 2)));
-assert_lex!(test_tGVAR_pid, b"$$", token!(tGVAR, loc!(0, 2)));
-assert_lex!(test_tGVAR_last_status, b"$?", token!(tGVAR, loc!(0, 2)));
-assert_lex!(test_tGVAR_error_string, b"$!", token!(tGVAR, loc!(0, 2)));
-assert_lex!(test_tGVAR_error_position, b"$@", token!(tGVAR, loc!(0, 2)));
-assert_lex!(
-    test_tGVAR_input_record_separator,
-    b"$/",
-    token!(tGVAR, loc!(0, 2))
-);
-assert_lex!(
-    test_tGVAR_output_record_separator,
-    b"$\\",
-    token!(tGVAR, loc!(0, 2))
-);
-assert_lex!(test_tGVAR_field_separator, b"$;", token!(tGVAR, loc!(0, 2)));
-assert_lex!(
-    test_tGVAR_output_field_separator,
-    b"$,",
-    token!(tGVAR, loc!(0, 2))
-);
-assert_lex!(
-    test_tGVAR_last_read_line_number,
-    b"$.",
-    token!(tGVAR, loc!(0, 2))
-);
-assert_lex!(test_tGVAR_ignorecase, b"$=", token!(tGVAR, loc!(0, 2)));
-assert_lex!(test_tGVAR_load_path, b"$:", token!(tGVAR, loc!(0, 2)));
-assert_lex!(
-    test_tGVAR_reading_filename,
-    b"$<",
-    token!(tGVAR, loc!(0, 2))
-);
-assert_lex!(
-    test_tGVAR_default_output_handle,
-    b"$>",
-    token!(tGVAR, loc!(0, 2))
-);
-assert_lex!(
-    test_tGVAR_already_loaded_files,
-    b"$\"",
-    token!(tGVAR, loc!(0, 2))
-);
+    #[test]
+    fn test_tGVAR_underscore_digits() {
+        assert_lex!(b"$_42", token!(tGVAR, loc!(0, 4)));
+    }
+    #[test]
+    fn test_tGVAR_underscore_ascii_id() {
+        assert_lex!(b"$_foo", token!(tGVAR, loc!(0, 5)));
+    }
+    #[test]
+    fn test_tGVAR_underscore_utf8_id() {
+        assert_lex!(
+            // $_абв
+            b"$_\xD0\xB0\xD0\xB1\xD0\xB2",
+            token!(tGVAR, loc!(0, 8)) // foo
+        );
+    }
+    #[test]
+    fn test_tGVAR_underscore_invalid_bytes() {
+        assert_lex!(&[b'$', b'_', 255], token!(tGVAR, loc!(0, 2)));
+    }
 
-// $-<identchar>
-assert_lex!(test_tGVAR_dash_number, b"$-9", token!(tGVAR, loc!(0, 3)));
-assert_lex!(test_tGVAR_dash_ascii, b"$-a", token!(tGVAR, loc!(0, 3)));
-assert_lex!(
-    test_tGVAR_dash_utf_8,
-    b"$-\xD1\x84",
-    token!(tGVAR, loc!(0, 4))
-);
+    // Special gvars
+    #[test]
+    fn test_tGVAR_match_data() {
+        assert_lex!(b"$~", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_argv() {
+        assert_lex!(b"$*", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_pid() {
+        assert_lex!(b"$$", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_last_status() {
+        assert_lex!(b"$?", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_error_string() {
+        assert_lex!(b"$!", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_error_position() {
+        assert_lex!(b"$@", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_input_record_separator() {
+        assert_lex!(b"$/", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_output_record_separator() {
+        assert_lex!(b"$\\", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_field_separator() {
+        assert_lex!(b"$;", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_output_field_separator() {
+        assert_lex!(b"$,", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_last_read_line_number() {
+        assert_lex!(b"$.", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_ignorecase() {
+        assert_lex!(b"$=", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_load_path() {
+        assert_lex!(b"$:", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_reading_filename() {
+        assert_lex!(b"$<", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_default_output_handle() {
+        assert_lex!(b"$>", token!(tGVAR, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tGVAR_already_loaded_files() {
+        assert_lex!(b"$\"", token!(tGVAR, loc!(0, 2)));
+    }
 
-// Special back refs
-assert_lex!(
-    test_tBACK_REF_last_match,
-    b"$&",
-    token!(tBACK_REF, loc!(0, 2))
-);
-assert_lex!(
-    test_tBACK_REF_string_before_last_match,
-    b"$`",
-    token!(tBACK_REF, loc!(0, 2))
-);
-assert_lex!(
-    test_tBACK_REF_string_after_last_match,
-    b"$'",
-    token!(tBACK_REF, loc!(0, 2))
-);
-assert_lex!(
-    test_tBACK_REF_string_matches_last_paren,
-    b"$+",
-    token!(tBACK_REF, loc!(0, 2))
-);
+    // $-<identchar>
+    #[test]
+    fn test_tGVAR_dash_number() {
+        assert_lex!(b"$-9", token!(tGVAR, loc!(0, 3)));
+    }
+    #[test]
+    fn test_tGVAR_dash_ascii() {
+        assert_lex!(b"$-a", token!(tGVAR, loc!(0, 3)));
+    }
+    #[test]
+    fn test_tGVAR_dash_utf_8() {
+        assert_lex!(b"$-\xD1\x84", token!(tGVAR, loc!(0, 4)));
+    }
 
-// $NNN
-assert_lex!(test_tNTH_REF, b"$42", token!(tNTH_REF, loc!(0, 3)));
+    // Special back refs
+    #[test]
+    fn test_tBACK_REF_last_match() {
+        assert_lex!(b"$&", token!(tBACK_REF, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tBACK_REF_string_before_last_match() {
+        assert_lex!(b"$`", token!(tBACK_REF, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tBACK_REF_string_after_last_match() {
+        assert_lex!(b"$'", token!(tBACK_REF, loc!(0, 2)));
+    }
+    #[test]
+    fn test_tBACK_REF_string_matches_last_paren() {
+        assert_lex!(b"$+", token!(tBACK_REF, loc!(0, 2)));
+    }
 
-assert_lex!(test_tGVAR_no_id, b"$ ", token!(tGVAR, loc!(0, 1)));
-assert_lex!(test_tGVAR_invalid_id, b"$(", token!(tGVAR, loc!(0, 1)));
+    // $NNN
+    #[test]
+    fn test_tNTH_REF() {
+        assert_lex!(b"$42", token!(tNTH_REF, loc!(0, 3)));
+    }
 
-assert_lex!(test_tGVAR_ascii_id, b"$foo", token!(tGVAR, loc!(0, 4)));
-assert_lex!(
-    test_tGVAR_utf8_id,
-    // $_абв
-    b"$\xD0\xB0\xD0\xB1\xD0\xB2",
-    token!(tGVAR, loc!(0, 7))
-);
-assert_lex!(
-    test_tGVAR_malformed_id,
-    &[b'$', b'f', b'o', b'o', 208, 0],
-    token!(tGVAR, loc!(0, 4))
-);
+    #[test]
+    fn test_tGVAR_no_id() {
+        assert_lex!(b"$ ", token!(tGVAR, loc!(0, 1)));
+    }
+    #[test]
+    fn test_tGVAR_invalid_id() {
+        assert_lex!(b"$(", token!(tGVAR, loc!(0, 1)));
+    }
+
+    #[test]
+    fn test_tGVAR_ascii_id() {
+        assert_lex!(b"$foo", token!(tGVAR, loc!(0, 4)));
+    }
+    #[test]
+    fn test_tGVAR_utf8_id() {
+        assert_lex!(
+            // $_абв
+            b"$\xD0\xB0\xD0\xB1\xD0\xB2",
+            token!(tGVAR, loc!(0, 7))
+        );
+    }
+    #[test]
+    fn test_tGVAR_malformed_id() {
+        assert_lex!(&[b'$', b'f', b'o', b'o', 208, 0], token!(tGVAR, loc!(0, 4)));
+    }
+}

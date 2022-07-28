@@ -1,6 +1,5 @@
 use crate::{
     lexer::{
-        assert_lex,
         buffer::{Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
     },
@@ -98,11 +97,34 @@ impl AtMark {
     }
 }
 
-assert_lex!(test_tIVAR_valid, b"@ivar", token!(tIVAR, loc!(0, 5)));
-assert_lex!(test_tCVAR_valid, b"@@cvar", token!(tCVAR, loc!(0, 6)));
+#[cfg(test)]
+mod tests {
+    use crate::{testing::assert_lex, token::token};
 
-assert_lex!(test_tIVAR_no_id, b"@", token!(tIVAR, loc!(0, 1)));
-assert_lex!(test_tCVAR_no_id, b"@@", token!(tCVAR, loc!(0, 2)));
+    #[test]
+    fn test_tIVAR_valid() {
+        assert_lex!(b"@ivar", token!(tIVAR, loc!(0, 5)));
+    }
+    #[test]
+    fn test_tCVAR_valid() {
+        assert_lex!(b"@@cvar", token!(tCVAR, loc!(0, 6)));
+    }
 
-assert_lex!(test_tIVAR_invalid_id, b"@(", token!(tIVAR, loc!(0, 1)));
-assert_lex!(test_tCVAR_invalid_id, b"@@(", token!(tCVAR, loc!(0, 2)));
+    #[test]
+    fn test_tIVAR_no_id() {
+        assert_lex!(b"@", token!(tIVAR, loc!(0, 1)));
+    }
+    #[test]
+    fn test_tCVAR_no_id() {
+        assert_lex!(b"@@", token!(tCVAR, loc!(0, 2)));
+    }
+
+    #[test]
+    fn test_tIVAR_invalid_id() {
+        assert_lex!(b"@(", token!(tIVAR, loc!(0, 1)));
+    }
+    #[test]
+    fn test_tCVAR_invalid_id() {
+        assert_lex!(b"@@(", token!(tCVAR, loc!(0, 2)));
+    }
+}

@@ -1,6 +1,5 @@
 use crate::{
     lexer::{
-        assert_lex,
         buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
         ident::Ident,
         strings::escapes::{
@@ -123,16 +122,28 @@ impl QMark {
     }
 }
 
-assert_lex!(test_tEH, b"?", token!(tEH, loc!(0, 1)));
-assert_lex!(test_tCHAR_ascii, b"?a", token!(tCHAR, loc!(0, 2), b'a'));
-assert_lex!(
-    test_tCHAR_multibyte,
-    "?字".as_bytes(),
-    token!(tCHAR, loc!(0, 4), '字')
-);
-assert_lex!(
-    test_tCHAR_slash_u,
-    b"?\\u1234",
-    token!(tCHAR, loc!(0, 7), '\u{1234}')
-);
-assert_lex!(test_tEH_and_ident, b"?ident", token!(tEH, loc!(0, 1)));
+#[cfg(test)]
+mod tests {
+    use crate::{testing::assert_lex, token::token};
+
+    #[test]
+    fn test_tEH() {
+        assert_lex!(b"?", token!(tEH, loc!(0, 1)));
+    }
+    #[test]
+    fn test_tCHAR_ascii() {
+        assert_lex!(b"?a", token!(tCHAR, loc!(0, 2), b'a'));
+    }
+    #[test]
+    fn test_tCHAR_multibyte() {
+        assert_lex!("?字".as_bytes(), token!(tCHAR, loc!(0, 4), '字'));
+    }
+    #[test]
+    fn test_tCHAR_slash_u() {
+        assert_lex!(b"?\\u1234", token!(tCHAR, loc!(0, 7), '\u{1234}'));
+    }
+    #[test]
+    fn test_tEH_and_ident() {
+        assert_lex!(b"?ident", token!(tEH, loc!(0, 1)));
+    }
+}

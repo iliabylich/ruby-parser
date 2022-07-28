@@ -2,6 +2,7 @@
 
 pub(crate) mod precedence;
 
+#[cfg_attr(test, allow(non_snake_case))]
 pub(crate) mod lexer;
 pub use lexer::Lexer;
 
@@ -28,3 +29,6 @@ pub use builder::{CString, Constructor};
 pub(crate) mod state;
 
 mod transactions;
+
+#[cfg(test)]
+mod testing;

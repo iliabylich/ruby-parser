@@ -12,10 +12,8 @@ pub(crate) struct Builder<C: Constructor = RustConstructor> {
     phantom: std::marker::PhantomData<C>,
 }
 
-macro_rules! node_ptr_to_box {
-    ($ptr:expr) => {
-        Box::from_raw($ptr as *mut Node)
-    };
+fn node_ptr_to_box(ptr: *mut std::ffi::c_void) -> Box<Node> {
+    unsafe { Box::from_raw(ptr as *mut Node) }
 }
 
 fn cstring_value(loc: Loc, buffer: &Buffer) -> CString {
@@ -501,7 +499,7 @@ impl<C: Constructor> Builder<C> {
     pub(crate) fn gvar(gvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = gvar_t.loc;
         let name = cstring_value(loc, buffer);
-        unsafe { node_ptr_to_box!(C::gvar_node(name, loc)) }
+        node_ptr_to_box(C::gvar_node(name, loc))
     }
     pub(crate) fn cvar(cvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = cvar_t.loc;
@@ -513,7 +511,7 @@ impl<C: Constructor> Builder<C> {
     pub(crate) fn back_ref(back_ref_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = back_ref_t.loc;
         let name = cstring_value(loc, buffer);
-        unsafe { node_ptr_to_box!(C::back_ref_node(name, loc)) }
+        node_ptr_to_box(C::back_ref_node(name, loc))
     }
     pub(crate) fn nth_ref(nth_ref_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = nth_ref_t.loc;

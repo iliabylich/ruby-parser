@@ -144,84 +144,89 @@ mod tests {
     use super::*;
     use crate::token::token;
 
-    macro_rules! assert_heredoc_id {
+    macro_rules! assert_parses_heredoc_id {
         (
-            test = $test:ident,
-            input = $input:expr,
-            output = $output:expr
-        ) => {
-            #[test]
-            fn $test() {
-                let mut buffer = BufferWithCursor::new($input);
-                let output = HeredocId::parse(&mut buffer);
-                assert_eq!(output, $output);
-            }
-        };
+            $input:expr,
+            $output:expr
+        ) => {{
+            let mut buffer = BufferWithCursor::new($input);
+            let output = HeredocId::parse(&mut buffer);
+            assert_eq!(output, $output);
+        }};
     }
 
     // prefixes
-    assert_heredoc_id!(
-        test = test_heredoc_id_minus,
-        input = b"<<-HERE",
-        output = Some(HeredocId {
-            token: token!(tDSTRING_BEG, loc!(0, 7)),
-            id: (3, 7),
-            interpolated: true,
-            squiggly: false
-        })
-    );
-    assert_heredoc_id!(
-        test = test_heredoc_id_tilde,
-        input = b"<<~HERE",
-        output = Some(HeredocId {
-            token: token!(tDSTRING_BEG, loc!(0, 7)),
-            id: (3, 7),
-            interpolated: true,
-            squiggly: true
-        })
-    );
+    #[test]
+    fn test_heredoc_id_minus() {
+        assert_parses_heredoc_id!(
+            b"<<-HERE",
+            Some(HeredocId {
+                token: token!(tDSTRING_BEG, loc!(0, 7)),
+                id: (3, 7),
+                interpolated: true,
+                squiggly: false
+            })
+        );
+    }
+
+    #[test]
+    fn test_heredoc_id_tilde() {
+        assert_parses_heredoc_id!(
+            b"<<~HERE",
+            Some(HeredocId {
+                token: token!(tDSTRING_BEG, loc!(0, 7)),
+                id: (3, 7),
+                interpolated: true,
+                squiggly: true
+            })
+        );
+    }
 
     // quotes
-    assert_heredoc_id!(
-        test = test_heredoc_id_squote,
-        input = b"<<-'HERE'",
-        output = Some(HeredocId {
-            token: token!(tSTRING_BEG, loc!(0, 9)),
-            id: (4, 8),
-            interpolated: false,
-            squiggly: false
-        })
-    );
-    assert_heredoc_id!(
-        test = test_heredoc_id_dquote,
-        input = b"<<-\"HERE\"",
-        output = Some(HeredocId {
-            token: token!(tDSTRING_BEG, loc!(0, 9)),
-            id: (4, 8),
-            interpolated: true,
-            squiggly: false
-        })
-    );
-    assert_heredoc_id!(
-        test = test_heredoc_id_xquote,
-        input = b"<<-`HERE`",
-        output = Some(HeredocId {
-            token: token!(tXSTRING_BEG, loc!(0, 9)),
-            id: (4, 8),
-            interpolated: true,
-            squiggly: false
-        })
-    );
+    #[test]
+    fn test_heredoc_id_squote() {
+        assert_parses_heredoc_id!(
+            b"<<-'HERE'",
+            Some(HeredocId {
+                token: token!(tSTRING_BEG, loc!(0, 9)),
+                id: (4, 8),
+                interpolated: false,
+                squiggly: false
+            })
+        );
+    }
+    #[test]
+    fn test_heredoc_id_dquote() {
+        assert_parses_heredoc_id!(
+            b"<<-\"HERE\"",
+            Some(HeredocId {
+                token: token!(tDSTRING_BEG, loc!(0, 9)),
+                id: (4, 8),
+                interpolated: true,
+                squiggly: false
+            })
+        );
+    }
+    #[test]
+    fn test_heredoc_id_xquote() {
+        assert_parses_heredoc_id!(
+            b"<<-`HERE`",
+            Some(HeredocId {
+                token: token!(tXSTRING_BEG, loc!(0, 9)),
+                id: (4, 8),
+                interpolated: true,
+                squiggly: false
+            })
+        );
+    }
 
     // unterminated heredoc IDs
-    assert_heredoc_id!(
-        test = test_heredoc_id_quote_unterminated,
-        input = b"<<-'HERE",
-        output = None
-    );
-    assert_heredoc_id!(
-        test = test_heredoc_id_no_quote_unterminated,
-        input = b"<<-)",
-        output = None
-    );
+    #[test]
+    fn test_heredoc_id_quote_unterminated() {
+        assert_parses_heredoc_id!(b"<<-'HERE", None);
+    }
+    #[test]
+    fn test_heredoc_id_no_quote_unterminated() {
+        assert_parses_heredoc_id!(b"<<-)", None);
+    }
 }

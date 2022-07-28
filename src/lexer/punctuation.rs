@@ -1,6 +1,5 @@
 use crate::{
     lexer::{
-        assert_lex,
         heredoc_id::HeredocId,
         ident::Ident,
         numbers::parse_number,
@@ -28,7 +27,11 @@ impl OnByte<b'#'> for Lexer {
         token!(tCOMMENT, loc!(start, self.buffer().pos()))
     }
 }
-assert_lex!(test_tCOMMENT_INLINE, b"# foo", token!(tCOMMENT, loc!(0, 5)));
+#[test]
+fn test_tCOMMENT_INLINE() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"# foo", token!(tCOMMENT, loc!(0, 5)));
+}
 
 impl OnByte<b'*'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -54,10 +57,26 @@ impl OnByte<b'*'> for Lexer {
         }
     }
 }
-assert_lex!(test_tSTAR, b"*", token!(tSTAR, loc!(0, 1)));
-assert_lex!(test_tOP_ASGN_STAR, b"*=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tPOW, b"**", token!(tPOW, loc!(0, 2)));
-assert_lex!(test_tOP_ASGN_DSTAR, b"**=", token!(tOP_ASGN, loc!(0, 3)));
+#[test]
+fn test_tSTAR() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"*", token!(tSTAR, loc!(0, 1)));
+}
+#[test]
+fn test_tOP_ASGN_STAR() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"*=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tPOW() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"**", token!(tPOW, loc!(0, 2)));
+}
+#[test]
+fn test_tOP_ASGN_DSTAR() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"**=", token!(tOP_ASGN, loc!(0, 3)));
+}
 
 impl OnByte<b'!'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -78,9 +97,21 @@ impl OnByte<b'!'> for Lexer {
         }
     }
 }
-assert_lex!(test_tNEQ, b"!=", token!(tNEQ, loc!(0, 2)));
-assert_lex!(test_tNMATCH, b"!~", token!(tNMATCH, loc!(0, 2)));
-assert_lex!(test_tBANG, b"!", token!(tBANG, loc!(0, 1)));
+#[test]
+fn test_tNEQ() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"!=", token!(tNEQ, loc!(0, 2)));
+}
+#[test]
+fn test_tNMATCH() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"!~", token!(tNMATCH, loc!(0, 2)));
+}
+#[test]
+fn test_tBANG() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"!", token!(tBANG, loc!(0, 1)));
+}
 
 impl OnByte<b'='> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -115,16 +146,36 @@ impl OnByte<b'='> for Lexer {
         }
     }
 }
-assert_lex!(
-    test_tEMBEDDED_COMMENT_START,
-    b"=begin",
-    token!(tEMBEDDED_COMMENT_START, loc!(0, 6))
-);
-assert_lex!(test_tEQQ, b"===", token!(tEQQ, loc!(0, 3)));
-assert_lex!(test_tEQ, b"==", token!(tEQ, loc!(0, 2)));
-assert_lex!(test_tMATCH, b"=~", token!(tMATCH, loc!(0, 2)));
-assert_lex!(test_tASSOC, b"=>", token!(tASSOC, loc!(0, 2)));
-assert_lex!(test_tEQL, b"=", token!(tEQL, loc!(0, 1)));
+#[test]
+fn test_tEMBEDDED_COMMENT_START() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"=begin", token!(tEMBEDDED_COMMENT_START, loc!(0, 6)));
+}
+#[test]
+fn test_tEQQ() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"===", token!(tEQQ, loc!(0, 3)));
+}
+#[test]
+fn test_tEQ() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"==", token!(tEQ, loc!(0, 2)));
+}
+#[test]
+fn test_tMATCH() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"=~", token!(tMATCH, loc!(0, 2)));
+}
+#[test]
+fn test_tASSOC() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"=>", token!(tASSOC, loc!(0, 2)));
+}
+#[test]
+fn test_tEQL() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"=", token!(tEQL, loc!(0, 1)));
+}
 
 impl OnByte<b'<'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -185,35 +236,58 @@ impl OnByte<b'<'> for Lexer {
         }
     }
 }
-assert_lex!(
-    test_name = test_tSTRING_BEG_HEREDOC,
-    input = b"<<-HERE",
-    token = token!(tDSTRING_BEG, loc!(0, 7)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.curly_nest_mut() = 42;
-        lexer.require_new_expr();
-    },
-    assert = |lexer: &Lexer| {
-        assert_eq!(lexer.string_literals().size(), 1);
+#[test]
+fn test_tSTRING_BEG_HEREDOC() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b"<<-HERE",
+        token = token!(tDSTRING_BEG, loc!(0, 7)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.curly_nest_mut() = 42;
+            lexer.require_new_expr();
+        },
+        assert = |lexer: &Lexer| {
+            assert_eq!(lexer.string_literals().size(), 1);
 
-        assert_eq!(
-            lexer.string_literals().last(),
-            Some(&StringLiteral::Heredoc(Heredoc::new(
-                Some(Interpolation::new(42)),
-                loc!(3, 7),
-                7,
-                false
-            )))
-        );
-    }
-);
-assert_lex!(test_tCMP, b"<=>", token!(tCMP, loc!(0, 3)));
-assert_lex!(test_tLEQ, b"<=", token!(tLEQ, loc!(0, 2)));
-assert_lex!(test_tOP_ASGN_LSHIFT, b"<<=", token!(tOP_ASGN, loc!(0, 3)));
-assert_lex!(test_tLSHFT, b"<<", token!(tLSHFT, loc!(0, 2)));
-assert_lex!(test_tLT, b"<", token!(tLT, loc!(0, 1)));
+            assert_eq!(
+                lexer.string_literals().last(),
+                Some(&StringLiteral::Heredoc(Heredoc::new(
+                    Some(Interpolation::new(42)),
+                    loc!(3, 7),
+                    7,
+                    false
+                )))
+            );
+        }
+    );
+}
+#[test]
+fn test_tCMP() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"<=>", token!(tCMP, loc!(0, 3)));
+}
+#[test]
+fn test_tLEQ() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"<=", token!(tLEQ, loc!(0, 2)));
+}
+#[test]
+fn test_tOP_ASGN_LSHIFT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"<<=", token!(tOP_ASGN, loc!(0, 3)));
+}
+#[test]
+fn test_tLSHFT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"<<", token!(tLSHFT, loc!(0, 2)));
+}
+#[test]
+fn test_tLT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"<", token!(tLT, loc!(0, 1)));
+}
 
-impl OnByte<b'>'> for Lexer {
+impl OnByte<62 /* '>' (fix highlighting) */> for Lexer {
     fn on_byte(&mut self) -> Token {
         let start = self.pos();
         self.skip_byte();
@@ -236,10 +310,26 @@ impl OnByte<b'>'> for Lexer {
         }
     }
 }
-assert_lex!(test_tGEQ, b">=", token!(tGEQ, loc!(0, 2)));
-assert_lex!(test_tOP_ASGN_RSHIFT, b">>=", token!(tOP_ASGN, loc!(0, 3)));
-assert_lex!(test_tRSHFT, b">>", token!(tRSHFT, loc!(0, 2)));
-assert_lex!(test_tGT, b">", token!(tGT, loc!(0, 1)));
+#[test]
+fn test_tGEQ() {
+    use crate::testing::assert_lex;
+    assert_lex!(b">=", token!(tGEQ, loc!(0, 2)));
+}
+#[test]
+fn test_tOP_ASGN_RSHIFT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b">>=", token!(tOP_ASGN, loc!(0, 3)));
+}
+#[test]
+fn test_tRSHFT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b">>", token!(tRSHFT, loc!(0, 2)));
+}
+#[test]
+fn test_tGT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b">", token!(tGT, loc!(0, 1)));
+}
 
 impl OnByte<b'"'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -255,27 +345,30 @@ impl OnByte<b'"'> for Lexer {
         token
     }
 }
-assert_lex!(
-    test_name = test_tSTRING_BEG_DQUOTE,
-    input = b"\"",
-    token = token!(tDSTRING_BEG, loc!(0, 1)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.curly_nest_mut() = 42;
-    },
-    assert = |lexer: &Lexer| {
-        use crate::lexer::strings::types::StringInterp;
-        assert_eq!(lexer.string_literals().size(), 1);
+#[test]
+fn test_tSTRING_BEG_DQUOTE() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b"\"",
+        token = token!(tDSTRING_BEG, loc!(0, 1)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.curly_nest_mut() = 42;
+        },
+        assert = |lexer: &Lexer| {
+            use crate::lexer::strings::types::StringInterp;
+            assert_eq!(lexer.string_literals().size(), 1);
 
-        assert_eq!(
-            lexer.string_literals().last(),
-            Some(&StringLiteral::StringInterp(StringInterp::new(
-                Interpolation::new(42),
-                b'"',
-                b'"'
-            )))
-        );
-    }
-);
+            assert_eq!(
+                lexer.string_literals().last(),
+                Some(&StringLiteral::StringInterp(StringInterp::new(
+                    Interpolation::new(42),
+                    b'"',
+                    b'"'
+                )))
+            );
+        }
+    );
+}
 
 impl OnByte<b'`'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -285,11 +378,11 @@ impl OnByte<b'`'> for Lexer {
         token!(tIDENTIFIER, loc!(start, start + 1))
     }
 }
-assert_lex!(
-    test_tIDENTIFIER_backtick,
-    b"`",
-    token!(tIDENTIFIER, loc!(0, 1))
-);
+#[test]
+fn test_tIDENTIFIER_backtick() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"`", token!(tIDENTIFIER, loc!(0, 1)));
+}
 
 impl OnByte<b'\''> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -301,21 +394,24 @@ impl OnByte<b'\''> for Lexer {
         token
     }
 }
-assert_lex!(
-    test_name = test_tSTRING_BEG1_SQUOTE,
-    input = b"'",
-    token = token!(tSTRING_BEG, loc!(0, 1)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.curly_nest_mut() = 42;
-    },
-    assert = |lexer: &Lexer| {
-        assert_eq!(lexer.string_literals().size(), 1);
-        assert_eq!(
-            lexer.string_literals().last(),
-            Some(&StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')))
-        )
-    }
-);
+#[test]
+fn test_tSTRING_BEG1_SQUOTE() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b"'",
+        token = token!(tSTRING_BEG, loc!(0, 1)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.curly_nest_mut() = 42;
+        },
+        assert = |lexer: &Lexer| {
+            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(
+                lexer.string_literals().last(),
+                Some(&StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')))
+            )
+        }
+    );
+}
 
 impl OnByte<b'?'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -350,11 +446,31 @@ impl OnByte<b'&'> for Lexer {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_DAMPER, b"&&=", token!(tOP_ASGN, loc!(0, 3)));
-assert_lex!(test_tANDOP, b"&&", token!(tANDOP, loc!(0, 2)));
-assert_lex!(test_tOP_ASGN_AMPER, b"&=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tANDDOT, b"&.", token!(tANDDOT, loc!(0, 2)));
-assert_lex!(test_tAMPER, b"&", token!(tAMPER, loc!(0, 1)));
+#[test]
+fn test_tOP_ASGN_DAMPER() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"&&=", token!(tOP_ASGN, loc!(0, 3)));
+}
+#[test]
+fn test_tANDOP() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"&&", token!(tANDOP, loc!(0, 2)));
+}
+#[test]
+fn test_tOP_ASGN_AMPER() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"&=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tANDDOT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"&.", token!(tANDDOT, loc!(0, 2)));
+}
+#[test]
+fn test_tAMPER() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"&", token!(tAMPER, loc!(0, 1)));
+}
 
 impl OnByte<b'|'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -379,10 +495,26 @@ impl OnByte<b'|'> for Lexer {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_DPIPE, b"||=", token!(tOP_ASGN, loc!(0, 3)));
-assert_lex!(test_tOROP, b"||", token!(tOROP, loc!(0, 2)));
-assert_lex!(test_tOP_ASGN_PIPE, b"|=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tPIPE, b"|", token!(tPIPE, loc!(0, 1)));
+#[test]
+fn test_tOP_ASGN_DPIPE() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"||=", token!(tOP_ASGN, loc!(0, 3)));
+}
+#[test]
+fn test_tOROP() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"||", token!(tOROP, loc!(0, 2)));
+}
+#[test]
+fn test_tOP_ASGN_PIPE() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"|=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tPIPE() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"|", token!(tPIPE, loc!(0, 1)));
+}
 
 impl OnByte<b'+'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -403,9 +535,21 @@ impl OnByte<b'+'> for Lexer {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_PLUS, b"+=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tPLUS_NUMBER, b"+1", token!(tINTEGER, loc!(0, 2)));
-assert_lex!(test_tPLUS, b"+", token!(tPLUS, loc!(0, 1)));
+#[test]
+fn test_tOP_ASGN_PLUS() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"+=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tPLUS_NUMBER() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"+1", token!(tINTEGER, loc!(0, 2)));
+}
+#[test]
+fn test_tPLUS() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"+", token!(tPLUS, loc!(0, 1)));
+}
 
 impl OnByte<b'-'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -426,10 +570,26 @@ impl OnByte<b'-'> for Lexer {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_MINUS, b"-=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tLAMBDA, b"->", token!(tLAMBDA, loc!(0, 2)));
-assert_lex!(test_tMINUS, b"-", token!(tMINUS, loc!(0, 1)));
-assert_lex!(test_tUMINUS, b"-5", token!(tUMINUS, loc!(0, 1)));
+#[test]
+fn test_tOP_ASGN_MINUS() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"-=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tLAMBDA() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"->", token!(tLAMBDA, loc!(0, 2)));
+}
+#[test]
+fn test_tMINUS() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"-", token!(tMINUS, loc!(0, 1)));
+}
+#[test]
+fn test_tUMINUS() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"-5", token!(tUMINUS, loc!(0, 1)));
+}
 
 impl OnByte<b'.'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -460,9 +620,21 @@ impl OnByte<b'.'> for Lexer {
         }
     }
 }
-assert_lex!(test_tDOT3, b"...", token!(tDOT3, loc!(0, 3)));
-assert_lex!(test_tDOT2, b"..", token!(tDOT2, loc!(0, 2)));
-assert_lex!(test_tDOT, b".", token!(tDOT, loc!(0, 1)));
+#[test]
+fn test_tDOT3() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"...", token!(tDOT3, loc!(0, 3)));
+}
+#[test]
+fn test_tDOT2() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"..", token!(tDOT2, loc!(0, 2)));
+}
+#[test]
+fn test_tDOT() {
+    use crate::testing::assert_lex;
+    assert_lex!(b".", token!(tDOT, loc!(0, 1)));
+}
 
 impl OnByte<b')'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -477,15 +649,18 @@ impl OnByte<b')'> for Lexer {
         token!(tRPAREN, loc!(start, start + 1))
     }
 }
-assert_lex!(
-    test_name = test_tRPAREN,
-    input = b")",
-    token = token!(tRPAREN, loc!(0, 1)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.paren_nest_mut() = 1;
-    },
-    assert = |_lexer: &Lexer| {}
-);
+#[test]
+fn test_tRPAREN() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b")",
+        token = token!(tRPAREN, loc!(0, 1)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.paren_nest_mut() = 1;
+        },
+        assert = |_lexer: &Lexer| {}
+    );
+}
 
 impl OnByte<b']'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -499,15 +674,18 @@ impl OnByte<b']'> for Lexer {
         token!(tRBRACK, loc!(start, start + 1))
     }
 }
-assert_lex!(
-    test_name = test_tRBRACK,
-    input = b"]",
-    token = token!(tRBRACK, loc!(0, 1)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.brack_nest_mut() = 1;
-    },
-    assert = |_lexer: &Lexer| {}
-);
+#[test]
+fn test_tRBRACK() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b"]",
+        token = token!(tRBRACK, loc!(0, 1)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.brack_nest_mut() = 1;
+        },
+        assert = |_lexer: &Lexer| {}
+    );
+}
 
 impl OnByte<b'}'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -521,15 +699,18 @@ impl OnByte<b'}'> for Lexer {
         token!(tRCURLY, loc!(start, start + 1))
     }
 }
-assert_lex!(
-    test_name = test_tRCURLY,
-    input = b"}",
-    token = token!(tRCURLY, loc!(0, 1)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.curly_nest_mut() = 1;
-    },
-    assert = |_lexer: &Lexer| {}
-);
+#[test]
+fn test_tRCURLY() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b"}",
+        token = token!(tRCURLY, loc!(0, 1)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.curly_nest_mut() = 1;
+        },
+        assert = |_lexer: &Lexer| {}
+    );
+}
 
 impl OnByte<b':'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -565,42 +746,56 @@ impl OnByte<b':'> for Lexer {
         token!(tCOLON, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tCOLON2, b"::", token!(tCOLON2, loc!(0, 2)));
-assert_lex!(
-    test_name = test_tDSYMBEG,
-    input = b":\"",
-    token = token!(tDSYMBEG, loc!(0, 2)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.curly_nest_mut() = 42;
-    },
-    assert = |lexer: &Lexer| {
-        use crate::lexer::strings::types::Symbol;
+#[test]
+fn test_tCOLON2() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"::", token!(tCOLON2, loc!(0, 2)));
+}
+#[test]
+fn test_tDSYMBEG() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b":\"",
+        token = token!(tDSYMBEG, loc!(0, 2)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.curly_nest_mut() = 42;
+        },
+        assert = |lexer: &Lexer| {
+            use crate::lexer::strings::types::Symbol;
 
-        assert_eq!(lexer.string_literals().size(), 1);
-        assert_eq!(
-            lexer.string_literals().last(),
-            Some(&StringLiteral::Symbol(Symbol::new(true, 42)))
-        )
-    }
-);
-assert_lex!(
-    test_name = test_tSYMBEG,
-    input = b":'",
-    token = token!(tSYMBEG, loc!(0, 2)),
-    setup = |lexer: &mut Lexer| {
-        *lexer.curly_nest_mut() = 42;
-    },
-    assert = |lexer: &Lexer| {
-        use crate::lexer::strings::types::Symbol;
+            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(
+                lexer.string_literals().last(),
+                Some(&StringLiteral::Symbol(Symbol::new(true, 42)))
+            )
+        }
+    );
+}
+#[test]
+fn test_tSYMBEG() {
+    use crate::testing::assert_lex;
+    assert_lex!(
+        input = b":'",
+        token = token!(tSYMBEG, loc!(0, 2)),
+        setup = |lexer: &mut Lexer| {
+            *lexer.curly_nest_mut() = 42;
+        },
+        assert = |lexer: &Lexer| {
+            use crate::lexer::strings::types::Symbol;
 
-        assert_eq!(lexer.string_literals().size(), 1);
-        assert_eq!(
-            lexer.string_literals().last(),
-            Some(&StringLiteral::Symbol(Symbol::new(false, 42)))
-        )
-    }
-);
-assert_lex!(test_tCOLON, b":", token!(tCOLON, loc!(0, 1)));
+            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(
+                lexer.string_literals().last(),
+                Some(&StringLiteral::Symbol(Symbol::new(false, 42)))
+            )
+        }
+    );
+}
+#[test]
+fn test_tCOLON() {
+    use crate::testing::assert_lex;
+    assert_lex!(b":", token!(tCOLON, loc!(0, 1)));
+}
 
 impl OnByte<b'/'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -617,8 +812,16 @@ impl OnByte<b'/'> for Lexer {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_DIV, b"/=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tDIVIDE, b"/", token!(tDIVIDE, loc!(0, 1)));
+#[test]
+fn test_tOP_ASGN_DIV() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"/=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tDIVIDE() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"/", token!(tDIVIDE, loc!(0, 1)));
+}
 
 impl OnByte<b'^'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -634,8 +837,16 @@ impl OnByte<b'^'> for Lexer {
         }
     }
 }
-assert_lex!(test_tOP_ASGN_CARET, b"^=", token!(tOP_ASGN, loc!(0, 2)));
-assert_lex!(test_tCARET, b"^", token!(tCARET, loc!(0, 1)));
+#[test]
+fn test_tOP_ASGN_CARET() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"^=", token!(tOP_ASGN, loc!(0, 2)));
+}
+#[test]
+fn test_tCARET() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"^", token!(tCARET, loc!(0, 1)));
+}
 
 impl OnByte<b';'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -644,7 +855,11 @@ impl OnByte<b';'> for Lexer {
         token!(tSEMI, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tSEMI, b";", token!(tSEMI, loc!(0, 1)));
+#[test]
+fn test_tSEMI() {
+    use crate::testing::assert_lex;
+    assert_lex!(b";", token!(tSEMI, loc!(0, 1)));
+}
 
 impl OnByte<b','> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -653,7 +868,11 @@ impl OnByte<b','> for Lexer {
         token!(tCOMMA, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tCOMMA, b",", token!(tCOMMA, loc!(0, 1)));
+#[test]
+fn test_tCOMMA() {
+    use crate::testing::assert_lex;
+    assert_lex!(b",", token!(tCOMMA, loc!(0, 1)));
+}
 
 impl OnByte<b'~'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -663,7 +882,11 @@ impl OnByte<b'~'> for Lexer {
         token!(tTILDE, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tTILDE, b"~", token!(tTILDE, loc!(0, 1)));
+#[test]
+fn test_tTILDE() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"~", token!(tTILDE, loc!(0, 1)));
+}
 
 impl OnByte<b'('> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -673,7 +896,11 @@ impl OnByte<b'('> for Lexer {
         token!(tLPAREN, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tLPAREN, b"(", token!(tLPAREN, loc!(0, 1)));
+#[test]
+fn test_tLPAREN() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"(", token!(tLPAREN, loc!(0, 1)));
+}
 
 impl OnByte<b'['> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -683,7 +910,11 @@ impl OnByte<b'['> for Lexer {
         token!(tLBRACK, loc!(start, start + 1))
     }
 }
-assert_lex!(test_tLBRACK, b"[", token!(tLBRACK, loc!(0, 1)));
+#[test]
+fn test_tLBRACK() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"[", token!(tLBRACK, loc!(0, 1)));
+}
 
 impl OnByte<b'{'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -727,16 +958,36 @@ impl OnByte<b'\\'> for Lexer {
         }
     }
 }
-assert_lex!(
-    test_tESCAPED_NL,
-    b"\\\nTEST_TOKEN",
-    token!(tTEST_TOKEN, loc!(2, 12))
-);
-assert_lex!(test_tESCAPED_SP, b"\\ ", token!(tSP, loc!(0, 2)));
-assert_lex!(test_tESCAPED_TAB, b"\\\t", token!(tSLASH_T, loc!(0, 2)));
-assert_lex!(test_tESCAPED_LF, b"\\\x0c", token!(tSLASH_F, loc!(0, 2)));
-assert_lex!(test_tESCAPED_CR, b"\\\r", token!(tSLASH_R, loc!(0, 2)));
-assert_lex!(test_tESCAPED_VTAB, b"\\\x0b", token!(tVTAB, loc!(0, 2)));
+#[test]
+fn test_tESCAPED_NL() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\\\nTEST_TOKEN", token!(tTEST_TOKEN, loc!(2, 12)));
+}
+#[test]
+fn test_tESCAPED_SP() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\\ ", token!(tSP, loc!(0, 2)));
+}
+#[test]
+fn test_tESCAPED_TAB() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\\\t", token!(tSLASH_T, loc!(0, 2)));
+}
+#[test]
+fn test_tESCAPED_LF() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\\\x0c", token!(tSLASH_F, loc!(0, 2)));
+}
+#[test]
+fn test_tESCAPED_CR() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\\\r", token!(tSLASH_R, loc!(0, 2)));
+}
+#[test]
+fn test_tESCAPED_VTAB() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\\\x0b", token!(tVTAB, loc!(0, 2)));
+}
 
 impl OnByte<b'_'> for Lexer {
     fn on_byte(&mut self) -> Token {
@@ -761,15 +1012,23 @@ impl OnByte<b'_'> for Lexer {
         Ident::parse(&mut self.buffer())
     }
 }
-assert_lex!(test_tEOF_at__END__, b"__END__", token!(tEOF, loc!(0, 0)));
-assert_lex!(
-    test_tEOF_at_NL___END__,
-    b"\n__END__",
-    token!(tEOF, loc!(1, 1))
-);
-assert_lex!(
-    test_underscore_ident,
-    b"_foo",
-    token!(tIDENTIFIER, loc!(0, 4))
-);
-assert_lex!(test_underscore_fid, b"_foo?", token!(tFID, loc!(0, 5)));
+#[test]
+fn test_tEOF_at__END__() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"__END__", token!(tEOF, loc!(0, 0)));
+}
+#[test]
+fn test_tEOF_at_NL___END__() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"\n__END__", token!(tEOF, loc!(1, 1)));
+}
+#[test]
+fn test_underscore_ident() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"_foo", token!(tIDENTIFIER, loc!(0, 4)));
+}
+#[test]
+fn test_underscore_fid() {
+    use crate::testing::assert_lex;
+    assert_lex!(b"_foo?", token!(tFID, loc!(0, 5)));
+}

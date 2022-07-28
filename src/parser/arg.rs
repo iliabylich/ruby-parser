@@ -400,27 +400,17 @@ fn build_binary_call<C: Constructor>(
 
 #[test]
 fn test_arg() {
-    use crate::parser::RustParser;
-    let mut parser = RustParser::new(b"1 + 2 * 3").debug();
+    use crate::{parser::RustParser, testing::assert_parses};
+    let result = RustParser::new(b"1 + 2 * 3").debug().try_arg();
 
-    let ast;
-    match parser.try_arg() {
-        Ok(node) => ast = node,
-        Err(err) => {
-            eprintln!("{}", err.render());
-            panic!("error")
-        }
-    }
-    assert_eq!(
-        ast.inspect(0),
+    assert_parses!(
+        result,
         r#"
-s(:send,
-  s(:int, "1"), "+",
-  s(:send,
-    s(:int, "2"), "*",
-    s(:int, "3")))
+        s(:send,
+        s(:int, "1"), "+",
+        s(:send,
+            s(:int, "2"), "*",
+            s(:int, "3")))
         "#
-        .trim_start()
-        .trim_end()
     );
 }
