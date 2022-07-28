@@ -76,9 +76,7 @@ pub(crate) fn parse_number(buffer: &mut BufferWithCursor) -> Token {
         }
     }
 
-    let token = number.into();
-    println!("{:?}", token);
-    token
+    number.into()
 }
 
 #[cfg(test)]

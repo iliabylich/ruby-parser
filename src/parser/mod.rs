@@ -8,6 +8,7 @@ use crate::transactions::{ParseError, ParseResult, ParseResultApi};
 mod checkpoint;
 
 mod alias;
+mod arg;
 mod array;
 mod case;
 mod class;
@@ -284,9 +285,6 @@ where
             .or_else(|| self.try_token(TokenKind::kWHILE))
             .or_else(|| self.try_token(TokenKind::kUNTIL))
             .stop()
-    }
-    fn try_arg(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_arg")
     }
     fn try_relop(&mut self) {
         todo!("parser.try_relop")

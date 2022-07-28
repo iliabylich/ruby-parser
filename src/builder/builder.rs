@@ -738,8 +738,66 @@ impl<C: Constructor> Builder<C> {
     pub(crate) fn attr_asgn() {}
     pub(crate) fn index() {}
     pub(crate) fn index_asgn() {}
-    pub(crate) fn binary_op() {}
-    pub(crate) fn match_op() {}
+    pub(crate) fn binary_op(
+        receiver: Box<Node>,
+        operator_t: Token,
+        arg: Box<Node>,
+        buffer: &Buffer,
+    ) -> Box<Node> {
+        // TODO: check receiver is value_expr
+        // TODO: check arg is value_expr
+
+        let selector_l = Some(operator_t.loc);
+        let expression_l = receiver.expression().join(arg.expression());
+
+        Box::new(Node::Send(Send {
+            recv: Some(receiver),
+            method_name: string_value(operator_t.loc, buffer),
+            args: vec![*arg],
+            dot_l: None,
+            selector_l,
+            begin_l: None,
+            end_l: None,
+            operator_l: None,
+            expression_l,
+        }))
+    }
+    pub(crate) fn match_op(receiver: Box<Node>, match_t: Token, arg: Box<Node>) -> Box<Node> {
+        // TODO: check receiver is value_expr
+        // TODO: check arg is value_expr
+
+        let selector_l = match_t.loc;
+        let expression_l = receiver.expression().join(arg.expression());
+
+        let result = match static_regexp_captures(&receiver) {
+            Some(captures) => {
+                // TODO: declare all captures in static env
+                // for capture in captures {
+                //     static_env.declare(&capture);
+                // }
+
+                Node::MatchWithLvasgn(MatchWithLvasgn {
+                    re: receiver,
+                    value: arg,
+                    operator_l: selector_l,
+                    expression_l,
+                })
+            }
+            None => Node::Send(Send {
+                recv: Some(receiver),
+                method_name: StringContent::from("=~"),
+                args: vec![*arg],
+                dot_l: None,
+                selector_l: Some(selector_l),
+                begin_l: None,
+                end_l: None,
+                operator_l: None,
+                expression_l,
+            }),
+        };
+
+        Box::new(result)
+    }
     pub(crate) fn unary_op() {}
     pub(crate) fn not_op(
         not_t: Token,
@@ -782,6 +840,36 @@ impl<C: Constructor> Builder<C> {
     }
 
     // Conditionals
+    pub(crate) fn condition(
+        cond_t: Token,
+        cond: Box<Node>,
+        then_t: Token,
+        if_true: Option<Box<Node>>,
+        else_t: Option<Token>,
+        if_false: Option<Box<Node>>,
+        end_t: Option<Token>,
+    ) -> Box<Node> {
+        todo!("condition")
+    }
+
+    pub(crate) fn condition_mod(
+        if_true: Option<Box<Node>>,
+        if_false: Option<Box<Node>>,
+        cond_t: Token,
+        cond: Box<Node>,
+    ) -> Box<Node> {
+        todo!("condition_mod")
+    }
+
+    pub(crate) fn ternary(
+        cond: Box<Node>,
+        question_t: Token,
+        if_true: Box<Node>,
+        colon_t: Token,
+        if_false: Box<Node>,
+    ) -> Box<Node> {
+        todo!("ternary")
+    }
 
     // Case matching
 
@@ -998,4 +1086,9 @@ fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Loc> {
 
 fn heredoc_map(begin_t: &Option<Token>, nodes: &[Node], end_t: &Option<Token>) -> (Loc, Loc, Loc) {
     todo!("builder.heredoc_map")
+}
+
+// Regexp heleprs
+fn static_regexp_captures(node: &Node) -> Option<Vec<String>> {
+    None
 }
