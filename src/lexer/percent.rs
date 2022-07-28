@@ -120,135 +120,166 @@ mod tests {
     use super::*;
     use crate::lexer::Lexer;
 
-    macro_rules! test_string_literal_start {
+    macro_rules! assert_string_literal_start {
         (
-            name = $name:ident,
             input = $input:expr,
             token = $token:ident,
             literal = $literal:expr
-        ) => {
-            #[test]
-            fn $name() {
-                let len = $input.len();
+        ) => {{
+            let len = $input.len();
 
-                let (mut lexer, _state) = Lexer::new_managed($input);
-                let token = lexer.next_token();
-                assert_eq!(token, token!($token, loc!(0, len)));
+            let (mut lexer, _state) = Lexer::new_managed($input);
+            let token = lexer.next_token();
+            assert_eq!(token, token!($token, loc!(0, len)));
 
-                assert_eq!(
-                    lexer.string_literals().size(),
-                    1,
-                    "expected a string literal to be pushed"
-                );
-                let literal = lexer.string_literals().last().unwrap();
-                assert_eq!(literal, &$literal);
+            assert_eq!(
+                lexer.string_literals().size(),
+                1,
+                "expected a string literal to be pushed"
+            );
+            let literal = lexer.string_literals().last().unwrap();
+            assert_eq!(literal, &$literal);
 
-                assert_eq!(lexer.next_token(), token!(tEOF, loc!(len, len)));
-            }
-        };
+            assert_eq!(lexer.next_token(), token!(tEOF, loc!(len, len)));
+        }};
     }
 
     // $PUNCTUATION
-    test_string_literal_start!(
-        name = test_tPERCENT_tLPAREN,
-        input = b"%(",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'(', b')'))
-    );
-    test_string_literal_start!(
-        name = test_tPERCENT_tLBRACK,
-        input = b"%[",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'[', b']'))
-    );
-    test_string_literal_start!(
-        name = test_tPERCENT_tLCURLY,
-        input = b"%{",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
-    );
-    test_string_literal_start!(
-        name = test_tPERCENT_tLT,
-        input = b"%<",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'<', b'>'))
-    );
-    test_string_literal_start!(
-        name = test_tPERCENT_tPIPE,
-        input = b"%|",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'|', b'|'))
-    );
+    #[test]
+    fn test_tPERCENT_tLPAREN() {
+        assert_string_literal_start!(
+            input = b"%(",
+            token = tSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'(', b')'))
+        );
+    }
+    #[test]
+    fn test_tPERCENT_tLBRACK() {
+        assert_string_literal_start!(
+            input = b"%[",
+            token = tSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'[', b']'))
+        );
+    }
+    #[test]
+    fn test_tPERCENT_tLCURLY() {
+        assert_string_literal_start!(
+            input = b"%{",
+            token = tSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
+        );
+    }
+    #[test]
+    fn test_tPERCENT_tLT() {
+        assert_string_literal_start!(
+            input = b"%<",
+            token = tSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'<', b'>'))
+        );
+    }
+    #[test]
+    fn test_tPERCENT_tPIPE() {
+        assert_string_literal_start!(
+            input = b"%|",
+            token = tSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'|', b'|'))
+        );
+    }
 
     // %Q
-    test_string_literal_start!(
-        name = test_tPERCENT_q_upper,
-        input = b"%Q{",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
-    );
+    #[test]
+    fn test_tPERCENT_q_upper() {
+        assert_string_literal_start!(
+            input = b"%Q{",
+            token = tSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
+        );
+    }
 
     // %q
-    test_string_literal_start!(
-        name = test_tPERCENT_q_lower,
-        input = b"%q{",
-        token = tSTRING_BEG,
-        literal = StringLiteral::StringPlain(StringPlain::new(b'{', b'}'))
-    );
+    #[test]
+    fn test_tPERCENT_q_lower() {
+        assert_string_literal_start!(
+            input = b"%q{",
+            token = tSTRING_BEG,
+            literal = StringLiteral::StringPlain(StringPlain::new(b'{', b'}'))
+        );
+    }
 
     // %W
-    test_string_literal_start!(
-        name = test_tPERCENT_w_upper,
-        input = b"%W{",
-        token = tWORDS_BEG,
-        literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
-    );
+    #[test]
+    fn test_tPERCENT_w_upper() {
+        assert_string_literal_start!(
+            input = b"%W{",
+            token = tWORDS_BEG,
+            literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
+        );
+    }
 
     // %w
-    test_string_literal_start!(
-        name = test_tPERCENT_w_lower,
-        input = b"%w{",
-        token = tQWORDS_BEG,
-        literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
-    );
+    #[test]
+    fn test_tPERCENT_w_lower() {
+        assert_string_literal_start!(
+            input = b"%w{",
+            token = tQWORDS_BEG,
+            literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
+        );
+    }
 
     // %I
-    test_string_literal_start!(
-        name = test_tPERCENT_i_upper,
-        input = b"%I{",
-        token = tSYMBOLS_BEG,
-        literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
-    );
+    #[test]
+    fn test_tPERCENT_i_upper() {
+        assert_string_literal_start!(
+            input = b"%I{",
+            token = tSYMBOLS_BEG,
+            literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
+        );
+    }
 
     // %i
-    test_string_literal_start!(
-        name = test_tPERCENT_i_lower,
-        input = b"%i{",
-        token = tQSYMBOLS_BEG,
-        literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
-    );
+    #[test]
+    fn test_tPERCENT_i_lower() {
+        assert_string_literal_start!(
+            input = b"%i{",
+            token = tQSYMBOLS_BEG,
+            literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
+        );
+    }
 
     // %x
-    test_string_literal_start!(
-        name = test_tPERCENT_x_lower,
-        input = b"%x{",
-        token = tXSTRING_BEG,
-        literal = StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
-    );
+    #[test]
+    fn test_tPERCENT_x_lower() {
+        assert_string_literal_start!(
+            input = b"%x{",
+            token = tXSTRING_BEG,
+            literal =
+                StringLiteral::StringInterp(StringInterp::new(Interpolation::new(0), b'{', b'}'))
+        );
+    }
 
     // %r
-    test_string_literal_start!(
-        name = test_tPERCENT_r_lower,
-        input = b"%r{",
-        token = tREGEXP_BEG,
-        literal = StringLiteral::Regexp(Regexp::new(b'{', b'}', 0))
-    );
+    #[test]
+    fn test_tPERCENT_r_lower() {
+        assert_string_literal_start!(
+            input = b"%r{",
+            token = tREGEXP_BEG,
+            literal = StringLiteral::Regexp(Regexp::new(b'{', b'}', 0))
+        );
+    }
 
     // %s
-    test_string_literal_start!(
-        name = test_tPERCENT_s_lower,
-        input = b"%s{",
-        token = tSYMBEG,
-        literal = StringLiteral::StringPlain(StringPlain::new(b'{', b'}'))
-    );
+    #[test]
+    fn test_tPERCENT_s_lower() {
+        assert_string_literal_start!(
+            input = b"%s{",
+            token = tSYMBEG,
+            literal = StringLiteral::StringPlain(StringPlain::new(b'{', b'}'))
+        );
+    }
 }
