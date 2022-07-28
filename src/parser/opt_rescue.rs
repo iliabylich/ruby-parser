@@ -2,7 +2,6 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
-    transactions::StepData,
     Node,
 };
 
@@ -23,14 +22,11 @@ where
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::SeqError {
-                                name: "opt rescue",
-                                steps: nodes
-                                    .into_iter()
-                                    .map(|node| StepData::from(Box::new(node)))
-                                    .collect(),
-                                error: Box::new(error),
-                            });
+                            return Err(ParseError::seq_error::<Vec<Node>, _>(
+                                "opt rescue",
+                                nodes,
+                                error,
+                            ));
                         }
                     }
                 }
@@ -79,7 +75,7 @@ where
             .stop()
     }
 
-    fn try_arg_value(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn try_arg_value(&mut self) -> ParseResult<Box<Node>> {
         self.try_arg()
     }
 }

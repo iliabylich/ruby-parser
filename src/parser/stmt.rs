@@ -2,7 +2,6 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
-    transactions::StepData,
     Node, Token,
 };
 
@@ -37,14 +36,11 @@ where
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::SeqError {
-                                name: "top stmts",
-                                steps: top_stmts
-                                    .into_iter()
-                                    .map(|top_stmt| StepData::from(Box::new(top_stmt)))
-                                    .collect::<Vec<_>>(),
-                                error: Box::new(error),
-                            });
+                            return Err(ParseError::seq_error::<Vec<Node>, _>(
+                                "top stmts",
+                                top_stmts,
+                                error,
+                            ));
                         }
                     }
                 }
@@ -120,11 +116,11 @@ where
                         // ignore
                         Ok(stmt)
                     }
-                    Some(error) => Err(ParseError::SeqError {
-                        name: "stmt tail",
-                        steps: vec![stmt.into()],
-                        error: Box::new(error),
-                    }),
+                    Some(error) => Err(ParseError::seq_error::<Box<Node>, _>(
+                        "stmt tail",
+                        stmt,
+                        error,
+                    )),
                 }
             }
         }

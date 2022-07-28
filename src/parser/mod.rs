@@ -293,9 +293,6 @@ where
     fn try_rel_expr(&mut self) {
         todo!("parser.try_rel_expr")
     }
-    fn try_aref_args(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_aref_args")
-    }
     fn try_paren_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_paren_args")
     }
@@ -308,8 +305,47 @@ where
     fn try_opt_block_arg(&mut self) {
         todo!("parser.try_opt_block_arg")
     }
-    fn try_args(&mut self) {
-        todo!("parser.try_args")
+    fn try_args(&mut self) -> ParseResult<Vec<Node>> {
+        let mut args = vec![];
+        let mut commas = vec![];
+
+        fn item<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+            if parser.current_token().is(TokenKind::tSTAR) {
+                let star_t = parser.current_token();
+                let arg_value = parser.try_arg_value().map_err(|mut err| {
+                    err.make_required();
+                    err
+                })?;
+                todo!("{:?} {:?}", star_t, arg_value)
+            } else {
+                parser.try_arg_value()
+            }
+        }
+
+        let arg = item(self)?;
+        args.push(*arg);
+        loop {
+            match self.expect_token(TokenKind::tCOMMA) {
+                Ok(comma) => commas.push(comma),
+                Err(_) => return Ok(args),
+            }
+            match item(self) {
+                Ok(item) => args.push(*item),
+                Err(error) => {
+                    if error.is_lookahead() {
+                        return Err(ParseError::seq_error::<Vec<Node>, _>(
+                            "args",
+                            (args, commas),
+                            error,
+                        ));
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+
+        Ok(args)
     }
     fn try_mrhs_arg(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_mrhs_arg")
@@ -727,7 +763,7 @@ where
     fn try_assoc_list(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_assoc_list")
     }
-    fn try_assocs(&mut self) {
+    fn try_assocs(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_assocs")
     }
     fn try_assoc(&mut self) {
@@ -806,10 +842,11 @@ where
 
         Ok(rbrace_t)
     }
-    fn try_trailer(&mut self) -> ParseResult<Token> {
+    fn try_trailer(&mut self) -> ParseResult<Option<Token>> {
         self.one_of("trailer")
-            .or_else(|| self.try_token(TokenKind::tNL))
-            .or_else(|| self.try_token(TokenKind::tCOMMA))
+            .or_else(|| self.try_token(TokenKind::tNL).map(|token| Some(token)))
+            .or_else(|| self.try_token(TokenKind::tCOMMA).map(|token| Some(token)))
+            .or_else(|| Ok(None))
             .stop()
     }
     fn try_term(&mut self) -> ParseResult<Token> {

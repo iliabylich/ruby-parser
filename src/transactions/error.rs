@@ -16,10 +16,13 @@ pub(crate) enum ParseError {
 
     SeqError {
         name: &'static str,
-        steps: Vec<StepData>,
+        steps: Steps,
         error: Box<ParseError>,
     },
 }
+
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) struct Steps(pub(crate) Vec<StepData>);
 
 #[derive(Debug, PartialEq, Eq)]
 #[allow(dead_code)]
@@ -130,6 +133,59 @@ where
         }
     }
 }
+impl From<Token> for Steps {
+    fn from(token: Token) -> Self {
+        Steps(vec![token.into()])
+    }
+}
+impl From<Node> for Steps {
+    fn from(node: Node) -> Self {
+        Steps(vec![Box::new(node).into()])
+    }
+}
+impl From<Box<Node>> for Steps {
+    fn from(node: Box<Node>) -> Self {
+        Steps(vec![node.into()])
+    }
+}
+impl From<Vec<Node>> for Steps {
+    fn from(nodes: Vec<Node>) -> Self {
+        Steps(
+            nodes
+                .into_iter()
+                .map(|node| Box::new(node).into())
+                .collect(),
+        )
+    }
+}
+impl From<Vec<Token>> for Steps {
+    fn from(tokens: Vec<Token>) -> Self {
+        Steps(tokens.into_iter().map(|token| token.into()).collect())
+    }
+}
+impl<A, B> From<(A, B)> for Steps
+where
+    StepData: From<A>,
+    StepData: From<B>,
+{
+    fn from((lhs, rhs): (A, B)) -> Self {
+        todo!()
+    }
+}
+
+impl ParseError {
+    pub(crate) fn seq_error<T, S>(name: &'static str, steps: S, error: ParseError) -> Self
+    where
+        Steps: From<S>,
+    {
+        let steps = Steps::from(steps);
+        Self::SeqError {
+            name,
+            steps,
+            error: Box::new(error),
+        }
+    }
+}
 
 // is_lookahead
 impl ParseError {
@@ -137,7 +193,7 @@ impl ParseError {
         match self {
             Self::TokenError { lookahead, .. } => *lookahead,
             Self::OneOfError { variants, .. } => variants.iter().all(|v| v.is_lookahead()),
-            Self::SeqError { steps, .. } => steps.is_empty(),
+            Self::SeqError { steps, .. } => steps.0.is_empty(),
         }
     }
 }
@@ -212,7 +268,7 @@ impl ParseError {
             Self::OneOfError { variants, .. } => {
                 variants.iter().map(|v| v.weight()).max().unwrap_or(0)
             }
-            Self::SeqError { steps, .. } => 10 * steps.len() + 1,
+            Self::SeqError { steps, .. } => 10 * steps.0.len() + 1,
         }
     }
 }

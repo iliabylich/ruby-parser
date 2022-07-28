@@ -55,11 +55,11 @@ fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<B
                 let (mhs, colon_t, rhs) = match ternary {
                     Ok(values) => values,
                     Err(error) => {
-                        return Err(ParseError::SeqError {
-                            name: "ternary operator",
-                            steps: vec![lhs.into(), op_t.into()],
-                            error: Box::new(error),
-                        })
+                        return Err(ParseError::seq_error::<Box<Node>, _>(
+                            "ternary operator",
+                            (lhs, op_t),
+                            error,
+                        ))
                     }
                 };
                 lhs = Builder::<C>::ternary(lhs, op_t, mhs, colon_t, rhs);
@@ -68,11 +68,11 @@ fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<B
                 let rhs = match try_arg0(parser, r_bp) {
                     Ok(node) => node,
                     Err(error) => {
-                        return Err(ParseError::SeqError {
-                            name: "rhs of binary operator",
-                            steps: vec![lhs.into(), op_t.into()],
-                            error: Box::new(error),
-                        })
+                        return Err(ParseError::seq_error::<Box<Node>, _>(
+                            "rhs of binary operator",
+                            (lhs, op_t),
+                            error,
+                        ))
                     }
                 };
                 lhs = build_binary_call::<C>(lhs, op_t, rhs, parser.buffer());
@@ -276,11 +276,11 @@ fn try_arg_rhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>>
 
         match parser.try_arg() {
             Ok(rhs) => todo!("{:?} {:?} {:?}", lhs, rescue_t, rhs),
-            Err(error) => Err(ParseError::SeqError {
-                name: "arg rescue arg",
-                steps: vec![lhs.into(), rescue_t.into()],
-                error: Box::new(error),
-            }),
+            Err(error) => Err(ParseError::seq_error::<Box<Node>, _>(
+                "arg rescue arg",
+                (lhs, rescue_t),
+                error,
+            )),
         }
     } else {
         Ok(lhs)

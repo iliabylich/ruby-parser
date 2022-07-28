@@ -1,4 +1,4 @@
-use crate::transactions::ParseError;
+use crate::transactions::{error::Steps, ParseError};
 
 #[allow(dead_code)]
 impl ParseError {
@@ -36,7 +36,11 @@ impl ParseError {
                         .join("\n")
                 )
             }
-            Self::SeqError { name, steps, error } => {
+            Self::SeqError {
+                name,
+                steps: Steps(steps),
+                error,
+            } => {
                 format!(
                     "{offset}SEQUENCE ({weight}) {name} (got {steps:?})\n{error}",
                     offset = ws_offset(level),

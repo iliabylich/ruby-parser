@@ -2,7 +2,6 @@ use crate::{
     builder::{Builder, Constructor},
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
-    transactions::StepData,
     Node,
 };
 
@@ -39,14 +38,11 @@ where
                 Ok(fitem) => names.push(*fitem),
                 Err(error) => {
                     // got comma, but no `fitem`
-                    let mut steps = vec![];
-                    steps.extend(names.into_iter().map(|name| StepData::from(Box::new(name))));
-                    steps.extend(commas.into_iter().map(|comma| StepData::from(comma)));
-                    return Err(ParseError::SeqError {
-                        name: "list of undef items",
-                        steps,
-                        error: Box::new(error),
-                    });
+                    return Err(ParseError::seq_error::<Vec<Node>, _>(
+                        "list of undef items",
+                        (names, commas),
+                        error,
+                    ));
                 }
             }
         }

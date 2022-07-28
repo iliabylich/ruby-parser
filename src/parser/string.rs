@@ -39,14 +39,9 @@ where
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::SeqError {
-                                name: "string1",
-                                steps: parts
-                                    .into_iter()
-                                    .map(|node| Box::new(node).into())
-                                    .collect(),
-                                error: Box::new(error),
-                            });
+                            return Err(ParseError::seq_error::<Box<Node>, _>(
+                                "string1", parts, error,
+                            ));
                         }
                     }
                 }
@@ -97,14 +92,11 @@ where
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::SeqError {
-                                name: "string content",
-                                steps: strings
-                                    .into_iter()
-                                    .map(|node| Box::new(node).into())
-                                    .collect(),
-                                error: Box::new(error),
-                            });
+                            return Err(ParseError::seq_error::<Vec<Node>, _>(
+                                "string content",
+                                strings,
+                                error,
+                            ));
                         }
                     }
                 }

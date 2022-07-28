@@ -107,11 +107,11 @@ where
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::SeqError {
-                                name: "primary -> ::CONST",
-                                steps: vec![node.into()],
-                                error: Box::new(error),
-                            });
+                            return Err(ParseError::seq_error::<Box<Node>, _>(
+                                "primary -> ::CONST",
+                                node,
+                                error,
+                            ));
                         }
                     }
                 }

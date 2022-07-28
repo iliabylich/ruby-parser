@@ -55,12 +55,14 @@ macro_rules! gen_all_of {
             }
 
             pub(crate) fn stop(self) -> Result<($($generic),+), ParseError> {
+                use crate::transactions::error::Steps;
+
                 let Self { inner, name } = self;
                 match inner {
                     Ok(($($field),+)) => Ok(($($field),+)),
                     Err(SeqError { steps, error }) => Err(ParseError::SeqError {
                         name,
-                        steps,
+                        steps: Steps(steps),
                         error: Box::new(error),
                     }),
                 }
