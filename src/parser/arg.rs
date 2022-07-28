@@ -269,7 +269,22 @@ fn try_arg_head<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>
 }
 
 fn try_arg_rhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    todo!("parser.try_arg_rhs")
+    let lhs = parser.try_arg()?;
+    if parser.current_token().is(TokenKind::kRESCUE) {
+        let rescue_t = parser.current_token();
+        parser.skip_token();
+
+        match parser.try_arg() {
+            Ok(rhs) => todo!("{:?} {:?} {:?}", lhs, rescue_t, rhs),
+            Err(error) => Err(ParseError::SeqError {
+                name: "arg rescue arg",
+                steps: vec![lhs.into(), rescue_t.into()],
+                error: Box::new(error),
+            }),
+        }
+    } else {
+        Ok(lhs)
+    }
 }
 
 fn try_arg_prefix_operator<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Token> {
