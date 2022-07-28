@@ -295,9 +295,6 @@ where
     fn try_aref_args(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_aref_args")
     }
-    fn try_arg_rhs(&mut self) {
-        todo!("parser.try_arg_rhs")
-    }
     fn try_paren_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_paren_args")
     }
@@ -642,7 +639,7 @@ where
             .stop()
             .map(|node| Builder::<C>::assignable(node))
     }
-    fn try_f_opt_paren_args(&mut self) {
+    fn try_f_opt_paren_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_f_opt_paren_args")
     }
     fn try_f_paren_args(&mut self) {

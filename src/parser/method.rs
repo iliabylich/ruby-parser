@@ -45,14 +45,14 @@ where
             .stop()
     }
 
-    fn try_defn_head(&mut self) -> ParseResult<(Token, Token)> {
+    pub(crate) fn try_defn_head(&mut self) -> ParseResult<(Token, Token)> {
         self.all_of("instance method definition start")
             .and(|| self.try_k_def())
             .and(|| self.try_def_name())
             .stop()
     }
 
-    fn try_defs_head(&mut self) -> ParseResult<(Token, Box<Node>, Token, Token)> {
+    pub(crate) fn try_defs_head(&mut self) -> ParseResult<(Token, Box<Node>, Token, Token)> {
         self.all_of("singleton method definition start")
             .and(|| self.try_k_def())
             .and(|| self.try_singleton())

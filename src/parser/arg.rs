@@ -88,20 +88,188 @@ fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<B
 }
 
 fn try_arg_head<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
-    // | lhs tEQL arg_rhs
-    // | var_lhs tOP_ASGN arg_rhs
-    // | primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN arg_rhs
-    // | primary_value call_op2 tIDENTIFIER tOP_ASGN arg_rhs
-    // | primary_value call_op2 tCONSTANT tOP_ASGN arg_rhs
-    // | tCOLON3 tCONSTANT tOP_ASGN arg_rhs
-    // | backref tOP_ASGN arg_rhs
-    // | tUMINUS_NUM simple_numeric tPOW arg
-    // | defn_head f_opt_paren_args tEQL arg
-    // | defn_head f_opt_paren_args tEQL arg kRESCUE_MOD arg
-    // | defs_head f_opt_paren_args tEQL arg
-    // | defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg
-    // | primary
-    parser.try_numeric()
+    parser
+        .one_of("arg head")
+        .or_else(|| {
+            let (lhs, eql_t, rhs) = parser
+                .all_of("lhs tEQL arg_rhs")
+                .and(|| parser.try_lhs())
+                .and(|| parser.expect_token(TokenKind::tEQL))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+
+            todo!("{:?} {:?} {:?}", lhs, eql_t, rhs)
+        })
+        .or_else(|| {
+            let (lhs, op_t, rhs) = parser
+                .all_of("var_lhs tOP_ASGN arg_rhs")
+                .and(|| parser.try_var_lhs())
+                .and(|| parser.expect_token(TokenKind::tOP_ASGN))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+
+            todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
+        })
+        .or_else(|| {
+            let (expr, lbrack_t, args, rparen_t, op_t, rhs) = parser
+                .all_of("primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN arg_rhs")
+                .and(|| parser.try_primary_value())
+                .and(|| parser.expect_token(TokenKind::tLBRACK))
+                .and(|| parser.try_opt_call_args())
+                .and(|| parser.try_rbracket())
+                .and(|| parser.expect_token(TokenKind::tOP_ASGN))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+            todo!(
+                "{:?} {:?} {:?} {:?} {:?} {:?}",
+                expr,
+                lbrack_t,
+                args,
+                rparen_t,
+                op_t,
+                rhs
+            )
+        })
+        .or_else(|| {
+            let (expr, call_op_t, mid_t, op_t, rhs) = parser
+                .all_of("primary_value call_op2 tIDENTIFIER tOP_ASGN arg_rhs")
+                .and(|| parser.try_primary_value())
+                .and(|| parser.try_call_op2())
+                .and(|| parser.expect_token(TokenKind::tIDENTIFIER))
+                .and(|| parser.expect_token(TokenKind::tOP_ASGN))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+
+            todo!(
+                "{:?} {:?} {:?} {:?} {:?}",
+                expr,
+                call_op_t,
+                mid_t,
+                op_t,
+                rhs
+            )
+        })
+        .or_else(|| {
+            let (expr, call_op_t, const_t, op_t, rhs) = parser
+                .all_of("primary_value call_op2 tCONSTANT tOP_ASGN arg_rhs")
+                .and(|| parser.try_primary_value())
+                .and(|| parser.try_call_op2())
+                .and(|| parser.expect_token(TokenKind::tCONSTANT))
+                .and(|| parser.expect_token(TokenKind::tOP_ASGN))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+
+            todo!(
+                "{:?} {:?} {:?} {:?} {:?}",
+                expr,
+                call_op_t,
+                const_t,
+                op_t,
+                rhs
+            )
+        })
+        .or_else(|| {
+            let (colon_t, const_t, op_t, rhs) = parser
+                .all_of("tCOLON3 tCONSTANT tOP_ASGN arg_rhs")
+                .and(|| parser.expect_token(TokenKind::tCOLON2))
+                .and(|| parser.expect_token(TokenKind::tCONSTANT))
+                .and(|| parser.expect_token(TokenKind::tOP_ASGN))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+
+            todo!("{:?} {:?} {:?} {:?}", colon_t, const_t, op_t, rhs)
+        })
+        .or_else(|| {
+            let (lhs, op_t, rhs) = parser
+                .all_of("backref tOP_ASGN arg_rhs")
+                .and(|| parser.try_back_ref())
+                .and(|| parser.expect_token(TokenKind::tOP_ASGN))
+                .and(|| try_arg_rhs(parser))
+                .stop()?;
+
+            todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
+        })
+        .or_else(|| {
+            let (minus_t, lhs, op_t, rhs) = parser
+                .all_of("tUMINUS_NUM simple_numeric tPOW arg")
+                .and(|| parser.expect_token(TokenKind::tUMINUS_NUM))
+                .and(|| parser.try_simple_numeric())
+                .and(|| parser.expect_token(TokenKind::tPOW))
+                .and(|| parser.try_arg())
+                .stop()?;
+
+            todo!("{:?} {:?} {:?} {:?}", minus_t, lhs, op_t, rhs)
+        })
+        .or_else(|| {
+            let (def, args, eql_t, body, rescue_t, rescue_body) = parser
+                .all_of("defn_head f_opt_paren_args tEQL arg kRESCUE_MOD arg")
+                .and(|| parser.try_defn_head())
+                .and(|| parser.try_f_opt_paren_args())
+                .and(|| parser.expect_token(TokenKind::tEQL))
+                .and(|| parser.try_arg())
+                .and(|| parser.expect_token(TokenKind::kRESCUE_MOD))
+                .and(|| parser.try_arg())
+                .stop()?;
+
+            todo!(
+                "{:?} {:?} {:?} {:?} {:?} {:?}",
+                def,
+                args,
+                eql_t,
+                body,
+                rescue_t,
+                rescue_body
+            )
+        })
+        .or_else(|| {
+            let (def, args, eql_t, body) = parser
+                .all_of("defn_head f_opt_paren_args tEQL arg")
+                .and(|| parser.try_defn_head())
+                .and(|| parser.try_f_opt_paren_args())
+                .and(|| parser.expect_token(TokenKind::tEQL))
+                .and(|| parser.try_arg())
+                .stop()?;
+
+            todo!("{:?} {:?} {:?} {:?}", def, args, eql_t, body)
+        })
+        .or_else(|| {
+            let (defs, args, eql_t, body, rescue_t, rescue_body) = parser
+                .all_of("defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg")
+                .and(|| parser.try_defs_head())
+                .and(|| parser.try_f_opt_paren_args())
+                .and(|| parser.expect_token(TokenKind::tEQL))
+                .and(|| parser.try_arg())
+                .and(|| parser.expect_token(TokenKind::kRESCUE_MOD))
+                .and(|| parser.try_arg())
+                .stop()?;
+
+            todo!(
+                "{:?} {:?} {:?} {:?} {:?} {:?}",
+                defs,
+                args,
+                eql_t,
+                body,
+                rescue_t,
+                rescue_body
+            )
+        })
+        .or_else(|| {
+            let (defs, args, eql_t, body) = parser
+                .all_of("defs_head f_opt_paren_args tEQL arg")
+                .and(|| parser.try_defs_head())
+                .and(|| parser.try_f_opt_paren_args())
+                .and(|| parser.expect_token(TokenKind::tEQL))
+                .and(|| parser.try_arg())
+                .stop()?;
+
+            todo!("{:?} {:?} {:?} {:?}", defs, args, eql_t, body,)
+        })
+        .or_else(|| parser.try_primary())
+        .stop()
+}
+
+fn try_arg_rhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+    todo!("parser.try_arg_rhs")
 }
 
 fn try_arg_prefix_operator<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Token> {
@@ -219,8 +387,17 @@ fn build_binary_call<C: Constructor>(
 fn test_arg() {
     use crate::parser::RustParser;
     let mut parser = RustParser::new(b"1 + 2 * 3").debug();
+
+    let ast;
+    match parser.try_arg() {
+        Ok(node) => ast = node,
+        Err(err) => {
+            eprintln!("{}", err.render());
+            panic!("error")
+        }
+    }
     assert_eq!(
-        parser.try_arg().unwrap().inspect(0),
+        ast.inspect(0),
         r#"
 s(:send,
   s(:int, "1"), "+",

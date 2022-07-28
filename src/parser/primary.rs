@@ -1,6 +1,6 @@
 use crate::{
     builder::Constructor,
-    parser::{ParseResult, ParseResultApi, Parser},
+    parser::{ParseError, ParseResult, ParseResultApi, Parser},
     token::TokenKind,
     Node,
 };
@@ -96,13 +96,21 @@ where
             .stop()?;
 
         loop {
-            match self.try_colon2_const().ignore_lookaheads()? {
-                Some((colon2_t, const_t)) => {
+            match self.try_colon2_const() {
+                Ok((colon2_t, const_t)) => {
                     todo!("append tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t)
                 }
-                None => {
-                    // no match
-                    break;
+                Err(error) => {
+                    if error.is_lookahead() {
+                        // no match
+                        break;
+                    } else {
+                        return Err(ParseError::SeqError {
+                            name: "primary -> ::CONST",
+                            steps: vec![node.into()],
+                            error: Box::new(error),
+                        });
+                    }
                 }
             }
         }
