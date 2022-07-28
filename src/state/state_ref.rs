@@ -1,7 +1,5 @@
 use crate::{
-    lexer::{buffer::BufferWithCursor, strings::stack::StringLiteralStack},
-    state::State,
-    token::Token,
+    buffer::BufferWithCursor, lexer::strings::stack::StringLiteralStack, state::State, token::Token,
 };
 
 #[derive(PartialEq, Eq, Clone, Copy)]
@@ -78,7 +76,7 @@ macro_rules! generate_state_ref_delegation {
     ($for:tt) => {
         #[allow(dead_code)]
         impl $for {
-            pub(crate) fn buffer(&self) -> &'static mut crate::lexer::buffer::BufferWithCursor {
+            pub(crate) fn buffer(&self) -> &'static mut crate::buffer::BufferWithCursor {
                 self.state_ref().buffer()
             }
 

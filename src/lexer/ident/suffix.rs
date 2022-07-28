@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 pub(crate) struct IdentSuffix {
     pub(crate) byte: u8,

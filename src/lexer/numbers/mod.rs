@@ -1,7 +1,7 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::buffer::{Buffer, BufferWithCursor},
+    buffer::{Buffer, BufferWithCursor},
     loc::loc,
     token::{token, Token, TokenKind},
 };

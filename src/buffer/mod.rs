@@ -1,4 +1,3 @@
-mod lexer_proxy;
 mod pattern;
 pub(crate) mod utf8;
 
@@ -121,7 +120,7 @@ impl BufferWithCursor {}
 
 macro_rules! scan_while_matches_pattern {
     ($buffer:expr, $start:expr, $pattern:pat) => {{
-        use crate::lexer::buffer::LookaheadResult;
+        use crate::buffer::LookaheadResult;
 
         let mut end = $start;
         loop {

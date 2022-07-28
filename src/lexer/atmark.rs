@@ -1,8 +1,6 @@
 use crate::{
-    lexer::{
-        buffer::{Buffer, BufferWithCursor},
-        ident::Ident,
-    },
+    buffer::{Buffer, BufferWithCursor},
+    lexer::ident::Ident,
     loc::loc,
     token::{token, Token, TokenKind},
 };

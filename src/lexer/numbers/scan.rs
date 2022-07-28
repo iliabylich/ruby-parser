@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 macro_rules! read_while_digits {
     ($buffer:expr, $start:ident, $pat:pat) => {{

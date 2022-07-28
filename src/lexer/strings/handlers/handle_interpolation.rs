@@ -1,9 +1,9 @@
 use std::ops::ControlFlow;
 
 use crate::{
+    buffer::BufferWithCursor,
     lexer::{
         atmark::AtMark,
-        buffer::BufferWithCursor,
         gvar::Gvar,
         strings::{
             action::StringExtendAction, handlers::handle_processed_string_content,

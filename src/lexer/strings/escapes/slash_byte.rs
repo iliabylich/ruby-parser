@@ -1,4 +1,4 @@
-use crate::lexer::{buffer::Buffer, strings::escapes::unescape_byte};
+use crate::{buffer::Buffer, lexer::strings::escapes::unescape_byte};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashByte {

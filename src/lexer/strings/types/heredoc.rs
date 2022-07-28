@@ -1,9 +1,9 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::BufferWithCursor,
-        strings::{action::StringExtendAction, literal::StringLiteralExtend, types::Interpolation},
+    buffer::BufferWithCursor,
+    lexer::strings::{
+        action::StringExtendAction, literal::StringLiteralExtend, types::Interpolation,
     },
     Loc,
 };

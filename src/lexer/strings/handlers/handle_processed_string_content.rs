@@ -1,10 +1,6 @@
 use std::ops::ControlFlow;
 
-use crate::{
-    lexer::{buffer::Buffer, strings::action::StringExtendAction},
-    loc::loc,
-    token::token,
-};
+use crate::{buffer::Buffer, lexer::strings::action::StringExtendAction, loc::loc, token::token};
 
 #[must_use]
 pub(crate) fn handle_processed_string_content(

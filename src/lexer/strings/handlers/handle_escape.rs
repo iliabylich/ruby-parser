@@ -1,16 +1,14 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::BufferWithCursor,
-        strings::{
-            action::StringExtendAction,
-            escapes::{
-                Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
-                SlashOctal, SlashU, SlashUError, SlashUPerCodepointError, SlashX, SlashXError,
-            },
-            handlers::handle_processed_string_content,
+    buffer::BufferWithCursor,
+    lexer::strings::{
+        action::StringExtendAction,
+        escapes::{
+            Escape, EscapeError, SlashByte, SlashByteError, SlashMetaCtrl, SlashMetaCtrlError,
+            SlashOctal, SlashU, SlashUError, SlashUPerCodepointError, SlashX, SlashXError,
         },
+        handlers::handle_processed_string_content,
     },
     loc::{loc, Loc},
     token::{token, TokenValue},

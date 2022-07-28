@@ -7,7 +7,7 @@ pub(crate) mod literal;
 pub(crate) mod stack;
 pub(crate) mod types;
 
-use crate::lexer::buffer::BufferWithCursor;
+use crate::buffer::BufferWithCursor;
 use action::StringExtendAction;
 use literal::{StringLiteral, StringLiteralExtend};
 

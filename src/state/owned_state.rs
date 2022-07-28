@@ -1,7 +1,4 @@
-use crate::{
-    lexer::{buffer::BufferWithCursor, strings::stack::StringLiteralStack},
-    state::State,
-};
+use crate::{buffer::BufferWithCursor, lexer::strings::stack::StringLiteralStack, state::State};
 
 use super::StateRef;
 

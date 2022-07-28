@@ -1,13 +1,11 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::BufferWithCursor,
-        numbers::{
-            scan,
-            state::{try_sub_parser, Integer, State},
-            ExtendNumber, Number,
-        },
+    buffer::BufferWithCursor,
+    lexer::numbers::{
+        scan,
+        state::{try_sub_parser, Integer, State},
+        ExtendNumber, Number,
     },
     token::TokenKind,
 };

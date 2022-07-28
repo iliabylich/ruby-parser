@@ -1,4 +1,4 @@
-use crate::lexer::{buffer::Buffer, strings::escapes::unescape_byte};
+use crate::{buffer::Buffer, lexer::strings::escapes::unescape_byte};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashMetaCtrl {
@@ -154,9 +154,9 @@ macro_rules! assert_lookahead {
         #[test]
         fn $test() {
             #[allow(unused_imports)]
-            use crate::lexer::{
+            use crate::{
                 buffer::Buffer,
-                strings::escapes::{SlashMetaCtrl, SlashMetaCtrlError},
+                lexer::strings::escapes::{SlashMetaCtrl, SlashMetaCtrlError},
             };
             let buffer = Buffer::new($input);
             let lookahead = SlashMetaCtrl::lookahead(&buffer, 0);

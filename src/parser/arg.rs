@@ -1,6 +1,6 @@
 use crate::{
+    buffer::Buffer,
     builder::{Builder, Constructor},
-    lexer::buffer::Buffer,
     parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,

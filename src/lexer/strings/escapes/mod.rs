@@ -30,7 +30,7 @@ pub(crate) enum EscapeError {
     SlashByteError(SlashByteError),
 }
 
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 impl Escape {
     pub(crate) fn lookahead(

@@ -1,12 +1,10 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::{scan_while_matches_pattern, BufferWithCursor, LookaheadResult},
-        numbers::{
-            state::{integer_prefix::*, Integer, IntegerPrefix, State},
-            ExtendNumber, Number,
-        },
+    buffer::{scan_while_matches_pattern, BufferWithCursor, LookaheadResult},
+    lexer::numbers::{
+        state::{integer_prefix::*, Integer, IntegerPrefix, State},
+        ExtendNumber, Number,
     },
     token::TokenKind,
 };

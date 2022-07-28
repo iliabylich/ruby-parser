@@ -9,10 +9,8 @@ macro_rules! assert_lookahead {
         fn $test() {
             #[allow(unused_imports)]
             use crate::{
-                lexer::{
-                    buffer::Buffer,
-                    strings::escapes::{SlashU, SlashUError, SlashUPerCodepointError},
-                },
+                buffer::Buffer,
+                lexer::strings::escapes::{SlashU, SlashUError, SlashUPerCodepointError},
                 loc::Loc,
             };
             let mut buffer = Buffer::new($input);

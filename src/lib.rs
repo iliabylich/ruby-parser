@@ -1,10 +1,12 @@
 #![feature(backtrace)]
 
-pub(crate) mod precedence;
+mod buffer;
 
 #[cfg_attr(test, allow(non_snake_case))]
-pub(crate) mod lexer;
+mod lexer;
 pub use lexer::Lexer;
+
+mod precedence;
 
 pub mod nodes;
 pub use nodes::Node;

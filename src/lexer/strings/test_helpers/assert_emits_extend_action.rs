@@ -11,10 +11,8 @@ macro_rules! assert_emits_extend_action {
         #[allow(unused_imports)]
         fn $test() {
             use crate::{
-                lexer::{
-                    buffer::BufferWithCursor,
-                    strings::{StringExtendAction, StringLiteralExtend},
-                },
+                buffer::BufferWithCursor,
+                lexer::strings::{StringExtendAction, StringLiteralExtend},
                 loc::loc,
                 string_content::StringContent,
                 token::token,

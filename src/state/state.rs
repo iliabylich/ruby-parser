@@ -1,7 +1,4 @@
-use crate::{
-    lexer::{buffer::BufferWithCursor, strings::stack::StringLiteralStack},
-    token::Token,
-};
+use crate::{buffer::BufferWithCursor, lexer::strings::stack::StringLiteralStack, token::Token};
 
 #[derive(Debug)]
 pub(crate) struct State {

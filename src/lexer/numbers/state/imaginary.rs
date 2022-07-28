@@ -1,10 +1,8 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::BufferWithCursor,
-        numbers::{ExtendNumber, Number},
-    },
+    buffer::BufferWithCursor,
+    lexer::numbers::{ExtendNumber, Number},
     token::TokenKind,
 };
 

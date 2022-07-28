@@ -1,4 +1,4 @@
-use crate::{lexer::buffer::Buffer, Loc};
+use crate::{buffer::Buffer, Loc};
 
 #[derive(Debug, PartialEq, Eq, Default, Clone, Copy)]
 pub struct Token {

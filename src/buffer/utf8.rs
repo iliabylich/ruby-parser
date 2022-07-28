@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 // UTF-8 support
 

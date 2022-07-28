@@ -28,10 +28,8 @@ macro_rules! assert_emits_string_end {
         #[test]
         fn test_string_begin_end_end() {
             use crate::{
-                lexer::{
-                    buffer::BufferWithCursor,
-                    strings::{StringExtendAction, StringLiteralExtend},
-                },
+                buffer::BufferWithCursor,
+                lexer::strings::{StringExtendAction, StringLiteralExtend},
                 loc::loc,
                 token::token,
             };

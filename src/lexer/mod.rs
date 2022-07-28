@@ -1,5 +1,4 @@
 pub(crate) mod atmark;
-pub(crate) mod buffer;
 mod checkpoint;
 pub(crate) mod gvar;
 pub(crate) mod handle_eof;
@@ -42,6 +41,17 @@ impl HasStateRef for Lexer {
     }
 }
 generate_state_ref_delegation!(Lexer);
+impl Lexer {
+    pub(crate) fn skip_byte(&mut self) {
+        self.buffer().skip_byte()
+    }
+    pub(crate) fn current_byte(&self) -> Option<u8> {
+        self.buffer().current_byte()
+    }
+    pub(crate) fn pos(&self) -> usize {
+        self.buffer().pos()
+    }
+}
 
 impl Lexer {
     pub(crate) fn new(state_ref: StateRef) -> Self {

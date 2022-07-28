@@ -1,17 +1,15 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::{Buffer, BufferWithCursor},
-        strings::{
-            action::StringExtendAction,
-            handlers::{
-                handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
-                handle_line_continuation, handle_processed_string_content, handle_string_end,
-            },
-            literal::StringLiteralExtend,
-            types::Interpolation,
+    buffer::{Buffer, BufferWithCursor},
+    lexer::strings::{
+        action::StringExtendAction,
+        handlers::{
+            handle_eof, handle_escape, handle_interpolation, handle_interpolation_end,
+            handle_line_continuation, handle_processed_string_content, handle_string_end,
         },
+        literal::StringLiteralExtend,
+        types::Interpolation,
     },
     loc::loc,
     token::token,

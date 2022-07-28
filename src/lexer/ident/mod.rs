@@ -1,5 +1,5 @@
 use crate::{
-    lexer::buffer::{utf8::Utf8Char, Buffer, BufferWithCursor},
+    buffer::{utf8::Utf8Char, Buffer, BufferWithCursor},
     loc::loc,
     token::{token, Token},
 };
@@ -124,7 +124,7 @@ impl Ident {
 #[cfg(test)]
 mod tests {
     use super::Ident;
-    use crate::{lexer::buffer::Buffer, testing::assert_lex, token::token};
+    use crate::{buffer::Buffer, testing::assert_lex, token::token};
 
     #[test]
     fn test_is_identchar() {

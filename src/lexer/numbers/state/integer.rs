@@ -1,12 +1,10 @@
 use std::ops::ControlFlow;
 
 use crate::{
-    lexer::{
-        buffer::BufferWithCursor,
-        numbers::{
-            state::{float::*, try_sub_parser, Float, Imaginary, Rational, State},
-            try_to_extend_with, ExtendNumber, Number,
-        },
+    buffer::BufferWithCursor,
+    lexer::numbers::{
+        state::{float::*, try_sub_parser, Float, Imaginary, Rational, State},
+        try_to_extend_with, ExtendNumber, Number,
     },
     token::TokenKind,
 };

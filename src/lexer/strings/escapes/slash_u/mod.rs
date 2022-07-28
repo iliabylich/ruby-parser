@@ -5,7 +5,7 @@ mod wide;
 use wide::{CodepointWide, CodepointWideError};
 
 use crate::{
-    lexer::buffer::{scan_while_matches_pattern, Buffer, LookaheadResult},
+    buffer::{scan_while_matches_pattern, Buffer, LookaheadResult},
     Loc,
 };
 

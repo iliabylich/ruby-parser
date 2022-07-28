@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 pub(crate) struct CodepointWide {
     pub(crate) length: usize,

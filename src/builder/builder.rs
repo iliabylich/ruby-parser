@@ -1,6 +1,6 @@
 use crate::{
+    buffer::Buffer,
     builder::{CString, Constructor, RustConstructor},
-    lexer::buffer::Buffer,
     loc::{loc, Loc},
     nodes::*,
     string_content::StringContent,

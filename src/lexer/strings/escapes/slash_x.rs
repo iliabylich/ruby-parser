@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashX {
@@ -52,7 +52,7 @@ macro_rules! assert_lookahead {
     (test = $test:ident, input = $input:expr, output = $output:expr) => {
         #[test]
         fn $test() {
-            let buffer = crate::lexer::buffer::Buffer::new($input);
+            let buffer = crate::buffer::Buffer::new($input);
             let lookahead = SlashX::lookahead(&buffer, 0);
             assert_eq!(lookahead, $output);
         }

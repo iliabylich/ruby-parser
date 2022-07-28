@@ -1,8 +1,8 @@
 use std::ops::ControlFlow;
 
-use crate::lexer::{
+use crate::{
     buffer::BufferWithCursor,
-    strings::{
+    lexer::strings::{
         action::StringExtendAction,
         types::{Array, Heredoc, Regexp, StringInterp, StringPlain, Symbol},
     },

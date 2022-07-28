@@ -1,5 +1,6 @@
+use crate::buffer::Buffer;
 use crate::builder::{Builder, Constructor, RustConstructor};
-use crate::lexer::{buffer::Buffer, Lexer};
+use crate::lexer::Lexer;
 use crate::nodes::Node;
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};

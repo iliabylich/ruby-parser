@@ -1,4 +1,4 @@
-use crate::lexer::buffer::Buffer;
+use crate::buffer::Buffer;
 
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 #[repr(C)]

@@ -5,10 +5,8 @@ macro_rules! assert_emits_escaped_slash_byte {
         #[test]
         fn test_escaped_slash_byte() {
             use crate::{
-                lexer::{
-                    buffer::BufferWithCursor,
-                    strings::{StringExtendAction, StringLiteralExtend},
-                },
+                buffer::BufferWithCursor,
+                lexer::strings::{StringExtendAction, StringLiteralExtend},
                 loc::loc,
                 token::token,
             };
