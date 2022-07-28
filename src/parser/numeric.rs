@@ -52,117 +52,45 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{loc::loc, string_content::StringContent, Node, RustParser};
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_integer() {
-        use crate::nodes::Int;
-        let mut parser = RustParser::new(b"42");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Int(Int {
-                value: StringContent::from("42"),
-                operator_l: None,
-                expression_l: loc!(0, 2)
-            })))
-        );
+        assert_parses!(try_numeric, b"42", "s(:int, \"42\")");
     }
 
     #[test]
     fn test_minus_integer() {
-        use crate::nodes::Int;
-        let mut parser = RustParser::new(b"-42");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Int(Int {
-                value: StringContent::from("-42"),
-                operator_l: Some(loc!(0, 1)),
-                expression_l: loc!(0, 3)
-            })))
-        );
+        assert_parses!(try_numeric, b"-42", "s(:int, \"-42\")");
     }
 
     #[test]
     fn test_float() {
-        use crate::nodes::Float;
-        let mut parser = RustParser::new(b"4.2");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Float(Float {
-                value: StringContent::from("4.2"),
-                operator_l: None,
-                expression_l: loc!(0, 3)
-            })))
-        );
+        assert_parses!(try_numeric, b"4.2", "s(:float, \"4.2\")");
     }
 
     #[test]
     fn test_minus_float() {
-        use crate::nodes::Float;
-        let mut parser = RustParser::new(b"-4.2");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Float(Float {
-                value: StringContent::from("-4.2"),
-                operator_l: Some(loc!(0, 1)),
-                expression_l: loc!(0, 4)
-            })))
-        );
+        assert_parses!(try_numeric, b"-4.2", "s(:float, \"-4.2\")");
     }
 
     #[test]
     fn test_rational() {
-        use crate::nodes::Rational;
-        let mut parser = RustParser::new(b"42r");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Rational(Rational {
-                value: StringContent::from("42r"),
-                operator_l: None,
-                expression_l: loc!(0, 3)
-            })))
-        );
+        assert_parses!(try_numeric, b"42r", "s(:rational, \"42r\")");
     }
 
     #[test]
     fn test_minus_rational() {
-        use crate::nodes::Rational;
-        let mut parser = RustParser::new(b"-42r");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Rational(Rational {
-                value: StringContent::from("-42r"),
-                operator_l: Some(loc!(0, 1)),
-                expression_l: loc!(0, 4)
-            })))
-        );
+        assert_parses!(try_numeric, b"-42r", "s(:rational, \"-42r\")");
     }
 
     #[test]
     fn test_complex() {
-        use crate::nodes::Complex;
-        let mut parser = RustParser::new(b"42i");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Complex(Complex {
-                value: StringContent::from("42i"),
-                operator_l: None,
-                expression_l: loc!(0, 3)
-            })))
-        );
+        assert_parses!(try_numeric, b"42i", "s(:complex, \"42i\")");
     }
 
     #[test]
     fn test_minus_complex() {
-        use crate::nodes::Complex;
-        let mut parser = RustParser::new(b"-42i");
-        assert_eq!(
-            parser.try_numeric(),
-            Ok(Box::new(Node::Complex(Complex {
-                value: StringContent::from("-42i"),
-                operator_l: Some(loc!(0, 1)),
-                expression_l: loc!(0, 4)
-            })))
-        );
+        assert_parses!(try_numeric, b"-42i", "s(:complex, \"-42i\")");
     }
 }

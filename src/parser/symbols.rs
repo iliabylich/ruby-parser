@@ -32,12 +32,10 @@ fn try_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<No
 
 #[cfg(test)]
 mod tests {
-    use crate::{parser::ParseError, RustParser};
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_symbols() {
-        let mut parser = RustParser::new(b"%I[foo bar]");
-        assert_eq!(parser.try_symbols(), Err(ParseError::empty()));
-        todo!("implement me");
+        assert_parses!(try_symbols, b"%I[foo bar]", "TODO")
     }
 }

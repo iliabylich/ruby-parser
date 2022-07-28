@@ -41,12 +41,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{parser::ParseError, RustParser};
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_words() {
-        let mut parser = RustParser::new(b"%W[foo bar]");
-        assert_eq!(parser.try_words(), Err(ParseError::empty()));
-        todo!("implement me");
+        assert_parses!(try_words, b"%W[foo bar]", "TODO")
     }
 }

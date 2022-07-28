@@ -19,16 +19,14 @@ where
 
 #[test]
 fn test_opt_else() {
-    use crate::{loc::loc, nodes::Int, parser::RustParser, string_content::StringContent, Node};
-    let mut parser = RustParser::new(b"else 42 end");
+    use crate::{
+        loc::loc, nodes::Int, parser::RustParser, string_content::StringContent, token::token, Node,
+    };
+    let mut parser = RustParser::new(b"else 42 end").debug();
     assert_eq!(
         parser.try_opt_else(),
         Ok((
-            Token {
-                kind: TokenKind::kELSE,
-                loc: loc!(0, 4),
-                value: None
-            },
+            token!(kELSE, loc!(0, 4)),
             Some(Box::new(Node::Int(Int {
                 value: StringContent::from("42"),
                 operator_l: None,

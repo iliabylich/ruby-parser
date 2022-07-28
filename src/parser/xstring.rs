@@ -69,26 +69,17 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{loc::loc, string_content::StringContent, Node, RustParser};
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_xstring_plain() {
-        use crate::nodes::{Str, Xstr};
-
-        let mut parser = RustParser::new(b"`foo`");
-        assert_eq!(
-            parser.try_xstring(),
-            Ok(Box::new(Node::Xstr(Xstr {
-                parts: vec![Node::Str(Str {
-                    value: StringContent::from("foo"),
-                    begin_l: None,
-                    end_l: None,
-                    expression_l: loc!(1, 4)
-                })],
-                begin_l: loc!(0, 1),
-                end_l: loc!(4, 5),
-                expression_l: loc!(0, 5)
-            })))
+        assert_parses!(
+            try_xstring,
+            b"`foo`",
+            r#"
+s(:xstr,
+  s(:str, "foo"))
+            "#
         );
     }
 }

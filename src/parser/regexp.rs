@@ -70,73 +70,44 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        loc::loc,
-        nodes::{RegOpt, Regexp, Str},
-        string_content::StringContent,
-        Node, RustParser,
-    };
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_regexp() {
-        let mut parser = RustParser::new(b"/foo/");
-        assert_eq!(
-            parser.try_regexp(),
-            Ok(Box::new(Node::Regexp(Regexp {
-                parts: vec![Node::Str(Str {
-                    value: StringContent::from("foo"),
-                    begin_l: None,
-                    end_l: None,
-                    expression_l: loc!(1, 4)
-                })],
-                options: None,
-                begin_l: loc!(0, 1),
-                end_l: loc!(4, 5),
-                expression_l: loc!(0, 5)
-            })))
-        );
+        assert_parses!(
+            try_regexp,
+            b"/foo/",
+            r#"
+s(:regexp,
+  s(:str, "foo"),
+  s(:regopt))
+            "#
+        )
     }
 
     #[test]
     fn test_regexp_with_options() {
-        let mut parser = RustParser::new(b"/foo/mix");
-        assert_eq!(
-            parser.try_regexp(),
-            Ok(Box::new(Node::Regexp(Regexp {
-                parts: vec![Node::Str(Str {
-                    value: StringContent::from("foo"),
-                    begin_l: None,
-                    end_l: None,
-                    expression_l: loc!(1, 4)
-                })],
-                options: Some(Box::new(Node::RegOpt(RegOpt {
-                    options: Some(StringContent::from("imx")),
-                    expression_l: loc!(5, 8)
-                }))),
-                begin_l: loc!(0, 1),
-                end_l: loc!(4, 5),
-                expression_l: loc!(0, 8)
-            })))
-        );
+        assert_parses!(
+            try_regexp,
+            b"/foo/mix",
+            r#"
+s(:regexp,
+  s(:str, "foo"),
+  s(:regopt, "i", "m", "x"))
+        "#
+        )
     }
 
     #[test]
     fn test_regexp_percent() {
-        let mut parser = RustParser::new(b"%r{foo}");
-        assert_eq!(
-            parser.try_regexp(),
-            Ok(Box::new(Node::Regexp(Regexp {
-                parts: vec![Node::Str(Str {
-                    value: StringContent::from("foo"),
-                    begin_l: None,
-                    end_l: None,
-                    expression_l: loc!(3, 6)
-                })],
-                options: None,
-                begin_l: loc!(0, 3),
-                end_l: loc!(6, 7),
-                expression_l: loc!(0, 7)
-            })))
-        );
+        assert_parses!(
+            try_regexp,
+            b"%r{foo}",
+            r#"
+s(:regexp,
+  s(:str, "foo"),
+  s(:regopt))
+        "#
+        )
     }
 }

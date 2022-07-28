@@ -201,35 +201,30 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::parser::{ParseError, RustParser};
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_lhs_user_variable() {
-        let mut parser = RustParser::new(b"a, b");
-        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+        assert_parses!(try_mlhs, b"a, b", "TODO")
     }
 
     #[test]
     fn test_lhs_parenthesized() {
-        let mut parser = RustParser::new(b"((a))");
-        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+        assert_parses!(try_mlhs, b"((a))", "TODO")
     }
 
     #[test]
     fn test_mlhs_without_parens() {
-        let mut parser = RustParser::new(b"a, *b, c");
-        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+        assert_parses!(try_mlhs, b"a, *b, c", "TODO")
     }
 
     #[test]
     fn test_mlhs_with_parens() {
-        let mut parser = RustParser::new(b"((*a), $x, @c)");
-        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()));
+        assert_parses!(try_mlhs, b"((*a), $x, @c)", "TODO")
     }
 
     #[test]
     fn test_nameless_splat() {
-        let mut parser = RustParser::new(b"*");
-        assert_eq!(parser.try_mlhs(), Err(ParseError::empty()))
+        assert_parses!(try_mlhs, b"*", "TODO")
     }
 }

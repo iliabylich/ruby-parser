@@ -65,29 +65,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        loc::loc, nodes::Sym, parser::ParseError, string_content::StringContent,
-        testing::assert_parses_with_error, Node, RustParser,
-    };
+    use crate::{testing::assert_parses, testing::assert_parses_with_error};
 
     #[test]
     fn test_ssym() {
-        let mut parser = RustParser::new(b":foo");
-        assert_eq!(
-            parser.try_ssym(),
-            Ok(Box::new(Node::Sym(Sym {
-                name: StringContent::from("foo"),
-                begin_l: Some(loc!(0, 1)),
-                end_l: None,
-                expression_l: loc!(0, 4)
-            })))
-        );
+        assert_parses!(try_ssym, b":foo", "s(:sym, \"foo\")")
     }
 
     #[test]
     fn test_ssym_only_colon() {
-        let mut parser = RustParser::new(b":");
-        assert!(parser.try_ssym().is_err(),);
+        let parser = assert_parses_with_error!(try_ssym, b":");
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
     }
@@ -110,16 +97,12 @@ ONEOF (1) static symbol
 
     #[test]
     fn test_ssym_quoted() {
-        let mut parser = RustParser::new(b":'foo'");
-        assert_eq!(parser.try_ssym(), Err(ParseError::empty()));
-        todo!("implement me");
+        assert_parses!(try_ssym, b":'foo'", "TODO")
     }
 
     #[test]
     fn test_dsym() {
-        let mut parser = RustParser::new(b":\"foo\"");
-        assert_eq!(parser.try_dsym(), Err(ParseError::empty()));
-        todo!("implement me");
+        assert_parses!(try_dsym, b":\"foo\"", "TODO")
     }
 
     #[test]

@@ -37,12 +37,10 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{parser::ParseError, RustParser};
+    use crate::testing::assert_parses;
 
     #[test]
     fn test_qsymbols() {
-        let mut parser = RustParser::new(b"%i[foo bar]");
-        assert_eq!(parser.try_qsymbols(), Err(ParseError::empty()));
-        todo!("implement me");
+        assert_parses!(try_qsymbols, b"%i[foo bar]", "TODO")
     }
 }
