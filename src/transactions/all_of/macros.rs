@@ -4,7 +4,7 @@ macro_rules! gen_all_of {
         #[allow(unused_parens)]
         pub(crate) struct $name<$($generic),+>
         where
-            $(StepData: From<$generic>),+
+            $(Steps: From<$generic>),+
         {
             pub(crate) name: &'static str,
             pub(crate) inner: Result<($($generic),+), SeqError>,
@@ -14,12 +14,12 @@ macro_rules! gen_all_of {
         #[allow(unused_parens)]
         impl<$($generic),+> $name<$($generic),+>
         where
-            $(StepData: From<$generic>),+
+            $(Steps: From<$generic>),+
         {
             pub(crate) fn and<N, Func>(self, f: Func) -> $next<$($generic),+, N>
             where
                 Func: FnOnce() -> Result<N, ParseError>,
-                StepData: From<N>,
+                Steps: From<N>,
             {
                 let Self { inner, name } = self;
                 match inner {
@@ -35,12 +35,13 @@ macro_rules! gen_all_of {
                                 // non-lookahead
                                 error.make_required();
 
+                                let mut steps: Steps = Steps::empty();
+                                $(steps += Steps::from($field);)+
+
                                 $next {
                                     name,
                                     inner: Err(SeqError {
-                                        steps: vec![
-                                            $(StepData::from($field)),+
-                                        ],
+                                        steps,
                                         error,
                                     }),
                                 }
@@ -55,14 +56,12 @@ macro_rules! gen_all_of {
             }
 
             pub(crate) fn stop(self) -> Result<($($generic),+), ParseError> {
-                use crate::transactions::error::Steps;
-
                 let Self { inner, name } = self;
                 match inner {
                     Ok(($($field),+)) => Ok(($($field),+)),
                     Err(SeqError { steps, error }) => Err(ParseError::SeqError {
                         name,
-                        steps: Steps(steps),
+                        steps,
                         error: Box::new(error),
                     }),
                 }

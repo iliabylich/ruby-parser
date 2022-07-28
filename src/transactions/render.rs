@@ -1,4 +1,4 @@
-use crate::transactions::{error::Steps, ParseError};
+use crate::transactions::{steps::Steps, ParseError};
 
 #[allow(dead_code)]
 impl ParseError {

@@ -1,6 +1,6 @@
-use crate::transactions::{ParseError, StepData};
+use crate::transactions::{steps::Steps, ParseError};
 
 pub(crate) struct SeqError {
-    pub(crate) steps: Vec<StepData>,
+    pub(crate) steps: Steps,
     pub(crate) error: ParseError,
 }

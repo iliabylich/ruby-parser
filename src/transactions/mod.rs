@@ -1,7 +1,11 @@
 use crate::{builder::Constructor, parser::Parser};
 
+mod step_data;
+
+mod steps;
+
 mod error;
-pub(crate) use error::{ParseError, StepData};
+pub(crate) use error::ParseError;
 
 mod result;
 pub(crate) use result::ParseResult;

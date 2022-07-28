@@ -4,7 +4,7 @@ use macros::gen_all_of;
 mod seq_error;
 use seq_error::SeqError;
 
-use crate::transactions::{ParseError, StepData};
+use crate::transactions::{steps::Steps, ParseError};
 
 pub(crate) struct AllOf0 {
     name: &'static str,
@@ -17,7 +17,7 @@ impl AllOf0 {
     pub(crate) fn and<A, F>(self, f: F) -> AllOf1<A>
     where
         F: FnOnce() -> Result<A, ParseError>,
-        StepData: From<A>,
+        Steps: From<A>,
     {
         let Self { name } = self;
         match f() {
@@ -25,7 +25,7 @@ impl AllOf0 {
             Err(error) => AllOf1 {
                 name,
                 inner: Err(SeqError {
-                    steps: vec![],
+                    steps: Steps::empty(),
                     error,
                 }),
             },
