@@ -1,5 +1,5 @@
 use crate::{
-    lexer::buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
+    lexer::buffer::{utf8::Utf8Char, Buffer, BufferWithCursor},
     loc::loc,
     token::{token, Token},
 };
@@ -15,10 +15,8 @@ pub(crate) struct Ident {
     pub(crate) length: usize,
 }
 
-impl Lookahead for Ident {
-    type Output = Option<Self>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl Ident {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Option<Self> {
         let mut end = start;
 
         loop {
@@ -126,11 +124,7 @@ impl Ident {
 #[cfg(test)]
 mod tests {
     use super::Ident;
-    use crate::{
-        lexer::buffer::{Buffer, Lookahead},
-        testing::assert_lex,
-        token::token,
-    };
+    use crate::{lexer::buffer::Buffer, testing::assert_lex, token::token};
 
     #[test]
     fn test_is_identchar() {

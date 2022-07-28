@@ -1,6 +1,6 @@
 use crate::{
     lexer::{
-        buffer::{Buffer, BufferWithCursor, Lookahead},
+        buffer::{Buffer, BufferWithCursor},
         ident::Ident,
     },
     loc::loc,
@@ -16,10 +16,8 @@ pub(crate) enum AtMarkError {
     EmptyVarName(Token),
 }
 
-impl Lookahead for AtMark {
-    type Output = Result<AtMark, AtMarkError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl AtMark {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Result<AtMark, AtMarkError> {
         let mut ident_start = start + 1;
 
         let mut token_value = TokenKind::tIVAR;

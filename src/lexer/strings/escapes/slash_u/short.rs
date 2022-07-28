@@ -1,4 +1,4 @@
-use crate::lexer::buffer::{Buffer, Lookahead};
+use crate::lexer::buffer::Buffer;
 
 pub(crate) struct CodepointShort {
     pub(crate) length: usize,
@@ -8,10 +8,8 @@ pub(crate) struct CodepointShortError {
     pub(crate) length: usize,
 }
 
-impl Lookahead for CodepointShort {
-    type Output = Result<Self, CodepointShortError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl CodepointShort {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Result<Self, CodepointShortError> {
         let mut length = 0;
         for i in 1..=4 {
             match buffer.byte_at(start + i - 1) {

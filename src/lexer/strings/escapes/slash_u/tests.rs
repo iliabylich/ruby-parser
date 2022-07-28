@@ -10,7 +10,7 @@ macro_rules! assert_lookahead {
             #[allow(unused_imports)]
             use crate::{
                 lexer::{
-                    buffer::{Buffer, Lookahead},
+                    buffer::Buffer,
                     strings::escapes::{SlashU, SlashUError, SlashUPerCodepointError},
                 },
                 loc::Loc,

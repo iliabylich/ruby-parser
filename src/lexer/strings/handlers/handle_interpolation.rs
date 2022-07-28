@@ -3,7 +3,7 @@ use std::ops::ControlFlow;
 use crate::{
     lexer::{
         atmark::AtMark,
-        buffer::{BufferWithCursor, Lookahead},
+        buffer::BufferWithCursor,
         gvar::Gvar,
         strings::{
             action::StringExtendAction, handlers::handle_processed_string_content,

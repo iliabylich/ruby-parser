@@ -1,4 +1,4 @@
-use crate::lexer::buffer::{Buffer, Lookahead};
+use crate::lexer::buffer::Buffer;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashOctal {
@@ -7,10 +7,8 @@ pub(crate) struct SlashOctal {
     pub(crate) length: usize,
 }
 
-impl Lookahead for SlashOctal {
-    type Output = Option<Self>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl SlashOctal {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Option<Self> {
         if !buffer.lookahead(start, b"\\") {
             return None;
         }

@@ -151,15 +151,6 @@ pub(crate) enum LookaheadResult {
     Some { length: usize },
 }
 
-pub(crate) trait Lookahead
-where
-    Self: Sized,
-{
-    type Output;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output;
-}
-
 #[test]
 fn test_lookahead() {
     let buffer = BufferWithCursor::new(b"foo");

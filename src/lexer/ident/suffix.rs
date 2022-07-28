@@ -1,13 +1,11 @@
-use crate::lexer::buffer::{Buffer, Lookahead};
+use crate::lexer::buffer::Buffer;
 
 pub(crate) struct IdentSuffix {
     pub(crate) byte: u8,
 }
 
-impl Lookahead for IdentSuffix {
-    type Output = Option<Self>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl IdentSuffix {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Option<Self> {
         match buffer.byte_at(start) {
             Some(suffix @ (b'!' | b'?')) => {
                 if buffer.byte_at(start + 1) == Some(b'=') {

@@ -2,7 +2,7 @@ use std::ops::ControlFlow;
 
 use crate::{
     lexer::{
-        buffer::{Buffer, BufferWithCursor, Lookahead},
+        buffer::{Buffer, BufferWithCursor},
         strings::{
             action::StringExtendAction,
             handlers::{
@@ -84,10 +84,8 @@ struct RegexpOptions {
     length: usize,
 }
 
-impl Lookahead for RegexpOptions {
-    type Output = Option<Self>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl RegexpOptions {
+    fn lookahead(buffer: &Buffer, start: usize) -> Option<Self> {
         let mut end = start;
         while matches!(
             buffer.byte_at(end),

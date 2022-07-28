@@ -1,6 +1,6 @@
 use crate::{
     lexer::{
-        buffer::{Buffer, BufferWithCursor, Lookahead},
+        buffer::{Buffer, BufferWithCursor},
         ident::Ident,
     },
     loc::loc,
@@ -19,10 +19,8 @@ pub(crate) enum HeredocIdError {
     UnterminatedHeredocId,
 }
 
-impl Lookahead for HeredocId {
-    type Output = Result<Option<Self>, HeredocIdError>;
-
-    fn lookahead(buffer: &Buffer, mut start: usize) -> Self::Output {
+impl HeredocId {
+    fn lookahead(buffer: &Buffer, mut start: usize) -> Result<Option<Self>, HeredocIdError> {
         // We are at `<<`
         let heredoc_start = start;
         // consume `<<`

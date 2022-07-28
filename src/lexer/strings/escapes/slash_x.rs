@@ -1,4 +1,4 @@
-use crate::lexer::buffer::{Buffer, Lookahead};
+use crate::lexer::buffer::Buffer;
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashX {
@@ -15,10 +15,8 @@ pub(crate) struct SlashXError {
     pub(crate) length: usize,
 }
 
-impl Lookahead for SlashX {
-    type Output = Result<Option<Self>, SlashXError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl SlashX {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Result<Option<Self>, SlashXError> {
         if !buffer.lookahead(start, b"\\x") {
             return Ok(None);
         }

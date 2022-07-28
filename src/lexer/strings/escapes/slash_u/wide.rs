@@ -1,4 +1,4 @@
-use crate::lexer::buffer::{Buffer, Lookahead};
+use crate::lexer::buffer::Buffer;
 
 pub(crate) struct CodepointWide {
     pub(crate) length: usize,
@@ -9,10 +9,8 @@ pub(crate) enum CodepointWideError {
     TooLong { length: usize },
 }
 
-impl Lookahead for CodepointWide {
-    type Output = Result<Self, CodepointWideError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl CodepointWide {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Result<Self, CodepointWideError> {
         let mut end = start;
         let mut valid = true;
         loop {

@@ -1,7 +1,4 @@
-use crate::lexer::{
-    buffer::{Buffer, Lookahead},
-    strings::escapes::unescape_byte,
-};
+use crate::lexer::{buffer::Buffer, strings::escapes::unescape_byte};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashMetaCtrl {
@@ -14,16 +11,17 @@ pub(crate) struct SlashMetaCtrlError {
     pub(crate) length: usize,
 }
 
-impl Lookahead for SlashMetaCtrl {
-    type Output = Result<Option<Self>, SlashMetaCtrlError>;
-
+impl SlashMetaCtrl {
     // \C-\M-f
     // \C-f
     // \c\M-f
     // \cf
     // \M-\cf
     // \M-f
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+    pub(crate) fn lookahead(
+        buffer: &Buffer,
+        start: usize,
+    ) -> Result<Option<Self>, SlashMetaCtrlError> {
         if buffer.byte_at(start) != Some(b'\\') {
             return Ok(None);
         }
@@ -157,7 +155,7 @@ macro_rules! assert_lookahead {
         fn $test() {
             #[allow(unused_imports)]
             use crate::lexer::{
-                buffer::{Buffer, Lookahead},
+                buffer::Buffer,
                 strings::escapes::{SlashMetaCtrl, SlashMetaCtrlError},
             };
             let buffer = Buffer::new($input);

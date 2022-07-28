@@ -1,6 +1,6 @@
 use crate::{
     lexer::{
-        buffer::{utf8::Utf8Char, Buffer, BufferWithCursor, Lookahead},
+        buffer::{utf8::Utf8Char, Buffer, BufferWithCursor},
         ident::Ident,
     },
     loc::loc,
@@ -16,10 +16,8 @@ pub(crate) enum GvarError {
     EmptyVarName(Token),
 }
 
-impl Lookahead for Gvar {
-    type Output = Result<Gvar, GvarError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl Gvar {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Result<Gvar, GvarError> {
         let mut ident_start = start + 1;
 
         let empty_gvar_name = || {

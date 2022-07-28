@@ -1,7 +1,4 @@
-use crate::lexer::{
-    buffer::{Buffer, Lookahead},
-    strings::escapes::unescape_byte,
-};
+use crate::lexer::{buffer::Buffer, strings::escapes::unescape_byte};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct SlashByte {
@@ -14,10 +11,8 @@ pub(crate) struct SlashByteError {
     pub(crate) length: usize,
 }
 
-impl Lookahead for SlashByte {
-    type Output = Result<Option<Self>, SlashByteError>;
-
-    fn lookahead(buffer: &Buffer, start: usize) -> Self::Output {
+impl SlashByte {
+    pub(crate) fn lookahead(buffer: &Buffer, start: usize) -> Result<Option<Self>, SlashByteError> {
         if buffer.byte_at(start) != Some(b'\\') {
             return Ok(None);
         }
