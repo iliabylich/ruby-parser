@@ -99,8 +99,8 @@ s(:alias,
             try_alias,
             b"",
             "
-SEQUENCE (1) alias statement (got [])
-    TOKEN (1) expected kALIAS, got tEOF (at 0)
+SEQUENCE (0) alias statement (got [])
+    TOKEN (0) expected kALIAS, got tEOF (at 0)
 "
         );
     }
@@ -111,13 +111,13 @@ SEQUENCE (1) alias statement (got [])
             try_alias,
             b"alias $foo",
             "
-SEQUENCE (11) alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
-    ONEOF (11) alias arguments
-        SEQUENCE (11) gvar -> [gvar | back ref | nth ref] (got [Node(Gvar(Gvar { name: StringContent { bytes: [36, 102, 111, 111] }, expression_l: 6...10 }))])
-            ONEOF (1) gvar rhs
-                TOKEN (1) expected tGVAR, got tEOF (at 10)
-                TOKEN (1) expected tBACK_REF, got tEOF (at 10)
-                TOKEN (1) expected tNTH_REF, got tEOF (at 10)
+SEQUENCE (1) alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
+    ONEOF (1) alias arguments
+        SEQUENCE (1) gvar -> [gvar | back ref | nth ref] (got [Node(Gvar(Gvar { name: StringContent { bytes: [36, 102, 111, 111] }, expression_l: 6...10 }))])
+            ONEOF (0) gvar rhs
+                TOKEN (0) expected tGVAR, got tEOF (at 10)
+                TOKEN (0) expected tBACK_REF, got tEOF (at 10)
+                TOKEN (0) expected tNTH_REF, got tEOF (at 10)
 "
         );
     }

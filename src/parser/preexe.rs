@@ -49,8 +49,8 @@ s(:preexe,
             try_postexe,
             b"",
             "
-SEQUENCE (1) postexe (got [])
-    TOKEN (1) expected klEND, got tEOF (at 0)
+SEQUENCE (0) postexe (got [])
+    TOKEN (0) expected klEND, got tEOF (at 0)
     "
         );
     }

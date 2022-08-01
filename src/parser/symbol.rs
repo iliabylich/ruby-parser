@@ -85,11 +85,11 @@ mod tests {
             try_ssym,
             b"",
             "
-ONEOF (1) static symbol
-    SEQUENCE (1) :sym (got [])
-        TOKEN (1) expected tCOLON, got tEOF (at 0)
-    SEQUENCE (1) dynamic symbol value (got [])
-        TOKEN (1) expected tSYMBEG, got tEOF (at 0)
+ONEOF (0) static symbol
+    SEQUENCE (0) :sym (got [])
+        TOKEN (0) expected tCOLON, got tEOF (at 0)
+    SEQUENCE (0) dynamic symbol value (got [])
+        TOKEN (0) expected tSYMBEG, got tEOF (at 0)
 "
         );
         assert_eq!(parser.lexer.buffer().pos(), 0);
@@ -111,8 +111,8 @@ ONEOF (1) static symbol
             try_dsym,
             b":",
             "
-SEQUENCE (1) dynamic symbol (got [])
-    TOKEN (1) expected tDSYMBEG, got tCOLON (at 0)
+SEQUENCE (0) dynamic symbol (got [])
+    TOKEN (0) expected tDSYMBEG, got tCOLON (at 0)
 "
         );
         // `:` is consumed
@@ -125,8 +125,8 @@ SEQUENCE (1) dynamic symbol (got [])
             try_dsym,
             b"",
             "
-SEQUENCE (1) dynamic symbol (got [])
-    TOKEN (1) expected tDSYMBEG, got tEOF (at 0)
+SEQUENCE (0) dynamic symbol (got [])
+    TOKEN (0) expected tDSYMBEG, got tEOF (at 0)
 "
         );
     }
