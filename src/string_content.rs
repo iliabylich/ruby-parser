@@ -65,4 +65,8 @@ impl StringContent {
     pub fn as_str(&self) -> &str {
         std::str::from_utf8(self.as_bytes()).unwrap()
     }
+
+    pub(crate) fn pop(&mut self) {
+        self.bytes.pop();
+    }
 }
