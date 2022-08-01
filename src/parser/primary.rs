@@ -93,6 +93,7 @@ where
             .or_else(|| try_keyword_cmd(self, TokenKind::kNEXT))
             .or_else(|| try_keyword_cmd(self, TokenKind::kREDO))
             .or_else(|| try_keyword_cmd(self, TokenKind::kRETRY))
+            .compact()
             .stop()?;
 
         loop {

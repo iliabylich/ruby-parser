@@ -112,11 +112,11 @@ impl ParseError {
 impl ParseError {
     pub(crate) fn weight(&self) -> usize {
         match self {
-            Self::TokenError { .. } => 1,
+            Self::TokenError { .. } => 0,
             Self::OneOfError { variants, .. } => {
                 variants.iter().map(|v| v.weight()).max().unwrap_or(0)
             }
-            Self::SeqError { steps, .. } => 10 * steps.0.len() + 1,
+            Self::SeqError { steps, .. } => steps.0.len(),
         }
     }
 }
