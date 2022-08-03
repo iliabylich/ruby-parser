@@ -9,7 +9,7 @@ impl Parser {
     pub(crate) fn parse_array(&mut self) -> ParseResult<Box<Node>> {
         let (lbrack_t, elements, rbrack_t) = self
             .all_of("array")
-            .and(|| self.parse_token(TokenKind::tLBRACK))
+            .and(|| self.try_token(TokenKind::tLBRACK))
             .and(|| parse_aref_args(self))
             .and(|| self.expect_token(TokenKind::tRBRACK))
             .stop()?;

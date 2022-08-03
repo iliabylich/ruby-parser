@@ -18,7 +18,7 @@ impl Parser {
 fn parse_ensure(parser: &mut Parser) -> ParseResult<Ensure> {
     parser
         .all_of("ensure")
-        .and(|| parser.parse_token(TokenKind::kENSURE))
+        .and(|| parser.try_token(TokenKind::kENSURE))
         .and(|| parser.try_compstmt())
         .stop()
 }

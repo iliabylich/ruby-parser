@@ -9,7 +9,7 @@ impl Parser {
     pub(crate) fn parse_postexe(&mut self) -> ParseResult<Box<Node>> {
         let (postexe_t, lcurly_t, compstmt, rcurly_t) = self
             .all_of("postexe")
-            .and(|| self.parse_token(TokenKind::klEND))
+            .and(|| self.try_token(TokenKind::klEND))
             .and(|| self.expect_token(TokenKind::tLCURLY))
             .and(|| self.try_compstmt())
             .and(|| self.expect_token(TokenKind::tRCURLY))

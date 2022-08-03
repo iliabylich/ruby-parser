@@ -349,13 +349,13 @@ fn parse_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
 fn parse_arg_prefix_operator(parser: &mut Parser) -> ParseResult<Token> {
     parser
         .one_of("arg prefix operator")
-        .or_else(|| parser.parse_token(TokenKind::tBDOT2))
-        .or_else(|| parser.parse_token(TokenKind::tBDOT3))
-        .or_else(|| parser.parse_token(TokenKind::tUPLUS))
-        .or_else(|| parser.parse_token(TokenKind::tUMINUS))
-        .or_else(|| parser.parse_token(TokenKind::tBANG))
-        .or_else(|| parser.parse_token(TokenKind::tTILDE))
-        .or_else(|| parser.parse_token(TokenKind::kDEFINED))
+        .or_else(|| parser.try_token(TokenKind::tBDOT2))
+        .or_else(|| parser.try_token(TokenKind::tBDOT3))
+        .or_else(|| parser.try_token(TokenKind::tUPLUS))
+        .or_else(|| parser.try_token(TokenKind::tUMINUS))
+        .or_else(|| parser.try_token(TokenKind::tBANG))
+        .or_else(|| parser.try_token(TokenKind::tTILDE))
+        .or_else(|| parser.try_token(TokenKind::kDEFINED))
         .stop()
 }
 

@@ -14,7 +14,7 @@ impl Parser {
     }
 
     fn parse_char(&mut self) -> ParseResult<Box<Node>> {
-        let char_t = self.parse_token(TokenKind::tCHAR)?;
+        let char_t = self.try_token(TokenKind::tCHAR)?;
         Ok(Builder::character(char_t))
     }
 
@@ -53,9 +53,9 @@ impl Parser {
             .all_of("string1")
             .and(|| {
                 self.one_of("string begin")
-                    .or_else(|| self.parse_token(TokenKind::tDSTRING_BEG))
-                    .or_else(|| self.parse_token(TokenKind::tSTRING_BEG))
-                    .or_else(|| self.parse_token(TokenKind::tHEREDOC_BEG))
+                    .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
+                    .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
+                    .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
                     .stop()
             })
             .and(|| self.parse_string_contents())
@@ -101,13 +101,13 @@ impl Parser {
     pub(crate) fn parse_string_content(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("string content")
             .or_else(|| {
-                let string_content_t = self.parse_token(TokenKind::tSTRING_CONTENT)?;
+                let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
                 Ok(Builder::string_internal(string_content_t, self.buffer()))
             })
             .or_else(|| {
                 let (_string_dvar_t, string_dvar) = self
                     .all_of("string dvar")
-                    .and(|| self.parse_token(TokenKind::tSTRING_DVAR))
+                    .and(|| self.try_token(TokenKind::tSTRING_DVAR))
                     .and(|| self.parse_string_dvar())
                     .stop()?;
 
@@ -116,7 +116,7 @@ impl Parser {
             .or_else(|| {
                 let (string_dbeg_t, compstmt, string_dend_t) = self
                     .all_of("#{ stmt }")
-                    .and(|| self.parse_token(TokenKind::tSTRING_DBEG))
+                    .and(|| self.try_token(TokenKind::tSTRING_DBEG))
                     .and(|| self.try_compstmt())
                     .and(|| self.expect_token(TokenKind::tSTRING_DEND))
                     .stop()?;

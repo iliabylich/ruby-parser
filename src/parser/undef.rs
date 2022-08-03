@@ -9,7 +9,7 @@ impl Parser {
     pub(crate) fn parse_undef(&mut self) -> ParseResult<Box<Node>> {
         let (undef_t, names) = self
             .all_of("undef ...")
-            .and(|| self.parse_token(TokenKind::kUNDEF))
+            .and(|| self.try_token(TokenKind::kUNDEF))
             .and(|| self.parse_names())
             .stop()?;
 

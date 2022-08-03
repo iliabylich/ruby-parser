@@ -18,7 +18,7 @@ impl Parser {
 fn parse_else(parser: &mut Parser) -> ParseResult<Else> {
     parser
         .all_of("else")
-        .and(|| parser.parse_token(TokenKind::kELSE))
+        .and(|| parser.try_token(TokenKind::kELSE))
         .and(|| parser.try_compstmt())
         .stop()
 }

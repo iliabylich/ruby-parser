@@ -11,7 +11,7 @@ impl Parser {
             .or_else(|| {
                 let (yield_t, lparen_t, args, rparen_t) = self
                     .all_of("yield(args)")
-                    .and(|| self.parse_token(TokenKind::kYIELD))
+                    .and(|| self.try_token(TokenKind::kYIELD))
                     .and(|| self.expect_token(TokenKind::tLPAREN))
                     .and(|| self.parse_call_args())
                     .and(|| self.parse_rparen())
@@ -26,7 +26,7 @@ impl Parser {
                 ))
             })
             .or_else(|| {
-                let yield_t = self.parse_token(TokenKind::kYIELD)?;
+                let yield_t = self.try_token(TokenKind::kYIELD)?;
                 Ok(Builder::keyword_cmd(
                     KeywordCmd::Yield,
                     yield_t,

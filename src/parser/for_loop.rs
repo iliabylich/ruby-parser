@@ -10,7 +10,7 @@ impl Parser {
             .all_of("for loop")
             .and(|| self.parse_k_for())
             .and(|| self.parse_for_var())
-            .and(|| self.parse_token(TokenKind::kIN))
+            .and(|| self.try_token(TokenKind::kIN))
             .and(|| self.parse_expr_value_do())
             .and(|| self.try_compstmt())
             .and(|| self.parse_k_end())
@@ -27,6 +27,6 @@ impl Parser {
     }
 
     fn parse_k_for(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kFOR)
+        self.try_token(TokenKind::kFOR)
     }
 }

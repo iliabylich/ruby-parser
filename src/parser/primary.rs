@@ -19,14 +19,14 @@ impl Parser {
             .or_else(|| self.parse_var_ref())
             .or_else(|| self.parse_back_ref())
             .or_else(|| {
-                let id_t = self.parse_token(TokenKind::tFID)?;
+                let id_t = self.try_token(TokenKind::tFID)?;
 
                 todo!("call_method {:?}", id_t);
             })
             .or_else(|| {
                 let (begin_t, bodystmt, end_t) = self
                     .all_of("BEGIN { .. }")
-                    .and(|| self.parse_token(TokenKind::kBEGIN))
+                    .and(|| self.try_token(TokenKind::kBEGIN))
                     .and(|| self.try_bodystmt())
                     .and(|| self.expect_token(TokenKind::kEND))
                     .stop()?;
@@ -36,7 +36,7 @@ impl Parser {
             .or_else(|| {
                 let (lparen_t, stmt, rparen_t) = self
                     .all_of("( stmt )")
-                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.parse_stmt())
                     .and(|| self.parse_rparen())
                     .stop()?;
@@ -124,7 +124,7 @@ impl Parser {
 }
 
 fn parse_keyword_cmd(parser: &mut Parser, expected: TokenKind) -> ParseResult<Box<Node>> {
-    let token = parser.parse_token(expected)?;
+    let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)
 }
 
@@ -133,8 +133,8 @@ fn parse_keyword_cmd(parser: &mut Parser, expected: TokenKind) -> ParseResult<Bo
 fn parse_not_expr(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (not_t, lparen_t, expr, rparen_t) = parser
         .all_of("not ( [expr] )")
-        .and(|| parser.parse_token(TokenKind::kNOT))
-        .and(|| parser.parse_token(TokenKind::tLPAREN))
+        .and(|| parser.try_token(TokenKind::kNOT))
+        .and(|| parser.try_token(TokenKind::tLPAREN))
         .and(|| parser.parse_expr())
         .and(|| parser.parse_rparen())
         .stop()?;

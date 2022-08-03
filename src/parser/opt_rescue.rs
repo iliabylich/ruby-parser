@@ -35,12 +35,12 @@ impl Parser {
     pub(crate) fn parse_then(&mut self) -> ParseResult<Token> {
         self.one_of("then ...")
             .or_else(|| self.parse_term())
-            .or_else(|| self.parse_token(TokenKind::kTHEN))
+            .or_else(|| self.try_token(TokenKind::kTHEN))
             .or_else(|| {
                 let (_term, then_t) = self
                     .all_of("term then")
                     .and(|| self.parse_term())
-                    .and(|| self.parse_token(TokenKind::kTHEN))
+                    .and(|| self.try_token(TokenKind::kTHEN))
                     .stop()?;
                 Ok(then_t)
             })
@@ -80,7 +80,7 @@ impl Parser {
 fn parse_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (rescue_t, exc_list, exc_var, then, compstmt) = parser
         .all_of("rescue1")
-        .and(|| parser.parse_token(TokenKind::kRESCUE))
+        .and(|| parser.try_token(TokenKind::kRESCUE))
         .and(|| parse_exc_list(parser))
         .and(|| try_exc_var(parser))
         .and(|| {
@@ -111,7 +111,7 @@ fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
         .or_else(|| {
             let (assoc_t, lhs) = parser
                 .all_of("exc var")
-                .and(|| parser.parse_token(TokenKind::tASSOC))
+                .and(|| parser.try_token(TokenKind::tASSOC))
                 .and(|| parser.parse_lhs())
                 .stop()?;
             Ok(Some((assoc_t, lhs)))

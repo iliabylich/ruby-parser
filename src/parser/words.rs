@@ -9,7 +9,7 @@ impl Parser {
     pub(crate) fn parse_words(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, elements, end_t) = self
             .all_of("words")
-            .and(|| self.parse_token(TokenKind::tWORDS_BEG))
+            .and(|| self.try_token(TokenKind::tWORDS_BEG))
             .and(|| self.parse_word_list())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;

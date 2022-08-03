@@ -9,7 +9,7 @@ impl Parser {
     pub(crate) fn parse_symbols(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, elements, end_t) = self
             .all_of("symbols")
-            .and(|| self.parse_token(TokenKind::tSYMBOLS_BEG))
+            .and(|| self.try_token(TokenKind::tSYMBOLS_BEG))
             .and(|| parse_symbol_list(self))
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;

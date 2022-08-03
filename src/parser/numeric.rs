@@ -11,7 +11,7 @@ impl Parser {
             .or_else(|| {
                 let (uminus_num, simple_numeric) = self
                     .all_of("-numeric")
-                    .and(|| self.parse_token(TokenKind::tUMINUS))
+                    .and(|| self.try_token(TokenKind::tUMINUS))
                     .and(|| self.parse_simple_numeric())
                     .stop()?;
 
@@ -28,19 +28,19 @@ impl Parser {
     pub(crate) fn parse_simple_numeric(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("simple numeric (without sign)")
             .or_else(|| {
-                let integer_t = self.parse_token(TokenKind::tINTEGER)?;
+                let integer_t = self.try_token(TokenKind::tINTEGER)?;
                 Ok(Builder::integer(integer_t, self.buffer()))
             })
             .or_else(|| {
-                let float_t = self.parse_token(TokenKind::tFLOAT)?;
+                let float_t = self.try_token(TokenKind::tFLOAT)?;
                 Ok(Builder::float(float_t, self.buffer()))
             })
             .or_else(|| {
-                let rational_t = self.parse_token(TokenKind::tRATIONAL)?;
+                let rational_t = self.try_token(TokenKind::tRATIONAL)?;
                 Ok(Builder::rational(rational_t, self.buffer()))
             })
             .or_else(|| {
-                let imaginary_t = self.parse_token(TokenKind::tIMAGINARY)?;
+                let imaginary_t = self.try_token(TokenKind::tIMAGINARY)?;
                 Ok(Builder::complex(imaginary_t, self.buffer()))
             })
             .stop()

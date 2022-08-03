@@ -19,13 +19,13 @@ impl Parser {
             .or_else(|| {
                 let (colon_t, sym_t) = self
                     .all_of(":sym")
-                    .and(|| self.parse_token(TokenKind::tCOLON))
+                    .and(|| self.try_token(TokenKind::tCOLON))
                     .and(|| {
                         self.one_of("static symbol value")
                             .or_else(|| self.parse_fname())
-                            .or_else(|| self.parse_token(TokenKind::tIVAR))
-                            .or_else(|| self.parse_token(TokenKind::tCVAR))
-                            .or_else(|| self.parse_token(TokenKind::tGVAR))
+                            .or_else(|| self.try_token(TokenKind::tIVAR))
+                            .or_else(|| self.try_token(TokenKind::tCVAR))
+                            .or_else(|| self.try_token(TokenKind::tGVAR))
                             .required()
                             .stop()
                     })
@@ -36,7 +36,7 @@ impl Parser {
             .or_else(|| {
                 let (begin_t, parts, end_t) = self
                     .all_of("dynamic symbol value")
-                    .and(|| self.parse_token(TokenKind::tSYMBEG))
+                    .and(|| self.try_token(TokenKind::tSYMBEG))
                     .and(|| self.parse_string_contents())
                     .and(|| self.expect_token(TokenKind::tSTRING_END))
                     .stop()?;
@@ -50,7 +50,7 @@ impl Parser {
     fn parse_dsym(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("dynamic symbol")
-            .and(|| self.parse_token(TokenKind::tDSYMBEG))
+            .and(|| self.try_token(TokenKind::tDSYMBEG))
             .and(|| self.parse_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;

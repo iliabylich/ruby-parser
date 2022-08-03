@@ -18,7 +18,7 @@ impl Parser {
             .and(|| {
                 self.one_of("executable string begin")
                     .or_else(|| self.read_backtick_identifier_as_xstring_beg())
-                    .or_else(|| self.parse_token(TokenKind::tXHEREDOC_BEG))
+                    .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
                     .stop()
                     .and_then(|tok| {
                         // now we need to manually push a xstring literal

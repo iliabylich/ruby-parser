@@ -43,7 +43,7 @@ impl Parser {
             .or_else(|| {
                 let (super_t, args) = self
                     .all_of("super args")
-                    .and(|| self.parse_token(TokenKind::kSUPER))
+                    .and(|| self.try_token(TokenKind::kSUPER))
                     .and(|| self.parse_command_args())
                     .stop()?;
 
@@ -53,7 +53,7 @@ impl Parser {
             .or_else(|| {
                 let (yield_t, args) = self
                     .all_of("yield args")
-                    .and(|| self.parse_token(TokenKind::kYIELD))
+                    .and(|| self.try_token(TokenKind::kYIELD))
                     .and(|| self.parse_command_args())
                     .stop()?;
 
@@ -73,7 +73,7 @@ impl Parser {
             .or_else(|| {
                 let (break_t, args) = self
                     .all_of("break args")
-                    .and(|| self.parse_token(TokenKind::kBREAK))
+                    .and(|| self.try_token(TokenKind::kBREAK))
                     .and(|| self.parse_call_args())
                     .stop()?;
 
@@ -83,7 +83,7 @@ impl Parser {
             .or_else(|| {
                 let (next_t, args) = self
                     .all_of("next args")
-                    .and(|| self.parse_token(TokenKind::kNEXT))
+                    .and(|| self.try_token(TokenKind::kNEXT))
                     .and(|| self.parse_call_args())
                     .stop()?;
 
@@ -133,7 +133,7 @@ fn parse_command_args_and_cmd_brace_block(
 fn parse_cmd_brace_block(parser: &mut Parser) -> ParseResult<CmdBraceBlock> {
     let (begin_t, brace_body, end_t) = parser
         .all_of("cmd brace block")
-        .and(|| parser.parse_token(TokenKind::tLCURLY))
+        .and(|| parser.try_token(TokenKind::tLCURLY))
         .and(|| parser.try_brace_body())
         .and(|| parser.expect_token(TokenKind::tRCURLY))
         .stop()?;

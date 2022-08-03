@@ -58,7 +58,7 @@ impl Parser {
     }
 
     fn parse_k_def(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kDEF)
+        self.try_token(TokenKind::kDEF)
     }
 
     fn parse_f_arglist(&mut self) -> ParseResult<Box<Node>> {
@@ -71,7 +71,7 @@ impl Parser {
             .or_else(|| {
                 let (lparen_t, expr, rparen_t) = self
                     .all_of("(expr)")
-                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.parse_expr())
                     .and(|| self.parse_rparen())
                     .stop()?;

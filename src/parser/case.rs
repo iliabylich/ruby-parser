@@ -79,7 +79,7 @@ impl Parser {
 }
 
 fn parse_k_case(parser: &mut Parser) -> ParseResult<Token> {
-    parser.parse_token(TokenKind::kCASE)
+    parser.try_token(TokenKind::kCASE)
 }
 
 fn parse_when_bodies(parser: &mut Parser) -> ParseResult<Vec<Node>> {
@@ -115,7 +115,7 @@ fn parse_when_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
 }
 
 fn parse_k_when(parser: &mut Parser) -> ParseResult<Token> {
-    parser.parse_token(TokenKind::kWHEN)
+    parser.try_token(TokenKind::kWHEN)
 }
 
 fn parse_case_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
@@ -149,7 +149,7 @@ fn parse_case_arg(parser: &mut Parser) -> ParseResult<Box<Node>> {
         .or_else(|| {
             let (star_t, value) = parser
                 .all_of("*arg")
-                .and(|| parser.parse_token(TokenKind::tSTAR))
+                .and(|| parser.try_token(TokenKind::tSTAR))
                 .and(|| parser.parse_arg_value())
                 .stop()?;
 

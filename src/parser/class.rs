@@ -30,7 +30,7 @@ impl Parser {
                 let (klass_t, lshift_t, expr, _term, body, end_t) = self
                     .all_of("singleton class")
                     .and(|| self.parse_k_class())
-                    .and(|| self.parse_token(TokenKind::tLSHFT))
+                    .and(|| self.try_token(TokenKind::tLSHFT))
                     .and(|| self.parse_expr())
                     .and(|| self.parse_term())
                     .and(|| self.try_bodystmt())
@@ -59,6 +59,6 @@ impl Parser {
     }
 
     fn parse_k_class(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kCLASS)
+        self.try_token(TokenKind::kCLASS)
     }
 }

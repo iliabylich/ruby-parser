@@ -42,9 +42,9 @@ impl Parser {
     }
 
     fn parse_k_while(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kWHILE)
+        self.try_token(TokenKind::kWHILE)
     }
     fn parse_k_until(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kUNTIL)
+        self.try_token(TokenKind::kUNTIL)
     }
 }

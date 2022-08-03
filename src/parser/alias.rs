@@ -9,7 +9,7 @@ impl Parser {
     pub(crate) fn parse_alias(&mut self) -> ParseResult<Box<Node>> {
         let (alias_t, (lhs, rhs)) = self
             .all_of("alias statement")
-            .and(|| self.parse_token(TokenKind::kALIAS))
+            .and(|| self.try_token(TokenKind::kALIAS))
             .and(|| parse_alias_args(self))
             .stop()?;
         Ok(Builder::alias(alias_t, lhs, rhs))

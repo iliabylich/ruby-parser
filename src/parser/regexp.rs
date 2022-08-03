@@ -14,7 +14,7 @@ impl Parser {
             .all_of("regexp")
             .and(|| {
                 self.one_of("regexp")
-                    .or_else(|| self.parse_token(TokenKind::tREGEXP_BEG))
+                    .or_else(|| self.try_token(TokenKind::tREGEXP_BEG))
                     .or_else(|| {
                         let token = self.read_div_as_heredoc_beg()?;
 

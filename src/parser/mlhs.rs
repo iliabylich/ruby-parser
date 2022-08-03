@@ -10,7 +10,7 @@ impl Parser {
             .or_else(|| self.parse_mlhs_basic())
             .or_else(|| {
                 self.all_of("( mlhs inner )")
-                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.parse_mlhs_inner())
                     .and(|| self.parse_rparen())
                     .stop()
@@ -26,7 +26,7 @@ impl Parser {
             .or_else(|| self.parse_mlhs_basic())
             .or_else(|| {
                 self.all_of("( mlhs inner )")
-                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.parse_mlhs_inner())
                     .and(|| self.parse_rparen())
                     .stop()
@@ -59,7 +59,7 @@ impl Parser {
     fn parse_mlhs_tail(&mut self) -> ParseResult<Box<Node>> {
         let (star_t, maybe_splat_arg, maybe_post) = self
             .all_of("mlhs_tail")
-            .and(|| self.parse_token(TokenKind::tSTAR))
+            .and(|| self.try_token(TokenKind::tSTAR))
             .and(|| {
                 self.one_of("splat argument")
                     .or_else(|| self.parse_mlhs_node().map(|node| Some(node)))
@@ -71,7 +71,7 @@ impl Parser {
                     .one_of("post-splat")
                     .or_else(|| {
                         self.all_of("comma -> mlhs post")
-                            .and(|| self.parse_token(TokenKind::tCOMMA))
+                            .and(|| self.try_token(TokenKind::tCOMMA))
                             .and(|| self.parse_mlhs_post())
                             .stop()
                             .map(|(star_t, maybe_arg)| todo!("{:?} {:?}", star_t, maybe_arg))
@@ -92,7 +92,7 @@ impl Parser {
             .or_else(|| {
                 let (lparen_t, exprs, rparen_t) = self
                     .all_of("( mlhs inner )")
-                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.try_token(TokenKind::tLPAREN))
                     .and(|| self.parse_mlhs_inner())
                     .and(|| self.parse_rparen())
                     .stop()?;
@@ -106,7 +106,7 @@ impl Parser {
             parser
                 .all_of("mlhs item and comma")
                 .and(|| parser.parse_mlhs_item())
-                .and(|| parser.parse_token(TokenKind::tCOMMA))
+                .and(|| parser.try_token(TokenKind::tCOMMA))
                 .stop()
         };
 
@@ -140,7 +140,7 @@ impl Parser {
         loop {
             let comma_and_item = self
                 .all_of("comma and mlhs item")
-                .and(|| self.parse_token(TokenKind::tCOMMA))
+                .and(|| self.try_token(TokenKind::tCOMMA))
                 .and(|| self.parse_mlhs_item())
                 .stop();
 

@@ -54,10 +54,10 @@ impl Parser {
     }
 
     fn parse_k_if(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kIF)
+        self.try_token(TokenKind::kIF)
     }
 
     fn parse_k_unless(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kUNLESS)
+        self.try_token(TokenKind::kUNLESS)
     }
 }

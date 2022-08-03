@@ -18,6 +18,6 @@ impl Parser {
     }
 
     fn parse_k_module(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kMODULE)
+        self.try_token(TokenKind::kMODULE)
     }
 }

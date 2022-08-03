@@ -7,44 +7,44 @@ use crate::{
 
 impl Parser {
     pub(crate) fn parse_gvar(&mut self) -> ParseResult<Box<Node>> {
-        let gvar_t = self.parse_token(TokenKind::tGVAR)?;
+        let gvar_t = self.try_token(TokenKind::tGVAR)?;
         Ok(Builder::gvar(gvar_t, self.buffer()))
     }
 
     pub(crate) fn parse_back_ref(&mut self) -> ParseResult<Box<Node>> {
-        let back_ref_t = self.parse_token(TokenKind::tBACK_REF)?;
+        let back_ref_t = self.try_token(TokenKind::tBACK_REF)?;
         Ok(Builder::back_ref(back_ref_t, self.buffer()))
     }
 
     pub(crate) fn parse_nth_ref(&mut self) -> ParseResult<Box<Node>> {
-        let nth_ref_t = self.parse_token(TokenKind::tNTH_REF)?;
+        let nth_ref_t = self.try_token(TokenKind::tNTH_REF)?;
         Ok(Builder::nth_ref(nth_ref_t, self.buffer()))
     }
 
     pub(crate) fn parse_lvar(&mut self) -> ParseResult<Box<Node>> {
-        let lvar_t = self.parse_token(TokenKind::tIDENTIFIER)?;
+        let lvar_t = self.try_token(TokenKind::tIDENTIFIER)?;
         Ok(Builder::lvar(lvar_t, self.buffer()))
     }
 
     pub(crate) fn parse_ivar(&mut self) -> ParseResult<Box<Node>> {
-        let ivar_t = self.parse_token(TokenKind::tIVAR)?;
+        let ivar_t = self.try_token(TokenKind::tIVAR)?;
         Ok(Builder::ivar(ivar_t, self.buffer()))
     }
 
     pub(crate) fn parse_cvar(&mut self) -> ParseResult<Box<Node>> {
-        let cvar_t = self.parse_token(TokenKind::tCVAR)?;
+        let cvar_t = self.try_token(TokenKind::tCVAR)?;
         Ok(Builder::cvar(cvar_t, self.buffer()))
     }
 
     pub(crate) fn parse_t_const(&mut self) -> ParseResult<Box<Node>> {
-        let const_t = self.parse_token(TokenKind::tCONSTANT)?;
+        let const_t = self.try_token(TokenKind::tCONSTANT)?;
         Ok(Builder::const_(const_t, self.buffer()))
     }
 
     pub(crate) fn parse_const_or_identifier(&mut self) -> ParseResult<Token> {
         self.one_of("const or identifier")
-            .or_else(|| self.parse_token(TokenKind::tCONSTANT))
-            .or_else(|| self.parse_token(TokenKind::tIDENTIFIER))
+            .or_else(|| self.try_token(TokenKind::tCONSTANT))
+            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
             .stop()
     }
 }
