@@ -1,4 +1,5 @@
 use crate::{
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
@@ -13,7 +14,7 @@ impl Parser {
             .and(|| self.expect_token(TokenKind::tRBRACK))
             .stop()?;
 
-        todo!("array {:?} {:?} {:?}", lbrack_t, elements, rbrack_t);
+        Ok(Builder::array(Some(lbrack_t), elements, Some(rbrack_t)))
     }
 }
 
@@ -31,7 +32,12 @@ mod tests {
     use crate::testing::assert_parses;
 
     #[test]
-    fn test_array() {
+    fn test_array_simple() {
+        assert_parses!(parse_array, b"[1, 2, 3]", "TODO")
+    }
+
+    #[test]
+    fn test_array_mixed() {
         assert_parses!(parse_array, b"[1, 2, 3, 4 => 5]", "TODO")
     }
 }

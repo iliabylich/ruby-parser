@@ -20,13 +20,14 @@ mod for_loop;
 mod hash;
 mod if_unless;
 mod keyword_variable;
-mod method;
+mod method_definition;
 mod mlhs;
 mod module;
 mod numeric;
 mod opt_else;
 mod opt_ensure;
 mod opt_rescue;
+mod pattern_matching;
 mod postexe;
 mod preexe;
 mod primary;
@@ -359,9 +360,6 @@ impl Parser {
     fn parse_k_ensure(&mut self) -> ParseResult<Token> {
         self.parse_token(TokenKind::kENSURE)
     }
-    fn parse_k_when(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kWHEN)
-    }
     fn parse_k_else(&mut self) -> ParseResult<Token> {
         self.parse_token(TokenKind::kELSE)
     }
@@ -546,96 +544,7 @@ impl Parser {
     fn parse_do_body(&mut self) {
         todo!("parser.parse_do_body")
     }
-    fn parse_p_case_body(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.parse_p_case_body")
-    }
-    fn parse_p_cases(&mut self) {
-        todo!("parser.parse_p_cases")
-    }
-    fn parse_p_top_expr(&mut self) {
-        todo!("parser.parse_p_top_expr")
-    }
-    fn parse_p_top_expr_body(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.parse_p_top_expr_body")
-    }
-    fn parse_p_expr(&mut self) {
-        todo!("parser.parse_p_expr")
-    }
-    fn parse_p_as(&mut self) {
-        todo!("parser.parse_p_as")
-    }
-    fn parse_p_alt(&mut self) {
-        todo!("parser.parse_p_alt")
-    }
-    fn parse_p_lparen(&mut self) {
-        todo!("parser.parse_p_lparen")
-    }
-    fn parse_p_lbracket(&mut self) {
-        todo!("parser.parse_p_lbracket")
-    }
-    fn parse_p_expr_basic(&mut self) {
-        todo!("parser.parse_p_expr_basic")
-    }
-    fn parse_p_args(&mut self) {
-        todo!("parser.parse_p_args")
-    }
-    fn parse_p_args_head(&mut self) {
-        todo!("parser.parse_p_args_head")
-    }
-    fn parse_p_args_tail(&mut self) {
-        todo!("parser.parse_p_args_tail")
-    }
-    fn parse_p_find(&mut self) {
-        todo!("parser.parse_p_find")
-    }
-    fn parse_p_rest(&mut self) {
-        todo!("parser.parse_p_rest")
-    }
-    fn parse_p_args_post(&mut self) {
-        todo!("parser.parse_p_args_post")
-    }
-    fn parse_p_arg(&mut self) {
-        todo!("parser.parse_p_arg")
-    }
-    fn parse_p_kwargs(&mut self) {
-        todo!("parser.parse_p_kwargs")
-    }
-    fn parse_p_kwarg(&mut self) {
-        todo!("parser.parse_p_kwarg")
-    }
-    fn parse_p_kw(&mut self) {
-        todo!("parser.parse_p_kw")
-    }
-    fn parse_p_kw_label(&mut self) {
-        todo!("parser.parse_p_kw_label")
-    }
-    fn parse_p_kwrest(&mut self) {
-        todo!("parser.parse_p_kwrest")
-    }
-    fn parse_p_kwnorest(&mut self) {
-        todo!("parser.parse_p_kwnorest")
-    }
-    fn parse_p_any_kwrest(&mut self) {
-        todo!("parser.parse_p_any_kwrest")
-    }
-    fn parse_p_value(&mut self) {
-        todo!("parser.parse_p_value")
-    }
-    fn parse_p_primitive(&mut self) {
-        todo!("parser.parse_p_primitive")
-    }
-    fn parse_p_variable(&mut self) {
-        todo!("parser.parse_p_variable")
-    }
-    fn parse_p_var_ref(&mut self) {
-        todo!("parser.parse_p_var_ref")
-    }
-    fn parse_p_expr_ref(&mut self) {
-        todo!("parser.parse_p_expr_ref")
-    }
-    fn parse_p_const(&mut self) {
-        todo!("parser.parse_p_const")
-    }
+
     fn parse_literal(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("literal")
             .or_else(|| self.parse_numeric())

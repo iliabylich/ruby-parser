@@ -1,5 +1,6 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    builder::Builder,
+    parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -8,39 +9,56 @@ impl Parser {
     pub(crate) fn parse_case(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("case expr")
             .or_else(|| {
-                let (case_t, expr, _terms, body, end_t) = self
+                let (case_t, expr, _terms, when_bodies, opt_else, end_t) = self
                     .all_of("k_case expr_value opt_terms case_body k_end")
-                    .and(|| self.parse_k_case())
+                    .and(|| parse_k_case(self))
                     .and(|| self.parse_expr_value())
                     .and(|| self.parse_opt_terms())
-                    .and(|| self.parse_case_body())
+                    .and(|| parse_when_bodies(self))
+                    .and(|| self.try_opt_else())
                     .and(|| self.parse_k_end())
                     .stop()?;
 
-                todo!(
-                    "{:?} {:?} {:?} {:?} {:?}",
+                let (else_t, else_body) = opt_else
+                    .map(|(else_t, else_body)| (Some(else_t), else_body))
+                    .unwrap_or_else(|| (None, None));
+
+                Ok(Builder::case(
                     case_t,
-                    expr,
-                    _terms,
-                    body,
-                    end_t
-                )
+                    Some(expr),
+                    when_bodies,
+                    else_t,
+                    else_body,
+                    end_t,
+                ))
             })
             .or_else(|| {
-                let (case_t, _opt_terms, body, end_t) = self
+                let (case_t, _opt_terms, when_bodies, opt_else, end_t) = self
                     .all_of("k_case opt_terms case_body k_end")
-                    .and(|| self.parse_k_case())
+                    .and(|| parse_k_case(self))
                     .and(|| self.parse_opt_terms())
-                    .and(|| self.parse_case_body())
+                    .and(|| parse_when_bodies(self))
+                    .and(|| self.try_opt_else())
                     .and(|| self.parse_k_end())
                     .stop()?;
 
-                todo!("{:?} {:?} {:?} {:?}", case_t, _opt_terms, body, end_t)
+                let (else_t, else_body) = opt_else
+                    .map(|(else_t, else_body)| (Some(else_t), else_body))
+                    .unwrap_or_else(|| (None, None));
+
+                Ok(Builder::case(
+                    case_t,
+                    None,
+                    when_bodies,
+                    else_t,
+                    else_body,
+                    end_t,
+                ))
             })
             .or_else(|| {
                 let (case_t, expr, _opt_terms, p_case_body, end_t) = self
                     .all_of("k_case expr_value opt_terms p_case_body k_end")
-                    .and(|| self.parse_k_case())
+                    .and(|| parse_k_case(self))
                     .and(|| self.parse_expr_value())
                     .and(|| self.parse_opt_terms())
                     .and(|| self.parse_p_case_body())
@@ -58,18 +76,85 @@ impl Parser {
             })
             .stop()
     }
+}
 
-    fn parse_case_args(&mut self) {
-        todo!("parser.parse_case_args")
-    }
-    fn parse_case_body(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.parse_case_body")
-    }
-    fn parse_cases(&mut self) {
-        todo!("parser.parse_cases")
-    }
+fn parse_k_case(parser: &mut Parser) -> ParseResult<Token> {
+    parser.parse_token(TokenKind::kCASE)
+}
 
-    fn parse_k_case(&mut self) -> ParseResult<Token> {
-        self.parse_token(TokenKind::kCASE)
+fn parse_when_bodies(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let mut nodes = vec![];
+    loop {
+        match parse_when_body(parser) {
+            Ok(when_body) => nodes.push(*when_body),
+            Err(err) => match err.strip_lookaheads() {
+                Some(error) => {
+                    return Err(ParseError::seq_error::<Vec<Node>, _>(
+                        "when bodies",
+                        nodes,
+                        error,
+                    ))
+                }
+                None => break,
+            },
+        }
     }
+    Ok(nodes)
+}
+
+fn parse_when_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (when_t, patterns, then_t, body) = parser
+        .all_of("case when body")
+        .and(|| parse_k_when(parser))
+        .and(|| parse_case_args(parser))
+        .and(|| parser.parse_then())
+        .and(|| parser.try_compstmt())
+        .stop()?;
+
+    Ok(Builder::when(when_t, patterns, then_t, body))
+}
+
+fn parse_k_when(parser: &mut Parser) -> ParseResult<Token> {
+    parser.parse_token(TokenKind::kWHEN)
+}
+
+fn parse_case_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let mut nodes = vec![];
+    let mut commas = vec![];
+
+    let node = parse_case_arg(parser)?;
+    nodes.push(*node);
+
+    loop {
+        match parser.expect_token(TokenKind::tCOMMA) {
+            Ok(comma_t) => commas.push(comma_t),
+            Err(_) => break,
+        }
+        match parse_case_arg(parser) {
+            Ok(node) => nodes.push(*node),
+            Err(error) => {
+                return Err(ParseError::seq_error::<Vec<Node>, _>(
+                    "case args",
+                    (nodes, commas),
+                    error,
+                ))
+            }
+        }
+    }
+    Ok(nodes)
+}
+fn parse_case_arg(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .one_of("case arg")
+        .or_else(|| {
+            let (star_t, value) = parser
+                .all_of("*arg")
+                .and(|| parser.parse_token(TokenKind::tSTAR))
+                .and(|| parser.parse_arg_value())
+                .stop()?;
+
+            Ok(Builder::splat(star_t, value))
+        })
+        .or_else(|| parser.parse_arg_value())
+        .stop()
 }
