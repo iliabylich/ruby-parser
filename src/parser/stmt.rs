@@ -56,7 +56,7 @@ where
             .stop()
     }
 
-    pub(crate) fn try_bodystmt(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn try_bodystmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let (compstmt, rescue_bodies, opt_else, opt_ensure) = self
             .all_of("bodystmt")
             .and(|| self.try_compstmt())

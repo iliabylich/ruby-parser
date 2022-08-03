@@ -1,5 +1,9 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::{
+        helpers::{maybe_boxed_node_expr, maybe_loc},
+        Builder, Constructor,
+    },
+    nodes::{If, IfMod, IfTernary},
     token::Token,
     Node,
 };
@@ -14,7 +18,29 @@ impl<C: Constructor> Builder<C> {
         if_false: Option<Box<Node>>,
         end_t: Option<Token>,
     ) -> Box<Node> {
-        todo!("condition")
+        let end_l = maybe_loc(&end_t)
+            .or_else(|| maybe_boxed_node_expr(&if_false))
+            .or_else(|| maybe_loc(&else_t))
+            .or_else(|| maybe_boxed_node_expr(&if_true))
+            .unwrap_or_else(|| then_t.loc);
+
+        let expression_l = cond_t.loc.join(&end_l);
+        let keyword_l = cond_t.loc;
+        let begin_l = then_t.loc;
+        let else_l = maybe_loc(&else_t);
+        let end_l = maybe_loc(&end_t);
+
+        // TODO: call check_condition on cond
+        Box::new(Node::If(If {
+            cond,
+            if_true,
+            if_false,
+            keyword_l,
+            begin_l,
+            else_l,
+            end_l,
+            expression_l,
+        }))
     }
 
     pub(crate) fn condition_mod(
@@ -23,7 +49,24 @@ impl<C: Constructor> Builder<C> {
         cond_t: Token,
         cond: Box<Node>,
     ) -> Box<Node> {
-        todo!("condition_mod")
+        let pre = match (if_true.as_ref(), if_false.as_ref()) {
+            (None, None) => unreachable!("at least one of if_true/if_false is required"),
+            (None, Some(if_false)) => if_false,
+            (Some(if_true), None) => if_true,
+            (Some(_), Some(_)) => unreachable!("only one of if_true/if_false is required"),
+        };
+
+        let expression_l = pre.expression().join(cond.expression());
+        let keyword_l = cond_t.loc;
+
+        // TODO: call check_condition on cond
+        Box::new(Node::IfMod(IfMod {
+            cond,
+            if_true,
+            if_false,
+            keyword_l,
+            expression_l,
+        }))
     }
 
     pub(crate) fn ternary(
@@ -33,6 +76,17 @@ impl<C: Constructor> Builder<C> {
         colon_t: Token,
         if_false: Box<Node>,
     ) -> Box<Node> {
-        todo!("ternary")
+        let expression_l = cond.expression().join(if_false.expression());
+        let question_l = question_t.loc;
+        let colon_l = colon_t.loc;
+
+        Box::new(Node::IfTernary(IfTernary {
+            cond,
+            if_true,
+            if_false,
+            question_l,
+            colon_l,
+            expression_l,
+        }))
     }
 }

@@ -1,6 +1,6 @@
 use crate::builder::{Constructor, RustConstructor};
 
-mod helpers;
+pub(crate) mod helpers;
 
 mod access;
 mod arguments;

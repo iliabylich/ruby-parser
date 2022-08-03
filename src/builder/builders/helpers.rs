@@ -18,6 +18,10 @@ pub(crate) fn string_value(loc: Loc, buffer: &Buffer) -> StringContent {
     StringContent::from(buffer.slice(loc.start, loc.end).unwrap())
 }
 
+pub(crate) fn maybe_loc(token: &Option<Token>) -> Option<Loc> {
+    token.map(|t| t.loc)
+}
+
 pub(crate) fn nodes_locs(nodes: &[Node]) -> (Loc, Loc, Loc) {
     debug_assert!(nodes.len() > 0);
 
@@ -62,6 +66,14 @@ pub(crate) fn join_maybe_locs(lhs: &Option<Loc>, rhs: &Option<Loc>) -> Option<Lo
         (Some(lhs), None) => Some(*lhs),
         (Some(lhs), Some(rhs)) => Some(lhs.join(rhs)),
     }
+}
+
+pub(crate) fn maybe_node_expr(node: &Option<&Node>) -> Option<Loc> {
+    node.map(|node| *node.expression())
+}
+
+pub(crate) fn maybe_boxed_node_expr(node: &Option<Box<Node>>) -> Option<Loc> {
+    node.as_deref().map(|node| *node.expression())
 }
 
 pub(crate) fn is_heredoc(begin_t: &Option<Token>) -> bool {
