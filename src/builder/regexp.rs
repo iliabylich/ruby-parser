@@ -1,6 +1,6 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder},
+    builder::{helpers::string_value, Builder},
     nodes::{RegOpt, Regexp},
     string_content::StringContent,
     token::Token,

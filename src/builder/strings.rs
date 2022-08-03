@@ -1,7 +1,7 @@
 use crate::{
     buffer::Buffer,
     builder::{
-        builders::helpers::{collection_map, heredoc_map, is_heredoc, string_value},
+        helpers::{collection_map, heredoc_map, is_heredoc, string_value},
         Builder,
     },
     loc::loc,

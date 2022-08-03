@@ -1,6 +1,6 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder},
+    builder::{helpers::string_value, Builder},
     nodes::{BackRef, Cbase, Const, Cvar, Gvar, Ivar, Lvar, NthRef, Self_},
     string_content::StringContent,
     token::Token,

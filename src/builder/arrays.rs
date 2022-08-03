@@ -1,5 +1,5 @@
 use crate::{
-    builder::{builders::helpers::collection_map, Builder},
+    builder::{helpers::collection_map, Builder},
     nodes::{Array, Dstr, Dsym, Splat, Str, Sym},
     token::Token,
     Node,

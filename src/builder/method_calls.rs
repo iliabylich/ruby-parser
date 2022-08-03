@@ -1,7 +1,7 @@
 use crate::{
     buffer::Buffer,
     builder::{
-        builders::helpers::{
+        helpers::{
             collection_map, maybe_boxed_node_expr, maybe_loc, maybe_node_expr, maybe_string_value,
             static_regexp_captures, string_value,
         },

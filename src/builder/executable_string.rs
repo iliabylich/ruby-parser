@@ -1,5 +1,5 @@
 use crate::{
-    builder::{builders::helpers::collection_expr, Builder},
+    builder::{helpers::collection_expr, Builder},
     nodes::{XHeredoc, Xstr},
     token::{Token, TokenKind},
     Node,
