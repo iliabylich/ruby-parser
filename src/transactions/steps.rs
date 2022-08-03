@@ -1,4 +1,4 @@
-use crate::{transactions::step_data::StepData, Node, Token};
+use crate::{builder::ArgsType, transactions::step_data::StepData, Node, Token};
 
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct Steps(pub(crate) Vec<StepData>);
@@ -45,6 +45,11 @@ where
 impl From<Box<Node>> for Steps {
     fn from(node: Box<Node>) -> Self {
         Steps(vec![node.into()])
+    }
+}
+impl From<ArgsType> for Steps {
+    fn from(args_type: ArgsType) -> Self {
+        Steps(vec![args_type.into()])
     }
 }
 impl From<Vec<Node>> for Steps {

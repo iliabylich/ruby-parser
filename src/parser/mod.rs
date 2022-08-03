@@ -291,10 +291,10 @@ impl Parser {
     fn parse_opt_paren_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.parse_opt_paren_args")
     }
-    fn parse_block_arg(&mut self) {
+    fn parse_block_arg(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.parse_block_arg")
     }
-    fn parse_opt_block_arg(&mut self) {
+    fn parse_opt_block_arg(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.parse_opt_block_arg")
     }
     fn parse_args(&mut self) -> ParseResult<Vec<Node>> {
@@ -408,7 +408,7 @@ impl Parser {
     fn parse_block_param(&mut self) {
         todo!("parser.parse_block_param")
     }
-    fn parse_opt_block_param(&mut self) {
+    fn try_opt_block_param(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.parse_opt_block_param")
     }
     fn parse_block_param_def(&mut self) {
