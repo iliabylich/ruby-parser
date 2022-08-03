@@ -69,4 +69,8 @@ impl StringContent {
     pub(crate) fn pop(&mut self) {
         self.bytes.pop();
     }
+
+    pub(crate) fn push(&mut self, byte: u8) {
+        self.bytes.push(byte)
+    }
 }

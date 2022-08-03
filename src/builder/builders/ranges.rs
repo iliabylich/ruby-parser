@@ -1,5 +1,6 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::{helpers::maybe_boxed_node_expr, Builder, Constructor},
+    nodes::{Erange, Irange},
     Node, Token,
 };
 
@@ -9,7 +10,17 @@ impl<C: Constructor> Builder<C> {
         dot2_t: Token,
         right: Option<Box<Node>>,
     ) -> Box<Node> {
-        todo!("builder.range_inclusive")
+        let operator_l = dot2_t.loc;
+        let expression_l = operator_l
+            .maybe_join(&maybe_boxed_node_expr(&left))
+            .maybe_join(&maybe_boxed_node_expr(&right));
+
+        Box::new(Node::Irange(Irange {
+            left,
+            right,
+            operator_l,
+            expression_l,
+        }))
     }
 
     pub(crate) fn range_exclusive(
@@ -17,6 +28,16 @@ impl<C: Constructor> Builder<C> {
         dot3_t: Token,
         right: Option<Box<Node>>,
     ) -> Box<Node> {
-        todo!("builder.range_exclusive")
+        let operator_l = dot3_t.loc;
+        let expression_l = operator_l
+            .maybe_join(&maybe_boxed_node_expr(&left))
+            .maybe_join(&maybe_boxed_node_expr(&right));
+
+        Box::new(Node::Erange(Erange {
+            left,
+            right,
+            operator_l,
+            expression_l,
+        }))
     }
 }
