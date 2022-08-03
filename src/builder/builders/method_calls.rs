@@ -8,9 +8,6 @@ use crate::{
 };
 
 impl<C: Constructor> Builder<C> {
-    pub(crate) fn forwarded_args() -> Box<Node> {
-        todo!("builder.forwarded_args")
-    }
     pub(crate) fn call_method() -> Box<Node> {
         todo!("builder.call_method")
     }

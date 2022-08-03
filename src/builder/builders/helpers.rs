@@ -17,6 +17,9 @@ pub(crate) fn cstring_value(loc: Loc, buffer: &Buffer) -> CString {
 pub(crate) fn string_value(loc: Loc, buffer: &Buffer) -> StringContent {
     StringContent::from(buffer.slice(loc.start, loc.end).unwrap())
 }
+pub(crate) fn maybe_string_value(maybe_loc: Option<Loc>, buffer: &Buffer) -> Option<StringContent> {
+    maybe_loc.map(|loc| string_value(loc, buffer))
+}
 
 pub(crate) fn maybe_loc(token: &Option<Token>) -> Option<Loc> {
     token.map(|t| t.loc)
