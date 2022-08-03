@@ -1,7 +1,7 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::*, Builder, Constructor},
-    nodes::*,
+    builder::{builders::helpers::string_value, Builder, Constructor},
+    nodes::{BackRef, Cbase, Const, Cvar, Gvar, Ivar, Lvar, NthRef, Self_},
     string_content::StringContent,
     token::Token,
     Node,
@@ -28,8 +28,10 @@ impl<C: Constructor> Builder<C> {
     }
     pub(crate) fn gvar(gvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = gvar_t.loc;
-        let name = cstring_value(loc, buffer);
-        node_ptr_to_box(C::gvar_node(name, loc))
+        Box::new(Node::Gvar(Gvar {
+            name: string_value(loc, buffer),
+            expression_l: loc,
+        }))
     }
     pub(crate) fn cvar(cvar_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = cvar_t.loc;
@@ -40,8 +42,10 @@ impl<C: Constructor> Builder<C> {
     }
     pub(crate) fn back_ref(back_ref_t: Token, buffer: &Buffer) -> Box<Node> {
         let loc = back_ref_t.loc;
-        let name = cstring_value(loc, buffer);
-        node_ptr_to_box(C::back_ref_node(name, loc))
+        Box::new(Node::BackRef(BackRef {
+            name: string_value(loc, buffer),
+            expression_l: loc,
+        }))
     }
     pub(crate) fn nth_ref(nth_ref_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = nth_ref_t.loc;

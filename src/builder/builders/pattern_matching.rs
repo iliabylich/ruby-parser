@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    nodes::*,
+    nodes::{MatchPattern, MatchPatternP},
     token::Token,
     Node,
 };

@@ -1,6 +1,6 @@
 use crate::{
-    builder::{builders::helpers::*, Builder, Constructor},
-    nodes::*,
+    builder::{builders::helpers::collection_expr, Builder, Constructor},
+    nodes::{XHeredoc, Xstr},
     token::{Token, TokenKind},
     Node,
 };

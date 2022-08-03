@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, Constructor},
-    nodes::*,
+    nodes::{And, Or},
     token::Token,
     Node,
 };
@@ -15,7 +15,7 @@ impl<C: Constructor> Builder<C> {
         match operator_l.size() {
             2 => {
                 // kOR
-                Box::new(Node::And(And {
+                Box::new(Node::Or(Or {
                     lhs,
                     rhs,
                     operator_l,

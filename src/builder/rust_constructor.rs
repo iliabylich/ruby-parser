@@ -1,6 +1,6 @@
 use crate::{
     builder::{CString, Constructor},
-    nodes::*,
+    nodes::{BackRef, Gvar, NthRef},
     Loc, Node,
 };
 use std::ffi::c_void;

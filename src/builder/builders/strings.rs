@@ -1,8 +1,11 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::*, Builder, Constructor},
+    builder::{
+        builders::helpers::{collection_map, heredoc_map, is_heredoc, string_value},
+        Builder, Constructor,
+    },
     loc::loc,
-    nodes::*,
+    nodes::{Dstr, Heredoc, Str},
     string_content::StringContent,
     token::{Token, TokenKind},
     Node,
