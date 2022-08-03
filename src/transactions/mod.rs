@@ -28,4 +28,5 @@ impl Parser {
     }
 }
 
+#[cfg(test)]
 mod render;

@@ -108,7 +108,10 @@ impl Builder {
         };
 
         match &*method_call {
-            Node::Yield(Yield { keyword_l, .. }) => {
+            Node::Yield(Yield {
+                keyword_l: _keyword_l,
+                ..
+            }) => {
                 // self.error(DiagnosticMessage::BlockGivenToYield {}, keyword_l);
             }
             Node::Send(Send { args, .. }) => {
@@ -370,7 +373,7 @@ impl Builder {
         let expression_l = receiver.expression().join(arg.expression());
 
         let result = match static_regexp_captures(&receiver) {
-            Some(captures) => {
+            Some(_captures) => {
                 // TODO: declare all captures in static env
                 // for capture in captures {
                 //     static_env.declare(&capture);

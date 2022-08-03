@@ -23,7 +23,7 @@ pub use loc::Loc;
 pub(crate) mod token;
 pub use token::{Token, TokenKind};
 
-#[allow(dead_code, unused_variables)]
+#[allow(dead_code)]
 pub(crate) mod builder;
 
 pub(crate) mod state;

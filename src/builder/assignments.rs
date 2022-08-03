@@ -257,7 +257,10 @@ impl Builder {
                 }
                 _ => unreachable!(),
             },
-            Node::BackRef(BackRef { name, expression_l }) => {
+            Node::BackRef(BackRef {
+                name: _name,
+                expression_l: _expression_l,
+            }) => {
                 // TODO: report CantSetVariable
                 // self.error(
                 //     DiagnosticMessage::CantSetVariable {
@@ -268,7 +271,10 @@ impl Builder {
 
                 // and ignore
             }
-            Node::NthRef(NthRef { name, expression_l }) => {
+            Node::NthRef(NthRef {
+                name: _name,
+                expression_l: _expression_l,
+            }) => {
                 // TODO: report CantSetVariable
                 // self.error(
                 //     DiagnosticMessage::CantSetVariable {

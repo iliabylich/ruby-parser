@@ -178,7 +178,7 @@ impl Builder {
     pub(crate) fn blockarg(amper_t: Token, name_t: Option<Token>, buffer: &Buffer) -> Box<Node> {
         let name_l = maybe_loc(&name_t);
         let name = maybe_string_value(name_l, buffer);
-        if let (Some(name_l), Some(name)) = (name_l.as_ref(), name.as_ref()) {
+        if let (Some(_name_l), Some(_name)) = (name_l.as_ref(), name.as_ref()) {
             // self.check_reserved_for_numparam(name, name_l)?;
         }
 

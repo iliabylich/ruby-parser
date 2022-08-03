@@ -74,7 +74,6 @@ pub(crate) trait HasStateRef {
 }
 macro_rules! generate_state_ref_delegation {
     ($for:tt) => {
-        #[allow(dead_code)]
         impl $for {
             pub(crate) fn buffer(&self) -> &'static mut crate::buffer::BufferWithCursor {
                 self.state_ref().buffer()
@@ -102,9 +101,6 @@ macro_rules! generate_state_ref_delegation {
 
             pub(crate) fn token_idx(&self) -> usize {
                 self.state_ref().token_idx()
-            }
-            pub(crate) fn token_idx_mut(&self) -> &mut usize {
-                self.state_ref().token_idx_mut()
             }
 
             pub(crate) fn curly_nest(&self) -> usize {

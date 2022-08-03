@@ -94,6 +94,6 @@ pub(crate) fn heredoc_map(
 }
 
 // Regexp heleprs
-pub(crate) fn static_regexp_captures(node: &Node) -> Option<Vec<String>> {
+pub(crate) fn static_regexp_captures(_node: &Node) -> Option<Vec<String>> {
     None
 }

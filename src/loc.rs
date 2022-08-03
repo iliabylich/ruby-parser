@@ -1,5 +1,3 @@
-use crate::buffer::Buffer;
-
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 #[repr(C)]
 pub struct Loc {
@@ -90,37 +88,31 @@ impl Loc {
         self.start == self.end
     }
 
-    #[allow(dead_code)]
-    pub(crate) fn start_line_col(&self, _input: &Buffer) -> Option<(usize, usize)> {
-        todo!("loc.start_line_col")
-        // input.line_col_for_pos(self.start)
-    }
+    // pub(crate) fn start_line_col(&self, _input: &Buffer) -> Option<(usize, usize)> {
+    //     input.line_col_for_pos(self.start)
+    // }
 
-    #[allow(dead_code)]
-    pub(crate) fn expand_to_line(&self, _input: &Buffer) -> Option<(usize, Loc)> {
-        todo!("loc.expand_to_line")
-        // let (start_line, _) = self.start_line_col(input)?;
-        // let line_no = start_line;
-        // let line = input.line_at(line_no);
-        // Some((line_no, Self { start: line.start, line.line_end())))
-    }
+    // pub(crate) fn expand_to_line(&self, _input: &Buffer) -> Option<(usize, Loc)> {
+    //     let (start_line, _) = self.start_line_col(input)?;
+    //     let line_no = start_line;
+    //     let line = input.line_at(line_no);
+    //     Some((line_no, Self { start: line.start, line.line_end())))
+    // }
 
-    /// Returns source code of the current `Loc` on a given `Input`
-    pub fn source(&self, _input: &Buffer) -> Option<String> {
-        todo!("loc.source")
-        // let bytes = input.substr_at(self.start, self.end)?;
-        // Some(String::from_utf8_lossy(bytes).into_owned())
-    }
+    // /// Returns source code of the current `Loc` on a given `Input`
+    // pub fn source(&self, _input: &Buffer) -> Option<String> {
+    //     let bytes = input.substr_at(self.start, self.end)?;
+    //     Some(String::from_utf8_lossy(bytes).into_owned())
+    // }
 
-    #[allow(dead_code)]
-    pub(crate) fn print(&self, name: &str) {
-        println!(
-            "{}{} {}",
-            " ".repeat(self.start),
-            "~".repeat(self.size()),
-            name
-        )
-    }
+    // pub(crate) fn print(&self, name: &str) {
+    //     println!(
+    //         "{}{} {}",
+    //         " ".repeat(self.start),
+    //         "~".repeat(self.size()),
+    //         name
+    //     )
+    // }
 }
 
 impl std::fmt::Debug for Loc {

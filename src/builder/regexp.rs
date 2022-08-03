@@ -49,8 +49,8 @@ impl Builder {
 
         match options.as_deref() {
             Some(Node::RegOpt(RegOpt {
-                options,
-                expression_l,
+                options: _options,
+                expression_l: _expression_l,
             })) => {
                 // TODO: validate_static_regexp
             }

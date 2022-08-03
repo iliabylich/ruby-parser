@@ -1,6 +1,5 @@
 macro_rules! gen_all_of {
     ($name:ident; generic = $($generic:tt),+; fields = $($field:ident),+; next = $next:ident) => {
-        #[allow(dead_code)]
         #[allow(unused_parens)]
         pub(crate) struct $name<$($generic),+>
         where

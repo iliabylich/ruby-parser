@@ -165,7 +165,6 @@ macro_rules! non_assoc {
 }
 
 impl TokenKind {
-    #[allow(dead_code)]
     pub(crate) fn precedence(&self) -> Option<(u8, u8)> {
         use TokenKind::*;
 

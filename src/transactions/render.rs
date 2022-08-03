@@ -1,6 +1,5 @@
 use crate::transactions::{steps::Steps, ParseError};
 
-#[allow(dead_code)]
 impl ParseError {
     pub(crate) fn render(&self) -> String {
         self.render_with_level(0)
