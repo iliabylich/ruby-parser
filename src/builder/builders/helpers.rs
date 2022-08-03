@@ -88,7 +88,14 @@ pub(crate) fn heredoc_map(
     nodes: &[Node],
     end_t: &Option<Token>,
 ) -> (Loc, Loc, Loc) {
-    todo!("builder.heredoc_map")
+    let begin_t = begin_t.as_ref().expect("bug: begin_t must be Some");
+    let end_t = end_t.as_ref().expect("heredoc must have end_t");
+
+    let heredoc_body_l = collection_expr(nodes).unwrap_or_else(|| end_t.loc);
+    let expression_l = begin_t.loc;
+    let heredoc_end_l = end_t.loc;
+
+    (heredoc_body_l, heredoc_end_l, expression_l)
 }
 
 // Regexp heleprs
