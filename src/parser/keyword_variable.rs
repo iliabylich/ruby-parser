@@ -6,47 +6,47 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_keyword_variable(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_keyword_variable(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("keyword variable")
-            .or_else(|| self.try_nil())
-            .or_else(|| self.try_self())
-            .or_else(|| self.try_true())
-            .or_else(|| self.try_false())
-            .or_else(|| self.try__file__())
-            .or_else(|| self.try__line__())
-            .or_else(|| self.try__encoding__())
+            .or_else(|| self.parse_nil())
+            .or_else(|| self.parse_self())
+            .or_else(|| self.parse_true())
+            .or_else(|| self.parse_false())
+            .or_else(|| self.parse__file__())
+            .or_else(|| self.parse__line__())
+            .or_else(|| self.parse__encoding__())
             .stop()
     }
 
-    fn try_nil(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kNIL)
+    fn parse_nil(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::kNIL)
             .map(|nil_t| Builder::nil(nil_t))
     }
-    fn try_self(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kSELF)
+    fn parse_self(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::kSELF)
             .map(|self_t| Builder::self_(self_t))
     }
-    fn try_true(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kTRUE)
+    fn parse_true(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::kTRUE)
             .map(|true_t| Builder::true_(true_t))
     }
-    fn try_false(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kFALSE)
+    fn parse_false(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::kFALSE)
             .map(|false_t| Builder::false_(false_t))
     }
     #[allow(non_snake_case)]
-    fn try__file__(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::k__FILE__)
+    fn parse__file__(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::k__FILE__)
             .map(|file_t| Builder::__file__(file_t))
     }
     #[allow(non_snake_case)]
-    fn try__line__(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::k__LINE__)
+    fn parse__line__(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::k__LINE__)
             .map(|line_t| Builder::__line__(line_t))
     }
     #[allow(non_snake_case)]
-    fn try__encoding__(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::k__ENCODING__)
+    fn parse__encoding__(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_token(TokenKind::k__ENCODING__)
             .map(|encoding_t| Builder::__encoding__(encoding_t))
     }
 }
@@ -57,39 +57,39 @@ mod tests {
 
     #[test]
     fn test_nil() {
-        assert_parses!(try_keyword_variable, b"nil", "s(:nil)");
+        assert_parses!(parse_keyword_variable, b"nil", "s(:nil)");
     }
 
     #[test]
     fn test_self() {
-        assert_parses!(try_keyword_variable, b"self", "s(:self)");
+        assert_parses!(parse_keyword_variable, b"self", "s(:self)");
     }
 
     #[test]
     fn test_true() {
-        assert_parses!(try_keyword_variable, b"true", "s(:true)");
+        assert_parses!(parse_keyword_variable, b"true", "s(:true)");
     }
 
     #[test]
     fn test_false() {
-        assert_parses!(try_keyword_variable, b"false", "s(:false)");
+        assert_parses!(parse_keyword_variable, b"false", "s(:false)");
     }
 
     #[test]
     #[allow(non_snake_case)]
     fn test__file__() {
-        assert_parses!(try_keyword_variable, b"__FILE__", "s(:__FILE__)");
+        assert_parses!(parse_keyword_variable, b"__FILE__", "s(:__FILE__)");
     }
 
     #[test]
     #[allow(non_snake_case)]
     fn test__line__() {
-        assert_parses!(try_keyword_variable, b"__LINE__", "s(:__LINE__)");
+        assert_parses!(parse_keyword_variable, b"__LINE__", "s(:__LINE__)");
     }
 
     #[test]
     #[allow(non_snake_case)]
     fn test__encoding__() {
-        assert_parses!(try_keyword_variable, b"__ENCODING__", "s(:__ENCODING__)");
+        assert_parses!(parse_keyword_variable, b"__ENCODING__", "s(:__ENCODING__)");
     }
 }

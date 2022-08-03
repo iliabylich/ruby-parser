@@ -6,44 +6,44 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_alias(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_alias(&mut self) -> ParseResult<Box<Node>> {
         let (alias_t, (lhs, rhs)) = self
             .all_of("alias statement")
-            .and(|| self.try_token(TokenKind::kALIAS))
-            .and(|| try_alias_args(self))
+            .and(|| self.parse_token(TokenKind::kALIAS))
+            .and(|| parse_alias_args(self))
             .stop()?;
         Ok(Builder::alias(alias_t, lhs, rhs))
     }
 }
 
-fn try_alias_args(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
+fn parse_alias_args(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .one_of("alias arguments")
-        .or_else(|| try_fitem_fitem(parser))
-        .or_else(|| try_gvar_gvar(parser))
+        .or_else(|| parse_fitem_fitem(parser))
+        .or_else(|| parse_gvar_gvar(parser))
         .required()
         .compact()
         .stop()
 }
 
-fn try_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
+fn parse_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("fitem -> fitem")
-        .and(|| parser.try_fitem())
-        .and(|| parser.try_fitem())
+        .and(|| parser.parse_fitem())
+        .and(|| parser.parse_fitem())
         .stop()
 }
 
-fn try_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
+fn parse_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("gvar -> [gvar | back ref | nth ref]")
-        .and(|| parser.try_gvar())
+        .and(|| parser.parse_gvar())
         .and(|| {
             parser
                 .one_of("gvar rhs")
-                .or_else(|| parser.try_gvar())
-                .or_else(|| parser.try_back_ref())
-                .or_else(|| parser.try_nth_ref())
+                .or_else(|| parser.parse_gvar())
+                .or_else(|| parser.parse_back_ref())
+                .or_else(|| parser.parse_nth_ref())
                 .required()
                 .stop()
         })
@@ -57,7 +57,7 @@ mod tests {
     #[test]
     fn test_alias_name_to_name() {
         assert_parses!(
-            try_alias,
+            parse_alias,
             b"alias foo bar",
             r#"
 s(:alias,
@@ -70,7 +70,7 @@ s(:alias,
     #[test]
     fn test_alias_sym_to_sym() {
         assert_parses!(
-            try_alias,
+            parse_alias,
             b"alias :foo :bar",
             r#"
 s(:alias,
@@ -83,7 +83,7 @@ s(:alias,
     #[test]
     fn test_alias_gvar_to_gvar() {
         assert_parses!(
-            try_alias,
+            parse_alias,
             b"alias $foo $bar",
             r#"
 s(:alias,
@@ -96,7 +96,7 @@ s(:alias,
     #[test]
     fn test_nothing() {
         assert_parses_with_error!(
-            try_alias,
+            parse_alias,
             b"",
             "
 SEQUENCE (0) alias statement (got [])
@@ -108,7 +108,7 @@ SEQUENCE (0) alias statement (got [])
     #[test]
     fn test_only_alias() {
         assert_parses_with_error!(
-            try_alias,
+            parse_alias,
             b"alias $foo",
             "
 SEQUENCE (1) alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])

@@ -6,26 +6,26 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_strings(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_strings(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("strings")
-            .or_else(|| self.try_char())
-            .or_else(|| self.try_string_seq())
+            .or_else(|| self.parse_char())
+            .or_else(|| self.parse_string_seq())
             .stop()
     }
 
-    fn try_char(&mut self) -> ParseResult<Box<Node>> {
-        let char_t = self.try_token(TokenKind::tCHAR)?;
+    fn parse_char(&mut self) -> ParseResult<Box<Node>> {
+        let char_t = self.parse_token(TokenKind::tCHAR)?;
         Ok(Builder::character(char_t))
     }
 
-    fn try_string_seq(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_string_seq(&mut self) -> ParseResult<Box<Node>> {
         let mut parts = vec![];
 
-        let string = self.try_string1()?;
+        let string = self.parse_string1()?;
         parts.push(*string);
 
         loop {
-            match self.try_string1() {
+            match self.parse_string1() {
                 Ok(string) => {
                     parts.push(*string);
                 }
@@ -48,17 +48,17 @@ impl Parser {
         Ok(Builder::string_compose(None, parts, None))
     }
 
-    fn try_string1(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_string1(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("string1")
             .and(|| {
                 self.one_of("string begin")
-                    .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
-                    .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
-                    .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
+                    .or_else(|| self.parse_token(TokenKind::tDSTRING_BEG))
+                    .or_else(|| self.parse_token(TokenKind::tSTRING_BEG))
+                    .or_else(|| self.parse_token(TokenKind::tHEREDOC_BEG))
                     .stop()
             })
-            .and(|| self.try_string_contents())
+            .and(|| self.parse_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
@@ -67,14 +67,14 @@ impl Parser {
     }
 
     // This rule can be `none`
-    pub(crate) fn try_string_contents(&mut self) -> ParseResult<Vec<Node>> {
+    pub(crate) fn parse_string_contents(&mut self) -> ParseResult<Vec<Node>> {
         let mut strings = vec![];
         loop {
             if self.current_token().is(TokenKind::tSTRING_END) {
                 break;
             }
 
-            match self.try_string_content() {
+            match self.parse_string_content() {
                 Ok(string) => {
                     strings.push(*string);
                 }
@@ -98,17 +98,17 @@ impl Parser {
         Ok(strings)
     }
 
-    pub(crate) fn try_string_content(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_string_content(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("string content")
             .or_else(|| {
-                let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
+                let string_content_t = self.parse_token(TokenKind::tSTRING_CONTENT)?;
                 Ok(Builder::string_internal(string_content_t, self.buffer()))
             })
             .or_else(|| {
                 let (_string_dvar_t, string_dvar) = self
                     .all_of("string dvar")
-                    .and(|| self.try_token(TokenKind::tSTRING_DVAR))
-                    .and(|| self.try_string_dvar())
+                    .and(|| self.parse_token(TokenKind::tSTRING_DVAR))
+                    .and(|| self.parse_string_dvar())
                     .stop()?;
 
                 Ok(string_dvar)
@@ -116,7 +116,7 @@ impl Parser {
             .or_else(|| {
                 let (string_dbeg_t, compstmt, string_dend_t) = self
                     .all_of("#{ stmt }")
-                    .and(|| self.try_token(TokenKind::tSTRING_DBEG))
+                    .and(|| self.parse_token(TokenKind::tSTRING_DBEG))
                     .and(|| self.try_compstmt())
                     .and(|| self.expect_token(TokenKind::tSTRING_DEND))
                     .stop()?;
@@ -126,12 +126,12 @@ impl Parser {
             .stop()
     }
 
-    fn try_string_dvar(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("string_dvar")
-            .or_else(|| self.try_gvar())
-            .or_else(|| self.try_ivar())
-            .or_else(|| self.try_cvar())
-            .or_else(|| self.try_back_ref())
+            .or_else(|| self.parse_gvar())
+            .or_else(|| self.parse_ivar())
+            .or_else(|| self.parse_cvar())
+            .or_else(|| self.parse_back_ref())
             .stop()
     }
 }
@@ -142,18 +142,18 @@ mod tests {
 
     #[test]
     fn test_char() {
-        assert_parses!(try_strings, b"?\\u0001", "s(:str, \"\\u{1}\")")
+        assert_parses!(parse_strings, b"?\\u0001", "s(:str, \"\\u{1}\")")
     }
 
     #[test]
     fn test_string1_plain() {
-        assert_parses!(try_strings, b"'foo'", "s(:str, \"foo\")");
+        assert_parses!(parse_strings, b"'foo'", "s(:str, \"foo\")");
     }
 
     #[test]
     fn test_string1_interp() {
         assert_parses!(
-            try_strings,
+            parse_strings,
             b"\"foo #{42} #@bar\"",
             r#"
 s(:dstr,

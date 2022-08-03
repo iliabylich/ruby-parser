@@ -5,14 +5,14 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_mlhs(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_mlhs(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs")
-            .or_else(|| self.try_mlhs_basic())
+            .or_else(|| self.parse_mlhs_basic())
             .or_else(|| {
                 self.all_of("( mlhs inner )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.try_mlhs_inner())
-                    .and(|| self.try_rparen())
+                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.parse_mlhs_inner())
+                    .and(|| self.parse_rparen())
                     .stop()
                     .map(|(lparen_t, exprs, rparen_t)| {
                         todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
@@ -21,14 +21,14 @@ impl Parser {
             .stop()
     }
 
-    fn try_mlhs_inner(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_mlhs_inner(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs_basic")
-            .or_else(|| self.try_mlhs_basic())
+            .or_else(|| self.parse_mlhs_basic())
             .or_else(|| {
                 self.all_of("( mlhs inner )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.try_mlhs_inner())
-                    .and(|| self.try_rparen())
+                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.parse_mlhs_inner())
+                    .and(|| self.parse_rparen())
                     .stop()
                     .map(|(lparen_t, exprs, rparen_t)| {
                         todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
@@ -37,32 +37,32 @@ impl Parser {
             .stop()
     }
 
-    fn try_mlhs_basic(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_mlhs_basic(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs_basic")
             .or_else(|| {
                 self.all_of("mlhs head + tail")
-                    .and(|| self.try_mlhs_head())
+                    .and(|| self.parse_mlhs_head())
                     .and(|| {
                         self.one_of("mlhs head or tail")
-                            .or_else(|| self.try_mlhs_item().map(|node| Some(node)))
-                            .or_else(|| self.try_mlhs_tail().map(|node| Some(node)))
+                            .or_else(|| self.parse_mlhs_item().map(|node| Some(node)))
+                            .or_else(|| self.parse_mlhs_tail().map(|node| Some(node)))
                             .or_else(|| Ok(None))
                             .stop()
                     })
                     .stop()
                     .map(|(head, tail)| panic!("{:?} {:?}", head, tail))
             })
-            .or_else(|| self.try_mlhs_tail())
+            .or_else(|| self.parse_mlhs_tail())
             .stop()
     }
 
-    fn try_mlhs_tail(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_mlhs_tail(&mut self) -> ParseResult<Box<Node>> {
         let (star_t, maybe_splat_arg, maybe_post) = self
             .all_of("mlhs_tail")
-            .and(|| self.try_token(TokenKind::tSTAR))
+            .and(|| self.parse_token(TokenKind::tSTAR))
             .and(|| {
                 self.one_of("splat argument")
-                    .or_else(|| self.try_mlhs_node().map(|node| Some(node)))
+                    .or_else(|| self.parse_mlhs_node().map(|node| Some(node)))
                     .or_else(|| Ok(None))
                     .stop()
             })
@@ -71,8 +71,8 @@ impl Parser {
                     .one_of("post-splat")
                     .or_else(|| {
                         self.all_of("comma -> mlhs post")
-                            .and(|| self.try_token(TokenKind::tCOMMA))
-                            .and(|| self.try_mlhs_post())
+                            .and(|| self.parse_token(TokenKind::tCOMMA))
+                            .and(|| self.parse_mlhs_post())
                             .stop()
                             .map(|(star_t, maybe_arg)| todo!("{:?} {:?}", star_t, maybe_arg))
                     })
@@ -86,38 +86,38 @@ impl Parser {
         todo!("{:?} {:?} {:?}", star_t, maybe_splat_arg, maybe_post)
     }
 
-    fn try_mlhs_item(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_mlhs_item(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs item")
-            .or_else(|| self.try_mlhs_node())
+            .or_else(|| self.parse_mlhs_node())
             .or_else(|| {
                 let (lparen_t, exprs, rparen_t) = self
                     .all_of("( mlhs inner )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.try_mlhs_inner())
-                    .and(|| self.try_rparen())
+                    .and(|| self.parse_token(TokenKind::tLPAREN))
+                    .and(|| self.parse_mlhs_inner())
+                    .and(|| self.parse_rparen())
                     .stop()?;
                 todo!("{:?} {:?} {:?}", lparen_t, exprs, rparen_t)
             })
             .stop()
     }
 
-    fn try_mlhs_head(&mut self) -> ParseResult<Vec<Node>> {
-        let try_item_and_comma = |parser: &mut Parser| {
+    fn parse_mlhs_head(&mut self) -> ParseResult<Vec<Node>> {
+        let parse_item_and_comma = |parser: &mut Parser| {
             parser
                 .all_of("mlhs item and comma")
-                .and(|| parser.try_mlhs_item())
-                .and(|| parser.try_token(TokenKind::tCOMMA))
+                .and(|| parser.parse_mlhs_item())
+                .and(|| parser.parse_token(TokenKind::tCOMMA))
                 .stop()
         };
 
         let mut head = vec![];
         let mut commas = vec![];
-        let (item, comma) = try_item_and_comma(self)?;
+        let (item, comma) = parse_item_and_comma(self)?;
         head.push(*item);
         commas.push(comma);
 
         loop {
-            let item_and_comma = try_item_and_comma(self);
+            let item_and_comma = parse_item_and_comma(self);
 
             match item_and_comma {
                 Ok((item, comma)) => {
@@ -131,17 +131,17 @@ impl Parser {
         Ok(head)
     }
 
-    fn try_mlhs_post(&mut self) -> ParseResult<Vec<Node>> {
+    fn parse_mlhs_post(&mut self) -> ParseResult<Vec<Node>> {
         let mut post = vec![];
         let mut commas = vec![];
-        let item = self.try_mlhs_item()?;
+        let item = self.parse_mlhs_item()?;
         post.push(*item);
 
         loop {
             let comma_and_item = self
                 .all_of("comma and mlhs item")
-                .and(|| self.try_token(TokenKind::tCOMMA))
-                .and(|| self.try_mlhs_item())
+                .and(|| self.parse_token(TokenKind::tCOMMA))
+                .and(|| self.parse_mlhs_item())
                 .stop();
 
             match comma_and_item {
@@ -156,21 +156,21 @@ impl Parser {
         Ok(post)
     }
 
-    fn try_mlhs_node(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_mlhs_node(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs node")
-            .or_else(|| self.try_user_variable())
-            .or_else(|| self.try_keyword_variable())
-            .or_else(|| self.try_back_ref())
+            .or_else(|| self.parse_user_variable())
+            .or_else(|| self.parse_keyword_variable())
+            .or_else(|| self.parse_back_ref())
             .or_else(|| {
-                let (colon2_t, const_t) = self.try_colon2_const()?;
+                let (colon2_t, const_t) = self.parse_colon2_const()?;
                 panic!("const {:?} {:?}", colon2_t, const_t)
             })
             .or_else(|| {
                 let (primary_value, op_t, id_t) = self
                     .all_of("primary call_op [const/tIDENT]")
-                    .and(|| self.try_primary_value())
-                    .and(|| self.try_call_op())
-                    .and(|| self.try_const_or_identifier())
+                    .and(|| self.parse_primary_value())
+                    .and(|| self.parse_call_op())
+                    .and(|| self.parse_const_or_identifier())
                     .stop()?;
 
                 panic!(
@@ -181,9 +181,9 @@ impl Parser {
             .or_else(|| {
                 let (primary_value, colon2_t, const_t) = self
                     .all_of("priamay :: [const/tIDENT")
-                    .and(|| self.try_primary_value())
+                    .and(|| self.parse_primary_value())
                     .and(|| self.expect_token(TokenKind::tCOLON2))
-                    .and(|| self.try_const_or_identifier())
+                    .and(|| self.parse_const_or_identifier())
                     .stop()?;
 
                 panic!(
@@ -201,26 +201,26 @@ mod tests {
 
     #[test]
     fn test_lhs_user_variable() {
-        assert_parses!(try_mlhs, b"a, b", "TODO")
+        assert_parses!(parse_mlhs, b"a, b", "TODO")
     }
 
     #[test]
     fn test_lhs_parenthesized() {
-        assert_parses!(try_mlhs, b"((a))", "TODO")
+        assert_parses!(parse_mlhs, b"((a))", "TODO")
     }
 
     #[test]
     fn test_mlhs_without_parens() {
-        assert_parses!(try_mlhs, b"a, *b, c", "TODO")
+        assert_parses!(parse_mlhs, b"a, *b, c", "TODO")
     }
 
     #[test]
     fn test_mlhs_with_parens() {
-        assert_parses!(try_mlhs, b"((*a), $x, @c)", "TODO")
+        assert_parses!(parse_mlhs, b"((*a), $x, @c)", "TODO")
     }
 
     #[test]
     fn test_nameless_splat() {
-        assert_parses!(try_mlhs, b"*", "TODO")
+        assert_parses!(parse_mlhs, b"*", "TODO")
     }
 }

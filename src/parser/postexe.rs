@@ -6,10 +6,10 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_postexe(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_postexe(&mut self) -> ParseResult<Box<Node>> {
         let (postexe_t, lcurly_t, compstmt, rcurly_t) = self
             .all_of("postexe")
-            .and(|| self.try_token(TokenKind::klEND))
+            .and(|| self.parse_token(TokenKind::klEND))
             .and(|| self.expect_token(TokenKind::tLCURLY))
             .and(|| self.try_compstmt())
             .and(|| self.expect_token(TokenKind::tRCURLY))
@@ -26,7 +26,7 @@ mod tests {
     #[test]
     fn test_postexe() {
         assert_parses!(
-            try_postexe,
+            parse_postexe,
             b"END { 42 }",
             r#"
 s(:postexe,
@@ -37,6 +37,6 @@ s(:postexe,
 
     #[test]
     fn test_postexe_empty() {
-        assert_parses!(try_postexe, b"END {}", "s(:postexe)")
+        assert_parses!(parse_postexe, b"END {}", "s(:postexe)")
     }
 }

@@ -9,12 +9,12 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_regexp(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_regexp(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, contents, end_t) = self
             .all_of("regexp")
             .and(|| {
                 self.one_of("regexp")
-                    .or_else(|| self.try_token(TokenKind::tREGEXP_BEG))
+                    .or_else(|| self.parse_token(TokenKind::tREGEXP_BEG))
                     .or_else(|| {
                         let token = self.read_div_as_heredoc_beg()?;
 
@@ -32,7 +32,7 @@ impl Parser {
                     })
                     .stop()
             })
-            .and(|| self.try_regexp_contents())
+            .and(|| self.parse_regexp_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
@@ -41,8 +41,8 @@ impl Parser {
     }
 
     // This rule can be `none`
-    fn try_regexp_contents(&mut self) -> ParseResult<Vec<Node>> {
-        self.try_string_contents()
+    fn parse_regexp_contents(&mut self) -> ParseResult<Vec<Node>> {
+        self.parse_string_contents()
     }
 
     fn read_div_as_heredoc_beg(&mut self) -> ParseResult<Token> {
@@ -70,7 +70,7 @@ mod tests {
     #[test]
     fn test_regexp() {
         assert_parses!(
-            try_regexp,
+            parse_regexp,
             b"/foo/",
             r#"
 s(:regexp,
@@ -83,7 +83,7 @@ s(:regexp,
     #[test]
     fn test_regexp_with_options() {
         assert_parses!(
-            try_regexp,
+            parse_regexp,
             b"/foo/mix",
             r#"
 s(:regexp,
@@ -96,7 +96,7 @@ s(:regexp,
     #[test]
     fn test_regexp_percent() {
         assert_parses!(
-            try_regexp,
+            parse_regexp,
             b"%r{foo}",
             r#"
 s(:regexp,

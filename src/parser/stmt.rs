@@ -6,11 +6,11 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_opt_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
+    pub(crate) fn try_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let (top_stmts, _opt_terms) = self
             .all_of("top_compstmt")
-            .and(|| self.try_top_stmts())
-            .and(|| self.try_opt_terms())
+            .and(|| self.parse_top_stmts())
+            .and(|| self.parse_opt_terms())
             .stop()?;
 
         if top_stmts.is_empty() {
@@ -21,10 +21,10 @@ impl Parser {
     }
 
     // This rule can be `none`
-    pub(crate) fn try_top_stmts(&mut self) -> ParseResult<Vec<Node>> {
+    pub(crate) fn parse_top_stmts(&mut self) -> ParseResult<Vec<Node>> {
         let mut top_stmts = vec![];
         loop {
-            match self.try_top_stmt() {
+            match self.parse_top_stmt() {
                 Ok(top_stmt) => top_stmts.push(*top_stmt),
                 Err(error) => {
                     match error.strip_lookaheads() {
@@ -46,10 +46,10 @@ impl Parser {
         Ok(top_stmts)
     }
 
-    pub(crate) fn try_top_stmt(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_top_stmt(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("top-level statement")
-            .or_else(|| self.try_preexe())
-            .or_else(|| self.try_stmt())
+            .or_else(|| self.parse_preexe())
+            .or_else(|| self.parse_stmt())
             .stop()
     }
 
@@ -57,7 +57,7 @@ impl Parser {
         let (compstmt, rescue_bodies, opt_else, opt_ensure) = self
             .all_of("bodystmt")
             .and(|| self.try_compstmt())
-            .and(|| self.try_opt_rescue())
+            .and(|| self.parse_opt_rescue())
             .and(|| self.try_opt_else())
             .and(|| self.try_opt_ensure())
             .stop()?;
@@ -81,8 +81,8 @@ impl Parser {
     pub(crate) fn try_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let (stmts, _opt_terms) = self
             .all_of("compstmt")
-            .and(|| self.try_stmts())
-            .and(|| self.try_opt_terms())
+            .and(|| self.parse_stmts())
+            .and(|| self.parse_opt_terms())
             .stop()?;
         if stmts.is_empty() {
             Ok(None)
@@ -92,22 +92,22 @@ impl Parser {
     }
 
     // This rule can be `none`
-    pub(crate) fn try_stmts(&mut self) -> ParseResult<Vec<Node>> {
+    pub(crate) fn parse_stmts(&mut self) -> ParseResult<Vec<Node>> {
         let mut stmts = vec![];
-        while let Ok(stmt) = self.try_stmt() {
+        while let Ok(stmt) = self.parse_stmt() {
             stmts.push(*stmt);
         }
 
-        if let Ok(begin_block) = self.try_preexe() {
+        if let Ok(begin_block) = self.parse_preexe() {
             stmts.push(*begin_block);
         }
         Ok(stmts)
     }
 
     #[allow(unreachable_code, unused_mut)]
-    pub(crate) fn try_stmt(&mut self) -> ParseResult<Box<Node>> {
-        let mut stmt = self.try_stmt_head()?;
-        match self.try_stmt_tail() {
+    pub(crate) fn parse_stmt(&mut self) -> ParseResult<Box<Node>> {
+        let mut stmt = self.parse_stmt_head()?;
+        match self.parse_stmt_tail() {
             Ok((mod_t, expr)) => match mod_t.kind {
                 TokenKind::kIF => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
                 TokenKind::kUNLESS => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
@@ -131,46 +131,46 @@ impl Parser {
         }
     }
 
-    fn try_stmt_head(&mut self) -> ParseResult<Box<Node>> {
-        if let Ok(alias) = self.try_alias() {
+    fn parse_stmt_head(&mut self) -> ParseResult<Box<Node>> {
+        if let Ok(alias) = self.parse_alias() {
             return Ok(alias);
-        } else if let Ok(undef) = self.try_undef() {
+        } else if let Ok(undef) = self.parse_undef() {
             return Ok(undef);
-        } else if let Ok(postexe) = self.try_postexe() {
+        } else if let Ok(postexe) = self.parse_postexe() {
             return Ok(postexe);
         } else if self.current_token().is(TokenKind::kDEF) {
             todo!("handle endless def")
-        } else if let Ok(assignment) = self.try_assignment() {
+        } else if let Ok(assignment) = self.parse_assignment() {
             return Ok(assignment);
         }
 
-        self.try_expr()
+        self.parse_expr()
     }
 
-    fn try_stmt_tail(&mut self) -> ParseResult<(Token, Box<Node>)> {
+    fn parse_stmt_tail(&mut self) -> ParseResult<(Token, Box<Node>)> {
         self.one_of("stmt tail")
             .or_else(|| {
                 self.all_of("if_mod expr")
-                    .and(|| self.try_token(TokenKind::kIF))
-                    .and(|| self.try_expr_value())
+                    .and(|| self.parse_token(TokenKind::kIF))
+                    .and(|| self.parse_expr_value())
                     .stop()
             })
             .or_else(|| {
                 self.all_of("unless_mod expr")
-                    .and(|| self.try_token(TokenKind::kUNLESS))
-                    .and(|| self.try_expr_value())
+                    .and(|| self.parse_token(TokenKind::kUNLESS))
+                    .and(|| self.parse_expr_value())
                     .stop()
             })
             .or_else(|| {
                 self.all_of("while_mod expr")
-                    .and(|| self.try_token(TokenKind::kWHILE))
-                    .and(|| self.try_expr_value())
+                    .and(|| self.parse_token(TokenKind::kWHILE))
+                    .and(|| self.parse_expr_value())
                     .stop()
             })
             .or_else(|| {
                 self.all_of("until_mod expr")
-                    .and(|| self.try_token(TokenKind::kUNTIL))
-                    .and(|| self.try_expr_value())
+                    .and(|| self.parse_token(TokenKind::kUNTIL))
+                    .and(|| self.parse_expr_value())
                     .stop()
             })
             .stop()
@@ -180,10 +180,10 @@ impl Parser {
         todo!()
     }
 
-    fn try_assignment(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_assignment(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("assignment")
-            .or_else(|| self.try_mass_assignment())
-            .or_else(|| self.try_simple_assignment())
+            .or_else(|| self.parse_mass_assignment())
+            .or_else(|| self.parse_simple_assignment())
             .or_else(|| {
                 let (lhs, op_t, rhs) = self
                     .all_of("operation assignment")
@@ -192,9 +192,9 @@ impl Parser {
                             .or_else(|| {
                                 let (primary_value, op_t, id_t) = self
                                     .all_of("primary call_op2 tIDENTIFIER")
-                                    .and(|| self.try_primary_value())
-                                    .and(|| self.try_call_op2())
-                                    .and(|| self.try_const_or_identifier())
+                                    .and(|| self.parse_primary_value())
+                                    .and(|| self.parse_call_op2())
+                                    .and(|| self.parse_const_or_identifier())
                                     .stop()?;
                                 panic!(
                                     "primary_value call_op tIDENT {:?} {:?} {:?}",
@@ -204,10 +204,10 @@ impl Parser {
                             .or_else(|| {
                                 let (primary_value, lbrack_t, opt_call_args, rbrack_t) = self
                                     .all_of("primary [ args ]")
-                                    .and(|| self.try_primary_value())
+                                    .and(|| self.parse_primary_value())
                                     .and(|| self.expect_token(TokenKind::tLBRACK))
-                                    .and(|| self.try_opt_call_args())
-                                    .and(|| self.try_rparen())
+                                    .and(|| self.parse_opt_call_args())
+                                    .and(|| self.parse_rparen())
                                     .stop()?;
                                 todo!(
                                     "{:?} {:?} {:?} {:?}",
@@ -217,12 +217,12 @@ impl Parser {
                                     rbrack_t
                                 )
                             })
-                            .or_else(|| self.try_var_lhs())
-                            .or_else(|| self.try_back_ref())
+                            .or_else(|| self.parse_var_lhs())
+                            .or_else(|| self.parse_back_ref())
                             .stop()
                     })
                     .and(|| self.expect_token(TokenKind::tOP_ASGN))
-                    .and(|| self.try_command_rhs())
+                    .and(|| self.parse_command_rhs())
                     .stop()?;
 
                 todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
@@ -230,17 +230,17 @@ impl Parser {
             .stop()
     }
 
-    fn try_mass_assignment(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_mass_assignment(&mut self) -> ParseResult<Box<Node>> {
         let (mlhs, eql_t, rhs) = self
             .all_of("mass-assignment")
-            .and(|| self.try_mlhs())
+            .and(|| self.parse_mlhs())
             .and(|| self.expect_token(TokenKind::tEQL))
             .and(|| {
                 self.one_of("mass-assginemtn rhs")
-                    .or_else(|| self.try_command_call())
+                    .or_else(|| self.parse_command_call())
                     .or_else(|| {
                         self.all_of("mrhs_arg [rescue stmt]")
-                            .and(|| self.try_mrhs_arg())
+                            .and(|| self.parse_mrhs_arg())
                             .and(|| {
                                 let maybe_rescut_stmt = self
                                     .one_of("[rescue stmt]")
@@ -259,15 +259,15 @@ impl Parser {
         todo!("{:?} {:?} {:?}", mlhs, eql_t, rhs)
     }
 
-    fn try_simple_assignment(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_simple_assignment(&mut self) -> ParseResult<Box<Node>> {
         let (lhs, eql_t, rhs) = self
             .all_of("simple assignment")
-            .and(|| self.try_lhs())
+            .and(|| self.parse_lhs())
             .and(|| self.expect_token(TokenKind::tEQL))
             .and(|| {
                 self.one_of("simple assignment rhs")
-                    .or_else(|| self.try_command_call())
-                    .or_else(|| self.try_command_rhs())
+                    .or_else(|| self.parse_command_call())
+                    .or_else(|| self.parse_command_rhs())
                     .stop()
             })
             .stop()?;

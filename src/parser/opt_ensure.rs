@@ -9,16 +9,16 @@ type Ensure = (Token, Option<Box<Node>>);
 impl Parser {
     pub(crate) fn try_opt_ensure(&mut self) -> ParseResult<Option<Ensure>> {
         self.one_of("opt ensure")
-            .or_else(|| try_ensure(self).map(|v| Some(v)))
+            .or_else(|| parse_ensure(self).map(|v| Some(v)))
             .or_else(|| Ok(None))
             .stop()
     }
 }
 
-fn try_ensure(parser: &mut Parser) -> ParseResult<Ensure> {
+fn parse_ensure(parser: &mut Parser) -> ParseResult<Ensure> {
     parser
         .all_of("ensure")
-        .and(|| parser.try_token(TokenKind::kENSURE))
+        .and(|| parser.parse_token(TokenKind::kENSURE))
         .and(|| parser.try_compstmt())
         .stop()
 }

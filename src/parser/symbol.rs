@@ -6,26 +6,26 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_symbol(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_symbol(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("symbol")
-            .or_else(|| self.try_ssym())
-            .or_else(|| self.try_dsym())
+            .or_else(|| self.parse_ssym())
+            .or_else(|| self.parse_dsym())
             .compact()
             .stop()
     }
 
-    fn try_ssym(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_ssym(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("static symbol")
             .or_else(|| {
                 let (colon_t, sym_t) = self
                     .all_of(":sym")
-                    .and(|| self.try_token(TokenKind::tCOLON))
+                    .and(|| self.parse_token(TokenKind::tCOLON))
                     .and(|| {
                         self.one_of("static symbol value")
-                            .or_else(|| self.try_fname())
-                            .or_else(|| self.try_token(TokenKind::tIVAR))
-                            .or_else(|| self.try_token(TokenKind::tCVAR))
-                            .or_else(|| self.try_token(TokenKind::tGVAR))
+                            .or_else(|| self.parse_fname())
+                            .or_else(|| self.parse_token(TokenKind::tIVAR))
+                            .or_else(|| self.parse_token(TokenKind::tCVAR))
+                            .or_else(|| self.parse_token(TokenKind::tGVAR))
                             .required()
                             .stop()
                     })
@@ -36,8 +36,8 @@ impl Parser {
             .or_else(|| {
                 let (begin_t, parts, end_t) = self
                     .all_of("dynamic symbol value")
-                    .and(|| self.try_token(TokenKind::tSYMBEG))
-                    .and(|| self.try_string_contents())
+                    .and(|| self.parse_token(TokenKind::tSYMBEG))
+                    .and(|| self.parse_string_contents())
                     .and(|| self.expect_token(TokenKind::tSTRING_END))
                     .stop()?;
 
@@ -47,11 +47,11 @@ impl Parser {
             .stop()
     }
 
-    fn try_dsym(&mut self) -> ParseResult<Box<Node>> {
+    fn parse_dsym(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("dynamic symbol")
-            .and(|| self.try_token(TokenKind::tDSYMBEG))
-            .and(|| self.try_string_contents())
+            .and(|| self.parse_token(TokenKind::tDSYMBEG))
+            .and(|| self.parse_string_contents())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
@@ -66,12 +66,12 @@ mod tests {
 
     #[test]
     fn test_ssym() {
-        assert_parses!(try_ssym, b":foo", "s(:sym, \"foo\")")
+        assert_parses!(parse_ssym, b":foo", "s(:sym, \"foo\")")
     }
 
     #[test]
     fn test_ssym_only_colon() {
-        let parser = assert_parses_with_error!(try_ssym, b":");
+        let parser = assert_parses_with_error!(parse_ssym, b":");
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
     }
@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn test_ssym_no_colon() {
         let parser = assert_parses_with_error!(
-            try_ssym,
+            parse_ssym,
             b"",
             "
 ONEOF (0) static symbol
@@ -94,18 +94,18 @@ ONEOF (0) static symbol
 
     #[test]
     fn test_ssym_quoted() {
-        assert_parses!(try_ssym, b":'foo'", "TODO")
+        assert_parses!(parse_ssym, b":'foo'", "TODO")
     }
 
     #[test]
     fn test_dsym() {
-        assert_parses!(try_dsym, b":\"foo\"", "TODO")
+        assert_parses!(parse_dsym, b":\"foo\"", "TODO")
     }
 
     #[test]
     fn test_dsym_only_colon() {
         let parser = assert_parses_with_error!(
-            try_dsym,
+            parse_dsym,
             b":",
             "
 SEQUENCE (0) dynamic symbol (got [])
@@ -119,7 +119,7 @@ SEQUENCE (0) dynamic symbol (got [])
     #[test]
     fn test_dsym_no_colon() {
         assert_parses_with_error!(
-            try_dsym,
+            parse_dsym,
             b"",
             "
 SEQUENCE (0) dynamic symbol (got [])

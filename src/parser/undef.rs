@@ -6,21 +6,21 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_undef(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_undef(&mut self) -> ParseResult<Box<Node>> {
         let (undef_t, names) = self
             .all_of("undef ...")
-            .and(|| self.try_token(TokenKind::kUNDEF))
-            .and(|| self.try_names())
+            .and(|| self.parse_token(TokenKind::kUNDEF))
+            .and(|| self.parse_names())
             .stop()?;
 
         Ok(Builder::undef(undef_t, names))
     }
 
-    fn try_names(&mut self) -> ParseResult<Vec<Node>> {
+    fn parse_names(&mut self) -> ParseResult<Vec<Node>> {
         let mut names = vec![];
         let mut commas = vec![];
 
-        let fitem = self.try_fitem()?;
+        let fitem = self.parse_fitem()?;
         names.push(*fitem);
 
         loop {
@@ -31,7 +31,7 @@ impl Parser {
             } else {
                 break;
             }
-            match self.try_fitem() {
+            match self.parse_fitem() {
                 Ok(fitem) => names.push(*fitem),
                 Err(error) => {
                     // got comma, but no `fitem`
@@ -52,7 +52,7 @@ impl Parser {
 fn test_undef() {
     use crate::testing::assert_parses;
     assert_parses!(
-        try_undef,
+        parse_undef,
         b"undef a, :b, c",
         r#"
 s(:undef,

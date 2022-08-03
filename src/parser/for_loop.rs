@@ -5,15 +5,15 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_for_loop(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_for_loop(&mut self) -> ParseResult<Box<Node>> {
         let (for_t, var, in_t, (value, do_t), body, end_t) = self
             .all_of("for loop")
-            .and(|| self.try_k_for())
-            .and(|| self.try_for_var())
-            .and(|| self.try_token(TokenKind::kIN))
-            .and(|| self.try_expr_value_do())
+            .and(|| self.parse_k_for())
+            .and(|| self.parse_for_var())
+            .and(|| self.parse_token(TokenKind::kIN))
+            .and(|| self.parse_expr_value_do())
             .and(|| self.try_compstmt())
-            .and(|| self.try_k_end())
+            .and(|| self.parse_k_end())
             .stop()?;
 
         panic!(
@@ -22,11 +22,11 @@ impl Parser {
         );
     }
 
-    fn try_for_var(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_for_var")
+    fn parse_for_var(&mut self) -> ParseResult<Box<Node>> {
+        todo!("parser.parse_for_var")
     }
 
-    fn try_k_for(&mut self) -> ParseResult<Token> {
-        self.try_token(TokenKind::kFOR)
+    fn parse_k_for(&mut self) -> ParseResult<Token> {
+        self.parse_token(TokenKind::kFOR)
     }
 }

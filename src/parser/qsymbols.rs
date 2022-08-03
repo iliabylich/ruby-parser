@@ -6,11 +6,11 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_qsymbols(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_qsymbols(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, word_list, end_t) = self
             .all_of("qsymbols")
-            .and(|| self.try_token(TokenKind::tQSYMBOLS_BEG))
-            .and(|| self.try_qsym_list())
+            .and(|| self.parse_token(TokenKind::tQSYMBOLS_BEG))
+            .and(|| self.parse_qsym_list())
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
@@ -18,10 +18,10 @@ impl Parser {
     }
 
     // This rule can be `None`
-    fn try_qsym_list(&mut self) -> ParseResult<Vec<Node>> {
+    fn parse_qsym_list(&mut self) -> ParseResult<Vec<Node>> {
         let mut result = vec![];
         loop {
-            if let Ok(string_t) = self.try_token(TokenKind::tSTRING_CONTENT) {
+            if let Ok(string_t) = self.parse_token(TokenKind::tSTRING_CONTENT) {
                 let node = Builder::string_internal(string_t, self.buffer());
                 result.push(*node);
             } else {
@@ -38,6 +38,6 @@ mod tests {
 
     #[test]
     fn test_qsymbols() {
-        assert_parses!(try_qsymbols, b"%i[foo bar]", "TODO")
+        assert_parses!(parse_qsymbols, b"%i[foo bar]", "TODO")
     }
 }

@@ -7,10 +7,10 @@ use crate::{
 
 impl Parser {
     // This rule can be `none`
-    pub(crate) fn try_opt_rescue(&mut self) -> ParseResult<Vec<Node>> {
+    pub(crate) fn parse_opt_rescue(&mut self) -> ParseResult<Vec<Node>> {
         let mut nodes = vec![];
         loop {
-            match try_opt_rescue1(self) {
+            match parse_opt_rescue1(self) {
                 Ok(node) => nodes.push(*node),
                 Err(error) => {
                     match error.strip_lookaheads() {
@@ -32,36 +32,36 @@ impl Parser {
         Ok(nodes)
     }
 
-    pub(crate) fn try_then(&mut self) -> ParseResult<Token> {
+    pub(crate) fn parse_then(&mut self) -> ParseResult<Token> {
         self.one_of("then ...")
-            .or_else(|| self.try_term())
-            .or_else(|| self.try_token(TokenKind::kTHEN))
+            .or_else(|| self.parse_term())
+            .or_else(|| self.parse_token(TokenKind::kTHEN))
             .or_else(|| {
                 let (_term, then_t) = self
                     .all_of("term then")
-                    .and(|| self.try_term())
-                    .and(|| self.try_token(TokenKind::kTHEN))
+                    .and(|| self.parse_term())
+                    .and(|| self.parse_token(TokenKind::kTHEN))
                     .stop()?;
                 Ok(then_t)
             })
             .stop()
     }
 
-    pub(crate) fn try_lhs(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_lhs(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("lhs")
-            .or_else(|| self.try_user_variable())
-            .or_else(|| self.try_keyword_variable())
-            .or_else(|| self.try_back_ref())
+            .or_else(|| self.parse_user_variable())
+            .or_else(|| self.parse_keyword_variable())
+            .or_else(|| self.parse_back_ref())
             .or_else(|| {
-                let (colon2_t, const_t) = self.try_colon2_const()?;
+                let (colon2_t, const_t) = self.parse_colon2_const()?;
                 panic!("const {:?} {:?}", colon2_t, const_t)
             })
             .or_else(|| {
                 let (primary_value, op_t, id_t) = self
                     .all_of("primary call_op [const/tIDENT]")
-                    .and(|| self.try_primary_value())
-                    .and(|| self.try_call_op2())
-                    .and(|| self.try_const_or_identifier())
+                    .and(|| self.parse_primary_value())
+                    .and(|| self.parse_call_op2())
+                    .and(|| self.parse_const_or_identifier())
                     .stop()?;
 
                 panic!(
@@ -72,21 +72,21 @@ impl Parser {
             .stop()
     }
 
-    pub(crate) fn try_arg_value(&mut self) -> ParseResult<Box<Node>> {
-        self.try_arg()
+    pub(crate) fn parse_arg_value(&mut self) -> ParseResult<Box<Node>> {
+        self.parse_arg()
     }
 }
 
-fn try_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
+fn parse_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (rescue_t, exc_list, exc_var, then, compstmt) = parser
         .all_of("rescue1")
-        .and(|| parser.try_token(TokenKind::kRESCUE))
-        .and(|| try_exc_list(parser))
-        .and(|| try_opt_exc_var(parser))
+        .and(|| parser.parse_token(TokenKind::kRESCUE))
+        .and(|| parse_exc_list(parser))
+        .and(|| try_exc_var(parser))
         .and(|| {
             parser
                 .one_of("optional then")
-                .or_else(|| parser.try_then().map(|tok| Some(tok)))
+                .or_else(|| parser.parse_then().map(|tok| Some(tok)))
                 .or_else(|| Ok(None))
                 .stop()
         })
@@ -98,21 +98,21 @@ fn try_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
     ))
 }
 
-fn try_exc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+fn parse_exc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     parser
         .one_of("exceptions list")
-        .or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
-        .or_else(|| parser.try_mrhs())
+        .or_else(|| parser.parse_arg_value().map(|arg_value| vec![*arg_value]))
+        .or_else(|| parser.parse_mrhs())
         .stop()
 }
-fn try_opt_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
+fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
     parser
         .one_of("[exc var]")
         .or_else(|| {
             let (assoc_t, lhs) = parser
                 .all_of("exc var")
-                .and(|| parser.try_token(TokenKind::tASSOC))
-                .and(|| parser.try_lhs())
+                .and(|| parser.parse_token(TokenKind::tASSOC))
+                .and(|| parser.parse_lhs())
                 .stop()?;
             Ok(Some((assoc_t, lhs)))
         })
@@ -122,12 +122,12 @@ fn try_opt_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)
 
 #[cfg(test)]
 mod tests {
-    use super::try_opt_rescue1;
+    use super::parse_opt_rescue1;
     use crate::parser::{ParseError, Parser};
 
     #[test]
     fn test_opt_rescue1() {
         let mut parser = Parser::new(b"rescue");
-        assert_eq!(try_opt_rescue1(&mut parser), Err(ParseError::empty()));
+        assert_eq!(parse_opt_rescue1(&mut parser), Err(ParseError::empty()));
     }
 }

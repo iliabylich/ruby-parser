@@ -9,16 +9,16 @@ type Else = (Token, Option<Box<Node>>);
 impl Parser {
     pub(crate) fn try_opt_else(&mut self) -> ParseResult<Option<Else>> {
         self.one_of("opt else")
-            .or_else(|| try_else(self).map(|v| Some(v)))
+            .or_else(|| parse_else(self).map(|v| Some(v)))
             .or_else(|| Ok(None))
             .stop()
     }
 }
 
-fn try_else(parser: &mut Parser) -> ParseResult<Else> {
+fn parse_else(parser: &mut Parser) -> ParseResult<Else> {
     parser
         .all_of("else")
-        .and(|| parser.try_token(TokenKind::kELSE))
+        .and(|| parser.parse_token(TokenKind::kELSE))
         .and(|| parser.try_compstmt())
         .stop()
 }

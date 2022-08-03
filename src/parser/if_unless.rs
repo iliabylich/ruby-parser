@@ -5,15 +5,15 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_if_expr(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_if_expr(&mut self) -> ParseResult<Box<Node>> {
         let (if_t, expr, then_t, compstmt, if_tail, end_t) = self
             .all_of("if expr")
-            .and(|| self.try_k_if())
-            .and(|| self.try_expr_value())
-            .and(|| self.try_then())
+            .and(|| self.parse_k_if())
+            .and(|| self.parse_expr_value())
+            .and(|| self.parse_then())
             .and(|| self.try_compstmt())
-            .and(|| self.try_if_tail())
-            .and(|| self.try_k_end())
+            .and(|| self.parse_if_tail())
+            .and(|| self.parse_k_end())
             .stop()?;
 
         todo!(
@@ -27,15 +27,15 @@ impl Parser {
         )
     }
 
-    pub(crate) fn try_unless_expr(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_unless_expr(&mut self) -> ParseResult<Box<Node>> {
         let (unless_t, expr, then_t, compstmt, opt_else, end_t) = self
             .all_of("if expr")
-            .and(|| self.try_k_unless())
-            .and(|| self.try_expr_value())
-            .and(|| self.try_then())
+            .and(|| self.parse_k_unless())
+            .and(|| self.parse_expr_value())
+            .and(|| self.parse_then())
             .and(|| self.try_compstmt())
             .and(|| self.try_opt_else())
-            .and(|| self.try_k_end())
+            .and(|| self.parse_k_end())
             .stop()?;
 
         todo!(
@@ -49,15 +49,15 @@ impl Parser {
         )
     }
 
-    fn try_if_tail(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.try_if_tail")
+    fn parse_if_tail(&mut self) -> ParseResult<Box<Node>> {
+        todo!("parser.parse_if_tail")
     }
 
-    fn try_k_if(&mut self) -> ParseResult<Token> {
-        self.try_token(TokenKind::kIF)
+    fn parse_k_if(&mut self) -> ParseResult<Token> {
+        self.parse_token(TokenKind::kIF)
     }
 
-    fn try_k_unless(&mut self) -> ParseResult<Token> {
-        self.try_token(TokenKind::kUNLESS)
+    fn parse_k_unless(&mut self) -> ParseResult<Token> {
+        self.parse_token(TokenKind::kUNLESS)
     }
 }

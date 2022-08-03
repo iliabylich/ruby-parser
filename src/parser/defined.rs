@@ -5,13 +5,13 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_defined(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_defined(&mut self) -> ParseResult<Box<Node>> {
         let (defined_t, _nl, lparen_t, expr, rparen_t) = self
             .all_of("defined? value")
-            .and(|| self.try_token(TokenKind::kDEFINED))
-            .and(|| self.try_opt_nl())
+            .and(|| self.parse_token(TokenKind::kDEFINED))
+            .and(|| self.parse_opt_nl())
             .and(|| self.expect_token(TokenKind::tLPAREN))
-            .and(|| self.try_expr())
+            .and(|| self.parse_expr())
             .and(|| self.expect_token(TokenKind::tRPAREN))
             .stop()?;
 

@@ -6,12 +6,12 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_preexe(&mut self) -> ParseResult<Box<Node>> {
+    pub(crate) fn parse_preexe(&mut self) -> ParseResult<Box<Node>> {
         let (preexe_t, lcurly_t, body, rcurly_t) = self
             .all_of("preexe")
-            .and(|| self.try_token(TokenKind::klBEGIN))
+            .and(|| self.parse_token(TokenKind::klBEGIN))
             .and(|| self.expect_token(TokenKind::tLCURLY))
-            .and(|| self.try_opt_top_compstmt())
+            .and(|| self.try_top_compstmt())
             .and(|| self.expect_token(TokenKind::tRCURLY))
             .stop()?;
 
@@ -26,7 +26,7 @@ mod tests {
     #[test]
     fn test_preexe() {
         assert_parses!(
-            try_preexe,
+            parse_preexe,
             b"BEGIN { 42 }",
             r#"
 s(:preexe,
@@ -37,13 +37,13 @@ s(:preexe,
 
     #[test]
     fn test_preexe_empty() {
-        assert_parses!(try_preexe, b"BEGIN {}", "s(:preexe)");
+        assert_parses!(parse_preexe, b"BEGIN {}", "s(:preexe)");
     }
 
     #[test]
     fn test_nothing() {
         assert_parses_with_error!(
-            try_postexe,
+            parse_postexe,
             b"",
             "
 SEQUENCE (0) postexe (got [])
