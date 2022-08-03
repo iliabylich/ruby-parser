@@ -32,21 +32,55 @@ impl<C: Constructor> Builder<C> {
         }))
     }
 
-    pub(crate) fn in_pattern() {}
-    pub(crate) fn if_guard() {}
-    pub(crate) fn unless_guard() {}
-    pub(crate) fn match_var() {}
-    pub(crate) fn match_hash_var() {}
-    pub(crate) fn match_hash_var_from_str() {}
-    pub(crate) fn match_rest() {}
-    pub(crate) fn hash_pattern() {}
-    pub(crate) fn array_pattern() {}
-    pub(crate) fn find_pattern() {}
-    pub(crate) fn const_pattern() {}
-    pub(crate) fn pin() {}
-    pub(crate) fn match_alt() {}
-    pub(crate) fn match_as() {}
-    pub(crate) fn match_nil_pattern() {}
-    pub(crate) fn match_pair() {}
-    pub(crate) fn match_label() {}
+    pub(crate) fn in_pattern() -> Box<Node> {
+        todo!("builder.in_pattern")
+    }
+    pub(crate) fn if_guard() -> Box<Node> {
+        todo!("builder.if_guard")
+    }
+    pub(crate) fn unless_guard() -> Box<Node> {
+        todo!("builder.unless_guard")
+    }
+    pub(crate) fn match_var() -> Box<Node> {
+        todo!("builder.match_var")
+    }
+    pub(crate) fn match_hash_var() -> Box<Node> {
+        todo!("builder.match_hash_var")
+    }
+    pub(crate) fn match_hash_var_from_str() -> Box<Node> {
+        todo!("builder.match_hash_var_from_str")
+    }
+    pub(crate) fn match_rest() -> Box<Node> {
+        todo!("builder.match_rest")
+    }
+    pub(crate) fn hash_pattern() -> Box<Node> {
+        todo!("builder.hash_pattern")
+    }
+    pub(crate) fn array_pattern() -> Box<Node> {
+        todo!("builder.array_pattern")
+    }
+    pub(crate) fn find_pattern() -> Box<Node> {
+        todo!("builder.find_pattern")
+    }
+    pub(crate) fn const_pattern() -> Box<Node> {
+        todo!("builder.const_pattern")
+    }
+    pub(crate) fn pin() -> Box<Node> {
+        todo!("builder.pin")
+    }
+    pub(crate) fn match_alt() -> Box<Node> {
+        todo!("builder.match_alt")
+    }
+    pub(crate) fn match_as() -> Box<Node> {
+        todo!("builder.match_as")
+    }
+    pub(crate) fn match_nil_pattern() -> Box<Node> {
+        todo!("builder.match_nil_pattern")
+    }
+    pub(crate) fn match_pair() -> Box<Node> {
+        todo!("builder.match_pair")
+    }
+    pub(crate) fn match_label() -> Box<Node> {
+        todo!("builder.match_label")
+    }
 }

@@ -8,14 +8,30 @@ use crate::{
 };
 
 impl<C: Constructor> Builder<C> {
-    pub(crate) fn forwarded_args() {}
-    pub(crate) fn call_method() {}
-    pub(crate) fn call_lambda() {}
-    pub(crate) fn block() {}
-    pub(crate) fn block_pass() {}
-    pub(crate) fn attr_asgn() {}
-    pub(crate) fn index() {}
-    pub(crate) fn index_asgn() {}
+    pub(crate) fn forwarded_args() -> Box<Node> {
+        todo!("builder.forwarded_args")
+    }
+    pub(crate) fn call_method() -> Box<Node> {
+        todo!("builder.call_method")
+    }
+    pub(crate) fn call_lambda() -> Box<Node> {
+        todo!("builder.call_lambda")
+    }
+    pub(crate) fn block() -> Box<Node> {
+        todo!("builder.block")
+    }
+    pub(crate) fn block_pass() -> Box<Node> {
+        todo!("builder.block_pass")
+    }
+    pub(crate) fn attr_asgn() -> Box<Node> {
+        todo!("builder.attr_asgn")
+    }
+    pub(crate) fn index() -> Box<Node> {
+        todo!("builder.index")
+    }
+    pub(crate) fn index_asgn() -> Box<Node> {
+        todo!("builder.index_asgn")
+    }
     pub(crate) fn binary_op(
         receiver: Box<Node>,
         operator_t: Token,
@@ -76,13 +92,15 @@ impl<C: Constructor> Builder<C> {
 
         Box::new(result)
     }
-    pub(crate) fn unary_op() {}
+    pub(crate) fn unary_op() -> Box<Node> {
+        todo!("builder.unary_op")
+    }
     pub(crate) fn not_op(
         not_t: Token,
         begin_t: Option<Token>,
         receiver: Option<Box<Node>>,
         end_t: Option<Token>,
     ) -> Box<Node> {
-        todo!()
+        todo!("builder.not_op")
     }
 }

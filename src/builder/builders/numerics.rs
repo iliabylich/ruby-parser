@@ -15,6 +15,7 @@ impl<C: Constructor> Builder<C> {
             expression_l,
         }))
     }
+
     pub(crate) fn float(float_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = float_t.loc;
         Box::new(Node::Float(Float {
@@ -23,6 +24,7 @@ impl<C: Constructor> Builder<C> {
             expression_l,
         }))
     }
+
     pub(crate) fn rational(rational_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = rational_t.loc;
         Box::new(Node::Rational(Rational {
@@ -31,6 +33,7 @@ impl<C: Constructor> Builder<C> {
             expression_l,
         }))
     }
+
     pub(crate) fn complex(complex_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = complex_t.loc;
         Box::new(Node::Complex(Complex {
