@@ -82,7 +82,7 @@ fn try_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
         .all_of("rescue1")
         .and(|| parser.try_token(TokenKind::kRESCUE))
         .and(|| try_exc_list(parser))
-        .and(|| try_exc_var(parser))
+        .and(|| try_opt_exc_var(parser))
         .and(|| {
             parser
                 .one_of("optional then")
@@ -105,7 +105,7 @@ fn try_exc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
         .or_else(|| parser.try_mrhs())
         .stop()
 }
-fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
+fn try_opt_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
     parser
         .one_of("[exc var]")
         .or_else(|| {

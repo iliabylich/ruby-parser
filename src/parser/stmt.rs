@@ -6,7 +6,7 @@ use crate::{
 };
 
 impl Parser {
-    pub(crate) fn try_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
+    pub(crate) fn try_opt_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let (top_stmts, _opt_terms) = self
             .all_of("top_compstmt")
             .and(|| self.try_top_stmts())
@@ -62,12 +62,20 @@ impl Parser {
             .and(|| self.try_opt_ensure())
             .stop()?;
 
-        Ok(Builder::begin_body(
+        if compstmt.is_none()
+            && rescue_bodies.is_empty()
+            && opt_else.is_none()
+            && opt_ensure.is_none()
+        {
+            return Ok(None);
+        }
+
+        Ok(Some(Builder::begin_body(
             compstmt,
             rescue_bodies,
-            Some(opt_else),
-            Some(opt_ensure),
-        ))
+            opt_else,
+            opt_ensure,
+        )))
     }
 
     pub(crate) fn try_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {

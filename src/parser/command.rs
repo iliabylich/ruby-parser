@@ -97,7 +97,7 @@ impl Parser {
         self.try_call_args()
     }
 
-    pub(crate) fn try_brace_body(&mut self) -> ParseResult<Option<Box<Node>>> {
+    pub(crate) fn try_opt_brace_body(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_brace_body")
     }
 
@@ -134,7 +134,7 @@ fn try_cmd_brace_block(parser: &mut Parser) -> ParseResult<CmdBraceBlock> {
     let (begin_t, brace_body, end_t) = parser
         .all_of("cmd brace block")
         .and(|| parser.try_token(TokenKind::tLCURLY))
-        .and(|| parser.try_brace_body())
+        .and(|| parser.try_opt_brace_body())
         .and(|| parser.expect_token(TokenKind::tRCURLY))
         .stop()?;
 

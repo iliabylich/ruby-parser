@@ -1,4 +1,5 @@
 use crate::{
+    builder::{Builder, KeywordCmd},
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
@@ -15,17 +16,24 @@ impl Parser {
                     .and(|| self.try_call_args())
                     .and(|| self.try_rparen())
                     .stop()?;
-                todo!(
-                    "yield {:?} {:?} {:?} {:?}",
+
+                Ok(Builder::keyword_cmd(
+                    KeywordCmd::Yield,
                     yield_t,
-                    lparen_t,
+                    Some(lparen_t),
                     args,
-                    rparen_t
-                );
+                    Some(rparen_t),
+                ))
             })
             .or_else(|| {
                 let yield_t = self.try_token(TokenKind::kYIELD)?;
-                todo!("yield {:?}", yield_t)
+                Ok(Builder::keyword_cmd(
+                    KeywordCmd::Yield,
+                    yield_t,
+                    None,
+                    vec![],
+                    None,
+                ))
             })
             .stop()
     }

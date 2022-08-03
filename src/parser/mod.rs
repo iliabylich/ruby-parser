@@ -112,7 +112,7 @@ impl Parser {
     }
 
     fn try_program(&mut self) -> ParseResult<Option<Box<Node>>> {
-        self.try_top_compstmt()
+        self.try_opt_top_compstmt()
     }
 
     pub(crate) fn buffer(&self) -> &Buffer {
@@ -667,7 +667,7 @@ impl Parser {
             .stop()
             .map(|node| Builder::assignable(node))
     }
-    fn try_f_opt_paren_args(&mut self) -> ParseResult<Vec<Node>> {
+    fn try_f_opt_paren_args(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_f_opt_paren_args")
     }
     fn try_f_paren_args(&mut self) {
@@ -833,7 +833,7 @@ impl Parser {
 
         Ok(rbrace_t)
     }
-    fn try_trailer(&mut self) -> ParseResult<Option<Token>> {
+    fn try_opt_trailer(&mut self) -> ParseResult<Option<Token>> {
         self.one_of("trailer")
             .or_else(|| self.try_token(TokenKind::tNL).map(|token| Some(token)))
             .or_else(|| self.try_token(TokenKind::tCOMMA).map(|token| Some(token)))

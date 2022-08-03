@@ -1,6 +1,6 @@
 use crate::{
     buffer::Buffer,
-    builder::Builder,
+    builder::{Builder, KeywordCmd},
     parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
@@ -98,7 +98,7 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
 
-            todo!("{:?} {:?} {:?}", lhs, eql_t, rhs)
+            Ok(Builder::assign(lhs, eql_t, rhs))
         })
         .or_else(|| {
             let (lhs, op_t, rhs) = parser
@@ -108,10 +108,10 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
 
-            todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
+            Ok(Builder::op_assign(lhs, op_t, rhs, parser.buffer()))
         })
         .or_else(|| {
-            let (expr, lbrack_t, args, rparen_t, op_t, rhs) = parser
+            let (expr, lbrack_t, args, rbrack_t, op_t, rhs) = parser
                 .all_of("primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN arg_rhs")
                 .and(|| parser.try_primary_value())
                 .and(|| parser.expect_token(TokenKind::tLBRACK))
@@ -120,15 +120,13 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| parser.expect_token(TokenKind::tOP_ASGN))
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
-            todo!(
-                "{:?} {:?} {:?} {:?} {:?} {:?}",
-                expr,
-                lbrack_t,
-                args,
-                rparen_t,
+
+            Ok(Builder::op_assign(
+                Builder::index(expr, lbrack_t, args, rbrack_t),
                 op_t,
-                rhs
-            )
+                rhs,
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
             let (expr, call_op_t, mid_t, op_t, rhs) = parser
@@ -140,14 +138,20 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
 
-            todo!(
-                "{:?} {:?} {:?} {:?} {:?}",
-                expr,
-                call_op_t,
-                mid_t,
+            Ok(Builder::op_assign(
+                Builder::call_method(
+                    Some(expr),
+                    Some(call_op_t),
+                    Some(mid_t),
+                    None,
+                    vec![],
+                    None,
+                    parser.buffer(),
+                ),
                 op_t,
-                rhs
-            )
+                rhs,
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
             let (expr, call_op_t, const_t, op_t, rhs) = parser
@@ -159,17 +163,23 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
 
-            todo!(
-                "{:?} {:?} {:?} {:?} {:?}",
-                expr,
-                call_op_t,
-                const_t,
+            Ok(Builder::op_assign(
+                Builder::call_method(
+                    Some(expr),
+                    Some(call_op_t),
+                    Some(const_t),
+                    None,
+                    vec![],
+                    None,
+                    parser.buffer(),
+                ),
                 op_t,
-                rhs
-            )
+                rhs,
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
-            let (colon_t, const_t, op_t, rhs) = parser
+            let (colon2_t, const_t, op_t, rhs) = parser
                 .all_of("tCOLON3 tCONSTANT tOP_ASGN arg_rhs")
                 .and(|| parser.expect_token(TokenKind::tCOLON2))
                 .and(|| parser.expect_token(TokenKind::tCONSTANT))
@@ -177,7 +187,16 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
 
-            todo!("{:?} {:?} {:?} {:?}", colon_t, const_t, op_t, rhs)
+            Ok(Builder::op_assign(
+                Builder::const_op_assignable(Builder::const_global(
+                    colon2_t,
+                    const_t,
+                    parser.buffer(),
+                )),
+                op_t,
+                rhs,
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
             let (lhs, op_t, rhs) = parser
@@ -187,7 +206,7 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| try_arg_rhs(parser))
                 .stop()?;
 
-            todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
+            Ok(Builder::op_assign(lhs, op_t, rhs, parser.buffer()))
         })
         .or_else(|| {
             let (minus_t, lhs, op_t, rhs) = parser
@@ -198,10 +217,14 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| parser.try_arg())
                 .stop()?;
 
-            todo!("{:?} {:?} {:?} {:?}", minus_t, lhs, op_t, rhs)
+            Ok(Builder::unary_op(
+                minus_t,
+                Builder::binary_op(lhs, op_t, rhs, parser.buffer()),
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
-            let (def, args, eql_t, body, rescue_t, rescue_body) = parser
+            let ((def_t, name_t), args, eql_t, body, rescue_t, rescue_body) = parser
                 .all_of("defn_head f_opt_paren_args tEQL arg kRESCUE_MOD arg")
                 .and(|| parser.try_defn_head())
                 .and(|| parser.try_f_opt_paren_args())
@@ -211,18 +234,23 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| parser.try_arg())
                 .stop()?;
 
-            todo!(
-                "{:?} {:?} {:?} {:?} {:?} {:?}",
-                def,
+            // self.validate_endless_method_name(&name_t);
+
+            let rescue_body = Builder::rescue_body(rescue_t, vec![], None, None, Some(rescue_body));
+
+            let method_body = Builder::begin_body(Some(body), vec![*rescue_body], None, None);
+
+            Ok(Builder::def_endless_method(
+                def_t,
+                name_t,
                 args,
                 eql_t,
-                body,
-                rescue_t,
-                rescue_body
-            )
+                Some(method_body),
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
-            let (def, args, eql_t, body) = parser
+            let ((def_t, name_t), args, eql_t, body) = parser
                 .all_of("defn_head f_opt_paren_args tEQL arg")
                 .and(|| parser.try_defn_head())
                 .and(|| parser.try_f_opt_paren_args())
@@ -230,31 +258,44 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| parser.try_arg())
                 .stop()?;
 
-            todo!("{:?} {:?} {:?} {:?}", def, args, eql_t, body)
-        })
-        .or_else(|| {
-            let (defs, args, eql_t, body, rescue_t, rescue_body) = parser
-                .all_of("defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg")
-                .and(|| parser.try_defs_head())
-                .and(|| parser.try_f_opt_paren_args())
-                .and(|| parser.expect_token(TokenKind::tEQL))
-                .and(|| parser.try_arg())
-                .and(|| parser.expect_token(TokenKind::kRESCUE_MOD))
-                .and(|| parser.try_arg())
-                .stop()?;
-
-            todo!(
-                "{:?} {:?} {:?} {:?} {:?} {:?}",
-                defs,
+            Ok(Builder::def_endless_method(
+                def_t,
+                name_t,
                 args,
                 eql_t,
-                body,
-                rescue_t,
-                rescue_body
-            )
+                Some(body),
+                parser.buffer(),
+            ))
         })
         .or_else(|| {
-            let (defs, args, eql_t, body) = parser
+            let ((def_t, definee, dot_t, name_t), args, eql_t, body, rescue_t, rescue_body) =
+                parser
+                    .all_of("defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg")
+                    .and(|| parser.try_defs_head())
+                    .and(|| parser.try_f_opt_paren_args())
+                    .and(|| parser.expect_token(TokenKind::tEQL))
+                    .and(|| parser.try_arg())
+                    .and(|| parser.expect_token(TokenKind::kRESCUE_MOD))
+                    .and(|| parser.try_arg())
+                    .stop()?;
+
+            let rescue_body = Builder::rescue_body(rescue_t, vec![], None, None, Some(rescue_body));
+
+            let method_body = Builder::begin_body(Some(body), vec![*rescue_body], None, None);
+
+            Ok(Builder::def_endless_singleton(
+                def_t,
+                definee,
+                dot_t,
+                name_t,
+                args,
+                eql_t,
+                Some(method_body),
+                parser.buffer(),
+            ))
+        })
+        .or_else(|| {
+            let ((def_t, definee, dot_t, name_t), args, eql_t, body) = parser
                 .all_of("defs_head f_opt_paren_args tEQL arg")
                 .and(|| parser.try_defs_head())
                 .and(|| parser.try_f_opt_paren_args())
@@ -262,7 +303,16 @@ fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 .and(|| parser.try_arg())
                 .stop()?;
 
-            todo!("{:?} {:?} {:?} {:?}", defs, args, eql_t, body,)
+            Ok(Builder::def_endless_singleton(
+                def_t,
+                definee,
+                dot_t,
+                name_t,
+                args,
+                eql_t,
+                Some(body),
+                parser.buffer(),
+            ))
         })
         .or_else(|| parser.try_primary())
         .stop()
@@ -275,7 +325,16 @@ fn try_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
         parser.skip_token();
 
         match parser.try_arg() {
-            Ok(rhs) => todo!("{:?} {:?} {:?}", lhs, rescue_t, rhs),
+            Ok(rhs) => {
+                // self.value_expr(&lhs);
+                let rescue_body = Builder::rescue_body(rescue_t, vec![], None, None, Some(rhs));
+                Ok(Builder::begin_body(
+                    Some(lhs),
+                    vec![*rescue_body],
+                    None,
+                    None,
+                ))
+            }
             Err(error) => Err(ParseError::seq_error::<Box<Node>, _>(
                 "arg rescue arg",
                 (lhs, rescue_t),
@@ -308,7 +367,30 @@ fn try_arg_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
             let (_, r_bp) = op_t.kind.precedence().expect("bug");
             let rhs = try_arg0(parser, r_bp)?;
 
-            todo!("unary {:?} {:?}", op_t, rhs);
+            match op_t.kind {
+                TokenKind::tBDOT2 => {
+                    // self.value_expr(&rhs);
+                    Ok(Builder::range_inclusive(None, op_t, Some(rhs)))
+                }
+                TokenKind::tBDOT3 => {
+                    // self.value_expr(&rhs);
+                    Ok(Builder::range_exclusive(None, op_t, Some(rhs)))
+                }
+                TokenKind::tUMINUS | TokenKind::tUPLUS | TokenKind::tTILDE => {
+                    Ok(Builder::unary_op(op_t, rhs, parser.buffer()))
+                }
+                TokenKind::tBANG => Ok(Builder::not_op(op_t, None, Some(rhs), None)),
+                TokenKind::kDEFINED => Ok(Builder::keyword_cmd(
+                    KeywordCmd::Defined,
+                    op_t,
+                    None,
+                    vec![*rhs],
+                    None,
+                )),
+                _ => {
+                    unreachable!("bug")
+                }
+            }
         })
         .or_else(|| try_arg_head(parser))
         .stop()

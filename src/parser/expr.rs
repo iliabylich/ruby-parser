@@ -8,7 +8,7 @@ use crate::{
 impl Parser {
     pub(crate) fn try_expr(&mut self) -> ParseResult<Box<Node>> {
         let mut lhs = try_expr_head(self)?;
-        while let Some((op_t, rhs)) = try_expr_tail(self)? {
+        while let Some((op_t, rhs)) = try_opt_expr_tail(self)? {
             lhs = Builder::logical_op(lhs, op_t, rhs)
         }
         Ok(lhs)
@@ -66,7 +66,7 @@ fn try_arg_in_p_expr_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
     Ok(Builder::match_pattern_p(arg, in_t, p_top_expr_body))
 }
 
-fn try_expr_tail(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
+fn try_opt_expr_tail(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
     let expr_tail = parser
         .one_of("[and/or] expr")
         .or_else(|| {

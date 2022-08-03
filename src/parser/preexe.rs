@@ -11,7 +11,7 @@ impl Parser {
             .all_of("preexe")
             .and(|| self.try_token(TokenKind::klBEGIN))
             .and(|| self.expect_token(TokenKind::tLCURLY))
-            .and(|| self.try_top_compstmt())
+            .and(|| self.try_opt_top_compstmt())
             .and(|| self.expect_token(TokenKind::tRCURLY))
             .stop()?;
 

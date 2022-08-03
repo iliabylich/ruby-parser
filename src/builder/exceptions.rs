@@ -53,7 +53,7 @@ impl Builder {
         rescue_bodies: Vec<Node>,
         opt_else: Option<(Token, Option<Box<Node>>)>,
         opt_ensure: Option<(Token, Option<Box<Node>>)>,
-    ) -> Option<Box<Node>> {
+    ) -> Box<Node> {
         let mut result: Option<Box<Node>>;
 
         if !rescue_bodies.is_empty() {
@@ -150,6 +150,6 @@ impl Builder {
             })))
         }
 
-        result
+        result.unwrap()
     }
 }

@@ -12,7 +12,7 @@ impl Parser {
                     .all_of("normal class definition")
                     .and(|| self.try_k_class())
                     .and(|| self.try_cpath())
-                    .and(|| self.try_superclass())
+                    .and(|| self.try_opt_superclass())
                     .and(|| self.try_bodystmt())
                     .and(|| self.try_k_end())
                     .stop()?;
@@ -54,7 +54,7 @@ impl Parser {
         todo!("parser.try_cpath")
     }
 
-    fn try_superclass(&mut self) -> ParseResult<Option<Box<Node>>> {
+    fn try_opt_superclass(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_superclass")
     }
 

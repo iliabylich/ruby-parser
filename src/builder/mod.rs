@@ -27,3 +27,7 @@ mod strings;
 mod symbols;
 
 pub(crate) struct Builder;
+
+pub(crate) use keywords::KeywordCmd;
+pub(crate) use loops::LoopType;
+pub(crate) use method_calls::ArgsType;

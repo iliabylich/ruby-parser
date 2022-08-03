@@ -151,4 +151,24 @@ impl Builder {
             expression_l,
         }))
     }
+
+    pub(crate) fn const_fetch(
+        scope: Box<Node>,
+        t_colon2: Token,
+        name_t: Token,
+        buffer: &Buffer,
+    ) -> Box<Node> {
+        let scope: Box<Node> = scope;
+        let name_l = name_t.loc;
+        let expression_l = scope.expression().join(&name_l);
+        let double_colon_l = t_colon2.loc;
+
+        Box::new(Node::Const(Const {
+            scope: Some(scope),
+            name: string_value(name_l, buffer),
+            double_colon_l: Some(double_colon_l),
+            name_l,
+            expression_l,
+        }))
+    }
 }

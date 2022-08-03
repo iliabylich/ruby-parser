@@ -20,7 +20,7 @@ impl Parser {
 fn try_aref_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     let mut head = parser.try_args()?;
     let mut tail = parser.try_assocs()?;
-    let _trailer = parser.try_trailer();
+    let _trailer = parser.try_opt_trailer();
 
     head.append(&mut tail);
     Ok(head)
