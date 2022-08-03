@@ -104,11 +104,7 @@ impl Parser {
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::seq_error::<Box<Node>, _>(
-                                "primary -> ::CONST",
-                                node,
-                                error,
-                            ));
+                            return Err(ParseError::seq_error("primary -> ::CONST", node, error));
                         }
                     }
                 }

@@ -119,7 +119,8 @@ impl Lexer {
     }
 
     pub(crate) fn skip_token(&mut self) {
-        *self.state_ref().token_idx_mut() += 1;
+        self.state_ref()
+            .set_token_idx(self.state_ref().token_idx() + 1);
     }
 
     fn tokenize_while_in_string(&mut self) -> Token {

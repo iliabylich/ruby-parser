@@ -33,11 +33,7 @@ impl Parser {
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::seq_error::<Vec<Node>, _>(
-                                "top stmts",
-                                top_stmts,
-                                error,
-                            ));
+                            return Err(ParseError::seq_error("top stmts", top_stmts, error));
                         }
                     }
                 }
@@ -121,11 +117,7 @@ impl Parser {
                         // ignore
                         Ok(stmt)
                     }
-                    Some(error) => Err(ParseError::seq_error::<Box<Node>, _>(
-                        "stmt tail",
-                        stmt,
-                        error,
-                    )),
+                    Some(error) => Err(ParseError::seq_error("stmt tail", stmt, error)),
                 }
             }
         }

@@ -35,7 +35,7 @@ impl Parser {
                 Ok(fitem) => names.push(*fitem),
                 Err(error) => {
                     // got comma, but no `fitem`
-                    return Err(ParseError::seq_error::<Vec<Node>, _>(
+                    return Err(ParseError::seq_error(
                         "list of undef items",
                         (names, commas),
                         error,

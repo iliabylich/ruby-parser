@@ -20,8 +20,6 @@ macro_rules! assert_lookahead {
 
             let unescaped: Option<&[u8]> = match lookahead {
                 Ok(Some(SlashU::Wide { escaped_loc, .. })) => {
-                    dbg!(&buffer.unescaped_bytes);
-                    dbg!(&escaped_loc);
                     let slice = buffer
                         .unescaped_slice_at(escaped_loc.start, escaped_loc.end)
                         .unwrap();

@@ -55,7 +55,7 @@ fn parse_arg0(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
                 let (mhs, colon_t, rhs) = match ternary {
                     Ok(values) => values,
                     Err(error) => {
-                        return Err(ParseError::seq_error::<Box<Node>, _>(
+                        return Err(ParseError::seq_error(
                             "ternary operator",
                             (lhs, op_t),
                             error,
@@ -68,7 +68,7 @@ fn parse_arg0(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
                 let rhs = match parse_arg0(parser, r_bp) {
                     Ok(node) => node,
                     Err(error) => {
-                        return Err(ParseError::seq_error::<Box<Node>, _>(
+                        return Err(ParseError::seq_error(
                             "rhs of binary operator",
                             (lhs, op_t),
                             error,
@@ -335,7 +335,7 @@ fn parse_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
                     None,
                 ))
             }
-            Err(error) => Err(ParseError::seq_error::<Box<Node>, _>(
+            Err(error) => Err(ParseError::seq_error(
                 "arg rescue arg",
                 (lhs, rescue_t),
                 error,

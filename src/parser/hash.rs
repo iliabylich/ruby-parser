@@ -1,18 +1,129 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    builder::Builder,
+    parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_hash(&mut self) -> ParseResult<Box<Node>> {
-        let (lcurly_t, assoc_list, rcurly_t) = self
+        let (begin_t, pairs, end_t) = self
             .all_of("hash")
             .and(|| self.try_token(TokenKind::tLCURLY))
-            .and(|| self.parse_assoc_list())
+            .and(|| parse_assoc_list(self))
             .and(|| self.expect_token(TokenKind::tRCURLY))
             .stop()?;
 
-        todo!("hash {:?} {:?} {:?}", lcurly_t, assoc_list, rcurly_t);
+        Ok(Builder::associate(Some(begin_t), pairs, Some(end_t)))
     }
+
+    pub(crate) fn parse_assocs(&mut self) -> ParseResult<Vec<Node>> {
+        let mut nodes = vec![];
+        let mut commas = vec![];
+
+        let assoc = parse_assoc(self)?;
+        nodes.push(*assoc);
+
+        loop {
+            if self.current_token().is(TokenKind::tCOMMA) {
+                commas.push(self.current_token());
+                self.skip_token();
+            } else {
+                break;
+            }
+
+            match parse_assoc(self) {
+                Ok(node) => nodes.push(*node),
+                Err(error) => return Err(ParseError::seq_error("assocs", (nodes, commas), error)),
+            }
+        }
+
+        Ok(nodes)
+    }
+}
+
+fn parse_assoc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    parser
+        .one_of("assoc list")
+        .or_else(|| {
+            let (assocs, _trailer) = parser
+                .all_of("assics trailer")
+                .and(|| parser.parse_assocs())
+                .and(|| parser.try_trailer())
+                .stop()?;
+            Ok(assocs)
+        })
+        .or_else(|| Ok(vec![]))
+        .stop()
+}
+
+fn parse_assoc(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .one_of("assoc")
+        .or_else(|| {
+            let (key_t, value) = parser
+                .all_of("tLABEL arg_value")
+                .and(|| parser.try_token(TokenKind::tLABEL))
+                .and(|| parser.parse_arg_value())
+                .stop()?;
+
+            Ok(Builder::pair_keyword(key_t, value, parser.buffer()))
+        })
+        .or_else(|| {
+            let key_t = parser.try_token(TokenKind::tLABEL)?;
+            Ok(Builder::pair_label(key_t, parser.buffer()))
+        })
+        .or_else(|| {
+            let (begin_t, parts, end_t, value) = parser
+                .all_of("tSTRING_BEG string_contents tLABEL_END arg_value")
+                .and(|| parser.try_token(TokenKind::tSTRING_BEG))
+                .and(|| parser.parse_string_contents())
+                .and(|| parser.expect_token(TokenKind::tLABEL_END))
+                .and(|| parser.parse_arg_value())
+                .stop()?;
+
+            Ok(Builder::pair_quoted(begin_t, parts, end_t, value))
+        })
+        .or_else(|| {
+            let (dstar_t, value) = parser
+                .all_of("tDSTAR arg_value")
+                .and(|| parser.try_token(TokenKind::tDSTAR))
+                .and(|| parser.parse_arg_value())
+                .stop()?;
+
+            Ok(Builder::kwsplat(dstar_t, value))
+        })
+        .or_else(|| {
+            let (key, assoc_t, value) = parser
+                .all_of("arg_value tASSOC arg_value")
+                .and(|| parser.parse_arg_value())
+                .and(|| parser.expect_token(TokenKind::tASSOC))
+                .and(|| parser.parse_arg_value())
+                .stop()?;
+
+            Ok(Builder::pair(key, assoc_t, value))
+        })
+        .stop()
+}
+
+#[test]
+fn test_hash() {
+    use crate::testing::assert_parses;
+
+    assert_parses!(
+        parse_hash,
+        b"{ a: 1, :b => 2, c => 3 }",
+        r#"
+s(:hash,
+  s(:pair,
+    s(:sym, "a:"),
+    s(:int, "1")),
+  s(:pair,
+    s(:sym, "b"),
+    s(:int, "2")),
+  s(:pair,
+    s(:lvar, "c"),
+    s(:int, "3")))
+        "#
+    );
 }

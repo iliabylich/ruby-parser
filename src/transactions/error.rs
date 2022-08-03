@@ -22,7 +22,7 @@ pub(crate) enum ParseError {
 }
 
 impl ParseError {
-    pub(crate) fn seq_error<T, S>(name: &'static str, steps: S, error: ParseError) -> Self
+    pub(crate) fn seq_error<S>(name: &'static str, steps: S, error: ParseError) -> Self
     where
         Steps: From<S>,
     {

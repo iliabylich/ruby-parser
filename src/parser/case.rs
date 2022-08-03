@@ -88,13 +88,7 @@ fn parse_when_bodies(parser: &mut Parser) -> ParseResult<Vec<Node>> {
         match parse_when_body(parser) {
             Ok(when_body) => nodes.push(*when_body),
             Err(err) => match err.strip_lookaheads() {
-                Some(error) => {
-                    return Err(ParseError::seq_error::<Vec<Node>, _>(
-                        "when bodies",
-                        nodes,
-                        error,
-                    ))
-                }
+                Some(error) => return Err(ParseError::seq_error("when bodies", nodes, error)),
                 None => break,
             },
         }
@@ -126,19 +120,15 @@ fn parse_case_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     nodes.push(*node);
 
     loop {
-        match parser.expect_token(TokenKind::tCOMMA) {
-            Ok(comma_t) => commas.push(comma_t),
-            Err(_) => break,
+        if parser.current_token().is(TokenKind::tCOMMA) {
+            commas.push(parser.current_token());
+            parser.skip_token();
+        } else {
+            break;
         }
         match parse_case_arg(parser) {
             Ok(node) => nodes.push(*node),
-            Err(error) => {
-                return Err(ParseError::seq_error::<Vec<Node>, _>(
-                    "case args",
-                    (nodes, commas),
-                    error,
-                ))
-            }
+            Err(error) => return Err(ParseError::seq_error("case args", (nodes, commas), error)),
         }
     }
     Ok(nodes)

@@ -36,9 +36,7 @@ impl Parser {
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::seq_error::<Box<Node>, _>(
-                                "string1", parts, error,
-                            ));
+                            return Err(ParseError::seq_error("string1", parts, error));
                         }
                     }
                 }
@@ -85,11 +83,7 @@ impl Parser {
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::seq_error::<Vec<Node>, _>(
-                                "string content",
-                                strings,
-                                error,
-                            ));
+                            return Err(ParseError::seq_error("string content", strings, error));
                         }
                     }
                 }

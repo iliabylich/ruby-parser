@@ -2,6 +2,7 @@ use crate::state::State;
 
 use super::StateRef;
 
+#[derive(Debug)]
 pub(crate) struct OwnedState {
     inner: Box<State>,
 }

@@ -23,7 +23,7 @@ impl Checkpoint {
             self.token_idx,
             self.state_ref.tokens().len()
         );
-        *self.state_ref.token_idx_mut() = self.token_idx;
+        self.state_ref.set_token_idx(self.token_idx);
     }
 }
 

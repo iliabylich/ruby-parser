@@ -19,11 +19,7 @@ impl Parser {
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::seq_error::<Vec<Node>, _>(
-                                "opt rescue",
-                                nodes,
-                                error,
-                            ));
+                            return Err(ParseError::seq_error("opt rescue", nodes, error));
                         }
                     }
                 }

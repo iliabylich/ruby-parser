@@ -43,8 +43,8 @@ impl StateRef {
     pub(crate) fn token_idx(&self) -> usize {
         self.as_mut().token_idx
     }
-    pub(crate) fn token_idx_mut(&self) -> &'static mut usize {
-        &mut self.as_mut().token_idx
+    pub(crate) fn set_token_idx(&self, token_idx: usize) {
+        self.as_mut().token_idx = token_idx
     }
 
     pub(crate) fn curly_nest(&self) -> usize {

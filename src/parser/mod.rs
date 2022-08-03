@@ -52,6 +52,8 @@ pub struct Parser {
     debug: bool,
 }
 
+static mut COUNTER: usize = 0;
+
 impl Parser {
     pub fn new(input: &[u8]) -> Self {
         let mut state = OwnedState::new(input);
@@ -325,11 +327,7 @@ impl Parser {
                 Ok(item) => args.push(*item),
                 Err(error) => {
                     if error.is_lookahead() {
-                        return Err(ParseError::seq_error::<Vec<Node>, _>(
-                            "args",
-                            (args, commas),
-                            error,
-                        ));
+                        return Err(ParseError::seq_error("args", (args, commas), error));
                     } else {
                         break;
                     }
@@ -659,15 +657,6 @@ impl Parser {
     }
     fn parse_opt_f_block_arg(&mut self) {
         todo!("parser.parse_opt_f_block_arg")
-    }
-    fn parse_assoc_list(&mut self) -> ParseResult<Vec<Node>> {
-        todo!("parser.parse_assoc_list")
-    }
-    fn parse_assocs(&mut self) -> ParseResult<Vec<Node>> {
-        todo!("parser.parse_assocs")
-    }
-    fn parse_assoc(&mut self) {
-        todo!("parser.parse_assoc")
     }
     fn parse_operation(&mut self) -> ParseResult<Token> {
         self.one_of("operation")
