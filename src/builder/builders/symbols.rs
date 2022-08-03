@@ -1,12 +1,12 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder, Constructor},
+    builder::{builders::helpers::string_value, Builder},
     nodes::{Dsym, Str, Sym},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn symbol(start_t: Token, value_t: Token, buffer: &Buffer) -> Box<Node> {
         let begin_l = start_t.loc;
         let value_l = value_t.loc;

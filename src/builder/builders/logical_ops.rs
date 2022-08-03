@@ -1,11 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     nodes::{And, Or},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn logical_op(lhs: Box<Node>, op_t: Token, rhs: Box<Node>) -> Box<Node> {
         // TODO: value_expr(lhs)
 

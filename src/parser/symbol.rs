@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_symbol(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("symbol")
             .or_else(|| self.try_ssym())
@@ -34,7 +31,7 @@ where
                     })
                     .stop()?;
 
-                Ok(Builder::<C>::symbol(colon_t, sym_t, self.buffer()))
+                Ok(Builder::symbol(colon_t, sym_t, self.buffer()))
             })
             .or_else(|| {
                 let (begin_t, parts, end_t) = self
@@ -44,7 +41,7 @@ where
                     .and(|| self.expect_token(TokenKind::tSTRING_END))
                     .stop()?;
 
-                Ok(Builder::<C>::symbol_compose(begin_t, parts, end_t))
+                Ok(Builder::symbol_compose(begin_t, parts, end_t))
             })
             .compact()
             .stop()
@@ -58,7 +55,7 @@ where
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
-        let node = Builder::<C>::symbol_compose(begin_t, parts, end_t);
+        let node = Builder::symbol_compose(begin_t, parts, end_t);
         Ok(node)
     }
 }

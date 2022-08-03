@@ -1,5 +1,5 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     nodes::{For, Until, UntilPost, While, WhilePost},
     Node, Token,
 };
@@ -9,7 +9,7 @@ pub(crate) enum LoopType {
     Until,
 }
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn loop_(
         &self,
         loop_type: LoopType,

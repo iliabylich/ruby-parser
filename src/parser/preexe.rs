@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_preexe(&mut self) -> ParseResult<Box<Node>> {
         let (preexe_t, lcurly_t, body, rcurly_t) = self
             .all_of("preexe")
@@ -18,7 +15,7 @@ where
             .and(|| self.expect_token(TokenKind::tRCURLY))
             .stop()?;
 
-        Ok(Builder::<C>::preexe(preexe_t, lcurly_t, body, rcurly_t))
+        Ok(Builder::preexe(preexe_t, lcurly_t, body, rcurly_t))
     }
 }
 

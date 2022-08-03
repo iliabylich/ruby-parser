@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node, Token,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
         let (top_stmts, _opt_terms) = self
             .all_of("top_compstmt")
@@ -19,7 +16,7 @@ where
         if top_stmts.is_empty() {
             Ok(None)
         } else {
-            Ok(Some(Builder::<C>::compstmt(top_stmts)))
+            Ok(Some(Builder::compstmt(top_stmts)))
         }
     }
 
@@ -65,7 +62,7 @@ where
             .and(|| self.try_opt_ensure())
             .stop()?;
 
-        Ok(Builder::<C>::begin_body(
+        Ok(Builder::begin_body(
             compstmt,
             rescue_bodies,
             Some(opt_else),
@@ -82,7 +79,7 @@ where
         if stmts.is_empty() {
             Ok(None)
         } else {
-            Ok(Some(Builder::<C>::compstmt(stmts)))
+            Ok(Some(Builder::compstmt(stmts)))
         }
     }
 

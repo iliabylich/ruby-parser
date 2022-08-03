@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_opt_else(&mut self) -> ParseResult<(Token, Option<Box<Node>>)> {
         self.all_of("opt else")
             .and(|| self.try_token(TokenKind::kELSE))
@@ -20,9 +16,9 @@ where
 #[test]
 fn test_opt_else() {
     use crate::{
-        loc::loc, nodes::Int, parser::RustParser, string_content::StringContent, token::token, Node,
+        loc::loc, nodes::Int, parser::Parser, string_content::StringContent, token::token, Node,
     };
-    let mut parser = RustParser::new(b"else 42 end").debug();
+    let mut parser = Parser::new(b"else 42 end").debug();
     assert_eq!(
         parser.try_opt_else(),
         Ok((

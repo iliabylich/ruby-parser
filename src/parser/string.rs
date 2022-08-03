@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_strings(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("strings")
             .or_else(|| self.try_char())
@@ -18,7 +15,7 @@ where
 
     fn try_char(&mut self) -> ParseResult<Box<Node>> {
         let char_t = self.try_token(TokenKind::tCHAR)?;
-        Ok(Builder::<C>::character(char_t))
+        Ok(Builder::character(char_t))
     }
 
     fn try_string_seq(&mut self) -> ParseResult<Box<Node>> {
@@ -48,7 +45,7 @@ where
             }
         }
 
-        Ok(Builder::<C>::string_compose(None, parts, None))
+        Ok(Builder::string_compose(None, parts, None))
     }
 
     fn try_string1(&mut self) -> ParseResult<Box<Node>> {
@@ -66,11 +63,7 @@ where
             .stop()?;
 
         // TODO: dedent_heredoc
-        Ok(Builder::<C>::string_compose(
-            Some(begin_t),
-            parts,
-            Some(end_t),
-        ))
+        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
     }
 
     // This rule can be `none`
@@ -109,10 +102,7 @@ where
         self.one_of("string content")
             .or_else(|| {
                 let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
-                Ok(Builder::<C>::string_internal(
-                    string_content_t,
-                    self.buffer(),
-                ))
+                Ok(Builder::string_internal(string_content_t, self.buffer()))
             })
             .or_else(|| {
                 let (_string_dvar_t, string_dvar) = self
@@ -131,7 +121,7 @@ where
                     .and(|| self.expect_token(TokenKind::tSTRING_DEND))
                     .stop()?;
 
-                Ok(Builder::<C>::begin(string_dbeg_t, compstmt, string_dend_t))
+                Ok(Builder::begin(string_dbeg_t, compstmt, string_dend_t))
             })
             .stop()
     }

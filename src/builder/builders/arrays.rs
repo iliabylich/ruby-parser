@@ -1,11 +1,11 @@
 use crate::{
-    builder::{builders::helpers::collection_map, Builder, Constructor},
+    builder::{builders::helpers::collection_map, Builder},
     nodes::{Array, Dstr, Dsym, Splat, Str, Sym},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn array(
         begin_t: Option<Token>,
         elements: Vec<Node>,

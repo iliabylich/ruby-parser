@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_if_expr(&mut self) -> ParseResult<Box<Node>> {
         let (if_t, expr, then_t, compstmt, if_tail, end_t) = self
             .all_of("if expr")

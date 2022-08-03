@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_defined(&mut self) -> ParseResult<Box<Node>> {
         let (defined_t, _nl, lparen_t, expr, rparen_t) = self
             .all_of("defined? value")

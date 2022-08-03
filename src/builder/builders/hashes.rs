@@ -2,14 +2,14 @@ use crate::{
     buffer::Buffer,
     builder::{
         helpers::{collection_map, string_value},
-        Builder, Constructor,
+        Builder,
     },
     loc::loc,
     nodes::{Complex, Const, Float, Hash, Int, Kwsplat, Lvar, Pair, Rational, Regexp, Str, Sym},
     Node, Token,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn pair(key: Box<Node>, assoc_t: Token, value: Box<Node>) -> Box<Node> {
         let operator_l = assoc_t.loc;
         let expression_l = key.expression().join(value.expression());

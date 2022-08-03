@@ -1,5 +1,5 @@
 use crate::buffer::Buffer;
-use crate::builder::{Builder, Constructor, RustConstructor};
+use crate::builder::Builder;
 use crate::lexer::Lexer;
 use crate::nodes::Node;
 use crate::state::OwnedState;
@@ -44,19 +44,14 @@ mod words;
 mod xstring;
 mod yield_;
 
-pub struct Parser<C: Constructor = RustConstructor> {
+pub struct Parser {
     state: OwnedState,
 
     lexer: Lexer,
     debug: bool,
-    phantom: std::marker::PhantomData<C>,
 }
-pub type RustParser = Parser<RustConstructor>;
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub fn new(input: &[u8]) -> Self {
         let mut state = OwnedState::new(input);
         let state_ref = state.new_ref();
@@ -65,7 +60,6 @@ where
             state,
             lexer: Lexer::new(state_ref),
             debug: false,
-            phantom: std::marker::PhantomData,
         }
     }
 
@@ -126,10 +120,7 @@ where
     }
 }
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     fn try_command_rhs(&mut self) -> ParseResult<Box<Node>> {
         todo!("parser.try_command_rhs")
     }
@@ -202,7 +193,7 @@ where
         self.one_of("fitem")
             .or_else(|| {
                 self.try_fname()
-                    .map(|token| Builder::<C>::symbol_internal(token, self.buffer()))
+                    .map(|token| Builder::symbol_internal(token, self.buffer()))
             })
             .or_else(|| self.try_symbol())
             .stop()
@@ -309,7 +300,7 @@ where
         let mut args = vec![];
         let mut commas = vec![];
 
-        fn item<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+        fn item(parser: &mut Parser) -> ParseResult<Box<Node>> {
             if parser.current_token().is(TokenKind::tSTAR) {
                 let star_t = parser.current_token();
                 let arg_value = parser.try_arg_value().map_err(|mut err| {
@@ -674,7 +665,7 @@ where
             .or_else(|| self.try_user_variable())
             .or_else(|| self.try_keyword_variable())
             .stop()
-            .map(|node| Builder::<C>::assignable(node))
+            .map(|node| Builder::assignable(node))
     }
     fn try_f_opt_paren_args(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.try_f_opt_paren_args")

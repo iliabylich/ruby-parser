@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_class(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("class definition")
             .or_else(|| {

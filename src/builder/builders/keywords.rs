@@ -1,7 +1,7 @@
 use crate::{
     builder::{
         helpers::{maybe_loc, maybe_node_expr},
-        Builder, Constructor,
+        Builder,
     },
     nodes::{Break, Defined, Next, Redo, Retry, Return, Super, Yield, ZSuper},
     Node, Token,
@@ -20,7 +20,7 @@ pub(crate) enum KeywordCmd {
     Zsuper,
 }
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn keyword_cmd(
         type_: KeywordCmd,
         keyword_t: Token,

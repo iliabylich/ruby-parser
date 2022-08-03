@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_yield(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("yield with opt args")
             .or_else(|| {

@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     // This rule can be `none`
     pub(crate) fn try_opt_rescue(&mut self) -> ParseResult<Vec<Node>> {
         let mut nodes = vec![];
@@ -80,7 +77,7 @@ where
     }
 }
 
-fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+fn try_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (rescue_t, exc_list, exc_var, then, compstmt) = parser
         .all_of("rescue1")
         .and(|| parser.try_token(TokenKind::kRESCUE))
@@ -96,19 +93,19 @@ fn try_opt_rescue1<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<No
         .and(|| parser.try_compstmt())
         .stop()?;
 
-    Ok(Builder::<C>::rescue_body(
+    Ok(Builder::rescue_body(
         rescue_t, exc_list, exc_var, then, compstmt,
     ))
 }
 
-fn try_exc_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<Node>> {
+fn try_exc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     parser
         .one_of("exceptions list")
         .or_else(|| parser.try_arg_value().map(|arg_value| vec![*arg_value]))
         .or_else(|| parser.try_mrhs())
         .stop()
 }
-fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Option<(Token, Box<Node>)>> {
+fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
     parser
         .one_of("[exc var]")
         .or_else(|| {
@@ -126,11 +123,11 @@ fn try_exc_var<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Option<(To
 #[cfg(test)]
 mod tests {
     use super::try_opt_rescue1;
-    use crate::parser::{ParseError, RustParser};
+    use crate::parser::{ParseError, Parser};
 
     #[test]
     fn test_opt_rescue1() {
-        let mut parser = RustParser::new(b"rescue");
+        let mut parser = Parser::new(b"rescue");
         assert_eq!(try_opt_rescue1(&mut parser), Err(ParseError::empty()));
     }
 }

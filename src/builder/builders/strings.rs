@@ -2,7 +2,7 @@ use crate::{
     buffer::Buffer,
     builder::{
         builders::helpers::{collection_map, heredoc_map, is_heredoc, string_value},
-        Builder, Constructor,
+        Builder,
     },
     loc::loc,
     nodes::{Dstr, Heredoc, Str},
@@ -11,7 +11,7 @@ use crate::{
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn str_node(
         begin_t: Option<Token>,
         value: StringContent,

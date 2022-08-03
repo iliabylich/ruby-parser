@@ -1,10 +1,10 @@
 use crate::{
-    builder::{helpers::maybe_loc, Builder, Constructor},
+    builder::{helpers::maybe_loc, Builder},
     nodes::{Class, Module, SClass},
     Node, Token,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn def_class(
         class_t: Token,
         name: Box<Node>,

@@ -1,11 +1,11 @@
 use crate::{
-    builder::{builders::helpers::collection_expr, Builder, Constructor},
+    builder::{builders::helpers::collection_expr, Builder},
     nodes::{XHeredoc, Xstr},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn xstring_compose(begin_t: Token, parts: Vec<Node>, end_t: Token) -> Box<Node> {
         let begin_l = begin_t.loc;
         let end_l = end_t.loc;

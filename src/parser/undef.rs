@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_undef(&mut self) -> ParseResult<Box<Node>> {
         let (undef_t, names) = self
             .all_of("undef ...")
@@ -16,7 +13,7 @@ where
             .and(|| self.try_names())
             .stop()?;
 
-        Ok(Builder::<C>::undef(undef_t, names))
+        Ok(Builder::undef(undef_t, names))
     }
 
     fn try_names(&mut self) -> ParseResult<Vec<Node>> {

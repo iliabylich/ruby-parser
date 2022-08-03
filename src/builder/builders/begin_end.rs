@@ -1,11 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     nodes::{Postexe, Preexe},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn preexe(
         preexe_t: Token,
         lcurly_t: Token,

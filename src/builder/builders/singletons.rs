@@ -1,11 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     nodes::{False, Nil, True},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     // Singletons
     pub(crate) fn nil(nil_t: Token) -> Box<Node> {
         let loc = nil_t.loc;

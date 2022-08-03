@@ -1,11 +1,11 @@
 use crate::{
-    builder::{builders::helpers::nodes_locs, Builder, Constructor},
+    builder::{builders::helpers::nodes_locs, Builder},
     nodes::{Begin, Mlhs},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn compstmt(statements: Vec<Node>) -> Box<Node> {
         debug_assert!(!statements.is_empty());
 

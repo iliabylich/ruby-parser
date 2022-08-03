@@ -1,14 +1,14 @@
 use crate::{
     builder::{
         helpers::{maybe_boxed_node_expr, maybe_loc},
-        Builder, Constructor,
+        Builder,
     },
     nodes::{If, IfMod, IfTernary},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn condition(
         cond_t: Token,
         cond: Box<Node>,

@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_hash(&mut self) -> ParseResult<Box<Node>> {
         let (lcurly_t, assoc_list, rcurly_t) = self
             .all_of("hash")

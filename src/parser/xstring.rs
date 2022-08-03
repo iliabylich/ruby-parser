@@ -1,5 +1,5 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     lexer::strings::{
         literal::StringLiteral,
         types::{Interpolation, StringInterp},
@@ -11,10 +11,7 @@ use crate::{
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_xstring(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, parts, end_t) = self
             .all_of("xstring")
@@ -40,7 +37,7 @@ where
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
-        Ok(Builder::<C>::xstring_compose(begin_t, parts, end_t))
+        Ok(Builder::xstring_compose(begin_t, parts, end_t))
     }
 
     // This rule can be `none`

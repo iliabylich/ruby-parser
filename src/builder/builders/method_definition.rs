@@ -2,14 +2,14 @@ use crate::{
     buffer::Buffer,
     builder::{
         helpers::{maybe_boxed_node_expr, string_value},
-        Builder, Constructor,
+        Builder,
     },
     nodes::{Alias, Def, Defs, Undef},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn def_method(
         def_t: Token,
         name_t: Token,

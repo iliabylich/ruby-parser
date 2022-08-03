@@ -1,5 +1,3 @@
-use crate::builder::{Constructor, RustConstructor};
-
 pub(crate) mod helpers;
 
 mod access;
@@ -28,6 +26,4 @@ mod special_constants;
 mod strings;
 mod symbols;
 
-pub(crate) struct Builder<C: Constructor = RustConstructor> {
-    phantom: std::marker::PhantomData<C>,
-}
+pub(crate) struct Builder;

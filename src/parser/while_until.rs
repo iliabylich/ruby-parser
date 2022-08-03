@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_while_expr(&mut self) -> ParseResult<Box<Node>> {
         let (while_t, expr_value_do, compstmt, end_t) = self
             .all_of("while expr")

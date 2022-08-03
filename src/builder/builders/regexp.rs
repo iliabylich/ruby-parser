@@ -1,13 +1,13 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder, Constructor},
+    builder::{builders::helpers::string_value, Builder},
     nodes::{RegOpt, Regexp},
     string_content::StringContent,
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn regexp_options(regexp_end_t: &Token, buffer: &Buffer) -> Option<Box<Node>> {
         let expression_l = regexp_end_t.loc;
 

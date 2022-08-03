@@ -1,4 +1,4 @@
-use crate::{builder::Constructor, parser::Parser};
+use crate::parser::Parser;
 
 mod step_data;
 
@@ -16,7 +16,7 @@ use one_of::OneOf;
 mod all_of;
 use all_of::AllOf0 as AllOf;
 
-impl<C: Constructor> Parser<C> {
+impl Parser {
     pub(crate) fn one_of<T>(&self, name: &'static str) -> OneOf<T> {
         // eprintln!("constructing one_of {:?}", name);
         OneOf::new(name, self.new_checkpoint())

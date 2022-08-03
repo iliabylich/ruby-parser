@@ -1,12 +1,12 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder, Constructor},
+    builder::{builders::helpers::string_value, Builder},
     nodes::{Complex, Float, Int, Rational},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn integer(integer_t: Token, buffer: &Buffer) -> Box<Node> {
         let expression_l = integer_t.loc;
         Box::new(Node::Int(Int {

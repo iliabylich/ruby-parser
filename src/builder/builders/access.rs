@@ -1,13 +1,13 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder, Constructor},
+    builder::{builders::helpers::string_value, Builder},
     nodes::{BackRef, Cbase, Const, Cvar, Gvar, Ivar, Lvar, NthRef, Self_},
     string_content::StringContent,
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn self_(self_t: Token) -> Box<Node> {
         let loc = self_t.loc;
         Box::new(Node::Self_(Self_ { expression_l: loc }))

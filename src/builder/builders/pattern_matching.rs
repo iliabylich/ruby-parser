@@ -1,11 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     nodes::{MatchPattern, MatchPatternP},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn case_match() {}
 
     pub(crate) fn match_pattern(value: Box<Node>, assoc_t: Token, pattern: Box<Node>) -> Box<Node> {

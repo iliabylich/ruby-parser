@@ -1,10 +1,10 @@
 #[cfg(test)]
 macro_rules! assert_parses_with_error {
     ($f:ident, $src:expr, $expected:literal) => {{
-        use crate::parser::RustParser;
+        use crate::parser::Parser;
 
         let src: &[u8] = $src;
-        let mut parser = RustParser::new(src).debug();
+        let mut parser = Parser::new(src).debug();
         let result = parser.$f();
 
         match result {
@@ -18,10 +18,10 @@ macro_rules! assert_parses_with_error {
         parser
     }};
     ($f:ident, $src:expr) => {{
-        use crate::parser::RustParser;
+        use crate::parser::Parser;
 
         let src: &[u8] = $src;
-        let mut parser = RustParser::new(src).debug();
+        let mut parser = Parser::new(src).debug();
         let result = parser.$f();
         assert!(
             result.is_err(),

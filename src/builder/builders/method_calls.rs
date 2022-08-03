@@ -5,7 +5,7 @@ use crate::{
             collection_map, maybe_boxed_node_expr, maybe_loc, maybe_node_expr, maybe_string_value,
             static_regexp_captures, string_value,
         },
-        Builder, Constructor,
+        Builder,
     },
     nodes::{
         Begin, Block, BlockPass, Break, CSend, Index, IndexAsgn, Lambda, MatchWithLvasgn, Next,
@@ -21,7 +21,7 @@ pub(crate) enum ArgsType {
     Numargs(u8),
 }
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn call_method(
         receiver: Option<Box<Node>>,
         dot_t: Option<Token>,

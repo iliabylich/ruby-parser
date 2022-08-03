@@ -1,18 +1,18 @@
 use crate::{
     buffer::Buffer,
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C: Constructor> Parser<C> {
+impl Parser {
     pub(crate) fn try_arg(&mut self) -> ParseResult<Box<Node>> {
         try_arg0(self, 0)
     }
 }
 
-fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<Box<Node>> {
+fn try_arg0(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
     let mut lhs: Box<Node> = try_arg_lhs(parser)?;
 
     loop {
@@ -62,7 +62,7 @@ fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<B
                         ))
                     }
                 };
-                lhs = Builder::<C>::ternary(lhs, op_t, mhs, colon_t, rhs);
+                lhs = Builder::ternary(lhs, op_t, mhs, colon_t, rhs);
             } else {
                 // normal binary operator, like `+`
                 let rhs = match try_arg0(parser, r_bp) {
@@ -75,7 +75,7 @@ fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<B
                         ))
                     }
                 };
-                lhs = build_binary_call::<C>(lhs, op_t, rhs, parser.buffer());
+                lhs = build_binary_call(lhs, op_t, rhs, parser.buffer());
             }
             continue;
         }
@@ -87,7 +87,7 @@ fn try_arg0<C: Constructor>(parser: &mut Parser<C>, min_bp: u8) -> ParseResult<B
     Ok(lhs)
 }
 
-fn try_arg_head<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+fn try_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
     parser
         .one_of("arg head")
         .or_else(|| {
@@ -268,7 +268,7 @@ fn try_arg_head<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>
         .stop()
 }
 
-fn try_arg_rhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+fn try_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let lhs = parser.try_arg()?;
     if parser.current_token().is(TokenKind::kRESCUE) {
         let rescue_t = parser.current_token();
@@ -287,7 +287,7 @@ fn try_arg_rhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>>
     }
 }
 
-fn try_arg_prefix_operator<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Token> {
+fn try_arg_prefix_operator(parser: &mut Parser) -> ParseResult<Token> {
     parser
         .one_of("arg prefix operator")
         .or_else(|| parser.try_token(TokenKind::tBDOT2))
@@ -300,7 +300,7 @@ fn try_arg_prefix_operator<C: Constructor>(parser: &mut Parser<C>) -> ParseResul
         .stop()
 }
 
-fn try_arg_lhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+fn try_arg_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
     parser
         .one_of("arg lhs")
         .or_else(|| {
@@ -314,7 +314,7 @@ fn try_arg_lhs<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>>
         .stop()
 }
 
-fn try_binary_or_postfix_operator<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Token> {
+fn try_binary_or_postfix_operator(parser: &mut Parser) -> ParseResult<Token> {
     parser
         .one_of("infix/binary operator")
         .or_else(|| parser.expect_token(TokenKind::tDOT2))
@@ -359,12 +359,7 @@ fn build_postfix_call(op_t: Token, _lhs: Box<Node>) -> Box<Node> {
     }
 }
 
-fn build_binary_call<C: Constructor>(
-    lhs: Box<Node>,
-    op_t: Token,
-    rhs: Box<Node>,
-    buffer: &Buffer,
-) -> Box<Node> {
+fn build_binary_call(lhs: Box<Node>, op_t: Token, rhs: Box<Node>, buffer: &Buffer) -> Box<Node> {
     match op_t.kind {
         TokenKind::tDOT2 => panic!("range inclusive"),
         TokenKind::tDOT3 => panic!("range exclusive"),
@@ -388,11 +383,11 @@ fn build_binary_call<C: Constructor>(
         | TokenKind::tGT
         | TokenKind::tLT
         | TokenKind::tGEQ
-        | TokenKind::tLEQ => Builder::<C>::binary_op(lhs, op_t, rhs, buffer),
+        | TokenKind::tLEQ => Builder::binary_op(lhs, op_t, rhs, buffer),
 
-        TokenKind::tMATCH => Builder::<C>::match_op(lhs, op_t, rhs),
+        TokenKind::tMATCH => Builder::match_op(lhs, op_t, rhs),
 
-        TokenKind::tANDOP | TokenKind::tOROP => Builder::<C>::logical_op(lhs, op_t, rhs),
+        TokenKind::tANDOP | TokenKind::tOROP => Builder::logical_op(lhs, op_t, rhs),
 
         _ => unreachable!("not a binary operator {:?}", op_t.kind),
     }

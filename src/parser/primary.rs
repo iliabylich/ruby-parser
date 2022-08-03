@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_primary(&mut self) -> ParseResult<Box<Node>> {
         let node = self
             .one_of("primary value")
@@ -127,17 +123,14 @@ where
     }
 }
 
-fn try_keyword_cmd<C: Constructor>(
-    parser: &mut Parser<C>,
-    expected: TokenKind,
-) -> ParseResult<Box<Node>> {
+fn try_keyword_cmd(parser: &mut Parser, expected: TokenKind) -> ParseResult<Box<Node>> {
     let token = parser.try_token(expected)?;
     todo!("keyword.cmd {:?}", token)
 }
 
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
-fn try_not_expr<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Box<Node>> {
+fn try_not_expr(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (not_t, lparen_t, expr, rparen_t) = parser
         .all_of("not ( [expr] )")
         .and(|| parser.try_token(TokenKind::kNOT))

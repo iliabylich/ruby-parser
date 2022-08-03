@@ -1,10 +1,10 @@
 use crate::{
-    builder::{helpers::maybe_boxed_node_expr, Builder, Constructor},
+    builder::{helpers::maybe_boxed_node_expr, Builder},
     nodes::{Erange, Irange},
     Node, Token,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn range_inclusive(
         left: Option<Box<Node>>,
         dot2_t: Token,

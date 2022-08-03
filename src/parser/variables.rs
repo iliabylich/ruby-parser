@@ -1,47 +1,44 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_gvar(&mut self) -> ParseResult<Box<Node>> {
         let gvar_t = self.try_token(TokenKind::tGVAR)?;
-        Ok(Builder::<C>::gvar(gvar_t, self.buffer()))
+        Ok(Builder::gvar(gvar_t, self.buffer()))
     }
 
     pub(crate) fn try_back_ref(&mut self) -> ParseResult<Box<Node>> {
         let back_ref_t = self.try_token(TokenKind::tBACK_REF)?;
-        Ok(Builder::<C>::back_ref(back_ref_t, self.buffer()))
+        Ok(Builder::back_ref(back_ref_t, self.buffer()))
     }
 
     pub(crate) fn try_nth_ref(&mut self) -> ParseResult<Box<Node>> {
         let nth_ref_t = self.try_token(TokenKind::tNTH_REF)?;
-        Ok(Builder::<C>::nth_ref(nth_ref_t, self.buffer()))
+        Ok(Builder::nth_ref(nth_ref_t, self.buffer()))
     }
 
     pub(crate) fn try_lvar(&mut self) -> ParseResult<Box<Node>> {
         let lvar_t = self.try_token(TokenKind::tIDENTIFIER)?;
-        Ok(Builder::<C>::lvar(lvar_t, self.buffer()))
+        Ok(Builder::lvar(lvar_t, self.buffer()))
     }
 
     pub(crate) fn try_ivar(&mut self) -> ParseResult<Box<Node>> {
         let ivar_t = self.try_token(TokenKind::tIVAR)?;
-        Ok(Builder::<C>::ivar(ivar_t, self.buffer()))
+        Ok(Builder::ivar(ivar_t, self.buffer()))
     }
 
     pub(crate) fn try_cvar(&mut self) -> ParseResult<Box<Node>> {
         let cvar_t = self.try_token(TokenKind::tCVAR)?;
-        Ok(Builder::<C>::cvar(cvar_t, self.buffer()))
+        Ok(Builder::cvar(cvar_t, self.buffer()))
     }
 
     pub(crate) fn try_t_const(&mut self) -> ParseResult<Box<Node>> {
         let const_t = self.try_token(TokenKind::tCONSTANT)?;
-        Ok(Builder::<C>::const_(const_t, self.buffer()))
+        Ok(Builder::const_(const_t, self.buffer()))
     }
 
     pub(crate) fn try_const_or_identifier(&mut self) -> ParseResult<Token> {

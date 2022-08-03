@@ -2,7 +2,7 @@ use crate::{
     buffer::Buffer,
     builder::{
         helpers::{collection_map, maybe_loc, maybe_string_value, string_value},
-        Builder, Constructor,
+        Builder,
     },
     nodes::{
         Arg, Args, Blockarg, ForwardArg, ForwardedArgs, Kwarg, Kwnilarg, Kwoptarg, Kwrestarg, Mlhs,
@@ -11,7 +11,7 @@ use crate::{
     Node, Token,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn args(
         begin_t: Option<Token>,
         args: Vec<Node>,

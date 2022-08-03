@@ -1,19 +1,11 @@
 use crate::{
     buffer::Buffer,
-    builder::CString,
     loc::{loc, Loc},
     string_content::StringContent,
     token::{Token, TokenKind},
     Node,
 };
 
-pub(crate) fn node_ptr_to_box(ptr: *mut std::ffi::c_void) -> Box<Node> {
-    unsafe { Box::from_raw(ptr as *mut Node) }
-}
-
-pub(crate) fn cstring_value(loc: Loc, buffer: &Buffer) -> CString {
-    CString::from(buffer.slice(loc.start, loc.end).unwrap())
-}
 pub(crate) fn string_value(loc: Loc, buffer: &Buffer) -> StringContent {
     StringContent::from(buffer.slice(loc.start, loc.end).unwrap())
 }

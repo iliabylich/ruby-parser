@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     parser::{ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_command(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("command")
             .or_else(|| {
@@ -118,8 +114,8 @@ where
 
 type CmdBraceBlock = (Token, Option<Box<Node>>, Token);
 
-fn try_command_args_and_cmd_brace_block<C: Constructor>(
-    parser: &mut Parser<C>,
+fn try_command_args_and_cmd_brace_block(
+    parser: &mut Parser,
 ) -> ParseResult<(Vec<Node>, Option<CmdBraceBlock>)> {
     parser
         .all_of("command_args [+ cmd_brace_block]")
@@ -134,7 +130,7 @@ fn try_command_args_and_cmd_brace_block<C: Constructor>(
         .stop()
 }
 
-fn try_cmd_brace_block<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<CmdBraceBlock> {
+fn try_cmd_brace_block(parser: &mut Parser) -> ParseResult<CmdBraceBlock> {
     let (begin_t, brace_body, end_t) = parser
         .all_of("cmd brace block")
         .and(|| parser.try_token(TokenKind::tLCURLY))

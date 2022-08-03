@@ -1,14 +1,14 @@
 use crate::{
     builder::{
         helpers::{collection_map, maybe_boxed_node_expr, maybe_loc, maybe_node_expr},
-        Builder, Constructor,
+        Builder,
     },
     nodes::{Begin, Ensure, Rescue, RescueBody},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn rescue_body(
         rescue_t: Token,
         exc_list: Vec<Node>,

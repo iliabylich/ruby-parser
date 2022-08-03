@@ -1,13 +1,13 @@
 use crate::{
     builder::{
         helpers::{maybe_boxed_node_expr, maybe_loc, maybe_node_expr},
-        Builder, Constructor,
+        Builder,
     },
     nodes::{Case, When},
     Node, Token,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn when(
         when_t: Token,
         patterns: Vec<Node>,

@@ -1,11 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     nodes::{Encoding, File, Line},
     token::Token,
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn __line__(line_t: Token) -> Box<Node> {
         let loc = line_t.loc;
         Box::new(Node::Line(Line { expression_l: loc }))

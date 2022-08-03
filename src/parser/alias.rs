@@ -1,22 +1,22 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C: Constructor> Parser<C> {
+impl Parser {
     pub(crate) fn try_alias(&mut self) -> ParseResult<Box<Node>> {
         let (alias_t, (lhs, rhs)) = self
             .all_of("alias statement")
             .and(|| self.try_token(TokenKind::kALIAS))
             .and(|| try_alias_args(self))
             .stop()?;
-        Ok(Builder::<C>::alias(alias_t, lhs, rhs))
+        Ok(Builder::alias(alias_t, lhs, rhs))
     }
 }
 
-fn try_alias_args<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
+fn try_alias_args(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .one_of("alias arguments")
         .or_else(|| try_fitem_fitem(parser))
@@ -26,7 +26,7 @@ fn try_alias_args<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<No
         .stop()
 }
 
-fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
+fn try_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("fitem -> fitem")
         .and(|| parser.try_fitem())
@@ -34,7 +34,7 @@ fn try_fitem_fitem<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<N
         .stop()
 }
 
-fn try_gvar_gvar<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<(Box<Node>, Box<Node>)> {
+fn try_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("gvar -> [gvar | back ref | nth ref]")
         .and(|| parser.try_gvar())

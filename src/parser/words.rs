@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_words(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, elements, end_t) = self
             .all_of("words")
@@ -17,7 +14,7 @@ where
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
-        Ok(Builder::<C>::words_compose(begin_t, elements, end_t))
+        Ok(Builder::words_compose(begin_t, elements, end_t))
     }
 
     // This rule can be `none
@@ -34,7 +31,7 @@ where
         if contents.is_empty() {
             Ok(None)
         } else {
-            Ok(Some(Builder::<C>::word(contents)))
+            Ok(Some(Builder::word(contents)))
         }
     }
 }

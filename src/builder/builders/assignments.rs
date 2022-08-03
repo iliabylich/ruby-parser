@@ -1,6 +1,6 @@
 use crate::{
     buffer::Buffer,
-    builder::{builders::helpers::string_value, Builder, Constructor},
+    builder::{builders::helpers::string_value, Builder},
     nodes::{
         AndAsgn, BackRef, CSend, Casgn, Const, Cvar, Cvasgn, Encoding, False, File, Gvar, Gvasgn,
         Index, IndexAsgn, Ivar, Ivasgn, Line, Lvar, Lvasgn, MatchVar, Nil, NthRef, OpAsgn, OrAsgn,
@@ -10,7 +10,7 @@ use crate::{
     Node,
 };
 
-impl<C: Constructor> Builder<C> {
+impl Builder {
     pub(crate) fn assignable(node: Box<Node>) -> Box<Node> {
         let node = match *node {
             Node::Cvar(Cvar { name, expression_l }) => Node::Cvasgn(Cvasgn {

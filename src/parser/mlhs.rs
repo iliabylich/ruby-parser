@@ -1,14 +1,10 @@
 use crate::{
-    builder::Constructor,
     nodes::Node,
     parser::{ParseResult, Parser},
     token::TokenKind,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_mlhs(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("mlhs")
             .or_else(|| self.try_mlhs_basic())
@@ -106,7 +102,7 @@ where
     }
 
     fn try_mlhs_head(&mut self) -> ParseResult<Vec<Node>> {
-        let try_item_and_comma = |parser: &mut Parser<C>| {
+        let try_item_and_comma = |parser: &mut Parser| {
             parser
                 .all_of("mlhs item and comma")
                 .and(|| parser.try_mlhs_item())

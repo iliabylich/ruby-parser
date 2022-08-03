@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_symbols(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, elements, end_t) = self
             .all_of("symbols")
@@ -17,12 +14,12 @@ where
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
-        Ok(Builder::<C>::symbols_compose(begin_t, elements, end_t))
+        Ok(Builder::symbols_compose(begin_t, elements, end_t))
     }
 }
 
 // This rule can be `none`
-fn try_symbol_list<C: Constructor>(parser: &mut Parser<C>) -> ParseResult<Vec<Node>> {
+fn try_symbol_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     let mut result = vec![];
     while let Some(word) = parser.try_word()? {
         result.push(*word);

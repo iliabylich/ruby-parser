@@ -1,14 +1,11 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     parser::{ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_numeric(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("numeric")
             .or_else(|| {
@@ -18,7 +15,7 @@ where
                     .and(|| self.try_simple_numeric())
                     .stop()?;
 
-                Ok(Builder::<C>::unary_num(
+                Ok(Builder::unary_num(
                     uminus_num,
                     simple_numeric,
                     self.buffer(),
@@ -32,19 +29,19 @@ where
         self.one_of("simple numeric (without sign)")
             .or_else(|| {
                 let integer_t = self.try_token(TokenKind::tINTEGER)?;
-                Ok(Builder::<C>::integer(integer_t, self.buffer()))
+                Ok(Builder::integer(integer_t, self.buffer()))
             })
             .or_else(|| {
                 let float_t = self.try_token(TokenKind::tFLOAT)?;
-                Ok(Builder::<C>::float(float_t, self.buffer()))
+                Ok(Builder::float(float_t, self.buffer()))
             })
             .or_else(|| {
                 let rational_t = self.try_token(TokenKind::tRATIONAL)?;
-                Ok(Builder::<C>::rational(rational_t, self.buffer()))
+                Ok(Builder::rational(rational_t, self.buffer()))
             })
             .or_else(|| {
                 let imaginary_t = self.try_token(TokenKind::tIMAGINARY)?;
-                Ok(Builder::<C>::complex(imaginary_t, self.buffer()))
+                Ok(Builder::complex(imaginary_t, self.buffer()))
             })
             .stop()
     }

@@ -1,5 +1,5 @@
 use crate::{
-    builder::{Builder, Constructor},
+    builder::Builder,
     lexer::strings::{literal::StringLiteral, types::Regexp},
     loc::loc,
     parser::{ParseResult, Parser},
@@ -8,10 +8,7 @@ use crate::{
     Node,
 };
 
-impl<C> Parser<C>
-where
-    C: Constructor,
-{
+impl Parser {
     pub(crate) fn try_regexp(&mut self) -> ParseResult<Box<Node>> {
         let (begin_t, contents, end_t) = self
             .all_of("regexp")
@@ -39,10 +36,8 @@ where
             .and(|| self.expect_token(TokenKind::tSTRING_END))
             .stop()?;
 
-        let options = Builder::<C>::regexp_options(&end_t, self.buffer());
-        Ok(Builder::<C>::regexp_compose(
-            begin_t, contents, end_t, options,
-        ))
+        let options = Builder::regexp_options(&end_t, self.buffer());
+        Ok(Builder::regexp_compose(begin_t, contents, end_t, options))
     }
 
     // This rule can be `none`
