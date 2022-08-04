@@ -21,7 +21,7 @@ impl Parser {
         let mut nodes = vec![];
         let mut commas = vec![];
 
-        let assoc = parse_assoc(self)?;
+        let assoc = self.parse_assoc()?;
         nodes.push(*assoc);
 
         loop {
@@ -32,13 +32,61 @@ impl Parser {
                 break;
             }
 
-            match parse_assoc(self) {
+            match self.parse_assoc() {
                 Ok(node) => nodes.push(*node),
                 Err(error) => return Err(ParseError::seq_error("assocs", (nodes, commas), error)),
             }
         }
 
         Ok(nodes)
+    }
+
+    pub(crate) fn parse_assoc(&mut self) -> ParseResult<Box<Node>> {
+        self.one_of("assoc")
+            .or_else(|| {
+                let (key_t, value) = self
+                    .all_of("tLABEL arg_value")
+                    .and(|| self.try_token(TokenKind::tLABEL))
+                    .and(|| self.parse_arg_value())
+                    .stop()?;
+
+                Ok(Builder::pair_keyword(key_t, value, self.buffer()))
+            })
+            .or_else(|| {
+                let key_t = self.try_token(TokenKind::tLABEL)?;
+                Ok(Builder::pair_label(key_t, self.buffer()))
+            })
+            .or_else(|| {
+                let (begin_t, parts, end_t, value) = self
+                    .all_of("tSTRING_BEG string_contents tLABEL_END arg_value")
+                    .and(|| self.try_token(TokenKind::tSTRING_BEG))
+                    .and(|| self.parse_string_contents())
+                    .and(|| self.expect_token(TokenKind::tLABEL_END))
+                    .and(|| self.parse_arg_value())
+                    .stop()?;
+
+                Ok(Builder::pair_quoted(begin_t, parts, end_t, value))
+            })
+            .or_else(|| {
+                let (dstar_t, value) = self
+                    .all_of("tDSTAR arg_value")
+                    .and(|| self.try_token(TokenKind::tDSTAR))
+                    .and(|| self.parse_arg_value())
+                    .stop()?;
+
+                Ok(Builder::kwsplat(dstar_t, value))
+            })
+            .or_else(|| {
+                let (key, assoc_t, value) = self
+                    .all_of("arg_value tASSOC arg_value")
+                    .and(|| self.parse_arg_value())
+                    .and(|| self.expect_token(TokenKind::tASSOC))
+                    .and(|| self.parse_arg_value())
+                    .stop()?;
+
+                Ok(Builder::pair(key, assoc_t, value))
+            })
+            .stop()
     }
 }
 
@@ -54,55 +102,6 @@ fn parse_assoc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
             Ok(assocs)
         })
         .or_else(|| Ok(vec![]))
-        .stop()
-}
-
-fn parse_assoc(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("assoc")
-        .or_else(|| {
-            let (key_t, value) = parser
-                .all_of("tLABEL arg_value")
-                .and(|| parser.try_token(TokenKind::tLABEL))
-                .and(|| parser.parse_arg_value())
-                .stop()?;
-
-            Ok(Builder::pair_keyword(key_t, value, parser.buffer()))
-        })
-        .or_else(|| {
-            let key_t = parser.try_token(TokenKind::tLABEL)?;
-            Ok(Builder::pair_label(key_t, parser.buffer()))
-        })
-        .or_else(|| {
-            let (begin_t, parts, end_t, value) = parser
-                .all_of("tSTRING_BEG string_contents tLABEL_END arg_value")
-                .and(|| parser.try_token(TokenKind::tSTRING_BEG))
-                .and(|| parser.parse_string_contents())
-                .and(|| parser.expect_token(TokenKind::tLABEL_END))
-                .and(|| parser.parse_arg_value())
-                .stop()?;
-
-            Ok(Builder::pair_quoted(begin_t, parts, end_t, value))
-        })
-        .or_else(|| {
-            let (dstar_t, value) = parser
-                .all_of("tDSTAR arg_value")
-                .and(|| parser.try_token(TokenKind::tDSTAR))
-                .and(|| parser.parse_arg_value())
-                .stop()?;
-
-            Ok(Builder::kwsplat(dstar_t, value))
-        })
-        .or_else(|| {
-            let (key, assoc_t, value) = parser
-                .all_of("arg_value tASSOC arg_value")
-                .and(|| parser.parse_arg_value())
-                .and(|| parser.expect_token(TokenKind::tASSOC))
-                .and(|| parser.parse_arg_value())
-                .stop()?;
-
-            Ok(Builder::pair(key, assoc_t, value))
-        })
         .stop()
 }
 

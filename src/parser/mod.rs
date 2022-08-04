@@ -306,6 +306,7 @@ impl Parser {
         fn item(parser: &mut Parser) -> ParseResult<Box<Node>> {
             if parser.current_token().is(TokenKind::tSTAR) {
                 let star_t = parser.current_token();
+                parser.skip_token();
                 let arg_value = parser.parse_arg_value().map_err(|mut err| {
                     err.make_required();
                     err
@@ -319,19 +320,22 @@ impl Parser {
         let arg = item(self)?;
         args.push(*arg);
         loop {
-            match self.expect_token(TokenKind::tCOMMA) {
-                Ok(comma) => commas.push(comma),
-                Err(_) => return Ok(args),
+            if self.current_token().is(TokenKind::tCOMMA) {
+                commas.push(self.current_token());
+                self.skip_token();
+            } else {
+                return Ok(args);
             }
             match item(self) {
                 Ok(item) => args.push(*item),
-                Err(error) => {
-                    if error.is_lookahead() {
+                Err(error) => match error.strip_lookaheads() {
+                    Some(error) => {
                         return Err(ParseError::seq_error("args", (args, commas), error));
-                    } else {
+                    }
+                    None => {
                         break;
                     }
-                }
+                },
             }
         }
 

@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -19,12 +19,52 @@ impl Parser {
 }
 
 fn parse_aref_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let mut head = parser.parse_args()?;
-    let mut tail = parser.parse_assocs()?;
+    let mut nodes = vec![];
+    let mut commas = vec![];
+
+    let item = parse_aref_args_item(parser)?;
+    nodes.push(*item);
+
+    loop {
+        if parser.current_token().is(TokenKind::tCOMMA) {
+            commas.push(parser.current_token());
+            parser.skip_token();
+        } else {
+            break;
+        }
+
+        match parse_aref_args_item(parser) {
+            Ok(item) => nodes.push(*item),
+            Err(error) => return Err(ParseError::seq_error("aref args", (nodes, commas), error)),
+        }
+    }
     let _trailer = parser.try_trailer();
 
-    head.append(&mut tail);
-    Ok(head)
+    Ok(nodes)
+}
+
+fn parse_aref_args_item(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .one_of("areg_args item")
+        .or_else(|| parser.parse_assoc())
+        .or_else(|| parser.parse_arg())
+        .stop()
+}
+
+fn try_args(parser: &mut Parser) -> ParseResult<Option<Vec<Node>>> {
+    parser
+        .one_of("[args]")
+        .or_else(|| parser.parse_args().map(|v| Some(v)))
+        .or_else(|| Ok(None))
+        .stop()
+}
+
+fn try_assocs(parser: &mut Parser) -> ParseResult<Option<Vec<Node>>> {
+    parser
+        .one_of("[assocs]")
+        .or_else(|| parser.parse_assocs().map(|v| Some(v)))
+        .or_else(|| Ok(None))
+        .stop()
 }
 
 #[cfg(test)]
@@ -33,11 +73,32 @@ mod tests {
 
     #[test]
     fn test_array_simple() {
-        assert_parses!(parse_array, b"[1, 2, 3]", "TODO")
+        assert_parses!(
+            parse_array,
+            b"[1, 2, 3]",
+            r#"
+s(:array,
+  s(:int, "1"),
+  s(:int, "2"),
+  s(:int, "3"))
+            "#
+        )
     }
 
     #[test]
     fn test_array_mixed() {
-        assert_parses!(parse_array, b"[1, 2, 3, 4 => 5]", "TODO")
+        assert_parses!(
+            parse_array,
+            b"[1, 2, 3, 4 => 5]",
+            r#"
+s(:array,
+  s(:int, "1"),
+  s(:int, "2"),
+  s(:int, "3"),
+  s(:pair,
+    s(:int, "4"),
+    s(:int, "5")))
+            "#
+        )
     }
 }
