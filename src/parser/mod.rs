@@ -704,14 +704,17 @@ impl Parser {
         self.parse_terms()
     }
 
-    fn parse_opt_nl(&mut self) -> ParseResult<Token> {
-        self.try_token(TokenKind::tNL)
+    fn try_opt_nl(&mut self) -> ParseResult<Option<Token>> {
+        self.one_of("opt_nl")
+            .or_else(|| self.try_token(TokenKind::tNL).map(|t| Some(t)))
+            .or_else(|| Ok(None))
+            .stop()
     }
 
     fn parse_rparen(&mut self) -> ParseResult<Token> {
         let (_, rparen_t) = self
             .all_of("rparen")
-            .and(|| self.parse_opt_nl())
+            .and(|| self.try_opt_nl())
             .and(|| self.expect_token(TokenKind::tRPAREN))
             .stop()?;
 
@@ -720,7 +723,7 @@ impl Parser {
     fn parse_rbracket(&mut self) -> ParseResult<Token> {
         let (_, rbrack_t) = self
             .all_of("rbrack")
-            .and(|| self.parse_opt_nl())
+            .and(|| self.try_opt_nl())
             .and(|| self.expect_token(TokenKind::tRBRACK))
             .stop()?;
 
@@ -729,7 +732,7 @@ impl Parser {
     fn parse_rbrace(&mut self) -> ParseResult<Token> {
         let (_, rbrace_t) = self
             .all_of("rbrace")
-            .and(|| self.parse_opt_nl())
+            .and(|| self.try_opt_nl())
             .and(|| self.expect_token(TokenKind::tRCURLY))
             .stop()?;
 

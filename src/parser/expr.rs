@@ -30,7 +30,7 @@ fn parse_not_expr(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (not_t, _opt_nl, expr) = parser
         .all_of("not expr")
         .and(|| parser.try_token(TokenKind::kNOT))
-        .and(|| parser.parse_opt_nl())
+        .and(|| parser.try_opt_nl())
         .and(|| parser.parse_expr())
         .stop()?;
 

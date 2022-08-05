@@ -114,8 +114,13 @@ impl Parser {
                     .and(|| self.try_compstmt())
                     .and(|| self.expect_token(TokenKind::tSTRING_DEND))
                     .stop()?;
+                let stmts = if let Some(compstmt) = compstmt {
+                    vec![*compstmt]
+                } else {
+                    vec![]
+                };
 
-                Ok(Builder::begin(string_dbeg_t, compstmt, string_dend_t))
+                Ok(Builder::begin(string_dbeg_t, stmts, string_dend_t))
             })
             .stop()
     }

@@ -68,7 +68,14 @@ impl<T> OneOf<T> {
     pub(crate) fn compact(mut self) -> Self {
         if let Err(errors) = &mut self.inner {
             if let Some(max) = errors.iter().map(|e| e.weight()).max() {
-                errors.retain(|e| e.weight() == max)
+                errors.retain(|e| e.weight() == max);
+
+                if max > 0 {
+                    *errors = std::mem::take(errors)
+                        .into_iter()
+                        .map(|err| err.strip_lookaheads().unwrap())
+                        .collect();
+                }
             }
         }
 

@@ -1,6 +1,6 @@
 use crate::{
     builder::{helpers::nodes_locs, Builder},
-    nodes::{Begin, Mlhs},
+    nodes::Begin,
     token::Token,
     Node,
 };
@@ -23,57 +23,16 @@ impl Builder {
         }
     }
 
-    pub(crate) fn begin(begin_t: Token, body: Option<Box<Node>>, end_t: Token) -> Box<Node> {
-        let new_begin_l = begin_t.loc;
-        let new_end_l = end_t.loc;
-        let new_expression_l = new_begin_l.join(&new_end_l);
-
-        let new_begin_l = Some(new_begin_l);
-        let new_end_l = Some(new_end_l);
-
-        if let Some(body) = body {
-            let mut body = *body;
-            match &mut body {
-                Node::Mlhs(Mlhs {
-                    begin_l,
-                    end_l,
-                    expression_l,
-                    ..
-                }) => {
-                    // Synthesized (begin) from compstmt "a; b" or (mlhs)
-                    // from multi_lhs "(a, b) = *foo".
-                    *begin_l = new_begin_l;
-                    *end_l = new_end_l;
-                    *expression_l = new_expression_l;
-                    Box::new(body)
-                }
-                Node::Begin(Begin {
-                    begin_l,
-                    end_l,
-                    expression_l,
-                    ..
-                }) if begin_l.is_none() && end_l.is_none() => {
-                    *begin_l = new_begin_l;
-                    *end_l = new_end_l;
-                    *expression_l = new_expression_l;
-                    Box::new(body)
-                }
-                _ => Box::new(Node::Begin(Begin {
-                    statements: vec![body],
-                    begin_l: new_begin_l,
-                    end_l: new_end_l,
-                    expression_l: new_expression_l,
-                })),
-            }
-        } else {
-            // A nil expression: `()'.
-            Box::new(Node::Begin(Begin {
-                statements: vec![],
-                begin_l: new_begin_l,
-                end_l: new_end_l,
-                expression_l: new_expression_l,
-            }))
-        }
+    pub(crate) fn begin(begin_t: Token, statements: Vec<Node>, end_t: Token) -> Box<Node> {
+        let begin_l = begin_t.loc;
+        let end_l = end_t.loc;
+        let expression_l = begin_l.join(&end_l);
+        Box::new(Node::Begin(Begin {
+            statements,
+            begin_l: Some(begin_l),
+            end_l: Some(end_l),
+            expression_l,
+        }))
     }
 
     pub(crate) fn group(nodes: Vec<Node>) -> Box<Node> {
