@@ -1,5 +1,5 @@
 use crate::{
-    builder::Builder,
+    builder::{Builder, LoopType},
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node, Token,
@@ -105,10 +105,10 @@ impl Parser {
         let mut stmt = self.parse_stmt_head()?;
         match self.parse_stmt_tail() {
             Ok((mod_t, expr)) => match mod_t.kind {
-                TokenKind::kIF => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
-                TokenKind::kUNLESS => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
-                TokenKind::kWHILE => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
-                TokenKind::kUNTIL => todo!("{:?} {:?} {:?}", stmt, mod_t, expr),
+                TokenKind::kIF => Ok(Builder::condition_mod(Some(stmt), None, mod_t, expr)),
+                TokenKind::kUNLESS => Ok(Builder::condition_mod(None, Some(stmt), mod_t, expr)),
+                TokenKind::kWHILE => Ok(Builder::loop_mod(LoopType::While, stmt, mod_t, expr)),
+                TokenKind::kUNTIL => Ok(Builder::loop_mod(LoopType::Until, stmt, mod_t, expr)),
                 _ => unreachable!("stmt_tail handles only if/unless/while/until modifiers"),
             },
             Err(error) => {

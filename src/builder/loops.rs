@@ -47,7 +47,6 @@ impl Builder {
     }
 
     pub(crate) fn loop_mod(
-        &self,
         loop_type: LoopType,
         body: Box<Node>,
         keyword_t: Token,
