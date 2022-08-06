@@ -705,10 +705,13 @@ impl Parser {
     }
 
     fn try_opt_nl(&mut self) -> ParseResult<Option<Token>> {
-        self.one_of("opt_nl")
-            .or_else(|| self.try_token(TokenKind::tNL).map(|t| Some(t)))
-            .or_else(|| Ok(None))
-            .stop()
+        if self.current_token().is(TokenKind::tNL) {
+            let token = self.current_token();
+            self.skip_token();
+            Ok(Some(token))
+        } else {
+            Ok(None)
+        }
     }
 
     fn parse_rparen(&mut self) -> ParseResult<Token> {

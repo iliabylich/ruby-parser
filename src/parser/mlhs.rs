@@ -1,229 +1,213 @@
 use crate::{
     builder::Builder,
-    nodes::Node,
+    nodes::{Begin, Node},
     parser::{ParseResult, Parser},
-    token::TokenKind,
+    token::{Token, TokenKind},
 };
 
+/*
+        mlhs: ( mlhs )
+            | mlhs_head mlhs_tail
+
+   mlhs_head: node
+            | tSTAR node
+
+   mlhs_tail: none
+            | tCOMMA mlhs
+            | tCOMMA mlhs mlhs_tail
+
+        node: user_variable
+            | keyword_variable
+            | primary_value tLBRACK2 opt_call_args rbracket
+            | primary_value call_op2 tIDENTIFIER
+            | primary_value call_op2 tCONSTANT
+            | tCOLON3 tCONSTANT
+            | backref
+*/
 impl Parser {
     pub(crate) fn parse_mlhs(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("mlhs")
-            .or_else(|| {
-                let exprs = self.parse_mlhs_basic()?;
-                Ok(Builder::group(exprs))
-            })
-            .or_else(|| {
-                let (lparen_t, exprs, rparen_t) = self
-                    .all_of("( mlhs inner )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.parse_mlhs_inner())
-                    .and(|| self.parse_rparen())
-                    .stop()?;
-                Ok(Builder::begin(lparen_t, exprs, rparen_t))
-            })
-            .compact()
-            .stop()
-    }
+        if self.current_token().is(TokenKind::tLPAREN) {
+            let (lparen_t, mut inner, rparen_t) = self
+                .all_of("( mlhs )")
+                .and(|| self.try_token(TokenKind::tLPAREN))
+                .and(|| parse_mlhs_list(self))
+                .and(|| self.expect_token(TokenKind::tRPAREN))
+                .stop()?;
 
-    fn parse_mlhs_inner(&mut self) -> ParseResult<Vec<Node>> {
-        self.one_of("mlhs_basic")
-            .or_else(|| self.parse_mlhs_basic())
-            .or_else(|| {
-                let (lparen_t, exprs, rparen_t) = self
-                    .all_of("( mlhs inner )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.parse_mlhs_inner())
-                    .and(|| self.parse_rparen())
-                    .stop()?;
+            if inner.len() == 1 {
+                if let Node::Begin(Begin {
+                    statements,
+                    begin_l,
+                    end_l,
+                    ..
+                }) = &mut inner[0]
+                {
+                    if statements.len() == 1 && begin_l.is_none() && end_l.is_none() {
+                        // collapse `inner`
+                        inner = vec![std::mem::take(statements).into_iter().next().unwrap()]
+                    }
+                }
+            }
 
-                let node = Builder::begin(lparen_t, exprs, rparen_t);
-
-                Ok(vec![*node])
-            })
-            .stop()
-    }
-
-    fn parse_mlhs_basic(&mut self) -> ParseResult<Vec<Node>> {
-        self.one_of("mlhs_basic")
-            .or_else(|| {
-                let (mut head, mut tail) = self
-                    .all_of("mlhs head + tail")
-                    .and(|| self.parse_mlhs_head().map(|mlhs_head| dbg!(mlhs_head)))
-                    .and(|| {
-                        self.one_of("mlhs head or tail")
-                            .or_else(|| {
-                                self.parse_mlhs_item().map(|node| {
-                                    dbg!(&node);
-                                    vec![*node]
-                                })
-                            })
-                            .or_else(|| self.parse_mlhs_tail())
-                            .or_else(|| Ok(vec![]))
-                            .stop()
-                    })
-                    .stop()?;
-                head.append(&mut tail);
-                Ok(head)
-            })
-            .or_else(|| self.parse_mlhs_tail())
-            .stop()
-    }
-
-    fn parse_mlhs_tail(&mut self) -> ParseResult<Vec<Node>> {
-        let (star_t, maybe_splat_arg, mut post) = self
-            .all_of("mlhs_tail")
-            .and(|| self.try_token(TokenKind::tSTAR))
-            .and(|| {
-                self.one_of("splat argument")
-                    .or_else(|| self.parse_mlhs_node().map(|node| Some(node)))
-                    .or_else(|| Ok(None))
-                    .stop()
-            })
-            .and(|| {
-                self.one_of("post-splat")
-                    .or_else(|| {
-                        let (_comma_t, post) = self
-                            .all_of("comma -> mlhs post")
-                            .and(|| self.try_token(TokenKind::tCOMMA))
-                            .and(|| self.parse_mlhs_post())
-                            .stop()?;
-                        Ok(post)
-                    })
-                    .or_else(|| Ok(vec![]))
-                    .stop()
-            })
-            .stop()?;
-
-        let splat = if let Some(value) = maybe_splat_arg {
-            Builder::splat(star_t, value)
+            Ok(Builder::begin(lparen_t, inner, rparen_t))
         } else {
-            Builder::nameless_splat(star_t)
-        };
+            let (head, mut tail) = self
+                .all_of("mlhs head + mlhs tail")
+                .and(|| parse_mlhs_head(self))
+                .and(|| parse_mlhs_tail(self))
+                .stop()?;
 
-        let mut items = Vec::with_capacity(1 + post.len());
-        items.push(*splat);
-        items.append(&mut post);
-        Ok(items)
+            if tail.is_empty() {
+                Ok(head)
+            } else {
+                let mut nodes = Vec::with_capacity(1 + tail.len());
+                nodes.push(*head);
+                nodes.append(&mut tail);
+                Ok(Builder::group(nodes))
+            }
+        }
     }
+}
 
-    fn parse_mlhs_item(&mut self) -> ParseResult<Box<Node>> {
-        let mlhs_item = self
-            .one_of("mlhs item")
-            .or_else(|| self.parse_mlhs_node())
-            .or_else(|| {
-                let (lparen_t, exprs, rparen_t) = self
-                    .all_of("( mlhs inner )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.parse_mlhs_inner())
-                    .and(|| self.parse_rparen())
-                    .stop()?;
-                Ok(Builder::begin(lparen_t, exprs, rparen_t))
-            })
-            .stop()?;
-        dbg!(&mlhs_item);
-        Ok(mlhs_item)
-    }
+fn parse_mlhs_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let mut items = vec![];
+    let mut commas = vec![];
 
-    fn parse_mlhs_head(&mut self) -> ParseResult<Vec<Node>> {
-        let parse_item_and_comma = |parser: &mut Parser| {
-            parser
-                .all_of("mlhs item and comma")
-                .and(|| parser.parse_mlhs_item())
-                .and(|| parser.try_token(TokenKind::tCOMMA))
-                .stop()
-        };
+    fn append_mlhs(parser: &mut Parser, items: &mut Vec<Node>) -> ParseResult<()> {
+        let mlhs = parser.parse_mlhs()?;
 
-        let mut head = vec![];
-        let mut commas = vec![];
-        let (item, comma) = parse_item_and_comma(self)?;
-        head.push(*item);
-        commas.push(comma);
-
-        loop {
-            let item_and_comma = parse_item_and_comma(self);
-
-            match item_and_comma {
-                Ok((item, comma)) => {
-                    head.push(*item);
-                    commas.push(comma);
-                }
-                Err(_) => break,
+        match *mlhs {
+            Node::Begin(Begin {
+                mut statements,
+                begin_l,
+                end_l,
+                ..
+            }) if begin_l.is_none() && end_l.is_none() => items.append(&mut statements),
+            single => {
+                items.push(single);
             }
         }
 
-        dbg!(&head);
-        Ok(head)
+        Ok(())
     }
 
-    fn parse_mlhs_post(&mut self) -> ParseResult<Vec<Node>> {
-        let mut post = vec![];
-        let mut commas = vec![];
-        let item = self.parse_mlhs_item()?;
-        post.push(*item);
+    append_mlhs(parser, &mut items)?;
 
-        loop {
-            let comma_and_item = self
-                .all_of("comma and mlhs item")
-                .and(|| self.try_token(TokenKind::tCOMMA))
-                .and(|| self.parse_mlhs_item())
-                .stop();
+    loop {
+        if parser.current_token().is(TokenKind::tCOMMA) {
+            commas.push(parser.current_token());
+            parser.skip_token();
+        } else {
+            break;
+        }
 
-            match comma_and_item {
-                Ok((comma, item)) => {
-                    post.push(*item);
-                    commas.push(comma);
+        match append_mlhs(parser, &mut items) {
+            Ok(_) => continue,
+            Err(_) => break,
+        }
+    }
+
+    Ok(items)
+}
+
+fn parse_mlhs_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    if parser.current_token().is(TokenKind::tSTAR) {
+        let star_t = parser.current_token();
+        parser.skip_token();
+
+        if let Ok(value) = parse_mlhs_node(parser) {
+            Ok(Builder::splat(star_t, value))
+        } else {
+            Ok(Builder::nameless_splat(star_t))
+        }
+    } else {
+        parse_mlhs_node(parser)
+    }
+}
+
+fn parse_mlhs_tail(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let mut commas = vec![];
+    let mut items = vec![];
+
+    fn parse_comma_and_item(parser: &mut Parser) -> Option<(Token, Box<Node>)> {
+        let checkpoint = parser.new_checkpoint();
+        if parser.current_token().is(TokenKind::tCOMMA) {
+            let comma = parser.current_token();
+            parser.skip_token();
+
+            match parser.parse_mlhs() {
+                Ok(item) => Some((comma, item)),
+                Err(_) => {
+                    checkpoint.restore();
+                    None
                 }
-                Err(_) => break,
             }
+        } else {
+            None
         }
-
-        Ok(post)
     }
 
-    fn parse_mlhs_node(&mut self) -> ParseResult<Box<Node>> {
-        let mlhs_node = self
-            .one_of("mlhs node")
-            .or_else(|| self.parse_user_variable())
-            .or_else(|| self.parse_keyword_variable())
-            .or_else(|| self.parse_back_ref())
-            .or_else(|| {
-                let (colon2_t, const_t) = self.parse_colon2_const()?;
-                panic!("const {:?} {:?}", colon2_t, const_t)
-            })
-            .or_else(|| {
-                let (primary_value, op_t, id_t) = self
-                    .all_of("primary call_op [const/tIDENT]")
-                    .and(|| self.parse_primary_value())
-                    .and(|| self.parse_call_op())
-                    .and(|| self.parse_const_or_identifier())
-                    .stop()?;
+    loop {
+        match parse_comma_and_item(parser) {
+            Some((comma, item)) => {
+                commas.push(comma);
 
-                panic!(
-                    "primary_value call_op tIDENT {:?} {:?} {:?}",
-                    primary_value, op_t, id_t
-                )
-            })
-            .or_else(|| {
-                let (primary_value, colon2_t, const_t) = self
-                    .all_of("priamay :: [const/tIDENT")
-                    .and(|| self.parse_primary_value())
-                    .and(|| self.expect_token(TokenKind::tCOLON2))
-                    .and(|| self.parse_const_or_identifier())
-                    .stop()?;
-
-                panic!(
-                    "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
-                    primary_value, colon2_t, const_t
-                )
-            })
-            .stop()?;
-
-        if matches!(&*mlhs_node, Node::Ivar(_)) {
-            // panic!("Created lost ivar")
+                match *item {
+                    Node::Begin(Begin {
+                        mut statements,
+                        begin_l,
+                        end_l,
+                        ..
+                    }) if begin_l.is_none() && end_l.is_none() => items.append(&mut statements),
+                    single => {
+                        items.push(single);
+                    }
+                }
+            }
+            None => break,
         }
-        dbg!(&mlhs_node);
-        Ok(mlhs_node)
     }
+
+    Ok(items)
+}
+
+fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .one_of("mlhs node")
+        .or_else(|| parser.parse_user_variable())
+        .or_else(|| parser.parse_keyword_variable())
+        .or_else(|| parser.parse_back_ref())
+        .or_else(|| {
+            let (colon2_t, const_t) = parser.parse_colon2_const()?;
+            panic!("const {:?} {:?}", colon2_t, const_t)
+        })
+        .or_else(|| {
+            let (primary_value, op_t, id_t) = parser
+                .all_of("primary call_op [const/tIDENT]")
+                .and(|| parser.parse_primary_value())
+                .and(|| parser.parse_call_op())
+                .and(|| parser.parse_const_or_identifier())
+                .stop()?;
+
+            panic!(
+                "primary_value call_op tIDENT {:?} {:?} {:?}",
+                primary_value, op_t, id_t
+            )
+        })
+        .or_else(|| {
+            let (primary_value, colon2_t, const_t) = parser
+                .all_of("priamay :: [const/tIDENT")
+                .and(|| parser.parse_primary_value())
+                .and(|| parser.expect_token(TokenKind::tCOLON2))
+                .and(|| parser.parse_const_or_identifier())
+                .stop()?;
+
+            panic!(
+                "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
+                primary_value, colon2_t, const_t
+            )
+        })
+        .stop()
 }
 
 #[cfg(test)]
@@ -232,12 +216,28 @@ mod tests {
 
     #[test]
     fn test_lhs_user_variable() {
-        assert_parses!(parse_mlhs, b"a, b", "TODO")
+        assert_parses!(
+            parse_mlhs,
+            b"a, b",
+            r#"
+s(:begin,
+  s(:lvar, "a"),
+  s(:lvar, "b"))
+            "#
+        )
     }
 
     #[test]
     fn test_lhs_parenthesized() {
-        assert_parses!(parse_mlhs, b"((a))", "TODO")
+        assert_parses!(
+            parse_mlhs,
+            b"((a))",
+            r#"
+s(:begin,
+  s(:begin,
+    s(:lvar, "a")))
+            "#
+        )
     }
 
     #[test]
@@ -257,11 +257,22 @@ s(:begin,
 
     #[test]
     fn test_mlhs_with_parens() {
-        assert_parses!(parse_mlhs, b"((*a), $x, @c)", "TODO")
+        assert_parses!(
+            parse_mlhs,
+            b"((*a), @b, $c)",
+            r#"
+s(:begin,
+  s(:begin,
+    s(:splat,
+      s(:lvar, "a"))),
+  s(:ivar, "@b"),
+  s(:gvar, "$c"))
+            "#
+        );
     }
 
     #[test]
     fn test_nameless_splat() {
-        assert_parses!(parse_mlhs, b"*", "s(:splat)")
+        assert_parses!(parse_mlhs, b"*", "s(:splat)");
     }
 }

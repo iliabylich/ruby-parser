@@ -4,7 +4,7 @@ use super::StateRef;
 
 #[derive(Debug)]
 pub(crate) struct OwnedState {
-    inner: Box<State>,
+    pub(crate) inner: Box<State>,
 }
 
 impl OwnedState {
