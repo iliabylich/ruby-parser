@@ -180,8 +180,15 @@ impl Parser {
         self.parse_operation()
     }
 
-    fn parse_cname(&mut self) {
-        todo!("parser.parse_cname")
+    fn parse_cname(&mut self) -> ParseResult<Token> {
+        self.one_of("cname")
+            .or_else(|| {
+                let token = self.try_token(TokenKind::tIDENTIFIER)?;
+                // TODO: report class or module name must be constant
+                Ok(token)
+            })
+            .or_else(|| self.try_token(TokenKind::tCONSTANT))
+            .stop()
     }
     fn parse_fname(&mut self) -> ParseResult<Token> {
         self.one_of("fname")

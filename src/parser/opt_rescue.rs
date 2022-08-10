@@ -49,8 +49,8 @@ impl Parser {
             .or_else(|| self.parse_keyword_variable())
             .or_else(|| self.parse_back_ref())
             .or_else(|| {
-                let (colon2_t, const_t) = self.parse_colon2_const()?;
-                panic!("const {:?} {:?}", colon2_t, const_t)
+                let (colon2_t, name_t) = self.parse_colon2_const()?;
+                Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
             })
             .or_else(|| {
                 let (primary_value, op_t, id_t) = self

@@ -1,4 +1,5 @@
 use crate::{
+    builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
@@ -6,7 +7,7 @@ use crate::{
 
 impl Parser {
     pub(crate) fn parse_primary(&mut self) -> ParseResult<Box<Node>> {
-        let node = self
+        let mut node = self
             .one_of("primary value")
             .or_else(|| self.parse_literal())
             .or_else(|| self.parse_strings())
@@ -44,8 +45,8 @@ impl Parser {
                 todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
             })
             .or_else(|| {
-                let (colon2_t, const_t) = self.parse_colon2_const()?;
-                todo!("tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t);
+                let (colon2_t, name_t) = self.parse_colon2_const()?;
+                Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
             })
             .or_else(|| self.parse_array())
             .or_else(|| self.parse_hash())
@@ -94,8 +95,8 @@ impl Parser {
 
         loop {
             match self.parse_colon2_const() {
-                Ok((colon2_t, const_t)) => {
-                    todo!("append tCOLON2 tCONSTANT {:?} {:?}", colon2_t, const_t)
+                Ok((colon2_t, name_t)) => {
+                    node = Builder::const_fetch(node, colon2_t, name_t, self.buffer());
                 }
                 Err(error) => {
                     match error.strip_lookaheads() {

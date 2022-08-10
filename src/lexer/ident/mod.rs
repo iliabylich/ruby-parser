@@ -85,14 +85,31 @@ impl Ident {
             _ => {}
         }
 
+        let mut const_like = false;
+        match buffer.for_lookahead().utf8_char_at(start) {
+            Utf8Char::Valid { length } => {
+                let s = std::str::from_utf8(buffer.slice(start, start + length).expect("bug"))
+                    .expect("bug");
+                let c = s.chars().next().expect("bug");
+                if c.is_uppercase() {
+                    const_like = true;
+                }
+            }
+            _ => {}
+        }
+
         // lookahead to handle `foo:` label
         // cases like
         //      1. foo?bar:baz
         //      2. def foo(bar:)
         // are handled on the parser level
         if buffer.current_byte() == Some(b':') {
-            buffer.skip_byte();
-            return token!(tLABEL, loc!(start, buffer.pos()));
+            if const_like && buffer.byte_at(buffer.pos() + 1) == Some(b':') {
+                // FOO::BAR case, not a label
+            } else {
+                buffer.skip_byte();
+                return token!(tLABEL, loc!(start, buffer.pos()));
+            }
         }
 
         let end = buffer.pos();
@@ -104,16 +121,8 @@ impl Ident {
         }
 
         // Can be a constant
-        match buffer.for_lookahead().utf8_char_at(start) {
-            Utf8Char::Valid { length } => {
-                let s = std::str::from_utf8(buffer.slice(start, start + length).expect("bug"))
-                    .expect("bug");
-                let c = s.chars().next().expect("bug");
-                if c.is_uppercase() {
-                    return token!(tCONSTANT, loc!(start, buffer.pos()));
-                }
-            }
-            _ => {}
+        if const_like {
+            return token!(tCONSTANT, loc!(start, buffer.pos()));
         }
 
         // otherwise it's just a plain identifier

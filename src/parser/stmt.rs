@@ -90,14 +90,33 @@ impl Parser {
     // This rule can be `none`
     pub(crate) fn parse_stmts(&mut self) -> ParseResult<Vec<Node>> {
         let mut stmts = vec![];
-        while let Ok(stmt) = self.parse_stmt() {
-            stmts.push(*stmt);
+        let mut terms = vec![];
+
+        match self.parse_stmt_or_begin() {
+            Ok(node) => stmts.push(*node),
+            Err(_) => return Ok(vec![]),
         }
 
-        if let Ok(begin_block) = self.parse_preexe() {
-            stmts.push(*begin_block);
+        loop {
+            match self.parse_terms() {
+                Ok(mut tokens) => terms.append(&mut tokens),
+                Err(_) => break,
+            }
+
+            match self.parse_stmt_or_begin() {
+                Ok(node) => stmts.push(*node),
+                Err(_) => break,
+            }
         }
+
         Ok(stmts)
+    }
+
+    fn parse_stmt_or_begin(&mut self) -> ParseResult<Box<Node>> {
+        self.one_of("stmt_or_begin")
+            .or_else(|| self.parse_stmt())
+            .or_else(|| self.parse_preexe())
+            .stop()
     }
 
     #[allow(unreachable_code, unused_mut)]
