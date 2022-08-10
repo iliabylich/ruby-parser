@@ -1,18 +1,17 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_alias(&mut self) -> ParseResult<Box<Node>> {
-        let (alias_t, (lhs, rhs)) = self
-            .all_of("alias statement")
-            .and(|| self.try_token(TokenKind::kALIAS))
-            .and(|| parse_alias_args(self))
-            .stop()?;
-        Ok(Builder::alias(alias_t, lhs, rhs))
+        let alias_t = self.try_token(TokenKind::kALIAS)?;
+        match parse_alias_args(self) {
+            Ok((lhs, rhs)) => Ok(Builder::alias(alias_t, lhs, rhs)),
+            Err(error) => Err(ParseError::seq_error("alias statement", alias_t, error)),
+        }
     }
 }
 
@@ -98,10 +97,7 @@ s(:alias,
         assert_parses_with_error!(
             parse_alias,
             b"",
-            "
-SEQUENCE (0) alias statement (got [])
-    TOKEN (0) expected kALIAS, got tEOF (at 0)
-"
+            "TOKEN (0) expected kALIAS, got tEOF (at 0)"
         );
     }
 
