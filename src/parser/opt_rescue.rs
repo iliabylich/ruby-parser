@@ -30,12 +30,12 @@ impl Parser {
 
     pub(crate) fn parse_then(&mut self) -> ParseResult<Token> {
         self.one_of("then ...")
-            .or_else(|| self.parse_term())
+            .or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kTHEN))
             .or_else(|| {
                 let (_term, then_t) = self
                     .all_of("term then")
-                    .and(|| self.parse_term())
+                    .and(|| self.try_term())
                     .and(|| self.try_token(TokenKind::kTHEN))
                     .stop()?;
                 Ok(then_t)

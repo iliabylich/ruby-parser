@@ -67,6 +67,12 @@ impl From<Vec<Token>> for Steps {
         Steps(tokens.into_iter().map(|token| token.into()).collect())
     }
 }
+
+impl From<()> for Steps {
+    fn from(_: ()) -> Self {
+        Steps(vec![])
+    }
+}
 impl<A, B> From<(A, B)> for Steps
 where
     Steps: From<A>,

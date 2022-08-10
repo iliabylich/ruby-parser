@@ -565,7 +565,8 @@ impl OnByte<b'-'> for Lexer {
                 self.skip_byte();
                 token!(tLAMBDA, loc!(start, start + 2))
             }
-            Some(b'0'..=b'9') => token!(tUMINUS, loc!(start, start + 1)),
+            // TODO: handle tUMINUS
+            Some(b'0'..=b'9') => token!(tUMINUS_NUM, loc!(start, start + 1)),
             _ => token!(tMINUS, loc!(start, start + 1)),
         }
     }
@@ -586,9 +587,9 @@ fn test_tMINUS() {
     assert_lex!(b"-", token!(tMINUS, loc!(0, 1)));
 }
 #[test]
-fn test_tUMINUS() {
+fn test_tUMINUS_NUM() {
     use crate::testing::assert_lex;
-    assert_lex!(b"-5", token!(tUMINUS, loc!(0, 1)));
+    assert_lex!(b"-5", token!(tUMINUS_NUM, loc!(0, 1)));
 }
 
 impl OnByte<b'.'> for Lexer {

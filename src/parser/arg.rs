@@ -212,7 +212,7 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
             let (minus_t, lhs, op_t, rhs) = parser
                 .all_of("tUMINUS_NUM simple_numeric tPOW arg")
                 .and(|| parser.expect_token(TokenKind::tUMINUS_NUM))
-                .and(|| parser.parse_simple_numeric())
+                .and(|| parser.try_simple_numeric())
                 .and(|| parser.expect_token(TokenKind::tPOW))
                 .and(|| parser.parse_arg())
                 .stop()?;

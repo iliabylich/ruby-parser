@@ -97,7 +97,7 @@ fn parse_assoc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
             let (assocs, _trailer) = parser
                 .all_of("assics trailer")
                 .and(|| parser.parse_assocs())
-                .and(|| parser.try_trailer())
+                .and(|| Ok(parser.try_trailer()))
                 .stop()?;
             Ok(assocs)
         })

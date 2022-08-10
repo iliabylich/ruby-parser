@@ -383,7 +383,7 @@ impl Parser {
     }
     fn parse_do(&mut self) -> ParseResult<Token> {
         self.one_of("do")
-            .or_else(|| self.parse_term())
+            .or_else(|| self.try_term())
             .or_else(|| self.try_token(TokenKind::kDO))
             .stop()
     }
@@ -556,7 +556,7 @@ impl Parser {
 
     fn parse_literal(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("literal")
-            .or_else(|| self.parse_numeric())
+            .or_else(|| self.try_numeric())
             .or_else(|| self.parse_symbol())
             .stop()
     }
@@ -748,38 +748,59 @@ impl Parser {
 
         Ok(rbrace_t)
     }
-    fn try_trailer(&mut self) -> ParseResult<Option<Token>> {
-        self.one_of("trailer")
-            .or_else(|| self.try_token(TokenKind::tNL).map(|token| Some(token)))
-            .or_else(|| self.try_token(TokenKind::tCOMMA).map(|token| Some(token)))
-            .or_else(|| Ok(None))
-            .stop()
+    fn try_trailer(&mut self) -> Option<Token> {
+        let token = self.current_token();
+        match token.kind {
+            TokenKind::tNL | TokenKind::tCOMMA => Some(token),
+            _ => None,
+        }
     }
-    fn parse_term(&mut self) -> ParseResult<Token> {
-        self.one_of("term")
-            .or_else(|| self.try_token(TokenKind::tSEMI))
-            .or_else(|| self.try_token(TokenKind::tNL))
-            .stop()
+    fn try_term(&mut self) -> ParseResult<Token> {
+        let token = self.current_token();
+        match token.kind {
+            TokenKind::tSEMI | TokenKind::tNL => {
+                self.skip_token();
+                Ok(token)
+            }
+            got => Err(ParseError::OneOfError {
+                name: "term",
+                variants: vec![
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tSEMI,
+                        got,
+                        loc: token.loc,
+                    },
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tNL,
+                        got,
+                        loc: token.loc,
+                    },
+                ],
+            }),
+        }
     }
     fn parse_terms(&mut self) -> ParseResult<Vec<Token>> {
-        let mut terms = vec![];
-        if let Ok(term) = self.parse_term() {
-            terms.push(term)
-        } else {
-            return Ok(vec![]);
+        let mut tokens = vec![];
+        match self.try_term() {
+            Ok(term) => tokens.push(term),
+            Err(error) => return Err(ParseError::seq_error("terms", (), error)),
         }
+
         loop {
-            if let Err(_) = self.try_token(TokenKind::tSEMI) {
-                break;
+            match self.try_token(TokenKind::tSEMI) {
+                Ok(token) => tokens.push(token),
+                Err(_) => break,
             }
 
-            if let Ok(term) = self.parse_term() {
-                terms.push(term)
-            } else {
-                break;
+            match self.try_term() {
+                Ok(token) => tokens.push(token),
+                Err(_) => break,
             }
         }
-        Ok(terms)
+
+        Ok(tokens)
     }
 
     fn parse_colon2_const(&mut self) -> ParseResult<(Token, Token)> {

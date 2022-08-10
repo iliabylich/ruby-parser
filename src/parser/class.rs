@@ -33,7 +33,7 @@ impl Parser {
                     .and(|| self.parse_k_class())
                     .and(|| self.try_token(TokenKind::tLSHFT))
                     .and(|| self.parse_expr())
-                    .and(|| self.parse_term())
+                    .and(|| self.try_term())
                     .and(|| self.try_bodystmt())
                     .and(|| self.parse_k_end())
                     .stop()?;
