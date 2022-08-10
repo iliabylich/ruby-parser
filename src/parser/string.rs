@@ -2,15 +2,21 @@ use crate::{
     builder::Builder,
     parser::{ParseError, ParseResult, Parser},
     token::TokenKind,
-    Node,
+    Node, Token,
 };
 
 impl Parser {
     pub(crate) fn parse_strings(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("strings")
-            .or_else(|| self.parse_char())
-            .or_else(|| self.parse_string_seq())
-            .stop()
+        match self.parse_char() {
+            Ok(node) => Ok(node),
+            Err(error1) => match self.parse_string_seq() {
+                Ok(node) => Ok(node),
+                Err(error2) => Err(ParseError::OneOfError {
+                    name: "strings",
+                    variants: vec![error1, error2],
+                }),
+            },
+        }
     }
 
     fn parse_char(&mut self) -> ParseResult<Box<Node>> {
@@ -36,7 +42,7 @@ impl Parser {
                             break;
                         }
                         Some(error) => {
-                            return Err(ParseError::seq_error("string1", parts, error));
+                            return Err(ParseError::seq_error("string_seq", parts, error));
                         }
                     }
                 }
@@ -47,21 +53,51 @@ impl Parser {
     }
 
     fn parse_string1(&mut self) -> ParseResult<Box<Node>> {
-        let (begin_t, parts, end_t) = self
-            .all_of("string1")
-            .and(|| {
-                self.one_of("string begin")
-                    .or_else(|| self.try_token(TokenKind::tDSTRING_BEG))
-                    .or_else(|| self.try_token(TokenKind::tSTRING_BEG))
-                    .or_else(|| self.try_token(TokenKind::tHEREDOC_BEG))
-                    .stop()
-            })
-            .and(|| self.parse_string_contents())
-            .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .stop()?;
+        let begin_t = match self.current_token() {
+            Token {
+                kind: TokenKind::tDSTRING_BEG | TokenKind::tSTRING_BEG | TokenKind::tHEREDOC_BEG,
+                ..
+            } => self.current_token(),
+            Token { kind: got, loc, .. } => {
+                return Err(ParseError::OneOfError {
+                    name: "string1",
+                    variants: vec![
+                        ParseError::TokenError {
+                            lookahead: true,
+                            expected: TokenKind::tDSTRING_BEG,
+                            got,
+                            loc,
+                        },
+                        ParseError::TokenError {
+                            lookahead: true,
+                            expected: TokenKind::tSTRING_BEG,
+                            got,
+                            loc,
+                        },
+                        ParseError::TokenError {
+                            lookahead: true,
+                            expected: TokenKind::tHEREDOC_BEG,
+                            got,
+                            loc,
+                        },
+                    ],
+                });
+            }
+        };
+        self.skip_token();
 
-        // TODO: dedent_heredoc
-        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
+        match self.parse_string_contents() {
+            Ok(parts) => {
+                match self.expect_token(TokenKind::tSTRING_END) {
+                    Ok(end_t) => {
+                        // TODO: dedent_heredoc
+                        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
+                    }
+                    Err(error) => Err(ParseError::seq_error("string1", (begin_t, parts), error)),
+                }
+            }
+            Err(error) => Err(ParseError::seq_error("string1", begin_t, error)),
+        }
     }
 
     // This rule can be `none`
@@ -72,20 +108,19 @@ impl Parser {
                 break;
             }
 
-            match self.parse_string_content() {
+            match self
+                .parse_string_content()
+                .map_err(|err| err.strip_lookaheads())
+            {
                 Ok(string) => {
                     strings.push(*string);
                 }
-                Err(error) => {
-                    match error.strip_lookaheads() {
-                        None => {
-                            // no match
-                            break;
-                        }
-                        Some(error) => {
-                            return Err(ParseError::seq_error("string content", strings, error));
-                        }
-                    }
+                Err(None) => {
+                    // no match
+                    break;
+                }
+                Err(Some(error)) => {
+                    return Err(ParseError::seq_error("string content", strings, error));
                 }
             }
         }
@@ -93,36 +128,80 @@ impl Parser {
     }
 
     pub(crate) fn parse_string_content(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("string content")
-            .or_else(|| {
-                let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
+        match self.current_token() {
+            string_content_t @ Token {
+                kind: TokenKind::tSTRING_CONTENT,
+                ..
+            } => {
+                self.skip_token();
                 Ok(Builder::string_internal(string_content_t, self.buffer()))
-            })
-            .or_else(|| {
-                let (_string_dvar_t, string_dvar) = self
-                    .all_of("string dvar")
-                    .and(|| self.try_token(TokenKind::tSTRING_DVAR))
-                    .and(|| self.parse_string_dvar())
-                    .stop()?;
+            }
 
-                Ok(string_dvar)
-            })
-            .or_else(|| {
-                let (string_dbeg_t, compstmt, string_dend_t) = self
-                    .all_of("#{ stmt }")
-                    .and(|| self.try_token(TokenKind::tSTRING_DBEG))
-                    .and(|| self.try_compstmt())
-                    .and(|| self.expect_token(TokenKind::tSTRING_DEND))
-                    .stop()?;
-                let stmts = if let Some(compstmt) = compstmt {
-                    vec![*compstmt]
-                } else {
-                    vec![]
-                };
+            string_dvar_t @ Token {
+                kind: TokenKind::tSTRING_DVAR,
+                ..
+            } => {
+                self.skip_token();
+                match self.parse_string_dvar() {
+                    Ok(string_dvar) => Ok(string_dvar),
+                    Err(error) => Err(ParseError::seq_error("string dvar", string_dvar_t, error)),
+                }
+            }
 
-                Ok(Builder::begin(string_dbeg_t, stmts, string_dend_t))
-            })
-            .stop()
+            string_dbeg_t @ Token {
+                kind: TokenKind::tSTRING_DBEG,
+                ..
+            } => {
+                self.skip_token();
+                match self.try_compstmt() {
+                    Ok(compstmt) => match self.expect_token(TokenKind::tSTRING_DEND) {
+                        Ok(string_dend_t) => {
+                            let stmts = if let Some(compstmt) = compstmt {
+                                vec![*compstmt]
+                            } else {
+                                vec![]
+                            };
+
+                            Ok(Builder::begin(string_dbeg_t, stmts, string_dend_t))
+                        }
+                        Err(error) => Err(ParseError::seq_error(
+                            "#{ interpolated stmt }",
+                            (string_dbeg_t, compstmt),
+                            error,
+                        )),
+                    },
+                    Err(error) => Err(ParseError::seq_error(
+                        "#{ interpolated stmt }",
+                        string_dbeg_t,
+                        error,
+                    )),
+                }
+            }
+
+            Token { kind: got, loc, .. } => Err(ParseError::OneOfError {
+                name: "string content",
+                variants: vec![
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tSTRING_CONTENT,
+                        got,
+                        loc,
+                    },
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tSTRING_DVAR,
+                        got,
+                        loc,
+                    },
+                    ParseError::TokenError {
+                        lookahead: true,
+                        expected: TokenKind::tSTRING_DBEG,
+                        got,
+                        loc,
+                    },
+                ],
+            }),
+        }
     }
 
     fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
