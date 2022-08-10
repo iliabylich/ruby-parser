@@ -201,7 +201,7 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
         .or_else(|| {
             let (lhs, op_t, rhs) = parser
                 .all_of("backref tOP_ASGN arg_rhs")
-                .and(|| parser.parse_back_ref())
+                .and(|| parser.try_back_ref())
                 .and(|| parser.expect_token(TokenKind::tOP_ASGN))
                 .and(|| parse_arg_rhs(parser))
                 .stop()?;

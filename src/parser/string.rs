@@ -206,10 +206,10 @@ impl Parser {
 
     fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("string_dvar")
-            .or_else(|| self.parse_gvar())
-            .or_else(|| self.parse_ivar())
-            .or_else(|| self.parse_cvar())
-            .or_else(|| self.parse_back_ref())
+            .or_else(|| self.try_gvar())
+            .or_else(|| self.try_ivar())
+            .or_else(|| self.try_cvar())
+            .or_else(|| self.try_back_ref())
             .stop()
     }
 }

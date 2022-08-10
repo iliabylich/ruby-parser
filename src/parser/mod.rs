@@ -565,11 +565,11 @@ impl Parser {
     }
     fn parse_user_variable(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("user variable")
-            .or_else(|| self.parse_lvar())
-            .or_else(|| self.parse_ivar())
-            .or_else(|| self.parse_gvar())
-            .or_else(|| self.parse_t_const())
-            .or_else(|| self.parse_cvar())
+            .or_else(|| self.try_lvar())
+            .or_else(|| self.try_ivar())
+            .or_else(|| self.try_gvar())
+            .or_else(|| self.try_t_const())
+            .or_else(|| self.try_cvar())
             .stop()
     }
     fn parse_var_ref(&mut self) -> ParseResult<Box<Node>> {

@@ -205,7 +205,7 @@ impl Parser {
                                     .all_of("primary call_op2 tIDENTIFIER")
                                     .and(|| self.parse_primary_value())
                                     .and(|| self.parse_call_op2())
-                                    .and(|| self.parse_const_or_identifier())
+                                    .and(|| self.try_const_or_identifier())
                                     .stop()?;
                                 panic!(
                                     "primary_value call_op tIDENT {:?} {:?} {:?}",
@@ -229,7 +229,7 @@ impl Parser {
                                 )
                             })
                             .or_else(|| self.parse_var_lhs())
-                            .or_else(|| self.parse_back_ref())
+                            .or_else(|| self.try_back_ref())
                             .stop()
                     })
                     .and(|| self.expect_token(TokenKind::tOP_ASGN))

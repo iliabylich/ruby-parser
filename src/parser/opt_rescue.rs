@@ -47,7 +47,7 @@ impl Parser {
         self.one_of("lhs")
             .or_else(|| self.parse_user_variable())
             .or_else(|| self.parse_keyword_variable())
-            .or_else(|| self.parse_back_ref())
+            .or_else(|| self.try_back_ref())
             .or_else(|| {
                 let (colon2_t, name_t) = self.parse_colon2_const()?;
                 Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
@@ -57,7 +57,7 @@ impl Parser {
                     .all_of("primary call_op [const/tIDENT]")
                     .and(|| self.parse_primary_value())
                     .and(|| self.parse_call_op2())
-                    .and(|| self.parse_const_or_identifier())
+                    .and(|| self.try_const_or_identifier())
                     .stop()?;
 
                 panic!(

@@ -36,13 +36,13 @@ fn parse_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)>
 fn parse_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     parser
         .all_of("gvar -> [gvar | back ref | nth ref]")
-        .and(|| parser.parse_gvar())
+        .and(|| parser.try_gvar())
         .and(|| {
             parser
                 .one_of("gvar rhs")
-                .or_else(|| parser.parse_gvar())
-                .or_else(|| parser.parse_back_ref())
-                .or_else(|| parser.parse_nth_ref())
+                .or_else(|| parser.try_gvar())
+                .or_else(|| parser.try_back_ref())
+                .or_else(|| parser.try_nth_ref())
                 .required()
                 .stop()
         })

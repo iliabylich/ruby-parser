@@ -18,7 +18,7 @@ impl Parser {
             .or_else(|| self.parse_symbols())
             .or_else(|| self.parse_qsymbols())
             .or_else(|| self.parse_var_ref())
-            .or_else(|| self.parse_back_ref())
+            .or_else(|| self.try_back_ref())
             .or_else(|| {
                 let id_t = self.try_token(TokenKind::tFID)?;
 
