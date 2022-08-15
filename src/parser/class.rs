@@ -1,14 +1,19 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_class(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("class definition")
-            .or_else(|| {
+        one_of!(
+            "class definition",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (class_t, cpath, superclass, body, end_t) = all_of!(
                     "normal class definition",
                     self.parse_k_class(),
@@ -26,8 +31,8 @@ impl Parser {
                     body,
                     end_t
                 )
-            })
-            .or_else(|| {
+            },
+            {
                 let (klass_t, lshift_t, expr, _term, body, end_t) = all_of!(
                     "singleton class",
                     self.parse_k_class(),
@@ -47,22 +52,24 @@ impl Parser {
                     body,
                     end_t
                 )
-            })
-            .stop()
+            },
+        )
     }
 
     pub(crate) fn parse_cpath(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("cname")
-            .or_else(|| {
+        one_of!(
+            "cname",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (colon2_t, name_t) = self.parse_colon2_const()?;
                 Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
-            })
-            .or_else(|| self.parse_primary_value())
-            .or_else(|| {
+            },
+            self.parse_primary_value(),
+            {
                 let name_t = self.parse_cname()?;
                 Ok(Builder::const_(name_t, self.buffer()))
-            })
-            .stop()
+            },
+        )
     }
 
     fn try_superclass(&mut self) -> ParseResult<Option<Box<Node>>> {

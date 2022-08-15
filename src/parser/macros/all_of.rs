@@ -42,10 +42,10 @@ macro_rules! all_of {
 }
 pub(crate) use all_of;
 
-#[test]
-fn test_all_of() {
+#[cfg(test)]
+mod tests {
     use crate::{
-        parser::{ParseResult, Parser},
+        parser::{ParseError, ParseResult, Parser},
         token::{Token, TokenKind},
         Loc,
     };
@@ -62,19 +62,39 @@ fn test_all_of() {
         Ok((lbrack_t, rbrack_t))
     }
 
-    assert_eq!(
-        parse(b"[ ]"),
-        Ok((
-            Token {
-                kind: TokenKind::tLBRACK,
-                loc: Loc { start: 0, end: 1 },
-                value: None
-            },
-            Token {
-                kind: TokenKind::tRBRACK,
-                loc: Loc { start: 2, end: 3 },
-                value: None
-            },
-        ))
-    )
+    #[test]
+    fn test_ok() {
+        assert_eq!(
+            parse(b"[ ]"),
+            Ok((
+                Token {
+                    kind: TokenKind::tLBRACK,
+                    loc: Loc { start: 0, end: 1 },
+                    value: None
+                },
+                Token {
+                    kind: TokenKind::tRBRACK,
+                    loc: Loc { start: 2, end: 3 },
+                    value: None
+                },
+            ))
+        )
+    }
+
+    #[test]
+    fn test_err() {
+        assert_eq!(
+            parse(b"42"),
+            Err(ParseError::seq_error(
+                "foo",
+                (),
+                ParseError::TokenError {
+                    lookahead: true,
+                    expected: TokenKind::tLBRACK,
+                    got: TokenKind::tINTEGER,
+                    loc: Loc { start: 0, end: 2 }
+                }
+            ))
+        )
+    }
 }

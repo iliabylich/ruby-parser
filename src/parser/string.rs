@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{ParseError, ParseResult, Parser},
+    parser::{macros::one_of, ParseError, ParseResult, Parser},
     token::TokenKind,
     Node, Token,
 };
@@ -205,12 +205,14 @@ impl Parser {
     }
 
     fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("string_dvar")
-            .or_else(|| self.try_gvar())
-            .or_else(|| self.try_ivar())
-            .or_else(|| self.try_cvar())
-            .or_else(|| self.try_back_ref())
-            .stop()
+        one_of!(
+            "string_dvar",
+            checkpoint = self.new_checkpoint(),
+            self.try_gvar(),
+            self.try_ivar(),
+            self.try_cvar(),
+            self.try_back_ref(),
+        )
     }
 }
 

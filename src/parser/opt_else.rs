@@ -1,5 +1,8 @@
 use crate::{
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
@@ -8,10 +11,12 @@ type Else = (Token, Option<Box<Node>>);
 
 impl Parser {
     pub(crate) fn try_opt_else(&mut self) -> ParseResult<Option<Else>> {
-        self.one_of("opt else")
-            .or_else(|| parse_else(self).map(|v| Some(v)))
-            .or_else(|| Ok(None))
-            .stop()
+        one_of!(
+            "opt else",
+            checkpoint = self.new_checkpoint(),
+            parse_else(self).map(|v| Some(v)),
+            Ok(None),
+        )
     }
 }
 

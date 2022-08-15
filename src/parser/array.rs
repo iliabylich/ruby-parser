@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::TokenKind,
     Node,
 };
@@ -44,27 +47,30 @@ fn parse_aref_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
 }
 
 fn parse_aref_args_item(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("areg_args item")
-        .or_else(|| parser.parse_assoc())
-        .or_else(|| parser.parse_arg())
-        .stop()
+    one_of!(
+        "areg_args item",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_assoc(),
+        parser.parse_arg(),
+    )
 }
 
 fn try_args(parser: &mut Parser) -> ParseResult<Option<Vec<Node>>> {
-    parser
-        .one_of("[args]")
-        .or_else(|| parser.parse_args().map(|v| Some(v)))
-        .or_else(|| Ok(None))
-        .stop()
+    one_of!(
+        "[args]",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_args().map(|v| Some(v)),
+        Ok(None),
+    )
 }
 
 fn try_assocs(parser: &mut Parser) -> ParseResult<Option<Vec<Node>>> {
-    parser
-        .one_of("[assocs]")
-        .or_else(|| parser.parse_assocs().map(|v| Some(v)))
-        .or_else(|| Ok(None))
-        .stop()
+    one_of!(
+        "[assocs]",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_assocs().map(|v| Some(v)),
+        Ok(None),
+    )
 }
 
 #[cfg(test)]

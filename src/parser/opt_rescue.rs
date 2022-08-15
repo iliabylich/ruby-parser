@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
@@ -29,30 +32,34 @@ impl Parser {
     }
 
     pub(crate) fn parse_then(&mut self) -> ParseResult<Token> {
-        self.one_of("then ...")
-            .or_else(|| self.try_term())
-            .or_else(|| self.try_token(TokenKind::kTHEN))
-            .or_else(|| {
+        one_of!(
+            "then ...",
+            checkpoint = self.new_checkpoint(),
+            self.try_term(),
+            self.try_token(TokenKind::kTHEN),
+            {
                 let (_term, then_t) = all_of!(
                     "term then",
                     self.try_term(),
                     self.try_token(TokenKind::kTHEN),
                 )?;
                 Ok(then_t)
-            })
-            .stop()
+            },
+        )
     }
 
     pub(crate) fn parse_lhs(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("lhs")
-            .or_else(|| self.parse_user_variable())
-            .or_else(|| self.parse_keyword_variable())
-            .or_else(|| self.try_back_ref())
-            .or_else(|| {
+        one_of!(
+            "lhs",
+            checkpoint = self.new_checkpoint(),
+            self.parse_user_variable(),
+            self.parse_keyword_variable(),
+            self.try_back_ref(),
+            {
                 let (colon2_t, name_t) = self.parse_colon2_const()?;
                 Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
-            })
-            .or_else(|| {
+            },
+            {
                 let (primary_value, op_t, id_t) = all_of!(
                     "primary call_op [const/tIDENT]",
                     self.parse_primary_value(),
@@ -64,8 +71,8 @@ impl Parser {
                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                     primary_value, op_t, id_t
                 )
-            })
-            .stop()
+            },
+        )
     }
 
     pub(crate) fn parse_arg_value(&mut self) -> ParseResult<Box<Node>> {
@@ -80,11 +87,12 @@ fn parse_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
         parse_exc_list(parser),
         try_exc_var(parser),
         {
-            parser
-                .one_of("optional then")
-                .or_else(|| parser.parse_then().map(|tok| Some(tok)))
-                .or_else(|| Ok(None))
-                .stop()
+            one_of!(
+                "optional then",
+                checkpoint = parser.new_checkpoint(),
+                parser.parse_then().map(|tok| Some(tok)),
+                Ok(None),
+            )
         },
         parser.try_compstmt(),
     )?;
@@ -95,25 +103,27 @@ fn parse_opt_rescue1(parser: &mut Parser) -> ParseResult<Box<Node>> {
 }
 
 fn parse_exc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    parser
-        .one_of("exceptions list")
-        .or_else(|| parser.parse_arg_value().map(|arg_value| vec![*arg_value]))
-        .or_else(|| parser.parse_mrhs())
-        .stop()
+    one_of!(
+        "exceptions list",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_arg_value().map(|arg_value| vec![*arg_value]),
+        parser.parse_mrhs(),
+    )
 }
 fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
-    parser
-        .one_of("[exc var]")
-        .or_else(|| {
+    one_of!(
+        "[exc var]",
+        checkpoint = parser.new_checkpoint(),
+        {
             let (assoc_t, lhs) = all_of!(
                 "exc var",
                 parser.try_token(TokenKind::tASSOC),
                 parser.parse_lhs(),
             )?;
             Ok(Some((assoc_t, lhs)))
-        })
-        .or_else(|| Ok(None))
-        .stop()
+        },
+        Ok(None),
+    )
 }
 
 #[cfg(test)]

@@ -1,7 +1,10 @@
 use crate::{
     buffer::Buffer,
     builder::{Builder, KeywordCmd},
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
@@ -88,9 +91,10 @@ fn parse_arg0(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
 }
 
 fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("arg head")
-        .or_else(|| {
+    one_of!(
+        "arg head",
+        checkpoint = parser.new_checkpoint(),
+        {
             let (lhs, eql_t, rhs) = all_of!(
                 "lhs tEQL arg_rhs",
                 parser.parse_lhs(),
@@ -99,8 +103,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
             )?;
 
             Ok(Builder::assign(lhs, eql_t, rhs))
-        })
-        .or_else(|| {
+        },
+        {
             let (lhs, op_t, rhs) = all_of!(
                 "var_lhs tOP_ASGN arg_rhs",
                 parser.parse_var_lhs(),
@@ -109,8 +113,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
             )?;
 
             Ok(Builder::op_assign(lhs, op_t, rhs, parser.buffer()))
-        })
-        .or_else(|| {
+        },
+        {
             let (expr, lbrack_t, args, rbrack_t, op_t, rhs) = all_of!(
                 "primary_value tLBRACK2 opt_call_args rbracket tOP_ASGN arg_rhs",
                 parser.parse_primary_value(),
@@ -127,8 +131,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 rhs,
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let (expr, call_op_t, mid_t, op_t, rhs) = all_of!(
                 "primary_value call_op2 tIDENTIFIER tOP_ASGN arg_rhs",
                 parser.parse_primary_value(),
@@ -152,8 +156,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 rhs,
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let (expr, call_op_t, const_t, op_t, rhs) = all_of!(
                 "primary_value call_op2 tCONSTANT tOP_ASGN arg_rhs",
                 parser.parse_primary_value(),
@@ -177,8 +181,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 rhs,
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let (colon2_t, const_t, op_t, rhs) = all_of!(
                 "tCOLON3 tCONSTANT tOP_ASGN arg_rhs",
                 parser.expect_token(TokenKind::tCOLON2),
@@ -197,8 +201,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 rhs,
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let (lhs, op_t, rhs) = all_of!(
                 "backref tOP_ASGN arg_rhs",
                 parser.try_back_ref(),
@@ -207,8 +211,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
             )?;
 
             Ok(Builder::op_assign(lhs, op_t, rhs, parser.buffer()))
-        })
-        .or_else(|| {
+        },
+        {
             let (minus_t, lhs, op_t, rhs) = all_of!(
                 "tUMINUS_NUM simple_numeric tPOW arg",
                 parser.expect_token(TokenKind::tUMINUS_NUM),
@@ -222,8 +226,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 Builder::binary_op(lhs, op_t, rhs, parser.buffer()),
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let ((def_t, name_t), args, eql_t, body, rescue_t, rescue_body) = all_of!(
                 "defn_head f_opt_paren_args tEQL arg kRESCUE_MOD arg",
                 parser.parse_defn_head(),
@@ -248,8 +252,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 Some(method_body),
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let ((def_t, name_t), args, eql_t, body) = all_of!(
                 "defn_head f_opt_paren_args tEQL arg",
                 parser.parse_defn_head(),
@@ -266,18 +270,17 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 Some(body),
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
-            let ((def_t, definee, dot_t, name_t), args, eql_t, body, rescue_t, rescue_body) =
-                all_of!(
-                    "defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg",
-                    parser.parse_defs_head(),
-                    parser.try_f_opt_paren_args(),
-                    parser.expect_token(TokenKind::tEQL),
-                    parser.parse_arg(),
-                    parser.expect_token(TokenKind::kRESCUE_MOD),
-                    parser.parse_arg(),
-                )?;
+        },
+        {
+            let ((def_t, definee, dot_t, name_t), args, eql_t, body, rescue_t, rescue_body) = all_of!(
+                "defs_head f_opt_paren_args tEQL arg kRESCUE_MOD arg",
+                parser.parse_defs_head(),
+                parser.try_f_opt_paren_args(),
+                parser.expect_token(TokenKind::tEQL),
+                parser.parse_arg(),
+                parser.expect_token(TokenKind::kRESCUE_MOD),
+                parser.parse_arg(),
+            )?;
 
             let rescue_body = Builder::rescue_body(rescue_t, vec![], None, None, Some(rescue_body));
 
@@ -293,8 +296,8 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 Some(method_body),
                 parser.buffer(),
             ))
-        })
-        .or_else(|| {
+        },
+        {
             let ((def_t, definee, dot_t, name_t), args, eql_t, body) = all_of!(
                 "defs_head f_opt_paren_args tEQL arg",
                 parser.parse_defs_head(),
@@ -313,9 +316,9 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 Some(body),
                 parser.buffer(),
             ))
-        })
-        .or_else(|| parser.parse_primary())
-        .stop()
+        },
+        parser.parse_primary(),
+    )
 }
 
 fn parse_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
@@ -347,22 +350,24 @@ fn parse_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
 }
 
 fn parse_arg_prefix_operator(parser: &mut Parser) -> ParseResult<Token> {
-    parser
-        .one_of("arg prefix operator")
-        .or_else(|| parser.try_token(TokenKind::tBDOT2))
-        .or_else(|| parser.try_token(TokenKind::tBDOT3))
-        .or_else(|| parser.try_token(TokenKind::tUPLUS))
-        .or_else(|| parser.try_token(TokenKind::tUMINUS))
-        .or_else(|| parser.try_token(TokenKind::tBANG))
-        .or_else(|| parser.try_token(TokenKind::tTILDE))
-        .or_else(|| parser.try_token(TokenKind::kDEFINED))
-        .stop()
+    one_of!(
+        "arg prefix operator",
+        checkpoint = parser.new_checkpoint(),
+        parser.try_token(TokenKind::tBDOT2),
+        parser.try_token(TokenKind::tBDOT3),
+        parser.try_token(TokenKind::tUPLUS),
+        parser.try_token(TokenKind::tUMINUS),
+        parser.try_token(TokenKind::tBANG),
+        parser.try_token(TokenKind::tTILDE),
+        parser.try_token(TokenKind::kDEFINED),
+    )
 }
 
 fn parse_arg_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("arg lhs")
-        .or_else(|| {
+    one_of!(
+        "arg lhs",
+        checkpoint = parser.new_checkpoint(),
+        {
             let op_t = parse_arg_prefix_operator(parser)?;
             let (_, r_bp) = op_t.kind.precedence().expect("bug");
             let rhs = parse_arg0(parser, r_bp)?;
@@ -391,41 +396,42 @@ fn parse_arg_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
                     unreachable!("bug")
                 }
             }
-        })
-        .or_else(|| parse_arg_head(parser))
-        .stop()
+        },
+        parse_arg_head(parser),
+    )
 }
 
 fn parse_binary_or_postfix_operator(parser: &mut Parser) -> ParseResult<Token> {
-    parser
-        .one_of("infix/binary operator")
-        .or_else(|| parser.expect_token(TokenKind::tDOT2))
-        .or_else(|| parser.expect_token(TokenKind::tDOT3))
-        .or_else(|| parser.expect_token(TokenKind::tPLUS))
-        .or_else(|| parser.expect_token(TokenKind::tMINUS))
-        .or_else(|| parser.expect_token(TokenKind::tSTAR))
-        .or_else(|| parser.expect_token(TokenKind::tDIVIDE))
-        .or_else(|| parser.expect_token(TokenKind::tPERCENT))
-        .or_else(|| parser.expect_token(TokenKind::tPOW))
-        .or_else(|| parser.expect_token(TokenKind::tPIPE))
-        .or_else(|| parser.expect_token(TokenKind::tCARET))
-        .or_else(|| parser.expect_token(TokenKind::tAMPER))
-        .or_else(|| parser.expect_token(TokenKind::tCMP))
-        .or_else(|| parser.expect_token(TokenKind::tEQ))
-        .or_else(|| parser.expect_token(TokenKind::tEQQ))
-        .or_else(|| parser.expect_token(TokenKind::tNEQ))
-        .or_else(|| parser.expect_token(TokenKind::tMATCH))
-        .or_else(|| parser.expect_token(TokenKind::tNMATCH))
-        .or_else(|| parser.expect_token(TokenKind::tLSHFT))
-        .or_else(|| parser.expect_token(TokenKind::tRSHFT))
-        .or_else(|| parser.expect_token(TokenKind::tANDOP))
-        .or_else(|| parser.expect_token(TokenKind::tOROP))
-        .or_else(|| parser.expect_token(TokenKind::tEH))
-        .or_else(|| parser.expect_token(TokenKind::tGT))
-        .or_else(|| parser.expect_token(TokenKind::tLT))
-        .or_else(|| parser.expect_token(TokenKind::tGEQ))
-        .or_else(|| parser.expect_token(TokenKind::tLEQ))
-        .stop()
+    one_of!(
+        "infix/binary operator",
+        checkpoint = parser.new_checkpoint(),
+        parser.expect_token(TokenKind::tDOT2),
+        parser.expect_token(TokenKind::tDOT3),
+        parser.expect_token(TokenKind::tPLUS),
+        parser.expect_token(TokenKind::tMINUS),
+        parser.expect_token(TokenKind::tSTAR),
+        parser.expect_token(TokenKind::tDIVIDE),
+        parser.expect_token(TokenKind::tPERCENT),
+        parser.expect_token(TokenKind::tPOW),
+        parser.expect_token(TokenKind::tPIPE),
+        parser.expect_token(TokenKind::tCARET),
+        parser.expect_token(TokenKind::tAMPER),
+        parser.expect_token(TokenKind::tCMP),
+        parser.expect_token(TokenKind::tEQ),
+        parser.expect_token(TokenKind::tEQQ),
+        parser.expect_token(TokenKind::tNEQ),
+        parser.expect_token(TokenKind::tMATCH),
+        parser.expect_token(TokenKind::tNMATCH),
+        parser.expect_token(TokenKind::tLSHFT),
+        parser.expect_token(TokenKind::tRSHFT),
+        parser.expect_token(TokenKind::tANDOP),
+        parser.expect_token(TokenKind::tOROP),
+        parser.expect_token(TokenKind::tEH),
+        parser.expect_token(TokenKind::tGT),
+        parser.expect_token(TokenKind::tLT),
+        parser.expect_token(TokenKind::tGEQ),
+        parser.expect_token(TokenKind::tLEQ),
+    )
 }
 
 fn is_postfix_operator(op_t: Token) -> bool {

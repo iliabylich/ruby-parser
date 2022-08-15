@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::TokenKind,
     Node,
 };
@@ -16,13 +19,12 @@ impl Parser {
 }
 
 fn parse_alias_args(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
-    parser
-        .one_of("alias arguments")
-        .or_else(|| parse_fitem_fitem(parser))
-        .or_else(|| parse_gvar_gvar(parser))
-        .required()
-        .compact()
-        .stop()
+    one_of!(
+        "alias arguments",
+        checkpoint = parser.new_checkpoint(),
+        parse_fitem_fitem(parser),
+        parse_gvar_gvar(parser),
+    )
 }
 
 fn parse_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
@@ -33,13 +35,13 @@ fn parse_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     all_of!(
         "gvar -> [gvar | back ref | nth ref]",
         parser.try_gvar(),
-        parser
-            .one_of("gvar rhs")
-            .or_else(|| parser.try_gvar())
-            .or_else(|| parser.try_back_ref())
-            .or_else(|| parser.try_nth_ref())
-            .required()
-            .stop(),
+        one_of!(
+            "gvar rhs",
+            checkpoint = parser.new_checkpoint(),
+            parser.try_gvar(),
+            parser.try_back_ref(),
+            parser.try_nth_ref(),
+        ),
     )
 }
 

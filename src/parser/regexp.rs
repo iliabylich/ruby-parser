@@ -2,7 +2,10 @@ use crate::{
     builder::Builder,
     lexer::strings::{literal::StringLiteral, types::Regexp},
     loc::loc,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{token, Token, TokenKind},
     transactions::ParseError,
     Node,
@@ -13,9 +16,11 @@ impl Parser {
         let (begin_t, contents, end_t) = all_of!(
             "regexp",
             {
-                self.one_of("regexp")
-                    .or_else(|| self.try_token(TokenKind::tREGEXP_BEG))
-                    .or_else(|| {
+                one_of!(
+                    "regexp",
+                    checkpoint = self.new_checkpoint(),
+                    self.try_token(TokenKind::tREGEXP_BEG),
+                    {
                         let token = self.read_div_as_heredoc_beg()?;
 
                         // now we need to manually push a xstring literal
@@ -29,8 +34,8 @@ impl Parser {
                             )));
 
                         Ok(token)
-                    })
-                    .stop()
+                    },
+                )
             },
             self.parse_regexp_contents(),
             self.expect_token(TokenKind::tSTRING_END),

@@ -5,7 +5,10 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     loc::loc,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{token, Token, TokenKind},
     transactions::ParseError,
     Node,
@@ -16,22 +19,24 @@ impl Parser {
         let (begin_t, parts, end_t) = all_of!(
             "xstring",
             {
-                self.one_of("executable string begin")
-                    .or_else(|| self.read_backtick_identifier_as_xstring_beg())
-                    .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
-                    .stop()
-                    .and_then(|tok| {
-                        // now we need to manually push a xstring literal
-                        // Lexer is not capable of doing it
-                        self.lexer
-                            .string_literals()
-                            .push(StringLiteral::StringInterp(StringInterp::new(
-                                Interpolation::new(self.lexer.curly_nest()),
-                                b'`',
-                                b'`',
-                            )));
-                        Ok(tok)
-                    })
+                one_of!(
+                    "executable string begin",
+                    checkpoint = self.new_checkpoint(),
+                    self.read_backtick_identifier_as_xstring_beg(),
+                    self.try_token(TokenKind::tXHEREDOC_BEG),
+                )
+                .and_then(|tok| {
+                    // now we need to manually push a xstring literal
+                    // Lexer is not capable of doing it
+                    self.lexer
+                        .string_literals()
+                        .push(StringLiteral::StringInterp(StringInterp::new(
+                            Interpolation::new(self.lexer.curly_nest()),
+                            b'`',
+                            b'`',
+                        )));
+                    Ok(tok)
+                })
             },
             self.parse_xstring_contents(),
             self.expect_token(TokenKind::tSTRING_END),

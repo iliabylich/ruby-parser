@@ -1,13 +1,18 @@
 use crate::{
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_method(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("method definition")
-            .or_else(|| {
+        one_of!(
+            "method definition",
+            checkpoint = self.new_checkpoint(),
+            {
                 let ((def_t, name_t), args, body, end_t) = all_of!(
                     "instance method definition",
                     self.parse_defn_head(),
@@ -17,8 +22,8 @@ impl Parser {
                 )?;
 
                 todo!("{:?} {:?} {:?} {:?} {:?}", def_t, name_t, args, body, end_t)
-            })
-            .or_else(|| {
+            },
+            {
                 let ((def_t, singleton, op_t, name_t), args, body, end_t) = all_of!(
                     "singleton method definition",
                     self.parse_defs_head(),
@@ -37,8 +42,8 @@ impl Parser {
                     body,
                     end_t
                 )
-            })
-            .stop()
+            },
+        )
     }
 
     pub(crate) fn parse_defn_head(&mut self) -> ParseResult<(Token, Token)> {
@@ -68,9 +73,11 @@ impl Parser {
     }
 
     fn parse_singleton(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("singleton")
-            .or_else(|| self.parse_var_ref())
-            .or_else(|| {
+        one_of!(
+            "singleton",
+            checkpoint = self.new_checkpoint(),
+            self.parse_var_ref(),
+            {
                 let (lparen_t, expr, rparen_t) = all_of!(
                     "(expr)",
                     self.try_token(TokenKind::tLPAREN),
@@ -78,7 +85,7 @@ impl Parser {
                     self.parse_rparen(),
                 )?;
                 todo!("{:?} {:?} {:?}", lparen_t, expr, rparen_t)
-            })
-            .stop()
+            },
+        )
     }
 }

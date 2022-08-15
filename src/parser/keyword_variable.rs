@@ -1,21 +1,23 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{macros::one_of, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_keyword_variable(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("keyword variable")
-            .or_else(|| self.parse_nil())
-            .or_else(|| self.parse_self())
-            .or_else(|| self.parse_true())
-            .or_else(|| self.parse_false())
-            .or_else(|| self.parse__file__())
-            .or_else(|| self.parse__line__())
-            .or_else(|| self.parse__encoding__())
-            .stop()
+        one_of!(
+            "keyword variable",
+            checkpoint = self.new_checkpoint(),
+            self.parse_nil(),
+            self.parse_self(),
+            self.parse_true(),
+            self.parse_false(),
+            self.parse__file__(),
+            self.parse__line__(),
+            self.parse__encoding__(),
+        )
     }
 
     fn parse_nil(&mut self) -> ParseResult<Box<Node>> {

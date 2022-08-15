@@ -1,14 +1,19 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_case(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("case expr")
-            .or_else(|| {
+        one_of!(
+            "case expr",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (case_t, expr, _terms, when_bodies, opt_else, end_t) = all_of!(
                     "k_case expr_value opt_terms case_body k_end",
                     parse_k_case(self),
@@ -31,8 +36,8 @@ impl Parser {
                     else_body,
                     end_t,
                 ))
-            })
-            .or_else(|| {
+            },
+            {
                 let (case_t, _opt_terms, when_bodies, opt_else, end_t) = all_of!(
                     "k_case opt_terms case_body k_end",
                     parse_k_case(self),
@@ -54,8 +59,8 @@ impl Parser {
                     else_body,
                     end_t,
                 ))
-            })
-            .or_else(|| {
+            },
+            {
                 let (case_t, expr, _opt_terms, p_case_body, end_t) = all_of!(
                     "k_case expr_value opt_terms p_case_body k_end",
                     parse_k_case(self),
@@ -73,8 +78,8 @@ impl Parser {
                     p_case_body,
                     end_t
                 )
-            })
-            .stop()
+            },
+        )
     }
 }
 
@@ -134,9 +139,10 @@ fn parse_case_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     Ok(nodes)
 }
 fn parse_case_arg(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("case arg")
-        .or_else(|| {
+    one_of!(
+        "case arg",
+        checkpoint = parser.new_checkpoint(),
+        {
             let (star_t, value) = all_of!(
                 "*arg",
                 parser.try_token(TokenKind::tSTAR),
@@ -144,7 +150,7 @@ fn parse_case_arg(parser: &mut Parser) -> ParseResult<Box<Node>> {
             )?;
 
             Ok(Builder::splat(star_t, value))
-        })
-        .or_else(|| parser.parse_arg_value())
-        .stop()
+        },
+        parser.parse_arg_value(),
+    )
 }

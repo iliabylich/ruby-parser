@@ -1,6 +1,9 @@
 use crate::{
     builder::{Builder, LoopType},
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::TokenKind,
     Node, Token,
 };
@@ -43,10 +46,12 @@ impl Parser {
     }
 
     pub(crate) fn parse_top_stmt(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("top-level statement")
-            .or_else(|| self.parse_preexe())
-            .or_else(|| self.parse_stmt())
-            .stop()
+        one_of!(
+            "top-level statement",
+            checkpoint = self.new_checkpoint(),
+            self.parse_preexe(),
+            self.parse_stmt(),
+        )
     }
 
     pub(crate) fn try_bodystmt(&mut self) -> ParseResult<Option<Box<Node>>> {
@@ -109,10 +114,12 @@ impl Parser {
     }
 
     fn parse_stmt_or_begin(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("stmt_or_begin")
-            .or_else(|| self.parse_stmt())
-            .or_else(|| self.parse_preexe())
-            .stop()
+        one_of!(
+            "stmt_or_begin",
+            checkpoint = self.new_checkpoint(),
+            self.parse_stmt(),
+            self.parse_preexe(),
+        )
     }
 
     #[allow(unreachable_code, unused_mut)]
@@ -155,36 +162,38 @@ impl Parser {
     }
 
     fn parse_stmt_tail(&mut self) -> ParseResult<(Token, Box<Node>)> {
-        self.one_of("stmt tail")
-            .or_else(|| {
+        one_of!(
+            "stmt tail",
+            checkpoint = self.new_checkpoint(),
+            {
                 all_of!(
                     "if_mod expr",
                     self.try_token(TokenKind::kIF),
                     self.parse_expr_value(),
                 )
-            })
-            .or_else(|| {
+            },
+            {
                 all_of!(
                     "unless_mod expr",
                     self.try_token(TokenKind::kUNLESS),
                     self.parse_expr_value(),
                 )
-            })
-            .or_else(|| {
+            },
+            {
                 all_of!(
                     "while_mod expr",
                     self.try_token(TokenKind::kWHILE),
                     self.parse_expr_value(),
                 )
-            })
-            .or_else(|| {
+            },
+            {
                 all_of!(
                     "until_mod expr",
                     self.try_token(TokenKind::kUNTIL),
                     self.parse_expr_value(),
                 )
-            })
-            .stop()
+            },
+        )
     }
 
     fn rescue_stmt(&mut self) -> ParseResult<(Token, Box<Node>)> {
@@ -192,15 +201,19 @@ impl Parser {
     }
 
     fn parse_assignment(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("assignment")
-            .or_else(|| self.parse_mass_assignment())
-            .or_else(|| self.parse_simple_assignment())
-            .or_else(|| {
+        one_of!(
+            "assignment",
+            checkpoint = self.new_checkpoint(),
+            self.parse_mass_assignment(),
+            self.parse_simple_assignment(),
+            {
                 let (lhs, op_t, rhs) = all_of!(
                     "operation assignment",
                     {
-                        self.one_of("operation assignment lhs")
-                            .or_else(|| {
+                        one_of!(
+                            "operation assignment lhs",
+                            checkpoint = self.new_checkpoint(),
+                            {
                                 let (primary_value, op_t, id_t) = all_of!(
                                     "primary call_op2 tIDENTIFIER",
                                     self.parse_primary_value(),
@@ -211,8 +224,8 @@ impl Parser {
                                     "primary_value call_op tIDENT {:?} {:?} {:?}",
                                     primary_value, op_t, id_t
                                 )
-                            })
-                            .or_else(|| {
+                            },
+                            {
                                 let (primary_value, lbrack_t, opt_call_args, rbrack_t) = all_of!(
                                     "primary [ args ]",
                                     self.parse_primary_value(),
@@ -227,18 +240,18 @@ impl Parser {
                                     opt_call_args,
                                     rbrack_t
                                 )
-                            })
-                            .or_else(|| self.parse_var_lhs())
-                            .or_else(|| self.try_back_ref())
-                            .stop()
+                            },
+                            self.parse_var_lhs(),
+                            self.try_back_ref(),
+                        )
                     },
                     self.expect_token(TokenKind::tOP_ASGN),
                     self.parse_command_rhs(),
                 )?;
 
                 todo!("{:?} {:?} {:?}", lhs, op_t, rhs)
-            })
-            .stop()
+            },
+        )
     }
 
     fn parse_mass_assignment(&mut self) -> ParseResult<Box<Node>> {
@@ -247,22 +260,25 @@ impl Parser {
             self.parse_mlhs(),
             self.expect_token(TokenKind::tEQL),
             {
-                self.one_of("mass-assginemtn rhs")
-                    .or_else(|| self.parse_command_call())
-                    .or_else(|| {
+                one_of!(
+                    "mass-assginemtn rhs",
+                    checkpoint = self.new_checkpoint(),
+                    self.parse_command_call(),
+                    {
                         let (value, rescue) =
                             all_of!("mrhs_arg [rescue stmt]", self.parse_mrhs_arg(), {
-                                let maybe_rescut_stmt = self
-                                    .one_of("[rescue stmt]")
-                                    .or_else(|| self.rescue_stmt().map(|data| Some(data)))
-                                    .or_else(|| Ok(None))
-                                    .stop()?;
+                                let maybe_rescut_stmt = one_of!(
+                                    "[rescue stmt]",
+                                    checkpoint = self.new_checkpoint(),
+                                    self.rescue_stmt().map(|data| Some(data)),
+                                    Ok(None),
+                                )?;
                                 #[allow(unreachable_code)]
                                 Ok(todo!("{:?}", maybe_rescut_stmt) as Box<Node>)
                             },)?;
                         todo!("{:?} {:?}", value, rescue)
-                    })
-                    .stop()
+                    },
+                )
             },
         )?;
         todo!("{:?} {:?} {:?}", mlhs, eql_t, rhs)
@@ -274,10 +290,12 @@ impl Parser {
             self.parse_lhs(),
             self.expect_token(TokenKind::tEQL),
             {
-                self.one_of("simple assignment rhs")
-                    .or_else(|| self.parse_command_call())
-                    .or_else(|| self.parse_command_rhs())
-                    .stop()
+                one_of!(
+                    "simple assignment rhs",
+                    checkpoint = self.new_checkpoint(),
+                    self.parse_command_call(),
+                    self.parse_command_rhs(),
+                )
             },
         )?;
 

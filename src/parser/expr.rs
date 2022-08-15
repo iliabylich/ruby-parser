@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
@@ -16,15 +19,16 @@ impl Parser {
 }
 
 fn parse_expr_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("expression")
-        .or_else(|| parser.parse_command_call())
-        .or_else(|| parse_not_expr(parser))
-        .or_else(|| parse_bang_command_call(parser))
-        .or_else(|| parse_arg_assoc_p_expr_body(parser))
-        .or_else(|| parse_arg_in_p_expr_body(parser))
-        .or_else(|| parser.parse_arg())
-        .stop()
+    one_of!(
+        "expression",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_command_call(),
+        parse_not_expr(parser),
+        parse_bang_command_call(parser),
+        parse_arg_assoc_p_expr_body(parser),
+        parse_arg_in_p_expr_body(parser),
+        parser.parse_arg(),
+    )
 }
 fn parse_not_expr(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (not_t, _opt_nl, expr) = all_of!(
@@ -67,23 +71,24 @@ fn parse_arg_in_p_expr_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
 }
 
 fn try_expr_tail(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
-    let expr_tail = parser
-        .one_of("[and/or] expr")
-        .or_else(|| {
+    let expr_tail = one_of!(
+        "[and/or] expr",
+        checkpoint = parser.new_checkpoint(),
+        {
             all_of!(
                 "and expr",
                 parser.try_token(TokenKind::kAND),
                 parser.parse_expr(),
             )
-        })
-        .or_else(|| {
+        },
+        {
             all_of!(
                 "or expr",
                 parser.try_token(TokenKind::kOR),
                 parser.parse_expr(),
             )
-        })
-        .stop();
+        },
+    );
 
     match expr_tail {
         Ok(data) => Ok(Some(data)),

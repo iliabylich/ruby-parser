@@ -1,30 +1,34 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_primary(&mut self) -> ParseResult<Box<Node>> {
-        let mut node = self
-            .one_of("primary value")
-            .or_else(|| self.parse_literal())
-            .or_else(|| self.parse_strings())
-            .or_else(|| self.parse_xstring())
-            .or_else(|| self.parse_regexp())
-            .or_else(|| self.parse_words())
-            .or_else(|| self.parse_qwords())
-            .or_else(|| self.parse_symbols())
-            .or_else(|| self.parse_qsymbols())
-            .or_else(|| self.parse_var_ref())
-            .or_else(|| self.try_back_ref())
-            .or_else(|| {
+        let mut node = one_of!(
+            "primary value",
+            checkpoint = self.new_checkpoint(),
+            self.parse_literal(),
+            self.parse_strings(),
+            self.parse_xstring(),
+            self.parse_regexp(),
+            self.parse_words(),
+            self.parse_qwords(),
+            self.parse_symbols(),
+            self.parse_qsymbols(),
+            self.parse_var_ref(),
+            self.try_back_ref(),
+            {
                 let id_t = self.try_token(TokenKind::tFID)?;
 
                 todo!("call_method {:?}", id_t);
-            })
-            .or_else(|| {
+            },
+            {
                 let (begin_t, bodystmt, end_t) = all_of!(
                     "BEGIN { .. }",
                     self.try_token(TokenKind::kBEGIN),
@@ -33,8 +37,8 @@ impl Parser {
                 )?;
 
                 todo!("begin {:?} {:?} {:?}", begin_t, bodystmt, end_t);
-            })
-            .or_else(|| {
+            },
+            {
                 let (lparen_t, stmt, rparen_t) = all_of!(
                     "( stmt )",
                     self.try_token(TokenKind::tLPAREN),
@@ -43,18 +47,18 @@ impl Parser {
                 )?;
 
                 todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
-            })
-            .or_else(|| {
+            },
+            {
                 let (colon2_t, name_t) = self.parse_colon2_const()?;
                 Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
-            })
-            .or_else(|| self.parse_array())
-            .or_else(|| self.parse_hash())
-            .or_else(|| parse_keyword_cmd(self, TokenKind::kRETURN))
-            .or_else(|| self.parse_yield())
-            .or_else(|| self.parse_defined())
-            .or_else(|| parse_not_expr(self))
-            .or_else(|| {
+            },
+            self.parse_array(),
+            self.parse_hash(),
+            parse_keyword_cmd(self, TokenKind::kRETURN),
+            self.parse_yield(),
+            self.parse_defined(),
+            parse_not_expr(self),
+            {
                 let (fcall, brace_block) = all_of!(
                     "fcall brace_block",
                     self.parse_fcall(),
@@ -62,9 +66,9 @@ impl Parser {
                 )?;
 
                 todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
-            })
+            },
             // FIXME: this rule is left-recursive, this must be extracted to a post-rule
-            // .or_else(|| {
+            // {
             //     let method_call = self.parse_method_call()?;
             //     if let Ok(brace_block) = self.parse_brace_block() {
             //         todo!(
@@ -75,23 +79,22 @@ impl Parser {
             //     } else {
             //         todo!("method_call {:?}", method_call)
             //     }
-            // })
-            .or_else(|| self.parse_lambda())
-            .or_else(|| self.parse_if_expr())
-            .or_else(|| self.parse_unless_expr())
-            .or_else(|| self.parse_while_expr())
-            .or_else(|| self.parse_until_expr())
-            .or_else(|| self.parse_case())
-            .or_else(|| self.parse_for_loop())
-            .or_else(|| self.parse_class())
-            .or_else(|| self.parse_module())
-            .or_else(|| self.parse_method())
-            .or_else(|| parse_keyword_cmd(self, TokenKind::kBREAK))
-            .or_else(|| parse_keyword_cmd(self, TokenKind::kNEXT))
-            .or_else(|| parse_keyword_cmd(self, TokenKind::kREDO))
-            .or_else(|| parse_keyword_cmd(self, TokenKind::kRETRY))
-            .compact()
-            .stop()?;
+            // },
+            self.parse_lambda(),
+            self.parse_if_expr(),
+            self.parse_unless_expr(),
+            self.parse_while_expr(),
+            self.parse_until_expr(),
+            self.parse_case(),
+            self.parse_for_loop(),
+            self.parse_class(),
+            self.parse_module(),
+            self.parse_method(),
+            parse_keyword_cmd(self, TokenKind::kBREAK),
+            parse_keyword_cmd(self, TokenKind::kNEXT),
+            parse_keyword_cmd(self, TokenKind::kREDO),
+            parse_keyword_cmd(self, TokenKind::kRETRY),
+        )?;
 
         loop {
             match self.parse_colon2_const() {

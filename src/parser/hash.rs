@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseError, ParseResult, Parser,
+    },
     token::TokenKind,
     Node,
 };
@@ -42,8 +45,10 @@ impl Parser {
     }
 
     pub(crate) fn parse_assoc(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("assoc")
-            .or_else(|| {
+        one_of!(
+            "assoc",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (key_t, value) = all_of!(
                     "tLABEL arg_value",
                     self.try_token(TokenKind::tLABEL),
@@ -51,12 +56,12 @@ impl Parser {
                 )?;
 
                 Ok(Builder::pair_keyword(key_t, value, self.buffer()))
-            })
-            .or_else(|| {
+            },
+            {
                 let key_t = self.try_token(TokenKind::tLABEL)?;
                 Ok(Builder::pair_label(key_t, self.buffer()))
-            })
-            .or_else(|| {
+            },
+            {
                 let (begin_t, parts, end_t, value) = all_of!(
                     "tSTRING_BEG string_contents tLABEL_END arg_value",
                     self.try_token(TokenKind::tSTRING_BEG),
@@ -66,8 +71,8 @@ impl Parser {
                 )?;
 
                 Ok(Builder::pair_quoted(begin_t, parts, end_t, value))
-            })
-            .or_else(|| {
+            },
+            {
                 let (dstar_t, value) = all_of!(
                     "tDSTAR arg_value",
                     self.try_token(TokenKind::tDSTAR),
@@ -75,8 +80,8 @@ impl Parser {
                 )?;
 
                 Ok(Builder::kwsplat(dstar_t, value))
-            })
-            .or_else(|| {
+            },
+            {
                 let (key, assoc_t, value) = all_of!(
                     "arg_value tASSOC arg_value",
                     self.parse_arg_value(),
@@ -85,24 +90,25 @@ impl Parser {
                 )?;
 
                 Ok(Builder::pair(key, assoc_t, value))
-            })
-            .stop()
+            },
+        )
     }
 }
 
 fn parse_assoc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    parser
-        .one_of("assoc list")
-        .or_else(|| {
+    one_of!(
+        "assoc list",
+        checkpoint = parser.new_checkpoint(),
+        {
             let (assocs, _trailer) = all_of!(
                 "assics trailer",
                 parser.parse_assocs(),
                 Ok(parser.try_trailer()),
             )?;
             Ok(assocs)
-        })
-        .or_else(|| Ok(vec![]))
-        .stop()
+        },
+        Ok(vec![]),
+    )
 }
 
 #[test]

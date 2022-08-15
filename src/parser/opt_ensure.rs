@@ -1,5 +1,8 @@
 use crate::{
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
@@ -8,10 +11,12 @@ type Ensure = (Token, Option<Box<Node>>);
 
 impl Parser {
     pub(crate) fn try_opt_ensure(&mut self) -> ParseResult<Option<Ensure>> {
-        self.one_of("opt ensure")
-            .or_else(|| parse_ensure(self).map(|v| Some(v)))
-            .or_else(|| Ok(None))
-            .stop()
+        one_of!(
+            "opt ensure",
+            checkpoint = self.new_checkpoint(),
+            parse_ensure(self).map(|v| Some(v)),
+            Ok(None),
+        )
     }
 }
 

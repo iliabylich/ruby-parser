@@ -2,7 +2,7 @@ use crate::buffer::Buffer;
 use crate::builder::Builder;
 use crate::lexer::Lexer;
 use crate::nodes::Node;
-use crate::parser::macros::all_of;
+use crate::parser::macros::{all_of, one_of};
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 use crate::transactions::{ParseError, ParseResult};
@@ -89,7 +89,7 @@ impl Parser {
             Ok(token)
         } else {
             Err(ParseError::TokenError {
-                lookahead: true,
+                lookahead: false,
                 expected,
                 got: token.kind,
                 loc: token.loc,
@@ -143,18 +143,22 @@ impl Parser {
     }
 
     fn parse_command_call(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("command call")
-            .or_else(|| self.parse_command())
-            .or_else(|| self.parse_block_command())
-            .stop()
+        one_of!(
+            "command call",
+            checkpoint = self.new_checkpoint(),
+            self.parse_command(),
+            self.parse_block_command(),
+        )
     }
 
     fn parse_block_command(&mut self) -> ParseResult<Box<Node>> {
         let (block_call, maybe_args) = all_of!(
             "block command",
             self.parse_block_call(),
-            self.one_of("block call arguments")
-                .or_else(|| {
+            one_of!(
+                "block call arguments",
+                checkpoint = self.new_checkpoint(),
+                {
                     all_of!(
                         "required block call arguments",
                         self.parse_call_op2(),
@@ -162,9 +166,9 @@ impl Parser {
                         self.parse_command_args(),
                     )
                     .map(|values| Some(values))
-                })
-                .or_else(|| Ok(None))
-                .stop(),
+                },
+                Ok(None),
+            ),
         )?;
 
         panic!("{:?} {:?}", block_call, maybe_args)
@@ -179,112 +183,122 @@ impl Parser {
     }
 
     fn parse_cname(&mut self) -> ParseResult<Token> {
-        self.one_of("cname")
-            .or_else(|| {
+        one_of!(
+            "cname",
+            checkpoint = self.new_checkpoint(),
+            {
                 let token = self.try_token(TokenKind::tIDENTIFIER)?;
                 // TODO: report class or module name must be constant
                 Ok(token)
-            })
-            .or_else(|| self.try_token(TokenKind::tCONSTANT))
-            .stop()
+            },
+            self.try_token(TokenKind::tCONSTANT),
+        )
     }
     fn parse_fname(&mut self) -> ParseResult<Token> {
-        self.one_of("fname")
-            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
-            .or_else(|| self.try_token(TokenKind::tCONSTANT))
-            .or_else(|| self.try_token(TokenKind::tFID))
-            .or_else(|| self.parse_op())
-            .or_else(|| self.parse_reswords())
-            .stop()
+        one_of!(
+            "fname",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::tIDENTIFIER),
+            self.try_token(TokenKind::tCONSTANT),
+            self.try_token(TokenKind::tFID),
+            self.parse_op(),
+            self.parse_reswords(),
+        )
     }
     fn parse_fitem(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("fitem")
-            .or_else(|| {
+        one_of!(
+            "fitem",
+            checkpoint = self.new_checkpoint(),
+            {
                 self.parse_fname()
                     .map(|token| Builder::symbol_internal(token, self.buffer()))
-            })
-            .or_else(|| self.parse_symbol())
-            .stop()
+            },
+            self.parse_symbol(),
+        )
     }
 
     fn parse_op(&mut self) -> ParseResult<Token> {
-        self.one_of("operation")
-            .or_else(|| self.try_token(TokenKind::tPIPE))
-            .or_else(|| self.try_token(TokenKind::tCARET))
-            .or_else(|| self.try_token(TokenKind::tAMPER))
-            .or_else(|| self.try_token(TokenKind::tCMP))
-            .or_else(|| self.try_token(TokenKind::tEQ))
-            .or_else(|| self.try_token(TokenKind::tEQQ))
-            .or_else(|| self.try_token(TokenKind::tMATCH))
-            .or_else(|| self.try_token(TokenKind::tNMATCH))
-            .or_else(|| self.try_token(TokenKind::tGT))
-            .or_else(|| self.try_token(TokenKind::tGEQ))
-            .or_else(|| self.try_token(TokenKind::tLT))
-            .or_else(|| self.try_token(TokenKind::tLEQ))
-            .or_else(|| self.try_token(TokenKind::tNEQ))
-            .or_else(|| self.try_token(TokenKind::tLSHFT))
-            .or_else(|| self.try_token(TokenKind::tRSHFT))
-            .or_else(|| self.try_token(TokenKind::tPLUS))
-            .or_else(|| self.try_token(TokenKind::tMINUS))
-            .or_else(|| self.try_token(TokenKind::tSTAR))
-            .or_else(|| self.try_token(TokenKind::tSTAR))
-            .or_else(|| self.try_token(TokenKind::tDIVIDE))
-            .or_else(|| self.try_token(TokenKind::tPERCENT))
-            .or_else(|| self.try_token(TokenKind::tPOW))
-            .or_else(|| self.try_token(TokenKind::tDSTAR))
-            .or_else(|| self.try_token(TokenKind::tBANG))
-            .or_else(|| self.try_token(TokenKind::tTILDE))
-            .or_else(|| self.try_token(TokenKind::tUPLUS))
-            .or_else(|| self.try_token(TokenKind::tUMINUS))
-            .or_else(|| self.try_token(TokenKind::tAREF))
-            .or_else(|| self.try_token(TokenKind::tASET))
-            .or_else(|| self.try_token(TokenKind::tBACK_REF))
-            .stop()
+        one_of!(
+            "operation",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::tPIPE),
+            self.try_token(TokenKind::tCARET),
+            self.try_token(TokenKind::tAMPER),
+            self.try_token(TokenKind::tCMP),
+            self.try_token(TokenKind::tEQ),
+            self.try_token(TokenKind::tEQQ),
+            self.try_token(TokenKind::tMATCH),
+            self.try_token(TokenKind::tNMATCH),
+            self.try_token(TokenKind::tGT),
+            self.try_token(TokenKind::tGEQ),
+            self.try_token(TokenKind::tLT),
+            self.try_token(TokenKind::tLEQ),
+            self.try_token(TokenKind::tNEQ),
+            self.try_token(TokenKind::tLSHFT),
+            self.try_token(TokenKind::tRSHFT),
+            self.try_token(TokenKind::tPLUS),
+            self.try_token(TokenKind::tMINUS),
+            self.try_token(TokenKind::tSTAR),
+            self.try_token(TokenKind::tSTAR),
+            self.try_token(TokenKind::tDIVIDE),
+            self.try_token(TokenKind::tPERCENT),
+            self.try_token(TokenKind::tPOW),
+            self.try_token(TokenKind::tDSTAR),
+            self.try_token(TokenKind::tBANG),
+            self.try_token(TokenKind::tTILDE),
+            self.try_token(TokenKind::tUPLUS),
+            self.try_token(TokenKind::tUMINUS),
+            self.try_token(TokenKind::tAREF),
+            self.try_token(TokenKind::tASET),
+            self.try_token(TokenKind::tBACK_REF),
+        )
     }
     fn parse_reswords(&mut self) -> ParseResult<Token> {
-        self.one_of("reserved word")
-            .or_else(|| self.try_token(TokenKind::k__LINE__))
-            .or_else(|| self.try_token(TokenKind::k__FILE__))
-            .or_else(|| self.try_token(TokenKind::k__ENCODING__))
-            .or_else(|| self.try_token(TokenKind::klBEGIN))
-            .or_else(|| self.try_token(TokenKind::klEND))
-            .or_else(|| self.try_token(TokenKind::kALIAS))
-            .or_else(|| self.try_token(TokenKind::kAND))
-            .or_else(|| self.try_token(TokenKind::kBEGIN))
-            .or_else(|| self.try_token(TokenKind::kBREAK))
-            .or_else(|| self.try_token(TokenKind::kCASE))
-            .or_else(|| self.try_token(TokenKind::kCLASS))
-            .or_else(|| self.try_token(TokenKind::kDEF))
-            .or_else(|| self.try_token(TokenKind::kDEFINED))
-            .or_else(|| self.try_token(TokenKind::kDO))
-            .or_else(|| self.try_token(TokenKind::kELSE))
-            .or_else(|| self.try_token(TokenKind::kELSIF))
-            .or_else(|| self.try_token(TokenKind::kEND))
-            .or_else(|| self.try_token(TokenKind::kENSURE))
-            .or_else(|| self.try_token(TokenKind::kFALSE))
-            .or_else(|| self.try_token(TokenKind::kFOR))
-            .or_else(|| self.try_token(TokenKind::kIN))
-            .or_else(|| self.try_token(TokenKind::kMODULE))
-            .or_else(|| self.try_token(TokenKind::kNEXT))
-            .or_else(|| self.try_token(TokenKind::kNIL))
-            .or_else(|| self.try_token(TokenKind::kNOT))
-            .or_else(|| self.try_token(TokenKind::kOR))
-            .or_else(|| self.try_token(TokenKind::kREDO))
-            .or_else(|| self.try_token(TokenKind::kRESCUE))
-            .or_else(|| self.try_token(TokenKind::kRETRY))
-            .or_else(|| self.try_token(TokenKind::kRETURN))
-            .or_else(|| self.try_token(TokenKind::kSELF))
-            .or_else(|| self.try_token(TokenKind::kSUPER))
-            .or_else(|| self.try_token(TokenKind::kTHEN))
-            .or_else(|| self.try_token(TokenKind::kTRUE))
-            .or_else(|| self.try_token(TokenKind::kUNDEF))
-            .or_else(|| self.try_token(TokenKind::kWHEN))
-            .or_else(|| self.try_token(TokenKind::kYIELD))
-            .or_else(|| self.try_token(TokenKind::kIF))
-            .or_else(|| self.try_token(TokenKind::kUNLESS))
-            .or_else(|| self.try_token(TokenKind::kWHILE))
-            .or_else(|| self.try_token(TokenKind::kUNTIL))
-            .stop()
+        one_of!(
+            "reserved word",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::k__LINE__),
+            self.try_token(TokenKind::k__FILE__),
+            self.try_token(TokenKind::k__ENCODING__),
+            self.try_token(TokenKind::klBEGIN),
+            self.try_token(TokenKind::klEND),
+            self.try_token(TokenKind::kALIAS),
+            self.try_token(TokenKind::kAND),
+            self.try_token(TokenKind::kBEGIN),
+            self.try_token(TokenKind::kBREAK),
+            self.try_token(TokenKind::kCASE),
+            self.try_token(TokenKind::kCLASS),
+            self.try_token(TokenKind::kDEF),
+            self.try_token(TokenKind::kDEFINED),
+            self.try_token(TokenKind::kDO),
+            self.try_token(TokenKind::kELSE),
+            self.try_token(TokenKind::kELSIF),
+            self.try_token(TokenKind::kEND),
+            self.try_token(TokenKind::kENSURE),
+            self.try_token(TokenKind::kFALSE),
+            self.try_token(TokenKind::kFOR),
+            self.try_token(TokenKind::kIN),
+            self.try_token(TokenKind::kMODULE),
+            self.try_token(TokenKind::kNEXT),
+            self.try_token(TokenKind::kNIL),
+            self.try_token(TokenKind::kNOT),
+            self.try_token(TokenKind::kOR),
+            self.try_token(TokenKind::kREDO),
+            self.try_token(TokenKind::kRESCUE),
+            self.try_token(TokenKind::kRETRY),
+            self.try_token(TokenKind::kRETURN),
+            self.try_token(TokenKind::kSELF),
+            self.try_token(TokenKind::kSUPER),
+            self.try_token(TokenKind::kTHEN),
+            self.try_token(TokenKind::kTRUE),
+            self.try_token(TokenKind::kUNDEF),
+            self.try_token(TokenKind::kWHEN),
+            self.try_token(TokenKind::kYIELD),
+            self.try_token(TokenKind::kIF),
+            self.try_token(TokenKind::kUNLESS),
+            self.try_token(TokenKind::kWHILE),
+            self.try_token(TokenKind::kUNTIL),
+        )
     }
     fn parse_relop(&mut self) {
         todo!("parser.parse_relop")
@@ -380,10 +394,12 @@ impl Parser {
         self.try_token(TokenKind::kRETURN)
     }
     fn parse_do(&mut self) -> ParseResult<Token> {
-        self.one_of("do")
-            .or_else(|| self.try_term())
-            .or_else(|| self.try_token(TokenKind::kDO))
-            .stop()
+        one_of!(
+            "do",
+            checkpoint = self.new_checkpoint(),
+            self.try_term(),
+            self.try_token(TokenKind::kDO),
+        )
     }
     fn parse_f_marg(&mut self) {
         todo!("parser.parse_f_marg")
@@ -453,10 +469,12 @@ impl Parser {
         let (head, tail) = all_of!(
             "block_call",
             self.parse_block_call_head(),
-            self.one_of("block call tail")
-                .or_else(|| self.parse_block_call_tail().map(|value| Some(value)))
-                .or_else(|| Ok(None))
-                .stop(),
+            one_of!(
+                "block call tail",
+                checkpoint = self.new_checkpoint(),
+                self.parse_block_call_tail().map(|value| Some(value)),
+                Ok(None),
+            ),
         )?;
 
         todo!("{:?} {:?}", head, tail)
@@ -477,13 +495,15 @@ impl Parser {
         todo!("parse_block_call_tail")
     }
     fn parse_method_call(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("method call")
-            .or_else(|| {
+        one_of!(
+            "method call",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (fcall, paren_args) =
                     all_of!("fcall (args)", self.parse_fcall(), self.parse_paren_args(),)?;
                 todo!("{:?} {:?}", fcall, paren_args)
-            })
-            .or_else(|| {
+            },
+            {
                 let (primary_value, lbrack_t, opt_call_args, rbrack_t) = all_of!(
                     "primary [opt call args]",
                     self.parse_primary_value(),
@@ -498,8 +518,8 @@ impl Parser {
                     opt_call_args,
                     rbrack_t
                 )
-            })
-            .or_else(|| {
+            },
+            {
                 let (primary_value, call_t, paren_args) = all_of!(
                     "primary call_op2 paren_args",
                     self.parse_primary_value(),
@@ -507,8 +527,8 @@ impl Parser {
                     self.parse_paren_args(),
                 )?;
                 todo!("{:?} {:?} {:?}", primary_value, call_t, paren_args)
-            })
-            .or_else(|| {
+            },
+            {
                 let (primary_value, call_t, op_t, opt_paren_args) = all_of!(
                     "primary call_op2 operation2 opt_paren_args",
                     self.parse_primary_value(),
@@ -523,20 +543,20 @@ impl Parser {
                     op_t,
                     opt_paren_args
                 )
-            })
-            .or_else(|| {
+            },
+            {
                 let (super_t, paren_args) = all_of!(
                     "super(args)",
                     self.try_token(TokenKind::kSUPER),
                     self.parse_paren_args(),
                 )?;
                 todo!("{:?} {:?}", super_t, paren_args)
-            })
-            .or_else(|| {
+            },
+            {
                 let super_t = self.try_token(TokenKind::kSUPER)?;
                 todo!("{:?}", super_t)
-            })
-            .stop()
+            },
+        )
     }
 
     // TODO: return ArgsType instead of ()
@@ -548,35 +568,43 @@ impl Parser {
     }
 
     fn parse_literal(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("literal")
-            .or_else(|| self.try_numeric())
-            .or_else(|| self.parse_symbol())
-            .stop()
+        one_of!(
+            "literal",
+            checkpoint = self.new_checkpoint(),
+            self.try_numeric(),
+            self.parse_symbol(),
+        )
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
     }
     fn parse_user_variable(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("user variable")
-            .or_else(|| self.try_lvar())
-            .or_else(|| self.try_ivar())
-            .or_else(|| self.try_gvar())
-            .or_else(|| self.try_t_const())
-            .or_else(|| self.try_cvar())
-            .stop()
+        one_of!(
+            "user variable",
+            checkpoint = self.new_checkpoint(),
+            self.try_lvar(),
+            self.try_ivar(),
+            self.try_gvar(),
+            self.try_t_const(),
+            self.try_cvar(),
+        )
     }
     fn parse_var_ref(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("variable reference")
-            .or_else(|| self.parse_user_variable())
-            .or_else(|| self.parse_keyword_variable())
-            .stop()
+        one_of!(
+            "variable reference",
+            checkpoint = self.new_checkpoint(),
+            self.parse_user_variable(),
+            self.parse_keyword_variable(),
+        )
     }
     fn parse_var_lhs(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("variable as LHS in assignment")
-            .or_else(|| self.parse_user_variable())
-            .or_else(|| self.parse_keyword_variable())
-            .stop()
-            .map(|node| Builder::assignable(node))
+        one_of!(
+            "variable as LHS in assignment",
+            checkpoint = self.new_checkpoint(),
+            self.parse_user_variable(),
+            self.parse_keyword_variable(),
+        )
+        .map(|node| Builder::assignable(node))
     }
     fn try_f_opt_paren_args(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_f_opt_paren_args")
@@ -663,42 +691,54 @@ impl Parser {
         todo!("parser.parse_opt_f_block_arg")
     }
     fn parse_operation(&mut self) -> ParseResult<Token> {
-        self.one_of("operation")
-            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
-            .or_else(|| self.try_token(TokenKind::tCONSTANT))
-            .or_else(|| self.try_token(TokenKind::tFID))
-            .stop()
+        one_of!(
+            "operation",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::tIDENTIFIER),
+            self.try_token(TokenKind::tCONSTANT),
+            self.try_token(TokenKind::tFID),
+        )
     }
     fn parse_operation2(&mut self) -> ParseResult<Token> {
-        self.one_of("operation 2")
-            .or_else(|| self.parse_operation())
-            .or_else(|| self.parse_op())
-            .stop()
+        one_of!(
+            "operation 2",
+            checkpoint = self.new_checkpoint(),
+            self.parse_operation(),
+            self.parse_op(),
+        )
     }
     fn parse_operation3(&mut self) -> ParseResult<Token> {
-        self.one_of("operation 3")
-            .or_else(|| self.try_token(TokenKind::tIDENTIFIER))
-            .or_else(|| self.try_token(TokenKind::tFID))
-            .or_else(|| self.parse_op())
-            .stop()
+        one_of!(
+            "operation 3",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::tIDENTIFIER),
+            self.try_token(TokenKind::tFID),
+            self.parse_op(),
+        )
     }
     fn parse_dot_or_colon(&mut self) -> ParseResult<Token> {
-        self.one_of("dot or colon")
-            .or_else(|| self.try_token(TokenKind::tDOT))
-            .or_else(|| self.try_token(TokenKind::tCOLON2))
-            .stop()
+        one_of!(
+            "dot or colon",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::tDOT),
+            self.try_token(TokenKind::tCOLON2),
+        )
     }
     fn parse_call_op(&mut self) -> ParseResult<Token> {
-        self.one_of("call operation")
-            .or_else(|| self.try_token(TokenKind::tDOT))
-            .or_else(|| self.try_token(TokenKind::tANDDOT))
-            .stop()
+        one_of!(
+            "call operation",
+            checkpoint = self.new_checkpoint(),
+            self.try_token(TokenKind::tDOT),
+            self.try_token(TokenKind::tANDDOT),
+        )
     }
     fn parse_call_op2(&mut self) -> ParseResult<Token> {
-        self.one_of("call operation 2")
-            .or_else(|| self.parse_call_op())
-            .or_else(|| self.try_token(TokenKind::tCOLON2))
-            .stop()
+        one_of!(
+            "call operation 2",
+            checkpoint = self.new_checkpoint(),
+            self.parse_call_op(),
+            self.try_token(TokenKind::tCOLON2),
+        )
     }
     fn parse_opt_terms(&mut self) -> ParseResult<Vec<Token>> {
         self.parse_terms()

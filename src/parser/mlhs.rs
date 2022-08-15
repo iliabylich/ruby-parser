@@ -1,7 +1,10 @@
 use crate::{
     builder::Builder,
     nodes::{Begin, Node},
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
 };
 
@@ -172,16 +175,17 @@ fn parse_mlhs_tail(parser: &mut Parser) -> ParseResult<Vec<Node>> {
 }
 
 fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    parser
-        .one_of("mlhs node")
-        .or_else(|| parser.parse_user_variable())
-        .or_else(|| parser.parse_keyword_variable())
-        .or_else(|| parser.try_back_ref())
-        .or_else(|| {
+    one_of!(
+        "mlhs node",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_user_variable(),
+        parser.parse_keyword_variable(),
+        parser.try_back_ref(),
+        {
             let (colon2_t, name_t) = parser.parse_colon2_const()?;
             Ok(Builder::const_global(colon2_t, name_t, parser.buffer()))
-        })
-        .or_else(|| {
+        },
+        {
             let (primary_value, op_t, id_t) = all_of!(
                 "primary call_op [const/tIDENT]",
                 parser.parse_primary_value(),
@@ -193,8 +197,8 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 "primary_value call_op tIDENT {:?} {:?} {:?}",
                 primary_value, op_t, id_t
             )
-        })
-        .or_else(|| {
+        },
+        {
             let (primary_value, colon2_t, const_t) = all_of!(
                 "priamay :: [const/tIDENT",
                 parser.parse_primary_value(),
@@ -206,8 +210,8 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",
                 primary_value, colon2_t, const_t
             )
-        })
-        .stop()
+        },
+    )
 }
 
 #[cfg(test)]

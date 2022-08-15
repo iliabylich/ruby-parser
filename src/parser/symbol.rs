@@ -1,35 +1,42 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_symbol(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("symbol")
-            .or_else(|| self.parse_ssym())
-            .or_else(|| self.parse_dsym())
-            .compact()
-            .stop()
+        one_of!(
+            "symbol",
+            checkpoint = self.new_checkpoint(),
+            self.parse_ssym(),
+            self.parse_dsym(),
+        )
     }
 
     fn parse_ssym(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("static symbol")
-            .or_else(|| {
+        one_of!(
+            "static symbol",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (colon_t, sym_t) = all_of!(":sym", self.try_token(TokenKind::tCOLON), {
-                    self.one_of("static symbol value")
-                        .or_else(|| self.parse_fname())
-                        .or_else(|| self.try_token(TokenKind::tIVAR))
-                        .or_else(|| self.try_token(TokenKind::tCVAR))
-                        .or_else(|| self.try_token(TokenKind::tGVAR))
-                        .required()
-                        .stop()
+                    one_of!(
+                        "static symbol value",
+                        checkpoint = self.new_checkpoint(),
+                        self.parse_fname(),
+                        self.try_token(TokenKind::tIVAR),
+                        self.try_token(TokenKind::tCVAR),
+                        self.try_token(TokenKind::tGVAR),
+                    )
                 },)?;
 
                 Ok(Builder::symbol(colon_t, sym_t, self.buffer()))
-            })
-            .or_else(|| {
+            },
+            {
                 let (begin_t, parts, end_t) = all_of!(
                     "dynamic symbol value",
                     self.try_token(TokenKind::tSYMBEG),
@@ -38,9 +45,8 @@ impl Parser {
                 )?;
 
                 Ok(Builder::symbol_compose(begin_t, parts, end_t))
-            })
-            .compact()
-            .stop()
+            },
+        )
     }
 
     fn parse_dsym(&mut self) -> ParseResult<Box<Node>> {

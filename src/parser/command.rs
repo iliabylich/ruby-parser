@@ -1,14 +1,19 @@
 use crate::{
     builder::{ArgsType, Builder, KeywordCmd},
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, one_of},
+        ParseResult, Parser,
+    },
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_command(&mut self) -> ParseResult<Box<Node>> {
-        self.one_of("command")
-            .or_else(|| {
+        one_of!(
+            "command",
+            checkpoint = self.new_checkpoint(),
+            {
                 let (fcall, (command_args, cmd_brace_block)) = all_of!(
                     "fcall",
                     self.parse_fcall(),
@@ -29,8 +34,8 @@ impl Parser {
                 } else {
                     Ok(method_call)
                 }
-            })
-            .or_else(|| {
+            },
+            {
                 let (primary, call_op_t, op_t, (command_args, cmd_brace_block)) = all_of!(
                     "primary call_op2 operation command_args",
                     self.parse_primary_value(),
@@ -54,8 +59,8 @@ impl Parser {
                 } else {
                     Ok(method_call)
                 }
-            })
-            .or_else(|| {
+            },
+            {
                 let (super_t, args) = all_of!(
                     "super args",
                     self.try_token(TokenKind::kSUPER),
@@ -69,8 +74,8 @@ impl Parser {
                     args,
                     None,
                 ))
-            })
-            .or_else(|| {
+            },
+            {
                 let (yield_t, args) = all_of!(
                     "yield args",
                     self.try_token(TokenKind::kYIELD),
@@ -84,8 +89,8 @@ impl Parser {
                     args,
                     None,
                 ))
-            })
-            .or_else(|| {
+            },
+            {
                 let (return_t, args) =
                     all_of!("return args", self.parse_k_return(), self.parse_call_args(),)?;
 
@@ -96,8 +101,8 @@ impl Parser {
                     args,
                     None,
                 ))
-            })
-            .or_else(|| {
+            },
+            {
                 let (break_t, args) = all_of!(
                     "break args",
                     self.try_token(TokenKind::kBREAK),
@@ -111,8 +116,8 @@ impl Parser {
                     args,
                     None,
                 ))
-            })
-            .or_else(|| {
+            },
+            {
                 let (next_t, args) = all_of!(
                     "next args",
                     self.try_token(TokenKind::kNEXT),
@@ -126,8 +131,8 @@ impl Parser {
                     args,
                     None,
                 ))
-            })
-            .stop()
+            },
+        )
     }
 
     pub(crate) fn parse_command_args(&mut self) -> ParseResult<Vec<Node>> {
@@ -153,13 +158,15 @@ impl Parser {
 
     // This rule can be `none`
     pub(crate) fn parse_call_args(&mut self) -> ParseResult<Vec<Node>> {
-        self.one_of("call args")
-            .or_else(|| {
+        one_of!(
+            "call args",
+            checkpoint = self.new_checkpoint(),
+            {
                 let command = self.parse_command()?;
                 // self.value_expr(&command);
                 Ok(vec![*command])
-            })
-            .or_else(|| {
+            },
+            {
                 let ((mut args, _comma_t), assocs, mut opt_block_arg) = all_of!(
                     "args tCOMMA assocs opt_block_arg",
                     parse_args_t_comma(self),
@@ -171,8 +178,8 @@ impl Parser {
                 args.push(*hash);
                 args.append(&mut opt_block_arg);
                 Ok(args)
-            })
-            .or_else(|| {
+            },
+            {
                 let (mut args, mut opt_block_arg) = all_of!(
                     "args opt_block_arg",
                     self.parse_args(),
@@ -181,8 +188,8 @@ impl Parser {
 
                 args.append(&mut opt_block_arg);
                 Ok(args)
-            })
-            .or_else(|| {
+            },
+            {
                 let (assocs, mut opt_block_arg) = all_of!(
                     "assocs opt_block_arg",
                     self.parse_assocs(),
@@ -194,23 +201,25 @@ impl Parser {
                 nodes.push(*hash);
                 nodes.append(&mut opt_block_arg);
                 Ok(nodes)
-            })
-            .or_else(|| {
+            },
+            {
                 let block_arg = self.parse_block_arg()?;
                 Ok(vec![*block_arg])
-            })
-            .stop()
+            },
+        )
     }
 
     // This rule can be `none`
     pub(crate) fn parse_opt_call_args(&mut self) -> ParseResult<Vec<Node>> {
-        self.one_of("opt call args")
-            .or_else(|| self.parse_call_args())
-            .or_else(|| {
+        one_of!(
+            "opt call args",
+            checkpoint = self.new_checkpoint(),
+            self.parse_call_args(),
+            {
                 let (args, _comma_t) = parse_args_t_comma(self)?;
                 Ok(args)
-            })
-            .or_else(|| {
+            },
+            {
                 let ((mut args, _), (assocs, _)) = all_of!(
                     "args tCOMMA assocs tCOMMA",
                     parse_args_t_comma(self),
@@ -219,13 +228,13 @@ impl Parser {
                 let hash = Builder::associate(None, assocs, None);
                 args.push(*hash);
                 Ok(args)
-            })
-            .or_else(|| {
+            },
+            {
                 let (assocs, _) = parse_assocs_t_comma(self)?;
                 Ok(assocs)
-            })
-            .or_else(|| Ok(vec![]))
-            .stop()
+            },
+            Ok(vec![]),
+        )
     }
 }
 
@@ -237,11 +246,12 @@ fn parse_command_args_and_cmd_brace_block(
     all_of!(
         "command_args [+ cmd_brace_block]",
         parser.parse_command_args(),
-        parser
-            .one_of("maybe command_args")
-            .or_else(|| parse_cmd_brace_block(parser).map(|block| Some(block)))
-            .or_else(|| Ok(None))
-            .stop(),
+        one_of!(
+            "maybe command_args",
+            checkpoint = parser.new_checkpoint(),
+            parse_cmd_brace_block(parser).map(|block| Some(block)),
+            Ok(None),
+        ),
     )
 }
 
