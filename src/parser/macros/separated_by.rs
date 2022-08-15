@@ -17,18 +17,9 @@ macro_rules! separated_by {
 
                 match $item {
                     Ok(item) => items.push(item),
-                    Err(error) => {
+                    Err(_err) => {
                         checkpoint.restore();
-                        match error.strip_lookaheads() {
-                            Some(error) => {
-                                return Err(crate::parser::ParseError::seq_error(
-                                    $name,
-                                    (items, separators),
-                                    error,
-                                ));
-                            }
-                            None => break,
-                        }
+                        break;
                     }
                 }
             }
@@ -42,7 +33,7 @@ pub(crate) use separated_by;
 #[cfg(test)]
 mod tests {
     use crate::{
-        loc::{loc, Loc},
+        loc::loc,
         parser::{ParseError, ParseResult, Parser},
         token::{token, Token, TokenKind},
     };
