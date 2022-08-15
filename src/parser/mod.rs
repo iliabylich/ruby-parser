@@ -2,7 +2,7 @@ use crate::buffer::Buffer;
 use crate::builder::Builder;
 use crate::lexer::Lexer;
 use crate::nodes::Node;
-use crate::parser::macros::{all_of, one_of};
+use crate::parser::macros::{all_of, maybe, one_of};
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 use crate::transactions::{ParseError, ParseResult};
@@ -755,38 +755,19 @@ impl Parser {
 
         Ok(rbrace_t)
     }
-    fn try_trailer(&mut self) -> Option<Token> {
-        let token = self.current_token();
-        match token.kind {
-            TokenKind::tNL | TokenKind::tCOMMA => Some(token),
-            _ => None,
-        }
+    fn try_trailer(&mut self) -> ParseResult<Option<Token>> {
+        maybe!(one_of!(
+            "trailer",
+            self.try_token(TokenKind::tNL),
+            self.try_token(TokenKind::tCOMMA),
+        ))
     }
     fn try_term(&mut self) -> ParseResult<Token> {
-        let token = self.current_token();
-        match token.kind {
-            TokenKind::tSEMI | TokenKind::tNL => {
-                self.skip_token();
-                Ok(token)
-            }
-            got => Err(ParseError::OneOfError {
-                name: "term",
-                variants: vec![
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tSEMI,
-                        got,
-                        loc: token.loc,
-                    },
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tNL,
-                        got,
-                        loc: token.loc,
-                    },
-                ],
-            }),
-        }
+        one_of!(
+            "term",
+            self.try_token(TokenKind::tSEMI),
+            self.try_token(TokenKind::tNL),
+        )
     }
     fn parse_terms(&mut self) -> ParseResult<Vec<Token>> {
         let mut tokens = vec![];

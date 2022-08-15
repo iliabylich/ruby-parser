@@ -41,7 +41,7 @@ impl ParseError {
         match self {
             Self::TokenError { lookahead, .. } => *lookahead,
             Self::OneOfError { variants, .. } => variants.iter().all(|v| v.is_lookahead()),
-            Self::SeqError { steps, .. } => steps.0.is_empty(),
+            Self::SeqError { steps, error, .. } => steps.0.is_empty() && error.is_lookahead(),
         }
     }
 }

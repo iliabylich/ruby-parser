@@ -2,7 +2,7 @@ use crate::{
     builder::Builder,
     parser::{
         macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        ParseResult, Parser,
     },
     token::TokenKind,
     Node,
@@ -10,11 +10,12 @@ use crate::{
 
 impl Parser {
     pub(crate) fn parse_alias(&mut self) -> ParseResult<Box<Node>> {
-        let alias_t = self.try_token(TokenKind::kALIAS)?;
-        match parse_alias_args(self) {
-            Ok((lhs, rhs)) => Ok(Builder::alias(alias_t, lhs, rhs)),
-            Err(error) => Err(ParseError::seq_error("alias statement", alias_t, error)),
-        }
+        let (alias_t, (lhs, rhs)) = all_of!(
+            "alias",
+            self.try_token(TokenKind::kALIAS),
+            parse_alias_args(self),
+        )?;
+        Ok(Builder::alias(alias_t, lhs, rhs))
     }
 }
 
