@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -9,14 +9,14 @@ impl Parser {
     pub(crate) fn parse_class(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("class definition")
             .or_else(|| {
-                let (class_t, cpath, superclass, body, end_t) = self
-                    .all_of("normal class definition")
-                    .and(|| self.parse_k_class())
-                    .and(|| self.parse_cpath())
-                    .and(|| self.try_superclass())
-                    .and(|| self.try_bodystmt())
-                    .and(|| self.parse_k_end())
-                    .stop()?;
+                let (class_t, cpath, superclass, body, end_t) = all_of!(
+                    "normal class definition",
+                    self.parse_k_class(),
+                    self.parse_cpath(),
+                    self.try_superclass(),
+                    self.try_bodystmt(),
+                    self.parse_k_end(),
+                )?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?}",
@@ -28,15 +28,15 @@ impl Parser {
                 )
             })
             .or_else(|| {
-                let (klass_t, lshift_t, expr, _term, body, end_t) = self
-                    .all_of("singleton class")
-                    .and(|| self.parse_k_class())
-                    .and(|| self.try_token(TokenKind::tLSHFT))
-                    .and(|| self.parse_expr())
-                    .and(|| self.try_term())
-                    .and(|| self.try_bodystmt())
-                    .and(|| self.parse_k_end())
-                    .stop()?;
+                let (klass_t, lshift_t, expr, _term, body, end_t) = all_of!(
+                    "singleton class",
+                    self.parse_k_class(),
+                    self.try_token(TokenKind::tLSHFT),
+                    self.parse_expr(),
+                    self.try_term(),
+                    self.try_bodystmt(),
+                    self.parse_k_end(),
+                )?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?} {:?}",

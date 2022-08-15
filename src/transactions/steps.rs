@@ -73,6 +73,14 @@ impl From<()> for Steps {
         Steps(vec![])
     }
 }
+impl<A> From<(A,)> for Steps
+where
+    Steps: From<A>,
+{
+    fn from((a,): (A,)) -> Self {
+        Steps::from(a)
+    }
+}
 impl<A, B> From<(A, B)> for Steps
 where
     Steps: From<A>,
@@ -101,5 +109,17 @@ where
 {
     fn from((a, b, c, d): (A, B, C, D)) -> Self {
         Steps::from(a) + Steps::from(b) + Steps::from(c) + Steps::from(d)
+    }
+}
+impl<A, B, C, D, E> From<(A, B, C, D, E)> for Steps
+where
+    Steps: From<A>,
+    Steps: From<B>,
+    Steps: From<C>,
+    Steps: From<D>,
+    Steps: From<E>,
+{
+    fn from((a, b, c, d, e): (A, B, C, D, E)) -> Self {
+        Steps::from(a) + Steps::from(b) + Steps::from(c) + Steps::from(d) + Steps::from(e)
     }
 }

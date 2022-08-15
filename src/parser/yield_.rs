@@ -1,6 +1,6 @@
 use crate::{
     builder::{Builder, KeywordCmd},
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -9,13 +9,13 @@ impl Parser {
     pub(crate) fn parse_yield(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("yield with opt args")
             .or_else(|| {
-                let (yield_t, lparen_t, args, rparen_t) = self
-                    .all_of("yield(args)")
-                    .and(|| self.try_token(TokenKind::kYIELD))
-                    .and(|| self.expect_token(TokenKind::tLPAREN))
-                    .and(|| self.parse_call_args())
-                    .and(|| self.parse_rparen())
-                    .stop()?;
+                let (yield_t, lparen_t, args, rparen_t) = all_of!(
+                    "yield(args)",
+                    self.try_token(TokenKind::kYIELD),
+                    self.expect_token(TokenKind::tLPAREN),
+                    self.parse_call_args(),
+                    self.parse_rparen(),
+                )?;
 
                 Ok(Builder::keyword_cmd(
                     KeywordCmd::Yield,

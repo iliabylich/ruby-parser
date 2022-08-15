@@ -1,18 +1,18 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_symbols(&mut self) -> ParseResult<Box<Node>> {
-        let (begin_t, elements, end_t) = self
-            .all_of("symbols")
-            .and(|| self.try_token(TokenKind::tSYMBOLS_BEG))
-            .and(|| parse_symbol_list(self))
-            .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .stop()?;
+        let (begin_t, elements, end_t) = all_of!(
+            "symbols",
+            self.try_token(TokenKind::tSYMBOLS_BEG),
+            parse_symbol_list(self),
+            self.expect_token(TokenKind::tSTRING_END),
+        )?;
 
         Ok(Builder::symbols_compose(begin_t, elements, end_t))
     }

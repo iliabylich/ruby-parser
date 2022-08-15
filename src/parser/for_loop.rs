@@ -1,20 +1,20 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_for_loop(&mut self) -> ParseResult<Box<Node>> {
-        let (for_t, var, in_t, (value, do_t), body, end_t) = self
-            .all_of("for loop")
-            .and(|| self.parse_k_for())
-            .and(|| self.parse_for_var())
-            .and(|| self.try_token(TokenKind::kIN))
-            .and(|| self.parse_expr_value_do())
-            .and(|| self.try_compstmt())
-            .and(|| self.parse_k_end())
-            .stop()?;
+        let (for_t, var, in_t, (value, do_t), body, end_t) = all_of!(
+            "for loop",
+            self.parse_k_for(),
+            self.parse_for_var(),
+            self.try_token(TokenKind::kIN),
+            self.parse_expr_value_do(),
+            self.try_compstmt(),
+            self.parse_k_end(),
+        )?;
 
         panic!(
             "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",

@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -27,41 +27,41 @@ fn parse_expr_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
         .stop()
 }
 fn parse_not_expr(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    let (not_t, _opt_nl, expr) = parser
-        .all_of("not expr")
-        .and(|| parser.try_token(TokenKind::kNOT))
-        .and(|| parser.try_opt_nl())
-        .and(|| parser.parse_expr())
-        .stop()?;
+    let (not_t, _opt_nl, expr) = all_of!(
+        "not expr",
+        parser.try_token(TokenKind::kNOT),
+        parser.try_opt_nl(),
+        parser.parse_expr(),
+    )?;
 
     Ok(Builder::not_op(not_t, None, Some(expr), None))
 }
 fn parse_bang_command_call(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    let (bang_t, command_call) = parser
-        .all_of("! command_call")
-        .and(|| parser.try_token(TokenKind::tBANG))
-        .and(|| parser.parse_command_call())
-        .stop()?;
+    let (bang_t, command_call) = all_of!(
+        "! command_call",
+        parser.try_token(TokenKind::tBANG),
+        parser.parse_command_call(),
+    )?;
 
     Ok(Builder::not_op(bang_t, None, Some(command_call), None))
 }
 fn parse_arg_assoc_p_expr_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    let (arg, assoc_t, p_top_expr_body) = parser
-        .all_of("arg => pattern")
-        .and(|| parser.parse_arg())
-        .and(|| parser.try_token(TokenKind::tASSOC))
-        .and(|| parser.parse_p_top_expr_body())
-        .stop()?;
+    let (arg, assoc_t, p_top_expr_body) = all_of!(
+        "arg => pattern",
+        parser.parse_arg(),
+        parser.try_token(TokenKind::tASSOC),
+        parser.parse_p_top_expr_body(),
+    )?;
 
     Ok(Builder::match_pattern(arg, assoc_t, p_top_expr_body))
 }
 fn parse_arg_in_p_expr_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    let (arg, in_t, p_top_expr_body) = parser
-        .all_of("arg in pattern")
-        .and(|| parser.parse_arg())
-        .and(|| parser.try_token(TokenKind::kIN))
-        .and(|| parser.parse_p_top_expr_body())
-        .stop()?;
+    let (arg, in_t, p_top_expr_body) = all_of!(
+        "arg in pattern",
+        parser.parse_arg(),
+        parser.try_token(TokenKind::kIN),
+        parser.parse_p_top_expr_body(),
+    )?;
 
     Ok(Builder::match_pattern_p(arg, in_t, p_top_expr_body))
 }
@@ -70,18 +70,18 @@ fn try_expr_tail(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>>
     let expr_tail = parser
         .one_of("[and/or] expr")
         .or_else(|| {
-            parser
-                .all_of("and expr")
-                .and(|| parser.try_token(TokenKind::kAND))
-                .and(|| parser.parse_expr())
-                .stop()
+            all_of!(
+                "and expr",
+                parser.try_token(TokenKind::kAND),
+                parser.parse_expr(),
+            )
         })
         .or_else(|| {
-            parser
-                .all_of("or expr")
-                .and(|| parser.try_token(TokenKind::kOR))
-                .and(|| parser.parse_expr())
-                .stop()
+            all_of!(
+                "or expr",
+                parser.try_token(TokenKind::kOR),
+                parser.parse_expr(),
+            )
         })
         .stop();
 

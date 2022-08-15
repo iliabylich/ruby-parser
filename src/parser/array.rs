@@ -1,18 +1,18 @@
 use crate::{
     builder::Builder,
-    parser::{ParseError, ParseResult, Parser},
+    parser::{macros::all_of, ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_array(&mut self) -> ParseResult<Box<Node>> {
-        let (lbrack_t, elements, rbrack_t) = self
-            .all_of("array")
-            .and(|| self.try_token(TokenKind::tLBRACK))
-            .and(|| parse_aref_args(self))
-            .and(|| self.expect_token(TokenKind::tRBRACK))
-            .stop()?;
+        let (lbrack_t, elements, rbrack_t) = all_of!(
+            "array",
+            self.try_token(TokenKind::tLBRACK),
+            parse_aref_args(self),
+            self.expect_token(TokenKind::tRBRACK),
+        )?;
 
         Ok(Builder::array(Some(lbrack_t), elements, Some(rbrack_t)))
     }

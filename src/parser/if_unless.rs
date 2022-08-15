@@ -1,20 +1,20 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_if_expr(&mut self) -> ParseResult<Box<Node>> {
-        let (if_t, expr, then_t, compstmt, if_tail, end_t) = self
-            .all_of("if expr")
-            .and(|| self.parse_k_if())
-            .and(|| self.parse_expr_value())
-            .and(|| self.parse_then())
-            .and(|| self.try_compstmt())
-            .and(|| self.parse_if_tail())
-            .and(|| self.parse_k_end())
-            .stop()?;
+        let (if_t, expr, then_t, compstmt, if_tail, end_t) = all_of!(
+            "if expr",
+            self.parse_k_if(),
+            self.parse_expr_value(),
+            self.parse_then(),
+            self.try_compstmt(),
+            self.parse_if_tail(),
+            self.parse_k_end(),
+        )?;
 
         todo!(
             "{:?} {:?} {:?} {:?} {:?} {:?}",
@@ -28,15 +28,15 @@ impl Parser {
     }
 
     pub(crate) fn parse_unless_expr(&mut self) -> ParseResult<Box<Node>> {
-        let (unless_t, expr, then_t, compstmt, opt_else, end_t) = self
-            .all_of("if expr")
-            .and(|| self.parse_k_unless())
-            .and(|| self.parse_expr_value())
-            .and(|| self.parse_then())
-            .and(|| self.try_compstmt())
-            .and(|| self.try_opt_else())
-            .and(|| self.parse_k_end())
-            .stop()?;
+        let (unless_t, expr, then_t, compstmt, opt_else, end_t) = all_of!(
+            "if expr",
+            self.parse_k_unless(),
+            self.parse_expr_value(),
+            self.parse_then(),
+            self.try_compstmt(),
+            self.try_opt_else(),
+            self.parse_k_end(),
+        )?;
 
         todo!(
             "{:?} {:?} {:?} {:?} {:?} {:?}",

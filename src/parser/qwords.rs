@@ -1,18 +1,18 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_qwords(&mut self) -> ParseResult<Box<Node>> {
-        let (begin_t, word_list, end_t) = self
-            .all_of("qwords")
-            .and(|| self.try_token(TokenKind::tQWORDS_BEG))
-            .and(|| self.parse_qword_list())
-            .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .stop()?;
+        let (begin_t, word_list, end_t) = all_of!(
+            "qwords",
+            self.try_token(TokenKind::tQWORDS_BEG),
+            self.parse_qword_list(),
+            self.expect_token(TokenKind::tSTRING_END),
+        )?;
 
         Ok(Builder::words_compose(begin_t, word_list, end_t))
     }

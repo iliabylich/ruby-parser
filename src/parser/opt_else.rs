@@ -1,5 +1,5 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -16,11 +16,11 @@ impl Parser {
 }
 
 fn parse_else(parser: &mut Parser) -> ParseResult<Else> {
-    parser
-        .all_of("else")
-        .and(|| parser.try_token(TokenKind::kELSE))
-        .and(|| parser.try_compstmt())
-        .stop()
+    all_of!(
+        "else",
+        parser.try_token(TokenKind::kELSE),
+        parser.try_compstmt(),
+    )
 }
 
 #[test]

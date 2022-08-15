@@ -1,5 +1,5 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -16,11 +16,11 @@ impl Parser {
 }
 
 fn parse_ensure(parser: &mut Parser) -> ParseResult<Ensure> {
-    parser
-        .all_of("ensure")
-        .and(|| parser.try_token(TokenKind::kENSURE))
-        .and(|| parser.try_compstmt())
-        .stop()
+    all_of!(
+        "ensure",
+        parser.try_token(TokenKind::kENSURE),
+        parser.try_compstmt(),
+    )
 }
 
 #[test]

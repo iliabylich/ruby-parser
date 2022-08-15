@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     nodes::{Begin, Node},
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
 };
 
@@ -27,12 +27,12 @@ use crate::{
 impl Parser {
     pub(crate) fn parse_mlhs(&mut self) -> ParseResult<Box<Node>> {
         if self.current_token().is(TokenKind::tLPAREN) {
-            let (lparen_t, mut inner, rparen_t) = self
-                .all_of("( mlhs )")
-                .and(|| self.try_token(TokenKind::tLPAREN))
-                .and(|| parse_mlhs_list(self))
-                .and(|| self.expect_token(TokenKind::tRPAREN))
-                .stop()?;
+            let (lparen_t, mut inner, rparen_t) = all_of!(
+                "( mlhs )",
+                self.try_token(TokenKind::tLPAREN),
+                parse_mlhs_list(self),
+                self.expect_token(TokenKind::tRPAREN),
+            )?;
 
             if inner.len() == 1 {
                 if let Node::Begin(Begin {
@@ -51,11 +51,11 @@ impl Parser {
 
             Ok(Builder::begin(lparen_t, inner, rparen_t))
         } else {
-            let (head, mut tail) = self
-                .all_of("mlhs head + mlhs tail")
-                .and(|| parse_mlhs_head(self))
-                .and(|| parse_mlhs_tail(self))
-                .stop()?;
+            let (head, mut tail) = all_of!(
+                "mlhs head + mlhs tail",
+                parse_mlhs_head(self),
+                parse_mlhs_tail(self),
+            )?;
 
             if tail.is_empty() {
                 Ok(head)
@@ -182,12 +182,12 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
             Ok(Builder::const_global(colon2_t, name_t, parser.buffer()))
         })
         .or_else(|| {
-            let (primary_value, op_t, id_t) = parser
-                .all_of("primary call_op [const/tIDENT]")
-                .and(|| parser.parse_primary_value())
-                .and(|| parser.parse_call_op())
-                .and(|| parser.try_const_or_identifier())
-                .stop()?;
+            let (primary_value, op_t, id_t) = all_of!(
+                "primary call_op [const/tIDENT]",
+                parser.parse_primary_value(),
+                parser.parse_call_op(),
+                parser.try_const_or_identifier(),
+            )?;
 
             panic!(
                 "primary_value call_op tIDENT {:?} {:?} {:?}",
@@ -195,12 +195,12 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
             )
         })
         .or_else(|| {
-            let (primary_value, colon2_t, const_t) = parser
-                .all_of("priamay :: [const/tIDENT")
-                .and(|| parser.parse_primary_value())
-                .and(|| parser.expect_token(TokenKind::tCOLON2))
-                .and(|| parser.try_const_or_identifier())
-                .stop()?;
+            let (primary_value, colon2_t, const_t) = all_of!(
+                "priamay :: [const/tIDENT",
+                parser.parse_primary_value(),
+                parser.expect_token(TokenKind::tCOLON2),
+                parser.try_const_or_identifier(),
+            )?;
 
             panic!(
                 "primary_value tCOLON2 tCONSTANT {:?} {:?} {:?}",

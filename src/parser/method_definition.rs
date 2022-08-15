@@ -1,5 +1,5 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
@@ -8,24 +8,24 @@ impl Parser {
     pub(crate) fn parse_method(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("method definition")
             .or_else(|| {
-                let ((def_t, name_t), args, body, end_t) = self
-                    .all_of("instance method definition")
-                    .and(|| self.parse_defn_head())
-                    .and(|| self.parse_f_arglist())
-                    .and(|| self.try_bodystmt())
-                    .and(|| self.parse_k_end())
-                    .stop()?;
+                let ((def_t, name_t), args, body, end_t) = all_of!(
+                    "instance method definition",
+                    self.parse_defn_head(),
+                    self.parse_f_arglist(),
+                    self.try_bodystmt(),
+                    self.parse_k_end(),
+                )?;
 
                 todo!("{:?} {:?} {:?} {:?} {:?}", def_t, name_t, args, body, end_t)
             })
             .or_else(|| {
-                let ((def_t, singleton, op_t, name_t), args, body, end_t) = self
-                    .all_of("singleton method definition")
-                    .and(|| self.parse_defs_head())
-                    .and(|| self.parse_f_arglist())
-                    .and(|| self.try_bodystmt())
-                    .and(|| self.parse_k_end())
-                    .stop()?;
+                let ((def_t, singleton, op_t, name_t), args, body, end_t) = all_of!(
+                    "singleton method definition",
+                    self.parse_defs_head(),
+                    self.parse_f_arglist(),
+                    self.try_bodystmt(),
+                    self.parse_k_end(),
+                )?;
 
                 todo!(
                     "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",
@@ -42,19 +42,21 @@ impl Parser {
     }
 
     pub(crate) fn parse_defn_head(&mut self) -> ParseResult<(Token, Token)> {
-        self.all_of("instance method definition start")
-            .and(|| self.parse_k_def())
-            .and(|| self.parse_def_name())
-            .stop()
+        all_of!(
+            "instance method definition start",
+            self.parse_k_def(),
+            self.parse_def_name(),
+        )
     }
 
     pub(crate) fn parse_defs_head(&mut self) -> ParseResult<(Token, Box<Node>, Token, Token)> {
-        self.all_of("singleton method definition start")
-            .and(|| self.parse_k_def())
-            .and(|| self.parse_singleton())
-            .and(|| self.parse_dot_or_colon())
-            .and(|| self.parse_def_name())
-            .stop()
+        all_of!(
+            "singleton method definition start",
+            self.parse_k_def(),
+            self.parse_singleton(),
+            self.parse_dot_or_colon(),
+            self.parse_def_name(),
+        )
     }
 
     fn parse_k_def(&mut self) -> ParseResult<Token> {
@@ -69,12 +71,12 @@ impl Parser {
         self.one_of("singleton")
             .or_else(|| self.parse_var_ref())
             .or_else(|| {
-                let (lparen_t, expr, rparen_t) = self
-                    .all_of("(expr)")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.parse_expr())
-                    .and(|| self.parse_rparen())
-                    .stop()?;
+                let (lparen_t, expr, rparen_t) = all_of!(
+                    "(expr)",
+                    self.try_token(TokenKind::tLPAREN),
+                    self.parse_expr(),
+                    self.parse_rparen(),
+                )?;
                 todo!("{:?} {:?} {:?}", lparen_t, expr, rparen_t)
             })
             .stop()

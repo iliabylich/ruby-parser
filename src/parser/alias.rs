@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{ParseError, ParseResult, Parser},
+    parser::{macros::all_of, ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -26,27 +26,21 @@ fn parse_alias_args(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> 
 }
 
 fn parse_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
-    parser
-        .all_of("fitem -> fitem")
-        .and(|| parser.parse_fitem())
-        .and(|| parser.parse_fitem())
-        .stop()
+    all_of!("fitem -> fitem", parser.parse_fitem(), parser.parse_fitem(),)
 }
 
 fn parse_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
-    parser
-        .all_of("gvar -> [gvar | back ref | nth ref]")
-        .and(|| parser.try_gvar())
-        .and(|| {
-            parser
-                .one_of("gvar rhs")
-                .or_else(|| parser.try_gvar())
-                .or_else(|| parser.try_back_ref())
-                .or_else(|| parser.try_nth_ref())
-                .required()
-                .stop()
-        })
-        .stop()
+    all_of!(
+        "gvar -> [gvar | back ref | nth ref]",
+        parser.try_gvar(),
+        parser
+            .one_of("gvar rhs")
+            .or_else(|| parser.try_gvar())
+            .or_else(|| parser.try_back_ref())
+            .or_else(|| parser.try_nth_ref())
+            .required()
+            .stop(),
+    )
 }
 
 #[cfg(test)]

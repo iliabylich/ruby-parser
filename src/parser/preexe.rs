@@ -1,19 +1,19 @@
 use crate::{
     builder::Builder,
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_preexe(&mut self) -> ParseResult<Box<Node>> {
-        let (preexe_t, lcurly_t, body, rcurly_t) = self
-            .all_of("preexe")
-            .and(|| self.try_token(TokenKind::klBEGIN))
-            .and(|| self.expect_token(TokenKind::tLCURLY))
-            .and(|| self.try_top_compstmt())
-            .and(|| self.expect_token(TokenKind::tRCURLY))
-            .stop()?;
+        let (preexe_t, lcurly_t, body, rcurly_t) = all_of!(
+            "preexe",
+            self.try_token(TokenKind::klBEGIN),
+            self.expect_token(TokenKind::tLCURLY),
+            self.try_top_compstmt(),
+            self.expect_token(TokenKind::tRCURLY),
+        )?;
 
         Ok(Builder::preexe(preexe_t, lcurly_t, body, rcurly_t))
     }

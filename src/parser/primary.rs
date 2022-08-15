@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{ParseError, ParseResult, Parser},
+    parser::{macros::all_of, ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
@@ -25,22 +25,22 @@ impl Parser {
                 todo!("call_method {:?}", id_t);
             })
             .or_else(|| {
-                let (begin_t, bodystmt, end_t) = self
-                    .all_of("BEGIN { .. }")
-                    .and(|| self.try_token(TokenKind::kBEGIN))
-                    .and(|| self.try_bodystmt())
-                    .and(|| self.expect_token(TokenKind::kEND))
-                    .stop()?;
+                let (begin_t, bodystmt, end_t) = all_of!(
+                    "BEGIN { .. }",
+                    self.try_token(TokenKind::kBEGIN),
+                    self.try_bodystmt(),
+                    self.expect_token(TokenKind::kEND),
+                )?;
 
                 todo!("begin {:?} {:?} {:?}", begin_t, bodystmt, end_t);
             })
             .or_else(|| {
-                let (lparen_t, stmt, rparen_t) = self
-                    .all_of("( stmt )")
-                    .and(|| self.try_token(TokenKind::tLPAREN))
-                    .and(|| self.parse_stmt())
-                    .and(|| self.parse_rparen())
-                    .stop()?;
+                let (lparen_t, stmt, rparen_t) = all_of!(
+                    "( stmt )",
+                    self.try_token(TokenKind::tLPAREN),
+                    self.parse_stmt(),
+                    self.parse_rparen(),
+                )?;
 
                 todo!("begin {:?} {:?} {:?}", lparen_t, stmt, rparen_t)
             })
@@ -55,11 +55,11 @@ impl Parser {
             .or_else(|| self.parse_defined())
             .or_else(|| parse_not_expr(self))
             .or_else(|| {
-                let (fcall, brace_block) = self
-                    .all_of("fcall brace_block")
-                    .and(|| self.parse_fcall())
-                    .and(|| self.parse_brace_block())
-                    .stop()?;
+                let (fcall, brace_block) = all_of!(
+                    "fcall brace_block",
+                    self.parse_fcall(),
+                    self.parse_brace_block(),
+                )?;
 
                 todo!("fcall brace_block {:?} {:?}", fcall, brace_block)
             })
@@ -128,13 +128,13 @@ fn parse_keyword_cmd(parser: &mut Parser, expected: TokenKind) -> ParseResult<Bo
 // kNOT tLPAREN2 expr rparen
 // kNOT tLPAREN2 rparen
 fn parse_not_expr(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    let (not_t, lparen_t, expr, rparen_t) = parser
-        .all_of("not ( [expr] )")
-        .and(|| parser.try_token(TokenKind::kNOT))
-        .and(|| parser.try_token(TokenKind::tLPAREN))
-        .and(|| parser.parse_expr())
-        .and(|| parser.parse_rparen())
-        .stop()?;
+    let (not_t, lparen_t, expr, rparen_t) = all_of!(
+        "not ( [expr] )",
+        parser.try_token(TokenKind::kNOT),
+        parser.try_token(TokenKind::tLPAREN),
+        parser.parse_expr(),
+        parser.parse_rparen(),
+    )?;
 
     todo!(
         "not_op {:?} {:?} {:?} {:?}",

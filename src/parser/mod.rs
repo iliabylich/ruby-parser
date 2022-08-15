@@ -2,11 +2,13 @@ use crate::buffer::Buffer;
 use crate::builder::Builder;
 use crate::lexer::Lexer;
 use crate::nodes::Node;
+use crate::parser::macros::all_of;
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 use crate::transactions::{ParseError, ParseResult};
 
 mod checkpoint;
+mod macros;
 
 mod alias;
 mod arg;
@@ -148,26 +150,22 @@ impl Parser {
     }
 
     fn parse_block_command(&mut self) -> ParseResult<Box<Node>> {
-        let (block_call, maybe_args) = self
-            .all_of("block command")
-            .and(|| self.parse_block_call())
-            .and(|| {
-                self.one_of("block call arguments")
-                    .or_else(|| {
-                        let a = self
-                            .all_of("required block call arguments")
-                            .and(|| self.parse_call_op2())
-                            .and(|| self.parse_operation2())
-                            .and(|| self.parse_command_args())
-                            .stop()
-                            .map(|values| Some(values))?;
-
-                        Ok(a)
-                    })
-                    .or_else(|| Ok(None))
-                    .stop()
-            })
-            .stop()?;
+        let (block_call, maybe_args) = all_of!(
+            "block command",
+            self.parse_block_call(),
+            self.one_of("block call arguments")
+                .or_else(|| {
+                    all_of!(
+                        "required block call arguments",
+                        self.parse_call_op2(),
+                        self.parse_operation2(),
+                        self.parse_command_args(),
+                    )
+                    .map(|values| Some(values))
+                })
+                .or_else(|| Ok(None))
+                .stop(),
+        )?;
 
         panic!("{:?} {:?}", block_call, maybe_args)
     }
@@ -433,12 +431,12 @@ impl Parser {
         todo!("parser.parse_bvar")
     }
     fn parse_lambda(&mut self) -> ParseResult<Box<Node>> {
-        let (lambda_t, arglist, body) = self
-            .all_of("lambda")
-            .and(|| self.try_token(TokenKind::tLAMBDA))
-            .and(|| self.parse_f_larglist())
-            .and(|| self.parse_lambda_body())
-            .stop()?;
+        let (lambda_t, arglist, body) = all_of!(
+            "lambda",
+            self.try_token(TokenKind::tLAMBDA),
+            self.parse_f_larglist(),
+            self.parse_lambda_body(),
+        )?;
 
         todo!("builder.lambda {:?} {:?} {:?}", lambda_t, arglist, body)
     }
@@ -452,25 +450,23 @@ impl Parser {
         todo!("parser.parse_do_block")
     }
     fn parse_block_call(&mut self) -> ParseResult<Box<Node>> {
-        let (head, tail) = self
-            .all_of("block_call")
-            .and(|| self.parse_block_call_head())
-            .and(|| {
-                self.one_of("block call tail")
-                    .or_else(|| self.parse_block_call_tail().map(|value| Some(value)))
-                    .or_else(|| Ok(None))
-                    .stop()
-            })
-            .stop()?;
+        let (head, tail) = all_of!(
+            "block_call",
+            self.parse_block_call_head(),
+            self.one_of("block call tail")
+                .or_else(|| self.parse_block_call_tail().map(|value| Some(value)))
+                .or_else(|| Ok(None))
+                .stop(),
+        )?;
 
         todo!("{:?} {:?}", head, tail)
     }
     fn parse_block_call_head(&mut self) -> ParseResult<Box<Node>> {
-        let (command, do_block) = self
-            .all_of("command do_block")
-            .and(|| self.parse_command())
-            .and(|| self.parse_do_block())
-            .stop()?;
+        let (command, do_block) = all_of!(
+            "command do_block",
+            self.parse_command(),
+            self.parse_do_block(),
+        )?;
 
         todo!("{:?} {:?}", command, do_block)
     }
@@ -483,21 +479,18 @@ impl Parser {
     fn parse_method_call(&mut self) -> ParseResult<Box<Node>> {
         self.one_of("method call")
             .or_else(|| {
-                let (fcall, paren_args) = self
-                    .all_of("fcall (args)")
-                    .and(|| self.parse_fcall())
-                    .and(|| self.parse_paren_args())
-                    .stop()?;
+                let (fcall, paren_args) =
+                    all_of!("fcall (args)", self.parse_fcall(), self.parse_paren_args(),)?;
                 todo!("{:?} {:?}", fcall, paren_args)
             })
             .or_else(|| {
-                let (primary_value, lbrack_t, opt_call_args, rbrack_t) = self
-                    .all_of("primary [opt call args]")
-                    .and(|| self.parse_primary_value())
-                    .and(|| self.expect_token(TokenKind::tLBRACK))
-                    .and(|| self.parse_opt_call_args())
-                    .and(|| self.parse_rbracket())
-                    .stop()?;
+                let (primary_value, lbrack_t, opt_call_args, rbrack_t) = all_of!(
+                    "primary [opt call args]",
+                    self.parse_primary_value(),
+                    self.expect_token(TokenKind::tLBRACK),
+                    self.parse_opt_call_args(),
+                    self.parse_rbracket(),
+                )?;
                 todo!(
                     "{:?} {:?} {:?} {:?}",
                     primary_value,
@@ -507,22 +500,22 @@ impl Parser {
                 )
             })
             .or_else(|| {
-                let (primary_value, call_t, paren_args) = self
-                    .all_of("primary call_op2 paren_args")
-                    .and(|| self.parse_primary_value())
-                    .and(|| self.parse_call_op2())
-                    .and(|| self.parse_paren_args())
-                    .stop()?;
+                let (primary_value, call_t, paren_args) = all_of!(
+                    "primary call_op2 paren_args",
+                    self.parse_primary_value(),
+                    self.parse_call_op2(),
+                    self.parse_paren_args(),
+                )?;
                 todo!("{:?} {:?} {:?}", primary_value, call_t, paren_args)
             })
             .or_else(|| {
-                let (primary_value, call_t, op_t, opt_paren_args) = self
-                    .all_of("primary call_op2 operation2 opt_paren_args")
-                    .and(|| self.parse_primary_value())
-                    .and(|| self.parse_call_op2())
-                    .and(|| self.parse_operation2())
-                    .and(|| self.parse_opt_paren_args())
-                    .stop()?;
+                let (primary_value, call_t, op_t, opt_paren_args) = all_of!(
+                    "primary call_op2 operation2 opt_paren_args",
+                    self.parse_primary_value(),
+                    self.parse_call_op2(),
+                    self.parse_operation2(),
+                    self.parse_opt_paren_args(),
+                )?;
                 todo!(
                     "{:?} {:?} {:?} {:?}",
                     primary_value,
@@ -532,11 +525,11 @@ impl Parser {
                 )
             })
             .or_else(|| {
-                let (super_t, paren_args) = self
-                    .all_of("super(args)")
-                    .and(|| self.try_token(TokenKind::kSUPER))
-                    .and(|| self.parse_paren_args())
-                    .stop()?;
+                let (super_t, paren_args) = all_of!(
+                    "super(args)",
+                    self.try_token(TokenKind::kSUPER),
+                    self.parse_paren_args(),
+                )?;
                 todo!("{:?} {:?}", super_t, paren_args)
             })
             .or_else(|| {
@@ -722,29 +715,29 @@ impl Parser {
     }
 
     fn parse_rparen(&mut self) -> ParseResult<Token> {
-        let (_, rparen_t) = self
-            .all_of("rparen")
-            .and(|| self.try_opt_nl())
-            .and(|| self.expect_token(TokenKind::tRPAREN))
-            .stop()?;
+        let (_, rparen_t) = all_of!(
+            "rparen",
+            self.try_opt_nl(),
+            self.expect_token(TokenKind::tRPAREN),
+        )?;
 
         Ok(rparen_t)
     }
     fn parse_rbracket(&mut self) -> ParseResult<Token> {
-        let (_, rbrack_t) = self
-            .all_of("rbrack")
-            .and(|| self.try_opt_nl())
-            .and(|| self.expect_token(TokenKind::tRBRACK))
-            .stop()?;
+        let (_, rbrack_t) = all_of!(
+            "rbrack",
+            self.try_opt_nl(),
+            self.expect_token(TokenKind::tRBRACK),
+        )?;
 
         Ok(rbrack_t)
     }
     fn parse_rbrace(&mut self) -> ParseResult<Token> {
-        let (_, rbrace_t) = self
-            .all_of("rbrace")
-            .and(|| self.try_opt_nl())
-            .and(|| self.expect_token(TokenKind::tRCURLY))
-            .stop()?;
+        let (_, rbrace_t) = all_of!(
+            "rbrace",
+            self.try_opt_nl(),
+            self.expect_token(TokenKind::tRCURLY),
+        )?;
 
         Ok(rbrace_t)
     }
@@ -804,9 +797,10 @@ impl Parser {
     }
 
     fn parse_colon2_const(&mut self) -> ParseResult<(Token, Token)> {
-        self.all_of("::CONST")
-            .and(|| self.try_token(TokenKind::tCOLON2))
-            .and(|| self.try_token(TokenKind::tCONSTANT))
-            .stop()
+        all_of!(
+            "::CONST",
+            self.try_token(TokenKind::tCOLON2),
+            self.try_token(TokenKind::tCONSTANT),
+        )
     }
 }

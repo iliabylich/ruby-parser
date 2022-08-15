@@ -1,17 +1,17 @@
 use crate::{
     builder::Builder,
-    parser::{ParseError, ParseResult, Parser},
+    parser::{macros::all_of, ParseError, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_undef(&mut self) -> ParseResult<Box<Node>> {
-        let (undef_t, names) = self
-            .all_of("undef ...")
-            .and(|| self.try_token(TokenKind::kUNDEF))
-            .and(|| self.parse_names())
-            .stop()?;
+        let (undef_t, names) = all_of!(
+            "undef ...",
+            self.try_token(TokenKind::kUNDEF),
+            self.parse_names(),
+        )?;
 
         Ok(Builder::undef(undef_t, names))
     }

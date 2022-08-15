@@ -1,18 +1,18 @@
 use crate::{
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{Token, TokenKind},
     Node,
 };
 
 impl Parser {
     pub(crate) fn parse_while_expr(&mut self) -> ParseResult<Box<Node>> {
-        let (while_t, expr_value_do, compstmt, end_t) = self
-            .all_of("while expr")
-            .and(|| self.parse_k_while())
-            .and(|| self.parse_expr_value_do())
-            .and(|| self.try_compstmt())
-            .and(|| self.parse_k_end())
-            .stop()?;
+        let (while_t, expr_value_do, compstmt, end_t) = all_of!(
+            "while expr",
+            self.parse_k_while(),
+            self.parse_expr_value_do(),
+            self.try_compstmt(),
+            self.parse_k_end(),
+        )?;
 
         todo!(
             "{:?} {:?} {:?} {:?}",
@@ -24,13 +24,13 @@ impl Parser {
     }
 
     pub(crate) fn parse_until_expr(&mut self) -> ParseResult<Box<Node>> {
-        let (until_t, expr_value_do, compstmt, end_t) = self
-            .all_of("until expr")
-            .and(|| self.parse_k_until())
-            .and(|| self.parse_expr_value_do())
-            .and(|| self.try_compstmt())
-            .and(|| self.parse_k_end())
-            .stop()?;
+        let (until_t, expr_value_do, compstmt, end_t) = all_of!(
+            "until expr",
+            self.parse_k_until(),
+            self.parse_expr_value_do(),
+            self.try_compstmt(),
+            self.parse_k_end(),
+        )?;
 
         todo!(
             "{:?} {:?} {:?} {:?}",

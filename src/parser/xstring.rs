@@ -5,7 +5,7 @@ use crate::{
         types::{Interpolation, StringInterp},
     },
     loc::loc,
-    parser::{ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::{token, Token, TokenKind},
     transactions::ParseError,
     Node,
@@ -13,9 +13,9 @@ use crate::{
 
 impl Parser {
     pub(crate) fn parse_xstring(&mut self) -> ParseResult<Box<Node>> {
-        let (begin_t, parts, end_t) = self
-            .all_of("xstring")
-            .and(|| {
+        let (begin_t, parts, end_t) = all_of!(
+            "xstring",
+            {
                 self.one_of("executable string begin")
                     .or_else(|| self.read_backtick_identifier_as_xstring_beg())
                     .or_else(|| self.try_token(TokenKind::tXHEREDOC_BEG))
@@ -32,10 +32,10 @@ impl Parser {
                             )));
                         Ok(tok)
                     })
-            })
-            .and(|| self.parse_xstring_contents())
-            .and(|| self.expect_token(TokenKind::tSTRING_END))
-            .stop()?;
+            },
+            self.parse_xstring_contents(),
+            self.expect_token(TokenKind::tSTRING_END),
+        )?;
 
         Ok(Builder::xstring_compose(begin_t, parts, end_t))
     }
