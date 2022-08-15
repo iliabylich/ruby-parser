@@ -80,11 +80,11 @@ mod tests {
             parse(b"42 foo"),
             Err(ParseError::seq_error(
                 "[int] float",
-                (Token {
+                Token {
                     kind: TokenKind::tINTEGER,
                     loc: Loc { start: 0, end: 2 },
                     value: None
-                }),
+                },
                 ParseError::TokenError {
                     lookahead: true,
                     expected: TokenKind::tFLOAT,
