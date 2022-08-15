@@ -21,7 +21,6 @@ impl Parser {
 fn parse_alias_args(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     one_of!(
         "alias arguments",
-        checkpoint = parser.new_checkpoint(),
         parse_fitem_fitem(parser),
         parse_gvar_gvar(parser),
     )
@@ -37,7 +36,6 @@ fn parse_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
         parser.try_gvar(),
         one_of!(
             "gvar rhs",
-            checkpoint = parser.new_checkpoint(),
             parser.try_gvar(),
             parser.try_back_ref(),
             parser.try_nth_ref(),

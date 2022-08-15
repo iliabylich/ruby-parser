@@ -1,8 +1,8 @@
-use crate::{lexer::Checkpoint, parser::ParseError};
+use crate::parser::ParseError;
 
-pub(crate) struct OneOf<T> {
+pub(crate) struct OneOf<T, C> {
     pub(crate) name: &'static str,
-    pub(crate) checkpoint: Checkpoint,
+    pub(crate) checkpoint: C,
     pub(crate) inner: Result<T, Vec<ParseError>>,
 }
 
@@ -26,22 +26,47 @@ macro_rules! one_of {
         }
     }};
 
+    ($name:literal, $($branch:expr,)*) => {{
+        use crate::parser::macros::one_of::OneOf;
+        let mut chain = OneOf {
+            name: $name,
+            checkpoint: crate::parser::checkpoint::NoCheckpoint,
+            inner: Err(vec![]),
+        };
+
+        let chain = one_of!(chain, [$($branch,)*]);
+
+        match chain.inner {
+            Ok(value) => Ok(value),
+            Err(errors) => Err(crate::parser::ParseError::OneOfError {
+                name: chain.name,
+                variants: errors,
+            })
+        }
+    }};
+
     ($chain:expr, [$head:expr, $($tail:expr,)*]) => {{
         match &mut $chain.inner {
-            Ok(_) => {},
+            Ok(_) => {
+                $chain
+            },
             Err(errors) => {
-                match $head {
-                    Ok(value) => $chain.inner = Ok(value),
+                match (|| { $head })() {
+                    Ok(value) => {
+                        $chain.inner = Ok(value);
+                        $chain
+                    },
                     Err(err) => {
                         errors.push(err);
 
                         // rollback
                         $chain.checkpoint.restore();
+
+                        one_of!($chain, [ $($tail,)* ])
                     }
                 }
             }
         }
-        one_of!($chain, [ $($tail,)* ])
     }};
 
     ($chain:expr, []) => { $chain }

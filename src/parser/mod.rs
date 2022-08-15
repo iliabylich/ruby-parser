@@ -197,7 +197,6 @@ impl Parser {
     fn parse_fname(&mut self) -> ParseResult<Token> {
         one_of!(
             "fname",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::tIDENTIFIER),
             self.try_token(TokenKind::tCONSTANT),
             self.try_token(TokenKind::tFID),
@@ -210,8 +209,8 @@ impl Parser {
             "fitem",
             checkpoint = self.new_checkpoint(),
             {
-                self.parse_fname()
-                    .map(|token| Builder::symbol_internal(token, self.buffer()))
+                let token = self.parse_fname()?;
+                Ok(Builder::symbol_internal(token, self.buffer()))
             },
             self.parse_symbol(),
         )
@@ -220,7 +219,6 @@ impl Parser {
     fn parse_op(&mut self) -> ParseResult<Token> {
         one_of!(
             "operation",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::tPIPE),
             self.try_token(TokenKind::tCARET),
             self.try_token(TokenKind::tAMPER),
@@ -256,7 +254,6 @@ impl Parser {
     fn parse_reswords(&mut self) -> ParseResult<Token> {
         one_of!(
             "reserved word",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::k__LINE__),
             self.try_token(TokenKind::k__FILE__),
             self.try_token(TokenKind::k__ENCODING__),
@@ -394,12 +391,7 @@ impl Parser {
         self.try_token(TokenKind::kRETURN)
     }
     fn parse_do(&mut self) -> ParseResult<Token> {
-        one_of!(
-            "do",
-            checkpoint = self.new_checkpoint(),
-            self.try_term(),
-            self.try_token(TokenKind::kDO),
-        )
+        one_of!("do", self.try_term(), self.try_token(TokenKind::kDO),)
     }
     fn parse_f_marg(&mut self) {
         todo!("parser.parse_f_marg")
@@ -568,12 +560,7 @@ impl Parser {
     }
 
     fn parse_literal(&mut self) -> ParseResult<Box<Node>> {
-        one_of!(
-            "literal",
-            checkpoint = self.new_checkpoint(),
-            self.try_numeric(),
-            self.parse_symbol(),
-        )
+        one_of!("literal", self.try_numeric(), self.parse_symbol(),)
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
@@ -581,7 +568,6 @@ impl Parser {
     fn parse_user_variable(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "user variable",
-            checkpoint = self.new_checkpoint(),
             self.try_lvar(),
             self.try_ivar(),
             self.try_gvar(),
@@ -592,7 +578,6 @@ impl Parser {
     fn parse_var_ref(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "variable reference",
-            checkpoint = self.new_checkpoint(),
             self.parse_user_variable(),
             self.parse_keyword_variable(),
         )
@@ -600,7 +585,6 @@ impl Parser {
     fn parse_var_lhs(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "variable as LHS in assignment",
-            checkpoint = self.new_checkpoint(),
             self.parse_user_variable(),
             self.parse_keyword_variable(),
         )
@@ -693,24 +677,17 @@ impl Parser {
     fn parse_operation(&mut self) -> ParseResult<Token> {
         one_of!(
             "operation",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::tIDENTIFIER),
             self.try_token(TokenKind::tCONSTANT),
             self.try_token(TokenKind::tFID),
         )
     }
     fn parse_operation2(&mut self) -> ParseResult<Token> {
-        one_of!(
-            "operation 2",
-            checkpoint = self.new_checkpoint(),
-            self.parse_operation(),
-            self.parse_op(),
-        )
+        one_of!("operation 2", self.parse_operation(), self.parse_op(),)
     }
     fn parse_operation3(&mut self) -> ParseResult<Token> {
         one_of!(
             "operation 3",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::tIDENTIFIER),
             self.try_token(TokenKind::tFID),
             self.parse_op(),
@@ -719,7 +696,6 @@ impl Parser {
     fn parse_dot_or_colon(&mut self) -> ParseResult<Token> {
         one_of!(
             "dot or colon",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::tDOT),
             self.try_token(TokenKind::tCOLON2),
         )
@@ -727,7 +703,6 @@ impl Parser {
     fn parse_call_op(&mut self) -> ParseResult<Token> {
         one_of!(
             "call operation",
-            checkpoint = self.new_checkpoint(),
             self.try_token(TokenKind::tDOT),
             self.try_token(TokenKind::tANDDOT),
         )
@@ -735,7 +710,6 @@ impl Parser {
     fn parse_call_op2(&mut self) -> ParseResult<Token> {
         one_of!(
             "call operation 2",
-            checkpoint = self.new_checkpoint(),
             self.parse_call_op(),
             self.try_token(TokenKind::tCOLON2),
         )
