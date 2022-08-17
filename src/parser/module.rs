@@ -31,8 +31,12 @@ mod tests {
     fn test_module() {
         assert_parses!(
             parse_module,
-            b"module Foo::Bar; A = 1; end",
+            b"module Foo::Bar; 1; end",
             r#"
+s(:module,
+  s(:const,
+    s(:const, nil, "Foo"), "Bar"),
+  s(:int, "1"))
             "#
         )
     }
