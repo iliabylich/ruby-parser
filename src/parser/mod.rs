@@ -7,6 +7,8 @@ use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 use crate::transactions::{ParseError, ParseResult};
 
+use self::macros::separated_by;
+
 mod checkpoint;
 mod macros;
 
@@ -316,45 +318,27 @@ impl Parser {
         todo!("parser.parse_opt_block_arg")
     }
     fn parse_args(&mut self) -> ParseResult<Vec<Node>> {
-        let mut args = vec![];
-        let mut commas = vec![];
-
         fn item(parser: &mut Parser) -> ParseResult<Box<Node>> {
-            if parser.current_token().is(TokenKind::tSTAR) {
-                let star_t = parser.current_token();
-                parser.skip_token();
-                let arg_value = parser.parse_arg_value().map_err(|mut err| {
-                    err.make_required();
-                    err
-                })?;
-                todo!("{:?} {:?}", star_t, arg_value)
-            } else {
-                parser.parse_arg_value()
-            }
-        }
-
-        let arg = item(self)?;
-        args.push(*arg);
-        loop {
-            if self.current_token().is(TokenKind::tCOMMA) {
-                commas.push(self.current_token());
-                self.skip_token();
-            } else {
-                return Ok(args);
-            }
-            match item(self) {
-                Ok(item) => args.push(*item),
-                Err(error) => match error.strip_lookaheads() {
-                    Some(error) => {
-                        return Err(ParseError::seq_error("args", (args, commas), error));
-                    }
-                    None => {
-                        break;
-                    }
+            one_of!(
+                "args item",
+                {
+                    let (star_t, arg_value) = all_of!(
+                        "tSTAR arg_value",
+                        parser.try_token(TokenKind::tSTAR),
+                        parser.parse_arg_value(),
+                    )?;
+                    todo!("{:?} {:?}", star_t, arg_value)
                 },
-            }
+                parser.parse_arg_value(),
+            )
         }
 
+        let (args, _commas) = separated_by!(
+            "args",
+            checkpoint = self.new_checkpoint(),
+            item = item(self),
+            sep = self.try_token(TokenKind::tCOMMA)
+        )?;
         Ok(args)
     }
     fn parse_mrhs_arg(&mut self) -> ParseResult<Box<Node>> {
@@ -583,12 +567,12 @@ impl Parser {
         )
     }
     fn parse_var_lhs(&mut self) -> ParseResult<Box<Node>> {
-        one_of!(
+        let lhs = one_of!(
             "variable as LHS in assignment",
             self.parse_user_variable(),
             self.parse_keyword_variable(),
-        )
-        .map(|node| Builder::assignable(node))
+        )?;
+        Ok(Builder::assignable(lhs))
     }
     fn try_f_opt_paren_args(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_f_opt_paren_args")
@@ -715,17 +699,11 @@ impl Parser {
         )
     }
     fn parse_opt_terms(&mut self) -> ParseResult<Vec<Token>> {
-        self.parse_terms()
+        maybe!(self.parse_terms()).map(|maybe_terms| maybe_terms.unwrap_or_else(|| vec![]))
     }
 
     fn try_opt_nl(&mut self) -> ParseResult<Option<Token>> {
-        if self.current_token().is(TokenKind::tNL) {
-            let token = self.current_token();
-            self.skip_token();
-            Ok(Some(token))
-        } else {
-            Ok(None)
-        }
+        maybe!(self.try_token(TokenKind::tNL))
     }
 
     fn parse_rparen(&mut self) -> ParseResult<Token> {
@@ -770,25 +748,13 @@ impl Parser {
         )
     }
     fn parse_terms(&mut self) -> ParseResult<Vec<Token>> {
-        let mut tokens = vec![];
-        match self.try_term() {
-            Ok(term) => tokens.push(term),
-            Err(error) => return Err(ParseError::seq_error("terms", (), error)),
-        }
-
-        loop {
-            match self.try_token(TokenKind::tSEMI) {
-                Ok(token) => tokens.push(token),
-                Err(_) => break,
-            }
-
-            match self.try_term() {
-                Ok(token) => tokens.push(token),
-                Err(_) => break,
-            }
-        }
-
-        Ok(tokens)
+        let (terms, _semis) = separated_by!(
+            "terms",
+            checkpoint = self.new_checkpoint(),
+            item = self.try_term().map(Box::new),
+            sep = self.try_token(TokenKind::tSEMI)
+        )?;
+        Ok(terms)
     }
 
     fn parse_colon2_const(&mut self) -> ParseResult<(Token, Token)> {

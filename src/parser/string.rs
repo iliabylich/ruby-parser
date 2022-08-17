@@ -1,22 +1,15 @@
 use crate::{
     builder::Builder,
-    parser::{macros::one_of, ParseError, ParseResult, Parser},
+    parser::{macros::one_of, ParseResult, Parser},
     token::TokenKind,
-    Node, Token,
+    Node,
 };
+
+use super::macros::{all_of, at_least_once, maybe::maybe};
 
 impl Parser {
     pub(crate) fn parse_strings(&mut self) -> ParseResult<Box<Node>> {
-        match self.parse_char() {
-            Ok(node) => Ok(node),
-            Err(error1) => match self.parse_string_seq() {
-                Ok(node) => Ok(node),
-                Err(error2) => Err(ParseError::OneOfError {
-                    name: "strings",
-                    variants: vec![error1, error2],
-                }),
-            },
-        }
+        one_of!("strings", self.parse_char(), self.parse_string_seq(),)
     }
 
     fn parse_char(&mut self) -> ParseResult<Box<Node>> {
@@ -25,189 +18,77 @@ impl Parser {
     }
 
     fn parse_string_seq(&mut self) -> ParseResult<Box<Node>> {
-        let mut parts = vec![];
-
-        let string = self.parse_string1()?;
-        parts.push(*string);
-
-        loop {
-            match self.parse_string1() {
-                Ok(string) => {
-                    parts.push(*string);
-                }
-                Err(error) => {
-                    match error.strip_lookaheads() {
-                        None => {
-                            // no match
-                            break;
-                        }
-                        Some(error) => {
-                            return Err(ParseError::seq_error("string_seq", parts, error));
-                        }
-                    }
-                }
-            }
-        }
+        let parts = at_least_once!("string", self.parse_string1())?;
 
         Ok(Builder::string_compose(None, parts, None))
     }
 
     fn parse_string1(&mut self) -> ParseResult<Box<Node>> {
-        let begin_t = match self.current_token() {
-            Token {
-                kind: TokenKind::tDSTRING_BEG | TokenKind::tSTRING_BEG | TokenKind::tHEREDOC_BEG,
-                ..
-            } => self.current_token(),
-            Token { kind: got, loc, .. } => {
-                return Err(ParseError::OneOfError {
-                    name: "string1",
-                    variants: vec![
-                        ParseError::TokenError {
-                            lookahead: true,
-                            expected: TokenKind::tDSTRING_BEG,
-                            got,
-                            loc,
-                        },
-                        ParseError::TokenError {
-                            lookahead: true,
-                            expected: TokenKind::tSTRING_BEG,
-                            got,
-                            loc,
-                        },
-                        ParseError::TokenError {
-                            lookahead: true,
-                            expected: TokenKind::tHEREDOC_BEG,
-                            got,
-                            loc,
-                        },
-                    ],
-                });
-            }
-        };
-        self.skip_token();
+        let (begin_t, parts, end_t) = all_of!(
+            "string1",
+            one_of!(
+                "string1 begin",
+                self.try_token(TokenKind::tSTRING_BEG),
+                self.try_token(TokenKind::tDSTRING_BEG),
+                self.try_token(TokenKind::tHEREDOC_BEG),
+            ),
+            self.parse_string_contents(),
+            self.expect_token(TokenKind::tSTRING_END),
+        )?;
 
-        match self.parse_string_contents() {
-            Ok(parts) => {
-                match self.expect_token(TokenKind::tSTRING_END) {
-                    Ok(end_t) => {
-                        // TODO: dedent_heredoc
-                        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
-                    }
-                    Err(error) => Err(ParseError::seq_error("string1", (begin_t, parts), error)),
-                }
-            }
-            Err(error) => Err(ParseError::seq_error("string1", begin_t, error)),
-        }
+        // TODO: dedent_heredoc
+        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
     }
 
     // This rule can be `none`
     pub(crate) fn parse_string_contents(&mut self) -> ParseResult<Vec<Node>> {
-        let mut strings = vec![];
-        loop {
-            if self.current_token().is(TokenKind::tSTRING_END) {
-                break;
-            }
+        let contents = maybe!(at_least_once!(
+            "string_contents",
+            self.parse_string_content()
+        ))?;
 
-            match self
-                .parse_string_content()
-                .map_err(|err| err.strip_lookaheads())
-            {
-                Ok(string) => {
-                    strings.push(*string);
-                }
-                Err(None) => {
-                    // no match
-                    break;
-                }
-                Err(Some(error)) => {
-                    return Err(ParseError::seq_error("string content", strings, error));
-                }
-            }
-        }
-        Ok(strings)
+        Ok(contents.unwrap_or_else(|| vec![]))
     }
 
     pub(crate) fn parse_string_content(&mut self) -> ParseResult<Box<Node>> {
-        match self.current_token() {
-            string_content_t @ Token {
-                kind: TokenKind::tSTRING_CONTENT,
-                ..
-            } => {
-                self.skip_token();
+        one_of!(
+            "string_content",
+            checkpoint = self.new_checkpoint(),
+            {
+                let string_content_t = self.try_token(TokenKind::tSTRING_CONTENT)?;
                 Ok(Builder::string_internal(string_content_t, self.buffer()))
-            }
+            },
+            {
+                let (_string_dvar_t, string_dvar) = all_of!(
+                    "tSTRING_DVAR string_dvar",
+                    self.try_token(TokenKind::tSTRING_DVAR),
+                    self.parse_string_dvar(),
+                )?;
 
-            string_dvar_t @ Token {
-                kind: TokenKind::tSTRING_DVAR,
-                ..
-            } => {
-                self.skip_token();
-                match self.parse_string_dvar() {
-                    Ok(string_dvar) => Ok(string_dvar),
-                    Err(error) => Err(ParseError::seq_error("string dvar", string_dvar_t, error)),
-                }
-            }
+                Ok(string_dvar)
+            },
+            {
+                let (begin_t, compstmt, end_t) = all_of!(
+                    "tSTRING_DBEG compstmt tSTRING_DEND",
+                    self.try_token(TokenKind::tSTRING_DBEG),
+                    self.try_compstmt(),
+                    self.expect_token(TokenKind::tSTRING_DEND),
+                )?;
 
-            string_dbeg_t @ Token {
-                kind: TokenKind::tSTRING_DBEG,
-                ..
-            } => {
-                self.skip_token();
-                match self.try_compstmt() {
-                    Ok(compstmt) => match self.expect_token(TokenKind::tSTRING_DEND) {
-                        Ok(string_dend_t) => {
-                            let stmts = if let Some(compstmt) = compstmt {
-                                vec![*compstmt]
-                            } else {
-                                vec![]
-                            };
+                let stmts = if let Some(compstmt) = compstmt {
+                    vec![*compstmt]
+                } else {
+                    vec![]
+                };
 
-                            Ok(Builder::begin(string_dbeg_t, stmts, string_dend_t))
-                        }
-                        Err(error) => Err(ParseError::seq_error(
-                            "#{ interpolated stmt }",
-                            (string_dbeg_t, compstmt),
-                            error,
-                        )),
-                    },
-                    Err(error) => Err(ParseError::seq_error(
-                        "#{ interpolated stmt }",
-                        string_dbeg_t,
-                        error,
-                    )),
-                }
-            }
-
-            Token { kind: got, loc, .. } => Err(ParseError::OneOfError {
-                name: "string content",
-                variants: vec![
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tSTRING_CONTENT,
-                        got,
-                        loc,
-                    },
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tSTRING_DVAR,
-                        got,
-                        loc,
-                    },
-                    ParseError::TokenError {
-                        lookahead: true,
-                        expected: TokenKind::tSTRING_DBEG,
-                        got,
-                        loc,
-                    },
-                ],
-            }),
-        }
+                Ok(Builder::begin(begin_t, stmts, end_t))
+            },
+        )
     }
 
     fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "string_dvar",
-            checkpoint = self.new_checkpoint(),
             self.try_gvar(),
             self.try_ivar(),
             self.try_cvar(),

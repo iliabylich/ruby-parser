@@ -1,20 +1,22 @@
 macro_rules! at_least_once {
-    ($iter:expr, checkpoint = $checkpoint:expr) => {
+    ($name:literal, $iter:expr) => {
         (|| {
             let mut items = vec![];
 
             let item = $iter?;
-            items.push(item);
+            items.push(*item);
 
             loop {
-                let checkpoint = $checkpoint;
-
                 match $iter {
-                    Ok(item) => items.push(item),
-                    Err(_err) => {
-                        checkpoint.restore();
-                        break;
-                    }
+                    Ok(item) => items.push(*item),
+                    Err(error) => match error.strip_lookaheads() {
+                        Some(error) => {
+                            return Err($crate::parser::ParseError::seq_error($name, items, error))
+                        }
+                        None => {
+                            break;
+                        }
+                    },
                 }
             }
 
@@ -35,10 +37,7 @@ mod tests {
     fn parse(input: &[u8]) -> (Parser, ParseResult<Vec<Token>>) {
         let mut parser = Parser::new(input);
 
-        let ints = at_least_once!(
-            parser.try_token(TokenKind::tINTEGER),
-            checkpoint = parser.new_checkpoint()
-        );
+        let ints = at_least_once!("ints", parser.try_token(TokenKind::tINTEGER).map(Box::new));
 
         (parser, ints)
     }

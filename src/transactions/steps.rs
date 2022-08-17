@@ -67,6 +67,17 @@ impl From<Vec<Token>> for Steps {
         Steps(tokens.into_iter().map(|token| token.into()).collect())
     }
 }
+impl From<Vec<Vec<Token>>> for Steps {
+    fn from(vec_of_vec: Vec<Vec<Token>>) -> Self {
+        Steps(
+            vec_of_vec
+                .into_iter()
+                .flatten()
+                .map(|tok| tok.into())
+                .collect(),
+        )
+    }
+}
 
 impl From<()> for Steps {
     fn from(_: ()) -> Self {

@@ -1,8 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        macros::{all_of, at_least_once, one_of},
+        ParseResult, Parser,
     },
     token::{Token, TokenKind},
     Node,
@@ -88,17 +88,7 @@ fn parse_k_case(parser: &mut Parser) -> ParseResult<Token> {
 }
 
 fn parse_when_bodies(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let mut nodes = vec![];
-    loop {
-        match parse_when_body(parser) {
-            Ok(when_body) => nodes.push(*when_body),
-            Err(err) => match err.strip_lookaheads() {
-                Some(error) => return Err(ParseError::seq_error("when bodies", nodes, error)),
-                None => break,
-            },
-        }
-    }
-    Ok(nodes)
+    at_least_once!("when bodies", parse_when_body(parser))
 }
 
 fn parse_when_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
@@ -118,25 +108,7 @@ fn parse_k_when(parser: &mut Parser) -> ParseResult<Token> {
 }
 
 fn parse_case_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let mut nodes = vec![];
-    let mut commas = vec![];
-
-    let node = parse_case_arg(parser)?;
-    nodes.push(*node);
-
-    loop {
-        if parser.current_token().is(TokenKind::tCOMMA) {
-            commas.push(parser.current_token());
-            parser.skip_token();
-        } else {
-            break;
-        }
-        match parse_case_arg(parser) {
-            Ok(node) => nodes.push(*node),
-            Err(error) => return Err(ParseError::seq_error("case args", (nodes, commas), error)),
-        }
-    }
-    Ok(nodes)
+    at_least_once!("case args", parse_case_arg(parser))
 }
 fn parse_case_arg(parser: &mut Parser) -> ParseResult<Box<Node>> {
     one_of!(

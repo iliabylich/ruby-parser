@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
+        macros::{all_of, one_of, separated_by},
         ParseError, ParseResult, Parser,
     },
     token::TokenKind,
@@ -22,33 +22,21 @@ impl Parser {
 }
 
 fn parse_aref_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let mut nodes = vec![];
-    let mut commas = vec![];
+    let (aref_args, _commas) = separated_by!(
+        "aref args",
+        checkpoint = parser.new_checkpoint(),
+        item = parse_aref_args_item(parser),
+        sep = parser.try_token(TokenKind::tCOMMA)
+    )?;
 
-    let item = parse_aref_args_item(parser)?;
-    nodes.push(*item);
-
-    loop {
-        if parser.current_token().is(TokenKind::tCOMMA) {
-            commas.push(parser.current_token());
-            parser.skip_token();
-        } else {
-            break;
-        }
-
-        match parse_aref_args_item(parser) {
-            Ok(item) => nodes.push(*item),
-            Err(error) => return Err(ParseError::seq_error("aref args", (nodes, commas), error)),
-        }
-    }
     let _trailer = parser.try_trailer();
 
-    Ok(nodes)
+    Ok(aref_args)
 }
 
 fn parse_aref_args_item(parser: &mut Parser) -> ParseResult<Box<Node>> {
     one_of!(
-        "areg_args item",
+        "aref_args item",
         checkpoint = parser.new_checkpoint(),
         parser.parse_assoc(),
         parser.parse_arg(),

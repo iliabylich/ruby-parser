@@ -5,7 +5,7 @@ macro_rules! separated_by {
             let mut separators = vec![];
 
             let first = $item?;
-            items.push(first);
+            items.push(*first);
 
             loop {
                 let checkpoint = $checkpoint;
@@ -16,11 +16,20 @@ macro_rules! separated_by {
                 }
 
                 match $item {
-                    Ok(item) => items.push(item),
-                    Err(_err) => {
-                        checkpoint.restore();
-                        break;
-                    }
+                    Ok(item) => items.push(*item),
+                    Err(error) => match error.strip_lookaheads() {
+                        Some(error) => {
+                            return Err($crate::parser::ParseError::seq_error(
+                                $name,
+                                (items, separators),
+                                error,
+                            ))
+                        }
+                        None => {
+                            checkpoint.restore();
+                            break;
+                        }
+                    },
                 }
             }
 
@@ -44,7 +53,7 @@ mod tests {
         let ints = separated_by!(
             "ints separated by comma",
             checkpoint = parser.new_checkpoint(),
-            item = parser.try_token(TokenKind::tINTEGER),
+            item = parser.try_token(TokenKind::tINTEGER).map(Box::new),
             sep = parser.try_token(TokenKind::tCOMMA)
         )
         .map(|(items, _separators)| items);

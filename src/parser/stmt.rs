@@ -1,12 +1,14 @@
 use crate::{
     builder::{Builder, LoopType},
     parser::{
-        macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        macros::{all_of, maybe, one_of},
+        ParseResult, Parser,
     },
     token::TokenKind,
     Node, Token,
 };
+
+use super::macros::separated_by::separated_by;
 
 impl Parser {
     pub(crate) fn try_top_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
@@ -25,23 +27,12 @@ impl Parser {
 
     // This rule can be `none`
     pub(crate) fn parse_top_stmts(&mut self) -> ParseResult<Vec<Node>> {
-        let mut top_stmts = vec![];
-        loop {
-            match self.parse_top_stmt() {
-                Ok(top_stmt) => top_stmts.push(*top_stmt),
-                Err(error) => {
-                    match error.strip_lookaheads() {
-                        None => {
-                            // no match
-                            break;
-                        }
-                        Some(error) => {
-                            return Err(ParseError::seq_error("top stmts", top_stmts, error));
-                        }
-                    }
-                }
-            }
-        }
+        let (top_stmts, _terms) = separated_by!(
+            "top_stmts",
+            checkpoint = self.new_checkpoint(),
+            item = self.parse_top_stmt(),
+            sep = self.parse_terms()
+        )?;
         Ok(top_stmts)
     }
 
@@ -90,25 +81,12 @@ impl Parser {
 
     // This rule can be `none`
     pub(crate) fn parse_stmts(&mut self) -> ParseResult<Vec<Node>> {
-        let mut stmts = vec![];
-        let mut terms = vec![];
-
-        match self.parse_stmt_or_begin() {
-            Ok(node) => stmts.push(*node),
-            Err(_) => return Ok(vec![]),
-        }
-
-        loop {
-            match self.parse_terms() {
-                Ok(mut tokens) => terms.append(&mut tokens),
-                Err(_) => break,
-            }
-
-            match self.parse_stmt_or_begin() {
-                Ok(node) => stmts.push(*node),
-                Err(_) => break,
-            }
-        }
+        let (stmts, _terms) = separated_by!(
+            "stmts",
+            checkpoint = self.new_checkpoint(),
+            item = self.parse_stmt_or_begin(),
+            sep = self.parse_terms()
+        )?;
 
         Ok(stmts)
     }
@@ -124,41 +102,36 @@ impl Parser {
 
     #[allow(unreachable_code, unused_mut)]
     pub(crate) fn parse_stmt(&mut self) -> ParseResult<Box<Node>> {
-        let mut stmt = self.parse_stmt_head()?;
-        match self.parse_stmt_tail() {
-            Ok((mod_t, expr)) => match mod_t.kind {
-                TokenKind::kIF => Ok(Builder::condition_mod(Some(stmt), None, mod_t, expr)),
-                TokenKind::kUNLESS => Ok(Builder::condition_mod(None, Some(stmt), mod_t, expr)),
-                TokenKind::kWHILE => Ok(Builder::loop_mod(LoopType::While, stmt, mod_t, expr)),
-                TokenKind::kUNTIL => Ok(Builder::loop_mod(LoopType::Until, stmt, mod_t, expr)),
+        let (mut stmt, tail) = all_of!(
+            "stmt",
+            self.parse_stmt_head(),
+            maybe!(self.parse_stmt_tail()),
+        )?;
+
+        if let Some((mod_t, expr)) = tail {
+            stmt = match mod_t.kind {
+                TokenKind::kIF => Builder::condition_mod(Some(stmt), None, mod_t, expr),
+                TokenKind::kUNLESS => Builder::condition_mod(None, Some(stmt), mod_t, expr),
+                TokenKind::kWHILE => Builder::loop_mod(LoopType::While, stmt, mod_t, expr),
+                TokenKind::kUNTIL => Builder::loop_mod(LoopType::Until, stmt, mod_t, expr),
                 _ => unreachable!("stmt_tail handles only if/unless/while/until modifiers"),
-            },
-            Err(error) => {
-                match error.strip_lookaheads() {
-                    None => {
-                        // ignore
-                        Ok(stmt)
-                    }
-                    Some(error) => Err(ParseError::seq_error("stmt tail", stmt, error)),
-                }
             }
         }
+
+        Ok(stmt)
     }
 
     fn parse_stmt_head(&mut self) -> ParseResult<Box<Node>> {
-        if let Ok(alias) = self.parse_alias() {
-            return Ok(alias);
-        } else if let Ok(undef) = self.parse_undef() {
-            return Ok(undef);
-        } else if let Ok(postexe) = self.parse_postexe() {
-            return Ok(postexe);
-        } else if self.current_token().is(TokenKind::kDEF) {
-            todo!("handle endless def")
-        } else if let Ok(assignment) = self.parse_assignment() {
-            return Ok(assignment);
-        }
-
-        self.parse_expr()
+        one_of!(
+            "stmt head",
+            self.parse_alias(),
+            self.parse_undef(),
+            self.parse_postexe(),
+            all_of!("endless def", self.try_token(TokenKind::kDEF),)
+                .map(|_| todo!("handle endless def")),
+            self.parse_assignment(),
+            self.parse_expr(),
+        )
     }
 
     fn parse_stmt_tail(&mut self) -> ParseResult<(Token, Box<Node>)> {

@@ -1,8 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        macros::{all_of, one_of, separated_by},
+        ParseResult, Parser,
     },
     token::TokenKind,
     Node,
@@ -21,27 +21,13 @@ impl Parser {
     }
 
     pub(crate) fn parse_assocs(&mut self) -> ParseResult<Vec<Node>> {
-        let mut nodes = vec![];
-        let mut commas = vec![];
-
-        let assoc = self.parse_assoc()?;
-        nodes.push(*assoc);
-
-        loop {
-            if self.current_token().is(TokenKind::tCOMMA) {
-                commas.push(self.current_token());
-                self.skip_token();
-            } else {
-                break;
-            }
-
-            match self.parse_assoc() {
-                Ok(node) => nodes.push(*node),
-                Err(error) => return Err(ParseError::seq_error("assocs", (nodes, commas), error)),
-            }
-        }
-
-        Ok(nodes)
+        let (assocs, _commas) = separated_by!(
+            "assocs",
+            checkpoint = self.new_checkpoint(),
+            item = self.parse_assoc(),
+            sep = self.try_token(TokenKind::tCOMMA)
+        )?;
+        Ok(assocs)
     }
 
     pub(crate) fn parse_assoc(&mut self) -> ParseResult<Box<Node>> {
