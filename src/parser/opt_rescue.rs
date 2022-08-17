@@ -1,8 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        macros::{all_of, at_least_once, maybe, one_of},
+        ParseResult, Parser,
     },
     token::{Token, TokenKind},
     Node,
@@ -11,24 +11,8 @@ use crate::{
 impl Parser {
     // This rule can be `none`
     pub(crate) fn parse_opt_rescue(&mut self) -> ParseResult<Vec<Node>> {
-        let mut nodes = vec![];
-        loop {
-            match parse_opt_rescue1(self) {
-                Ok(node) => nodes.push(*node),
-                Err(error) => {
-                    match error.strip_lookaheads() {
-                        None => {
-                            // no match
-                            break;
-                        }
-                        Some(error) => {
-                            return Err(ParseError::seq_error("opt rescue", nodes, error));
-                        }
-                    }
-                }
-            }
-        }
-        Ok(nodes)
+        let nodes = maybe!(at_least_once!("opt_rescue", parse_opt_rescue1(self)))?;
+        Ok(nodes.unwrap_or_else(|| vec![]))
     }
 
     pub(crate) fn parse_then(&mut self) -> ParseResult<Token> {

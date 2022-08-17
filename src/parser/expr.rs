@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
+        macros::{all_of, maybe, one_of},
         ParseResult, Parser,
     },
     token::{Token, TokenKind},
@@ -71,7 +71,7 @@ fn parse_arg_in_p_expr_body(parser: &mut Parser) -> ParseResult<Box<Node>> {
 }
 
 fn try_expr_tail(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
-    let expr_tail = one_of!(
+    maybe!(one_of!(
         "[and/or] expr",
         checkpoint = parser.new_checkpoint(),
         {
@@ -88,18 +88,5 @@ fn try_expr_tail(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>>
                 parser.parse_expr(),
             )
         },
-    );
-
-    match expr_tail {
-        Ok(data) => Ok(Some(data)),
-        Err(error) => {
-            match error.strip_lookaheads() {
-                Some(error) => Err(error),
-                None => {
-                    // no match
-                    Ok(None)
-                }
-            }
-        }
-    }
+    ))
 }

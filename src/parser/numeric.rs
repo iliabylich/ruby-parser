@@ -2,9 +2,9 @@ use crate::{
     builder::Builder,
     parser::{
         macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        ParseResult, Parser,
     },
-    token::{Token, TokenKind},
+    token::TokenKind,
     Node,
 };
 

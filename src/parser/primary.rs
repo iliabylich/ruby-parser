@@ -1,8 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
-        ParseError, ParseResult, Parser,
+        macros::{all_of, maybe, one_of},
+        ParseResult, Parser,
     },
     token::TokenKind,
     Node,
@@ -97,20 +97,13 @@ impl Parser {
         )?;
 
         loop {
-            match self.parse_colon2_const() {
-                Ok((colon2_t, name_t)) => {
+            match maybe!(self.parse_colon2_const())? {
+                Some((colon2_t, name_t)) => {
                     node = Builder::const_fetch(node, colon2_t, name_t, self.buffer());
                 }
-                Err(error) => {
-                    match error.strip_lookaheads() {
-                        None => {
-                            // no match
-                            break;
-                        }
-                        Some(error) => {
-                            return Err(ParseError::seq_error("primary -> ::CONST", node, error));
-                        }
-                    }
+                None => {
+                    // no match
+                    break;
                 }
             }
         }

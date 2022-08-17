@@ -2,7 +2,7 @@ use crate::{
     builder::Builder,
     parser::{
         macros::{all_of, one_of, separated_by},
-        ParseError, ParseResult, Parser,
+        ParseResult, Parser,
     },
     token::TokenKind,
     Node,

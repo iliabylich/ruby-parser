@@ -2,10 +2,10 @@ use crate::{
     builder::Builder,
     nodes::{Begin, Node},
     parser::{
-        macros::{all_of, one_of},
+        macros::{all_of, at_least_once, maybe, one_of, separated_by},
         ParseResult, Parser,
     },
-    token::{Token, TokenKind},
+    token::TokenKind,
 };
 
 /*
@@ -73,44 +73,17 @@ impl Parser {
 }
 
 fn parse_mlhs_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let mut items = vec![];
-    let mut commas = vec![];
+    let items = maybe!(separated_by!(
+        "mlhs list",
+        checkpoint = parser.new_checkpoint(),
+        item = parser.parse_mlhs(),
+        sep = parser.try_token(TokenKind::tCOMMA)
+    ))?;
 
-    fn append_mlhs(parser: &mut Parser, items: &mut Vec<Node>) -> ParseResult<()> {
-        let mlhs = parser.parse_mlhs()?;
-
-        match *mlhs {
-            Node::Begin(Begin {
-                mut statements,
-                begin_l,
-                end_l,
-                ..
-            }) if begin_l.is_none() && end_l.is_none() => items.append(&mut statements),
-            single => {
-                items.push(single);
-            }
-        }
-
-        Ok(())
+    match items {
+        Some((items, _commas)) => Ok(mlhs_list_flatten(items)),
+        None => Ok(vec![]),
     }
-
-    append_mlhs(parser, &mut items)?;
-
-    loop {
-        if parser.current_token().is(TokenKind::tCOMMA) {
-            commas.push(parser.current_token());
-            parser.skip_token();
-        } else {
-            break;
-        }
-
-        match append_mlhs(parser, &mut items) {
-            Ok(_) => continue,
-            Err(_) => break,
-        }
-    }
-
-    Ok(items)
 }
 
 fn parse_mlhs_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
@@ -129,49 +102,20 @@ fn parse_mlhs_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
 }
 
 fn parse_mlhs_tail(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let mut commas = vec![];
-    let mut items = vec![];
+    let items = maybe!(at_least_once!(
+        "mlhs tail",
+        all_of!(
+            "mlhs tail item",
+            parser.try_token(TokenKind::tCOMMA),
+            parser.parse_mlhs(),
+        )
+        .map(|(_comma, item)| item)
+    ))?;
 
-    fn parse_comma_and_item(parser: &mut Parser) -> Option<(Token, Box<Node>)> {
-        let checkpoint = parser.new_checkpoint();
-        if parser.current_token().is(TokenKind::tCOMMA) {
-            let comma = parser.current_token();
-            parser.skip_token();
-
-            match parser.parse_mlhs() {
-                Ok(item) => Some((comma, item)),
-                Err(_) => {
-                    checkpoint.restore();
-                    None
-                }
-            }
-        } else {
-            None
-        }
+    match items {
+        Some(items) => Ok(mlhs_list_flatten(items)),
+        None => Ok(vec![]),
     }
-
-    loop {
-        match parse_comma_and_item(parser) {
-            Some((comma, item)) => {
-                commas.push(comma);
-
-                match *item {
-                    Node::Begin(Begin {
-                        mut statements,
-                        begin_l,
-                        end_l,
-                        ..
-                    }) if begin_l.is_none() && end_l.is_none() => items.append(&mut statements),
-                    single => {
-                        items.push(single);
-                    }
-                }
-            }
-            None => break,
-        }
-    }
-
-    Ok(items)
 }
 
 fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
@@ -212,6 +156,24 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
             )
         },
     )
+}
+
+fn mlhs_list_flatten(items: Vec<Node>) -> Vec<Node> {
+    let mut flatten = vec![];
+    for item in items.into_iter() {
+        match item {
+            Node::Begin(Begin {
+                mut statements,
+                begin_l,
+                end_l,
+                ..
+            }) if begin_l.is_none() && end_l.is_none() => flatten.append(&mut statements),
+            single => {
+                flatten.push(single);
+            }
+        }
+    }
+    flatten
 }
 
 #[cfg(test)]

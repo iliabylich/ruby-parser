@@ -1,9 +1,11 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseError, ParseResult, Parser},
+    parser::{macros::all_of, ParseResult, Parser},
     token::TokenKind,
     Node,
 };
+
+use super::macros::separated_by::separated_by;
 
 impl Parser {
     pub(crate) fn parse_undef(&mut self) -> ParseResult<Box<Node>> {
@@ -17,32 +19,12 @@ impl Parser {
     }
 
     fn parse_names(&mut self) -> ParseResult<Vec<Node>> {
-        let mut names = vec![];
-        let mut commas = vec![];
-
-        let fitem = self.parse_fitem()?;
-        names.push(*fitem);
-
-        loop {
-            if self.current_token().is(TokenKind::tCOMMA) {
-                commas.push(self.current_token());
-                // consume
-                self.skip_token();
-            } else {
-                break;
-            }
-            match self.parse_fitem() {
-                Ok(fitem) => names.push(*fitem),
-                Err(error) => {
-                    // got comma, but no `fitem`
-                    return Err(ParseError::seq_error(
-                        "list of undef items",
-                        (names, commas),
-                        error,
-                    ));
-                }
-            }
-        }
+        let (names, _commas) = separated_by!(
+            "undef named",
+            checkpoint = self.new_checkpoint(),
+            item = self.parse_fitem(),
+            sep = self.try_token(TokenKind::tCOMMA)
+        )?;
 
         Ok(names)
     }
