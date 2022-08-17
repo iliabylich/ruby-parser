@@ -2,7 +2,9 @@ use crate::transactions::{steps::Steps, ParseError};
 
 impl ParseError {
     pub(crate) fn render(&self) -> String {
-        self.render_with_level(0)
+        let mut copy = self.clone();
+        copy.strip_branches(5);
+        copy.render_with_level(0)
     }
 
     fn render_with_level(&self, level: usize) -> String {

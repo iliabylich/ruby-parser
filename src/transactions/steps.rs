@@ -1,6 +1,6 @@
 use crate::{builder::ArgsType, transactions::step_data::StepData, Node, Token};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) struct Steps(pub(crate) Vec<StepData>);
 
 impl Steps {

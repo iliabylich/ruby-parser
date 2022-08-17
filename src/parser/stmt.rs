@@ -27,13 +27,17 @@ impl Parser {
 
     // This rule can be `none`
     pub(crate) fn parse_top_stmts(&mut self) -> ParseResult<Vec<Node>> {
-        let (top_stmts, _terms) = separated_by!(
+        let top_stmts = maybe!(separated_by!(
             "top_stmts",
             checkpoint = self.new_checkpoint(),
             item = self.parse_top_stmt(),
             sep = self.parse_terms()
-        )?;
-        Ok(top_stmts)
+        ))?;
+
+        match top_stmts {
+            Some((top_stmts, _)) => Ok(top_stmts),
+            None => Ok(vec![]),
+        }
     }
 
     pub(crate) fn parse_top_stmt(&mut self) -> ParseResult<Box<Node>> {
@@ -71,7 +75,12 @@ impl Parser {
     }
 
     pub(crate) fn try_compstmt(&mut self) -> ParseResult<Option<Box<Node>>> {
-        let (stmts, _opt_terms) = all_of!("compstmt", self.parse_stmts(), self.parse_opt_terms(),)?;
+        let (_pre_terms, stmts, _post_terms) = all_of!(
+            "compstmt",
+            self.parse_opt_terms(),
+            self.parse_stmts(),
+            self.parse_opt_terms(),
+        )?;
         if stmts.is_empty() {
             Ok(None)
         } else {
@@ -81,14 +90,17 @@ impl Parser {
 
     // This rule can be `none`
     pub(crate) fn parse_stmts(&mut self) -> ParseResult<Vec<Node>> {
-        let (stmts, _terms) = separated_by!(
+        let stmts = maybe!(separated_by!(
             "stmts",
             checkpoint = self.new_checkpoint(),
             item = self.parse_stmt_or_begin(),
             sep = self.parse_terms()
-        )?;
+        ))?;
 
-        Ok(stmts)
+        match stmts {
+            Some((stmts, _)) => Ok(stmts),
+            None => Ok(vec![]),
+        }
     }
 
     fn parse_stmt_or_begin(&mut self) -> ParseResult<Box<Node>> {
@@ -177,8 +189,8 @@ impl Parser {
         one_of!(
             "assignment",
             checkpoint = self.new_checkpoint(),
-            self.parse_mass_assignment(),
             self.parse_simple_assignment(),
+            self.parse_mass_assignment(),
             {
                 let (lhs, op_t, rhs) = all_of!(
                     "operation assignment",

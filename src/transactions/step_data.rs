@@ -1,6 +1,6 @@
 use crate::{builder::ArgsType, Node, Token};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) enum StepData {
     Node(Box<Node>),
     Token(Token),

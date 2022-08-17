@@ -92,7 +92,10 @@ s(:alias,
         assert_parses_with_error!(
             parse_alias,
             b"",
-            "TOKEN (0) expected kALIAS, got tEOF (at 0)"
+            "
+SEQUENCE (0) alias (got [])
+    TOKEN (0) expected kALIAS, got tEOF (at 0)
+"
         );
     }
 
@@ -102,7 +105,7 @@ s(:alias,
             parse_alias,
             b"alias $foo",
             "
-SEQUENCE (1) alias statement (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
+SEQUENCE (1) alias (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])
     ONEOF (1) alias arguments
         SEQUENCE (1) gvar -> [gvar | back ref | nth ref] (got [Node(Gvar(Gvar { name: StringContent { bytes: [36, 102, 111, 111] }, expression_l: 6...10 }))])
             ONEOF (0) gvar rhs

@@ -185,7 +185,7 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
         {
             let (colon2_t, const_t, op_t, rhs) = all_of!(
                 "tCOLON3 tCONSTANT tOP_ASGN arg_rhs",
-                parser.expect_token(TokenKind::tCOLON2),
+                parser.try_token(TokenKind::tCOLON2),
                 parser.expect_token(TokenKind::tCONSTANT),
                 parser.expect_token(TokenKind::tOP_ASGN),
                 parse_arg_rhs(parser),
@@ -215,7 +215,7 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
         {
             let (minus_t, lhs, op_t, rhs) = all_of!(
                 "tUMINUS_NUM simple_numeric tPOW arg",
-                parser.expect_token(TokenKind::tUMINUS_NUM),
+                parser.try_token(TokenKind::tUMINUS_NUM),
                 parser.try_simple_numeric(),
                 parser.expect_token(TokenKind::tPOW),
                 parser.parse_arg(),

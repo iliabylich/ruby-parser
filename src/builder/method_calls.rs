@@ -16,7 +16,7 @@ use crate::{
     Loc, Node,
 };
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) enum ArgsType {
     Args(Option<Box<Node>>),
     Numargs(u8),

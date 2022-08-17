@@ -1,6 +1,6 @@
 use crate::{transactions::steps::Steps, Loc, TokenKind};
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub(crate) enum ParseError {
     TokenError {
         lookahead: bool,
@@ -117,6 +117,30 @@ impl ParseError {
                 variants.iter().map(|v| v.weight()).max().unwrap_or(0)
             }
             Self::SeqError { steps, .. } => steps.0.len(),
+        }
+    }
+}
+
+// strip
+impl ParseError {
+    #[cfg(test)]
+    pub(crate) fn strip_branches(&mut self, max_nest: usize) {
+        match self {
+            Self::TokenError { .. } => {}
+            Self::OneOfError { variants, .. } => {
+                if max_nest == 0 {
+                    *variants = vec![];
+                } else {
+                    let max_weight = variants.iter().map(|v| v.weight()).max().unwrap_or(0);
+                    variants.retain(|v| v.weight() == max_weight);
+                    variants
+                        .iter_mut()
+                        .for_each(|v| v.strip_branches(max_nest - 1))
+                }
+            }
+            Self::SeqError { error, .. } => {
+                error.strip_branches(max_nest.checked_sub(1).unwrap_or(0))
+            }
         }
     }
 }
