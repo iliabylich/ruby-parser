@@ -1,4 +1,5 @@
 use crate::{
+    builder::{Builder, KeywordCmd},
     parser::{macros::all_of, ParseResult, Parser},
     token::TokenKind,
     Node,
@@ -15,12 +16,29 @@ impl Parser {
             self.expect_token(TokenKind::tRPAREN),
         )?;
 
-        todo!(
-            "defined {:?} {:?} {:?} {:?}",
+        Ok(Builder::keyword_cmd(
+            KeywordCmd::Defined,
             defined_t,
-            lparen_t,
-            expr,
-            rparen_t
+            Some(lparen_t),
+            vec![*expr],
+            Some(rparen_t),
+        ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::testing::assert_parses;
+
+    #[test]
+    fn test_defined() {
+        assert_parses!(
+            parse_defined,
+            b"defined?(42)",
+            r#"
+s(:defined?,
+  s(:int, "42"))
+            "#
         )
     }
 }

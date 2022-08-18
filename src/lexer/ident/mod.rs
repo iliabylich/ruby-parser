@@ -75,6 +75,12 @@ impl Ident {
             Some(IdentSuffix { byte: b'!' | b'?' }) => {
                 // append `!` or `?`
                 buffer.skip_byte();
+
+                // it still can be a special `defined?` keyword
+                if buffer.slice(start, buffer.pos()).unwrap() == b"defined?" {
+                    return token!(kDEFINED, loc!(start, buffer.pos()));
+                }
+
                 return token!(tFID, loc!(start, buffer.pos()));
             }
             Some(IdentSuffix { byte: b'=' }) => {
