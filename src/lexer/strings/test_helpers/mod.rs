@@ -8,7 +8,7 @@ mod assert_emits_eof;
 pub(crate) use assert_emits_eof::assert_emits_eof;
 
 mod assert_emits_string_end;
-pub(crate) use assert_emits_string_end::assert_emits_string_end;
+pub(crate) use assert_emits_string_end::*;
 
 mod assert_emits_interpolation_end;
 pub(crate) use assert_emits_interpolation_end::*;

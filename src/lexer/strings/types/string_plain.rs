@@ -72,6 +72,11 @@ mod tests {
 
     // literal end handling
     assert_emits_string_end!(literal = literal(b'{', b'}'), begin = "{", end = "}");
+    assert_does_not_emit_string_content_as_string_end!(
+        literal = literal(b'{', b'}'),
+        begin = "{",
+        end = "}"
+    );
 
     // escape sequences handling
     assert_ignores_escape_sequence!(literal = dummy_literal());

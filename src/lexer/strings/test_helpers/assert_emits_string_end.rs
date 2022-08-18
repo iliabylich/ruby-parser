@@ -20,7 +20,16 @@ macro_rules! assert_emits_string_end {
                 )
             }
         );
+    };
+}
+pub(crate) use assert_emits_string_end;
 
+macro_rules! assert_does_not_emit_string_content_as_string_end {
+    (
+        literal = $literal:expr,
+        begin = $begin:expr,
+        end = $end:expr
+    ) => {
         // test that
         //   %Q{ {} }
         // doesn't close literal in the first `}`
@@ -64,4 +73,4 @@ macro_rules! assert_emits_string_end {
         }
     };
 }
-pub(crate) use assert_emits_string_end;
+pub(crate) use assert_does_not_emit_string_content_as_string_end;

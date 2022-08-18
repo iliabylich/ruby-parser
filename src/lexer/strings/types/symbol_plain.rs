@@ -3,7 +3,9 @@ use std::ops::ControlFlow;
 use crate::{
     buffer::BufferWithCursor,
     lexer::strings::{
-        action::StringExtendAction, handlers::handle_eof, literal::StringLiteralExtend,
+        action::StringExtendAction,
+        handlers::{handle_eof, handle_string_end},
+        literal::StringLiteralExtend,
     },
 };
 
@@ -18,8 +20,39 @@ impl StringLiteralExtend for SymbolPlain {
     ) -> ControlFlow<StringExtendAction> {
         let start = buffer.pos();
 
-        handle_eof(buffer, start)?;
+        loop {
+            handle_eof(buffer, start)?;
 
-        todo!("symbol_plain.extend")
+            let mut dummy_ends_with_nesting = 0;
+            handle_string_end(buffer, start, b'\'', b'\'', &mut dummy_ends_with_nesting)?;
+
+            buffer.skip_byte()
+        }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    use crate::lexer::strings::{test_helpers::*, StringLiteral};
+
+    fn literal() -> StringLiteral {
+        StringLiteral::SymbolPlain(SymbolPlain)
+    }
+
+    // EOF handling
+    assert_emits_eof!(literal());
+
+    // interpolation END handling
+    assert_ignores_interpolation_end!(literal());
+
+    // literal end handling
+    assert_emits_string_end!(literal = literal(), begin = "'", end = "'");
+
+    // escape sequences handling
+    assert_ignores_escape_sequence!(literal = literal());
+
+    // line continuation handling
+    assert_ignores_line_continuation!(literal = literal());
 }

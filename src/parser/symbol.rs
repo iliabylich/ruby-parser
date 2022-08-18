@@ -72,6 +72,16 @@ mod tests {
     }
 
     #[test]
+    fn test_ssym_ivar() {
+        assert_parses!(parse_ssym, b":@ivar", "s(:sym, \"@ivar\")")
+    }
+
+    #[test]
+    fn test_ssym_keyword() {
+        assert_parses!(parse_ssym, b":super", "s(:sym, \"super\")")
+    }
+
+    #[test]
     fn test_ssym_only_colon() {
         let parser = assert_parses_with_error!(parse_ssym, b":");
         // `:` is consumed
@@ -96,7 +106,7 @@ ONEOF (0) static symbol
 
     #[test]
     fn test_ssym_quoted() {
-        assert_parses!(parse_ssym, b":'foo'", "TODO")
+        assert_parses!(parse_ssym, b":'foo'", "s(:sym, \"foo\")")
     }
 
     #[test]
