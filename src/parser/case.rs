@@ -13,74 +13,80 @@ impl Parser {
         one_of!(
             "case expr",
             checkpoint = self.new_checkpoint(),
-            {
-                let (case_t, expr, _terms, when_bodies, opt_else, end_t) = all_of!(
-                    "k_case expr_value opt_terms case_body k_end",
-                    parse_k_case(self),
-                    self.parse_expr_value(),
-                    self.parse_opt_terms(),
-                    parse_when_bodies(self),
-                    self.try_opt_else(),
-                    self.parse_k_end(),
-                )?;
-
-                let (else_t, else_body) = opt_else
-                    .map(|(else_t, else_body)| (Some(else_t), else_body))
-                    .unwrap_or_else(|| (None, None));
-
-                Ok(Builder::case(
-                    case_t,
-                    Some(expr),
-                    when_bodies,
-                    else_t,
-                    else_body,
-                    end_t,
-                ))
-            },
-            {
-                let (case_t, _opt_terms, when_bodies, opt_else, end_t) = all_of!(
-                    "k_case opt_terms case_body k_end",
-                    parse_k_case(self),
-                    self.parse_opt_terms(),
-                    parse_when_bodies(self),
-                    self.try_opt_else(),
-                    self.parse_k_end(),
-                )?;
-
-                let (else_t, else_body) = opt_else
-                    .map(|(else_t, else_body)| (Some(else_t), else_body))
-                    .unwrap_or_else(|| (None, None));
-
-                Ok(Builder::case(
-                    case_t,
-                    None,
-                    when_bodies,
-                    else_t,
-                    else_body,
-                    end_t,
-                ))
-            },
-            {
-                let (case_t, expr, _opt_terms, p_case_body, end_t) = all_of!(
-                    "k_case expr_value opt_terms p_case_body k_end",
-                    parse_k_case(self),
-                    self.parse_expr_value(),
-                    self.parse_opt_terms(),
-                    self.parse_p_case_body(),
-                    self.parse_k_end(),
-                )?;
-
-                todo!(
-                    "{:?} {:?} {:?} {:?} {:?}",
-                    case_t,
-                    expr,
-                    _opt_terms,
-                    p_case_body,
-                    end_t
-                )
-            },
+            parse_case_when1(self),
+            parse_case_when2(self),
+            parse_case_in(self),
         )
     }
+}
+
+fn parse_case_when1(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (case_t, expr, _terms, when_bodies, opt_else, end_t) = all_of!(
+        "k_case expr_value opt_terms case_body k_end",
+        parse_k_case(parser),
+        parser.parse_expr_value(),
+        parser.parse_opt_terms(),
+        parse_when_bodies(parser),
+        parser.try_opt_else(),
+        parser.parse_k_end(),
+    )?;
+
+    let (else_t, else_body) = opt_else
+        .map(|(else_t, else_body)| (Some(else_t), else_body))
+        .unwrap_or_else(|| (None, None));
+
+    Ok(Builder::case(
+        case_t,
+        Some(expr),
+        when_bodies,
+        else_t,
+        else_body,
+        end_t,
+    ))
+}
+
+fn parse_case_when2(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (case_t, _opt_terms, when_bodies, opt_else, end_t) = all_of!(
+        "k_case opt_terms case_body k_end",
+        parse_k_case(parser),
+        parser.parse_opt_terms(),
+        parse_when_bodies(parser),
+        parser.try_opt_else(),
+        parser.parse_k_end(),
+    )?;
+
+    let (else_t, else_body) = opt_else
+        .map(|(else_t, else_body)| (Some(else_t), else_body))
+        .unwrap_or_else(|| (None, None));
+
+    Ok(Builder::case(
+        case_t,
+        None,
+        when_bodies,
+        else_t,
+        else_body,
+        end_t,
+    ))
+}
+
+fn parse_case_in(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (case_t, expr, _opt_terms, p_case_body, end_t) = all_of!(
+        "k_case expr_value opt_terms p_case_body k_end",
+        parse_k_case(parser),
+        parser.parse_expr_value(),
+        parser.parse_opt_terms(),
+        parser.parse_p_case_body(),
+        parser.parse_k_end(),
+    )?;
+
+    todo!(
+        "{:?} {:?} {:?} {:?} {:?}",
+        case_t,
+        expr,
+        _opt_terms,
+        p_case_body,
+        end_t
+    )
 }
 
 fn parse_k_case(parser: &mut Parser) -> ParseResult<Token> {
