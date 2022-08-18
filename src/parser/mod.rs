@@ -141,7 +141,7 @@ impl Parser {
     }
 
     fn parse_expr_value_do(&mut self) -> ParseResult<(Box<Node>, Token)> {
-        todo!("parser.parse_expr_value_do")
+        all_of!("expr_value do", self.parse_expr(), self.parse_do(),)
     }
 
     fn parse_command_call(&mut self) -> ParseResult<Box<Node>> {

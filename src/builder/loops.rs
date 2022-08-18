@@ -90,7 +90,6 @@ impl Builder {
     }
 
     pub(crate) fn for_(
-        &self,
         for_t: Token,
         iterator: Box<Node>,
         in_t: Token,
