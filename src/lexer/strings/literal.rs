@@ -4,7 +4,10 @@ use crate::{
     buffer::BufferWithCursor,
     lexer::strings::{
         action::StringExtendAction,
-        types::{Array, Heredoc, Regexp, StringInterp, StringPlain, Symbol},
+        types::{
+            Heredoc, Regexp, StringInterp, StringPlain, SymbolInterp, SymbolPlain, WordsInterp,
+            WordsPlain,
+        },
     },
 };
 
@@ -21,10 +24,14 @@ pub(crate) enum StringLiteral {
     StringInterp(StringInterp),
     StringPlain(StringPlain),
 
-    Symbol(Symbol),
+    WordsInterp(WordsInterp),
+    WordsPlain(WordsPlain),
+
+    SymbolInterp(SymbolInterp),
+    SymbolPlain(SymbolPlain),
+
     Heredoc(Heredoc),
     Regexp(Regexp),
-    Array(Array),
 }
 
 impl StringLiteralExtend for StringLiteral {
@@ -36,10 +43,12 @@ impl StringLiteralExtend for StringLiteral {
         match self {
             Self::StringInterp(string) => string.extend(buffer, current_curly_nest),
             Self::StringPlain(string) => string.extend(buffer, current_curly_nest),
-            Self::Symbol(symbol) => symbol.extend(buffer, current_curly_nest),
+            Self::SymbolInterp(symbol) => symbol.extend(buffer, current_curly_nest),
+            Self::SymbolPlain(symbol) => symbol.extend(buffer, current_curly_nest),
             Self::Heredoc(heredoc) => heredoc.extend(buffer, current_curly_nest),
             Self::Regexp(regexp) => regexp.extend(buffer, current_curly_nest),
-            Self::Array(sym_array) => sym_array.extend(buffer, current_curly_nest),
+            Self::WordsInterp(words) => words.extend(buffer, current_curly_nest),
+            Self::WordsPlain(words) => words.extend(buffer, current_curly_nest),
         }
     }
 }

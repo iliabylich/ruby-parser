@@ -72,20 +72,22 @@ pub(crate) fn parse_percent(
 
         b'W' => {
             token = token!(tWORDS_BEG, loc!(start, end));
-            literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
+            literal =
+                StringLiteral::WordsInterp(WordsInterp::new(starts_with, ends_with, curly_level));
         }
         b'w' => {
             token = token!(tQWORDS_BEG, loc!(start, end));
-            literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
+            literal = StringLiteral::WordsPlain(WordsPlain::new(starts_with, ends_with));
         }
 
         b'I' => {
             token = token!(tSYMBOLS_BEG, loc!(start, end));
-            literal = StringLiteral::Array(Array::new(true, starts_with, ends_with, curly_level));
+            literal =
+                StringLiteral::WordsInterp(WordsInterp::new(starts_with, ends_with, curly_level));
         }
         b'i' => {
             token = token!(tQSYMBOLS_BEG, loc!(start, end));
-            literal = StringLiteral::Array(Array::new(false, starts_with, ends_with, curly_level));
+            literal = StringLiteral::WordsPlain(WordsPlain::new(starts_with, ends_with));
         }
 
         b'x' => {
@@ -216,7 +218,7 @@ mod tests {
         assert_string_literal_start!(
             input = b"%W{",
             token = tWORDS_BEG,
-            literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
+            literal = StringLiteral::WordsInterp(WordsInterp::new(b'{', b'}', 0))
         );
     }
 
@@ -226,7 +228,7 @@ mod tests {
         assert_string_literal_start!(
             input = b"%w{",
             token = tQWORDS_BEG,
-            literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
+            literal = StringLiteral::WordsPlain(WordsPlain::new(b'{', b'}'))
         );
     }
 
@@ -236,7 +238,7 @@ mod tests {
         assert_string_literal_start!(
             input = b"%I{",
             token = tSYMBOLS_BEG,
-            literal = StringLiteral::Array(Array::new(true, b'{', b'}', 0))
+            literal = StringLiteral::WordsInterp(WordsInterp::new(b'{', b'}', 0))
         );
     }
 
@@ -246,7 +248,7 @@ mod tests {
         assert_string_literal_start!(
             input = b"%i{",
             token = tQSYMBOLS_BEG,
-            literal = StringLiteral::Array(Array::new(false, b'{', b'}', 0))
+            literal = StringLiteral::WordsPlain(WordsPlain::new(b'{', b'}'))
         );
     }
 

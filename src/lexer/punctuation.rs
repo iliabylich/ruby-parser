@@ -4,7 +4,9 @@ use crate::{
         ident::Ident,
         numbers::parse_number,
         qmark::QMark,
-        strings::types::{Heredoc, Interpolation, StringInterp, StringPlain, Symbol},
+        strings::types::{
+            Heredoc, Interpolation, StringInterp, StringPlain, SymbolInterp, SymbolPlain,
+        },
         Lexer, OnByte, StringLiteral,
     },
     loc::loc,
@@ -727,7 +729,9 @@ impl OnByte<b':'> for Lexer {
                 self.skip_byte();
                 let token = token!(tDSYMBEG, loc!(start, start + 2));
                 self.string_literals()
-                    .push(StringLiteral::Symbol(Symbol::new(true, self.curly_nest())));
+                    .push(StringLiteral::SymbolInterp(SymbolInterp::new(
+                        self.curly_nest(),
+                    )));
                 return token;
             }
             Some(b'\'') => {
@@ -735,7 +739,7 @@ impl OnByte<b':'> for Lexer {
                 self.skip_byte();
                 let token = token!(tSYMBEG, loc!(start, start + 2));
                 self.string_literals()
-                    .push(StringLiteral::Symbol(Symbol::new(false, self.curly_nest())));
+                    .push(StringLiteral::SymbolPlain(SymbolPlain));
                 return token;
             }
             _ => {}
@@ -762,12 +766,12 @@ fn test_tDSYMBEG() {
             *lexer.curly_nest_mut() = 42;
         },
         assert = |lexer: &Lexer| {
-            use crate::lexer::strings::types::Symbol;
+            use crate::lexer::strings::types::SymbolInterp;
 
             assert_eq!(lexer.string_literals().size(), 1);
             assert_eq!(
                 lexer.string_literals().last(),
-                Some(&StringLiteral::Symbol(Symbol::new(true, 42)))
+                Some(&StringLiteral::SymbolInterp(SymbolInterp::new(42)))
             )
         }
     );
@@ -782,12 +786,12 @@ fn test_tSYMBEG() {
             *lexer.curly_nest_mut() = 42;
         },
         assert = |lexer: &Lexer| {
-            use crate::lexer::strings::types::Symbol;
+            use crate::lexer::strings::types::SymbolPlain;
 
             assert_eq!(lexer.string_literals().size(), 1);
             assert_eq!(
                 lexer.string_literals().last(),
-                Some(&StringLiteral::Symbol(Symbol::new(false, 42)))
+                Some(&StringLiteral::SymbolPlain(SymbolPlain))
             )
         }
     );
