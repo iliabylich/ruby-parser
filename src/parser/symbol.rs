@@ -111,7 +111,22 @@ ONEOF (0) static symbol
 
     #[test]
     fn test_dsym() {
-        assert_parses!(parse_dsym, b":\"foo\"", "TODO")
+        assert_parses!(parse_dsym, b":\"foo\"", "s(:sym, \"foo\")")
+    }
+
+    #[test]
+    fn test_dsym_interp() {
+        assert_parses!(
+            parse_dsym,
+            b":\"foo#{42}bar\"",
+            r#"
+s(:dsym,
+  s(:str, "foo"),
+  s(:begin,
+    s(:int, "42")),
+  s(:str, "bar"))
+            "#
+        )
     }
 
     #[test]
