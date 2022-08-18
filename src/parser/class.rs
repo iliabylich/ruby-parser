@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        macros::{all_of, one_of},
+        macros::{all_of, maybe, one_of},
         ParseResult, Parser,
     },
     token::{Token, TokenKind},
@@ -13,46 +13,8 @@ impl Parser {
         one_of!(
             "class definition",
             checkpoint = self.new_checkpoint(),
-            {
-                let (class_t, cpath, superclass, body, end_t) = all_of!(
-                    "normal class definition",
-                    self.parse_k_class(),
-                    self.parse_cpath(),
-                    self.try_superclass(),
-                    self.try_bodystmt(),
-                    self.parse_k_end(),
-                )?;
-
-                todo!(
-                    "{:?} {:?} {:?} {:?} {:?}",
-                    class_t,
-                    cpath,
-                    superclass,
-                    body,
-                    end_t
-                )
-            },
-            {
-                let (klass_t, lshift_t, expr, _term, body, end_t) = all_of!(
-                    "singleton class",
-                    self.parse_k_class(),
-                    self.try_token(TokenKind::tLSHFT),
-                    self.parse_expr(),
-                    self.try_term(),
-                    self.try_bodystmt(),
-                    self.parse_k_end(),
-                )?;
-
-                todo!(
-                    "{:?} {:?} {:?} {:?} {:?} {:?}",
-                    klass_t,
-                    lshift_t,
-                    expr,
-                    _term,
-                    body,
-                    end_t
-                )
-            },
+            parse_class(self),
+            parse_singleton_class(self),
         )
     }
 
@@ -72,13 +34,57 @@ impl Parser {
         )
     }
 
-    fn try_superclass(&mut self) -> ParseResult<Option<Box<Node>>> {
-        todo!("parser.try_superclass")
+    fn try_superclass(&mut self) -> ParseResult<Option<(Token, Box<Node>)>> {
+        let superclass = maybe!(all_of!(
+            "superclass",
+            self.try_token(TokenKind::tLT),
+            self.parse_expr_value(),
+            self.parse_term(),
+        ))?;
+
+        match superclass {
+            Some((lt_t, superclass, _term)) => Ok(Some((lt_t, superclass))),
+            None => Ok(None),
+        }
     }
 
     fn parse_k_class(&mut self) -> ParseResult<Token> {
         self.try_token(TokenKind::kCLASS)
     }
+}
+
+fn parse_class(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (class_t, name, superclass, body, end_t) = all_of!(
+        "normal class definition",
+        parser.parse_k_class(),
+        parser.parse_cpath(),
+        parser.try_superclass(),
+        parser.try_bodystmt(),
+        parser.parse_k_end(),
+    )?;
+
+    let (lt_t, superclass) = match superclass {
+        Some((lt_t, superclass)) => (Some(lt_t), Some(superclass)),
+        None => (None, None),
+    };
+
+    Ok(Builder::def_class(
+        class_t, name, lt_t, superclass, body, end_t,
+    ))
+}
+
+fn parse_singleton_class(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (class_t, lshift_t, expr, _term, body, end_t) = all_of!(
+        "singleton class",
+        parser.parse_k_class(),
+        parser.try_token(TokenKind::tLSHFT),
+        parser.parse_expr(),
+        parser.parse_term(),
+        parser.try_bodystmt(),
+        parser.parse_k_end(),
+    )?;
+
+    Ok(Builder::def_sclass(class_t, lshift_t, expr, body, end_t))
 }
 
 #[cfg(test)]
@@ -112,5 +118,31 @@ s(:const,
     #[test]
     fn test_cpath_simple() {
         assert_parses!(parse_cpath, b"Foo", r#"s(:const, nil, "Foo")"#)
+    }
+
+    #[test]
+    fn test_class() {
+        assert_parses!(
+            parse_class,
+            b"class Foo; 42; end",
+            r#"
+s(:class,
+  s(:const, nil, "Foo"), nil,
+  s(:int, "42"))
+            "#
+        )
+    }
+
+    #[test]
+    fn test_sclass() {
+        assert_parses!(
+            parse_class,
+            b"class << Foo; 42; end",
+            r#"
+s(:sclass,
+  s(:const, nil, "Foo"),
+  s(:int, "42"))
+            "#
+        )
     }
 }

@@ -19,12 +19,12 @@ impl Parser {
         one_of!(
             "then ...",
             checkpoint = self.new_checkpoint(),
-            self.try_term(),
+            self.parse_term(),
             self.try_token(TokenKind::kTHEN),
             {
                 let (_term, then_t) = all_of!(
                     "term then",
-                    self.try_term(),
+                    self.parse_term(),
                     self.try_token(TokenKind::kTHEN),
                 )?;
                 Ok(then_t)

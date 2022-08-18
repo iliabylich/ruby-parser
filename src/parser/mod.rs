@@ -312,7 +312,22 @@ impl Parser {
         todo!("parser.parse_opt_paren_args")
     }
     fn parse_block_arg(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.parse_block_arg")
+        one_of!(
+            "block_arg",
+            checkpoint = self.new_checkpoint(),
+            {
+                let (amper_t, arg_value) = all_of!(
+                    "tAMPER",
+                    self.try_token(TokenKind::tAMPER),
+                    self.parse_arg_value(),
+                )?;
+                todo!("{:?} {:?}", amper_t, arg_value)
+            },
+            {
+                let amper_t = self.try_token(TokenKind::tAMPER)?;
+                todo!("{:?}", amper_t)
+            },
+        )
     }
     fn parse_opt_block_arg(&mut self) -> ParseResult<Vec<Node>> {
         todo!("parser.parse_opt_block_arg")
@@ -375,7 +390,7 @@ impl Parser {
         self.try_token(TokenKind::kRETURN)
     }
     fn parse_do(&mut self) -> ParseResult<Token> {
-        one_of!("do", self.try_term(), self.try_token(TokenKind::kDO),)
+        one_of!("do", self.parse_term(), self.try_token(TokenKind::kDO),)
     }
     fn parse_f_marg(&mut self) {
         todo!("parser.parse_f_marg")
@@ -740,7 +755,7 @@ impl Parser {
             self.try_token(TokenKind::tCOMMA),
         ))
     }
-    fn try_term(&mut self) -> ParseResult<Token> {
+    fn parse_term(&mut self) -> ParseResult<Token> {
         one_of!(
             "term",
             self.try_token(TokenKind::tSEMI),
@@ -751,7 +766,7 @@ impl Parser {
         let (terms, _semis) = separated_by!(
             "terms",
             checkpoint = self.new_checkpoint(),
-            item = self.try_term().map(Box::new),
+            item = self.parse_term().map(Box::new),
             sep = self.try_token(TokenKind::tSEMI)
         )?;
         Ok(terms)
