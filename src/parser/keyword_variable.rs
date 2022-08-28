@@ -10,47 +10,54 @@ impl Parser {
         one_of!(
             "keyword variable",
             checkpoint = self.new_checkpoint(),
-            self.parse_nil(),
-            self.parse_self(),
-            self.parse_true(),
-            self.parse_false(),
-            self.parse__file__(),
-            self.parse__line__(),
-            self.parse__encoding__(),
+            parse_nil(self),
+            parse_self(self),
+            parse_true(self),
+            parse_false(self),
+            parse__file__(self),
+            parse__line__(self),
+            parse__encoding__(self),
         )
     }
+}
 
-    fn parse_nil(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kNIL)
-            .map(|nil_t| Builder::nil(nil_t))
-    }
-    fn parse_self(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kSELF)
-            .map(|self_t| Builder::self_(self_t))
-    }
-    fn parse_true(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kTRUE)
-            .map(|true_t| Builder::true_(true_t))
-    }
-    fn parse_false(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::kFALSE)
-            .map(|false_t| Builder::false_(false_t))
-    }
-    #[allow(non_snake_case)]
-    fn parse__file__(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::k__FILE__)
-            .map(|file_t| Builder::__file__(file_t))
-    }
-    #[allow(non_snake_case)]
-    fn parse__line__(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::k__LINE__)
-            .map(|line_t| Builder::__line__(line_t))
-    }
-    #[allow(non_snake_case)]
-    fn parse__encoding__(&mut self) -> ParseResult<Box<Node>> {
-        self.try_token(TokenKind::k__ENCODING__)
-            .map(|encoding_t| Builder::__encoding__(encoding_t))
-    }
+fn parse_nil(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::kNIL)
+        .map(|nil_t| Builder::nil(nil_t))
+}
+fn parse_self(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::kSELF)
+        .map(|self_t| Builder::self_(self_t))
+}
+fn parse_true(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::kTRUE)
+        .map(|true_t| Builder::true_(true_t))
+}
+fn parse_false(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::kFALSE)
+        .map(|false_t| Builder::false_(false_t))
+}
+#[allow(non_snake_case)]
+fn parse__file__(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::k__FILE__)
+        .map(|file_t| Builder::__file__(file_t))
+}
+#[allow(non_snake_case)]
+fn parse__line__(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::k__LINE__)
+        .map(|line_t| Builder::__line__(line_t))
+}
+#[allow(non_snake_case)]
+fn parse__encoding__(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    parser
+        .try_token(TokenKind::k__ENCODING__)
+        .map(|encoding_t| Builder::__encoding__(encoding_t))
 }
 
 #[cfg(test)]

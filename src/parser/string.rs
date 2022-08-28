@@ -9,35 +9,7 @@ use super::macros::{all_of, at_least_once, maybe::maybe};
 
 impl Parser {
     pub(crate) fn parse_strings(&mut self) -> ParseResult<Box<Node>> {
-        one_of!("strings", self.parse_char(), self.parse_string_seq(),)
-    }
-
-    fn parse_char(&mut self) -> ParseResult<Box<Node>> {
-        let char_t = self.try_token(TokenKind::tCHAR)?;
-        Ok(Builder::character(char_t))
-    }
-
-    fn parse_string_seq(&mut self) -> ParseResult<Box<Node>> {
-        let parts = at_least_once!("string", self.parse_string1())?;
-
-        Ok(Builder::string_compose(None, parts, None))
-    }
-
-    fn parse_string1(&mut self) -> ParseResult<Box<Node>> {
-        let (begin_t, parts, end_t) = all_of!(
-            "string1",
-            one_of!(
-                "string1 begin",
-                self.try_token(TokenKind::tSTRING_BEG),
-                self.try_token(TokenKind::tDSTRING_BEG),
-                self.try_token(TokenKind::tHEREDOC_BEG),
-            ),
-            self.parse_string_contents(),
-            self.expect_token(TokenKind::tSTRING_END),
-        )?;
-
-        // TODO: dedent_heredoc
-        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
+        one_of!("strings", parse_char(self), parse_string_seq(self),)
     }
 
     // This rule can be `none`
@@ -62,7 +34,7 @@ impl Parser {
                 let (_string_dvar_t, string_dvar) = all_of!(
                     "tSTRING_DVAR string_dvar",
                     self.try_token(TokenKind::tSTRING_DVAR),
-                    self.parse_string_dvar(),
+                    parse_string_dvar(self),
                 )?;
 
                 Ok(string_dvar)
@@ -85,16 +57,44 @@ impl Parser {
             },
         )
     }
+}
 
-    fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
+fn parse_char(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let char_t = parser.try_token(TokenKind::tCHAR)?;
+    Ok(Builder::character(char_t))
+}
+
+fn parse_string_seq(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let parts = at_least_once!("string", parse_string1(parser))?;
+
+    Ok(Builder::string_compose(None, parts, None))
+}
+
+fn parse_string1(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let (begin_t, parts, end_t) = all_of!(
+        "string1",
         one_of!(
-            "string_dvar",
-            self.parse_gvar(),
-            self.parse_ivar(),
-            self.parse_cvar(),
-            self.parse_back_ref(),
-        )
-    }
+            "string1 begin",
+            parser.try_token(TokenKind::tSTRING_BEG),
+            parser.try_token(TokenKind::tDSTRING_BEG),
+            parser.try_token(TokenKind::tHEREDOC_BEG),
+        ),
+        parser.parse_string_contents(),
+        parser.expect_token(TokenKind::tSTRING_END),
+    )?;
+
+    // TODO: dedent_heredoc
+    Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
+}
+
+fn parse_string_dvar(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    one_of!(
+        "string_dvar",
+        parser.parse_gvar(),
+        parser.parse_ivar(),
+        parser.parse_cvar(),
+        parser.parse_back_ref(),
+    )
 }
 
 #[cfg(test)]

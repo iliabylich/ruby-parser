@@ -13,30 +13,30 @@ impl Parser {
         let (begin_t, elements, end_t) = all_of!(
             "words",
             self.try_token(TokenKind::tWORDS_BEG),
-            self.parse_word_list(),
+            parse_word_list(self),
             self.expect_token(TokenKind::tSTRING_END),
         )?;
 
         Ok(Builder::words_compose(begin_t, elements, end_t))
     }
 
-    // This rule can be `none
-    fn parse_word_list(&mut self) -> ParseResult<Vec<Node>> {
-        let word_list = maybe!(separated_by!(
-            "word list",
-            checkpoint = self.new_checkpoint(),
-            item = self.try_word().map(|parts| Builder::word(parts)),
-            sep = self.try_token(TokenKind::tSP)
-        ))?;
-
-        match word_list {
-            Some((word_list, _spaces)) => Ok(word_list),
-            None => Ok(vec![]),
-        }
-    }
-
     pub(crate) fn try_word(&mut self) -> ParseResult<Vec<Node>> {
         at_least_once!("word", self.parse_string_content())
+    }
+}
+
+// This rule can be `none
+fn parse_word_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let word_list = maybe!(separated_by!(
+        "word list",
+        checkpoint = parser.new_checkpoint(),
+        item = parser.try_word().map(|parts| Builder::word(parts)),
+        sep = parser.try_token(TokenKind::tSP)
+    ))?;
+
+    match word_list {
+        Some((word_list, _spaces)) => Ok(word_list),
+        None => Ok(vec![]),
     }
 }
 

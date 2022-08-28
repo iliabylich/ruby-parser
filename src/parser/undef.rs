@@ -12,22 +12,22 @@ impl Parser {
         let (undef_t, names) = all_of!(
             "undef ...",
             self.try_token(TokenKind::kUNDEF),
-            self.parse_names(),
+            parse_names(self),
         )?;
 
         Ok(Builder::undef(undef_t, names))
     }
+}
 
-    fn parse_names(&mut self) -> ParseResult<Vec<Node>> {
-        let (names, _commas) = separated_by!(
-            "undef named",
-            checkpoint = self.new_checkpoint(),
-            item = self.parse_fitem(),
-            sep = self.try_token(TokenKind::tCOMMA)
-        )?;
+fn parse_names(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let (names, _commas) = separated_by!(
+        "undef named",
+        checkpoint = parser.new_checkpoint(),
+        item = parser.parse_fitem(),
+        sep = parser.try_token(TokenKind::tCOMMA)
+    )?;
 
-        Ok(names)
-    }
+    Ok(names)
 }
 
 #[test]

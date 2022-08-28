@@ -21,7 +21,7 @@ impl Parser {
                     checkpoint = self.new_checkpoint(),
                     self.try_token(TokenKind::tREGEXP_BEG),
                     {
-                        let token = self.read_div_as_heredoc_beg()?;
+                        let token = read_div_as_heredoc_beg(self)?;
 
                         // now we need to manually push a xstring literal
                         // Lexer is not capable of doing it
@@ -37,34 +37,34 @@ impl Parser {
                     },
                 )
             },
-            self.parse_regexp_contents(),
+            parse_regexp_contents(self),
             self.expect_token(TokenKind::tSTRING_END),
         )?;
 
         let options = Builder::regexp_options(&end_t, self.buffer());
         Ok(Builder::regexp_compose(begin_t, contents, end_t, options))
     }
+}
 
-    // This rule can be `none`
-    fn parse_regexp_contents(&mut self) -> ParseResult<Vec<Node>> {
-        self.parse_string_contents()
-    }
+// This rule can be `none`
+fn parse_regexp_contents(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    parser.parse_string_contents()
+}
 
-    fn read_div_as_heredoc_beg(&mut self) -> ParseResult<Token> {
-        let loc = self.current_token().loc;
-        if self.current_token().is(TokenKind::tDIVIDE) {
-            let token = token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end));
-            self.lexer.tokens_mut()[self.lexer.token_idx()] = token;
-            self.skip_token();
-            Ok(token)
-        } else {
-            Err(ParseError::TokenError {
-                lookahead: true,
-                expected: TokenKind::tREGEXP_BEG,
-                got: self.current_token().kind,
-                loc: self.current_token().loc,
-            })
-        }
+fn read_div_as_heredoc_beg(parser: &mut Parser) -> ParseResult<Token> {
+    let loc = parser.current_token().loc;
+    if parser.current_token().is(TokenKind::tDIVIDE) {
+        let token = token!(TokenKind::tREGEXP_BEG, loc!(loc.start, loc.end));
+        parser.lexer.tokens_mut()[parser.lexer.token_idx()] = token;
+        parser.skip_token();
+        Ok(token)
+    } else {
+        Err(ParseError::TokenError {
+            lookahead: true,
+            expected: TokenKind::tREGEXP_BEG,
+            got: parser.current_token().kind,
+            loc: parser.current_token().loc,
+        })
     }
 }
 

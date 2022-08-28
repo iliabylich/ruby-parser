@@ -13,28 +13,28 @@ impl Parser {
         let (begin_t, word_list, end_t) = all_of!(
             "qsymbols",
             self.try_token(TokenKind::tQSYMBOLS_BEG),
-            self.parse_qsym_list(),
+            parse_qsym_list(self),
             self.expect_token(TokenKind::tSTRING_END),
         )?;
 
         Ok(Builder::symbols_compose(begin_t, word_list, end_t))
     }
+}
 
-    // This rule can be `None`
-    fn parse_qsym_list(&mut self) -> ParseResult<Vec<Node>> {
-        let qsym_list = maybe!(separated_by!(
-            "qsym list",
-            checkpoint = self.new_checkpoint(),
-            item = self
-                .try_token(TokenKind::tSTRING_CONTENT)
-                .map(|token| Builder::symbol_internal(token, self.buffer())),
-            sep = self.try_token(TokenKind::tSP)
-        ))?;
+// This rule can be `None`
+fn parse_qsym_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let qsym_list = maybe!(separated_by!(
+        "qsym list",
+        checkpoint = parser.new_checkpoint(),
+        item = parser
+            .try_token(TokenKind::tSTRING_CONTENT)
+            .map(|token| Builder::symbol_internal(token, parser.buffer())),
+        sep = parser.try_token(TokenKind::tSP)
+    ))?;
 
-        match qsym_list {
-            Some((qsym_list, _spaces)) => Ok(qsym_list),
-            None => Ok(vec![]),
-        }
+    match qsym_list {
+        Some((qsym_list, _spaces)) => Ok(qsym_list),
+        None => Ok(vec![]),
     }
 }
 

@@ -47,16 +47,16 @@ impl Parser {
             None => Ok(None),
         }
     }
+}
 
-    fn parse_k_class(&mut self) -> ParseResult<Token> {
-        self.try_token(TokenKind::kCLASS)
-    }
+fn parse_k_class(parser: &mut Parser) -> ParseResult<Token> {
+    parser.try_token(TokenKind::kCLASS)
 }
 
 fn parse_class(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (class_t, name, superclass, body, end_t) = all_of!(
         "normal class definition",
-        parser.parse_k_class(),
+        parse_k_class(parser),
         parser.parse_cpath(),
         parser.try_superclass(),
         parser.try_bodystmt(),
@@ -76,7 +76,7 @@ fn parse_class(parser: &mut Parser) -> ParseResult<Box<Node>> {
 fn parse_singleton_class(parser: &mut Parser) -> ParseResult<Box<Node>> {
     let (class_t, lshift_t, expr, _term, body, end_t) = all_of!(
         "singleton class",
-        parser.parse_k_class(),
+        parse_k_class(parser),
         parser.try_token(TokenKind::tLSHFT),
         parser.parse_expr(),
         parser.parse_term(),

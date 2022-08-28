@@ -13,28 +13,28 @@ impl Parser {
         let (begin_t, word_list, end_t) = all_of!(
             "qwords",
             self.try_token(TokenKind::tQWORDS_BEG),
-            self.parse_qword_list(),
+            parse_qword_list(self),
             self.expect_token(TokenKind::tSTRING_END),
         )?;
 
         Ok(Builder::words_compose(begin_t, word_list, end_t))
     }
+}
 
-    // This rule can be `None`
-    fn parse_qword_list(&mut self) -> ParseResult<Vec<Node>> {
-        let qword_list = maybe!(separated_by!(
-            "qword list",
-            checkpoint = self.new_checkpoint(),
-            item = self
-                .try_token(TokenKind::tSTRING_CONTENT)
-                .map(|token| Builder::string_internal(token, self.buffer())),
-            sep = self.try_token(TokenKind::tSP)
-        ))?;
+// This rule can be `None`
+fn parse_qword_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
+    let qword_list = maybe!(separated_by!(
+        "qword list",
+        checkpoint = parser.new_checkpoint(),
+        item = parser
+            .try_token(TokenKind::tSTRING_CONTENT)
+            .map(|token| Builder::string_internal(token, parser.buffer())),
+        sep = parser.try_token(TokenKind::tSP)
+    ))?;
 
-        match qword_list {
-            Some((qword_list, _spaces)) => Ok(qword_list),
-            None => Ok(vec![]),
-        }
+    match qword_list {
+        Some((qword_list, _spaces)) => Ok(qword_list),
+        None => Ok(vec![]),
     }
 }
 
