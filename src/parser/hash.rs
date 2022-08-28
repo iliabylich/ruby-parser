@@ -102,7 +102,7 @@ fn test_hash() {
     use crate::testing::assert_parses;
 
     assert_parses!(
-        parse_hash,
+        Parser::parse_hash,
         b"{ a: 1, :b => 2, c => 3 }",
         r#"
 s(:hash,

@@ -90,8 +90,9 @@ fn parse_exc_list(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     one_of!(
         "exceptions list",
         checkpoint = parser.new_checkpoint(),
-        parser.parse_arg_value().map(|arg_value| vec![*arg_value]),
         parser.parse_mrhs(),
+        parser.parse_arg_value().map(|arg_value| vec![*arg_value]),
+        Ok(vec![]),
     )
 }
 fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
@@ -113,11 +114,27 @@ fn try_exc_var(parser: &mut Parser) -> ParseResult<Option<(Token, Box<Node>)>> {
 #[cfg(test)]
 mod tests {
     use super::parse_opt_rescue1;
-    use crate::parser::{ParseError, Parser};
+    use crate::testing::assert_parses;
 
     #[test]
-    fn test_opt_rescue1() {
-        let mut parser = Parser::new(b"rescue");
-        assert_eq!(parse_opt_rescue1(&mut parser), Err(ParseError::empty()));
+    fn test_opt_rescue1_simple() {
+        assert_parses!(parse_opt_rescue1, b"rescue", "s(:resbody, nil, nil, nil)");
+    }
+
+    #[test]
+    fn test_opt_rescue1_full() {
+        assert_parses!(
+            parse_opt_rescue1,
+            b"rescue Foo, Bar::Baz => e; 42",
+            r#"
+s(:resbody,
+  s(:array,
+    s(:const, nil, "Foo"),
+    s(:const,
+      s(:const, nil, "Bar"), "Baz")),
+  s(:lvar, "e"),
+  s(:int, "42"))
+            "#
+        );
     }
 }

@@ -118,7 +118,7 @@ mod tests {
     #[test]
     fn test_if() {
         assert_parses!(
-            parse_if_expr,
+            Parser::parse_if_expr,
             b"if 1; 2; else; 3; end",
             r#"
 s(:if,
@@ -132,7 +132,7 @@ s(:if,
     #[test]
     fn test_unless() {
         assert_parses!(
-            parse_unless_expr,
+            Parser::parse_unless_expr,
             b"unless 1; 2; else; 3; end",
             r#"
 s(:if,

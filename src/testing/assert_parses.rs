@@ -1,5 +1,5 @@
 macro_rules! assert_parses {
-    ($f:ident, $src:expr, $expected:expr) => {{
+    ($f:expr, $src:expr, $expected:expr) => {{
         use crate::{
             parser::{ParseResult, Parser},
             Node,
@@ -7,7 +7,7 @@ macro_rules! assert_parses {
 
         let src: &[u8] = $src;
         let mut parser = Parser::new(src).debug();
-        let parsed: ParseResult<Box<Node>> = parser.$f();
+        let parsed: ParseResult<Box<Node>> = $f(&mut parser);
 
         let ast;
         match parsed {

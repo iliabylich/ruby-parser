@@ -30,7 +30,7 @@ mod tests {
     #[test]
     fn test_module() {
         assert_parses!(
-            parse_module,
+            Parser::parse_module,
             b"module Foo::Bar; 1; end",
             r#"
 s(:module,

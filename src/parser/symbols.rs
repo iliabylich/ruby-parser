@@ -42,13 +42,13 @@ mod tests {
 
     #[test]
     fn test_symbols_empty() {
-        assert_parses!(parse_symbols, b"%I[]", "s(:array)")
+        assert_parses!(Parser::parse_symbols, b"%I[]", "s(:array)")
     }
 
     #[test]
     fn test_symbols() {
         assert_parses!(
-            parse_symbols,
+            Parser::parse_symbols,
             b"%I[foo bar]",
             r#"
 s(:array,
@@ -61,7 +61,7 @@ s(:array,
     #[test]
     fn test_symbols_interp() {
         assert_parses!(
-            parse_symbols,
+            Parser::parse_symbols,
             b"%I[f#{1}oo bar #{42}]",
             r#"
 s(:array,

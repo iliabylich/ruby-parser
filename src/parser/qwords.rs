@@ -44,13 +44,13 @@ mod tests {
 
     #[test]
     fn test_qwords_empty() {
-        assert_parses!(parse_qwords, b"%w[]", "s(:array)")
+        assert_parses!(Parser::parse_qwords, b"%w[]", "s(:array)")
     }
 
     #[test]
     fn test_qwords() {
         assert_parses!(
-            parse_qwords,
+            Parser::parse_qwords,
             b"%w[foo bar]",
             r#"
 s(:array,

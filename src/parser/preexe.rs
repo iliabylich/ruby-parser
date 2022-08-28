@@ -26,7 +26,7 @@ mod tests {
     #[test]
     fn test_preexe() {
         assert_parses!(
-            parse_preexe,
+            Parser::parse_preexe,
             b"BEGIN { 42 }",
             r#"
 s(:preexe,
@@ -37,13 +37,13 @@ s(:preexe,
 
     #[test]
     fn test_preexe_empty() {
-        assert_parses!(parse_preexe, b"BEGIN {}", "s(:preexe)");
+        assert_parses!(Parser::parse_preexe, b"BEGIN {}", "s(:preexe)");
     }
 
     #[test]
     fn test_nothing() {
         assert_parses_with_error!(
-            parse_postexe,
+            Parser::parse_postexe,
             b"",
             "
 SEQUENCE (0) postexe (got [])

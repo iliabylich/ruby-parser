@@ -64,26 +64,27 @@ fn parse_dsym(parser: &mut Parser) -> ParseResult<Box<Node>> {
 
 #[cfg(test)]
 mod tests {
+    use super::{parse_dsym, parse_ssym};
     use crate::{testing::assert_parses, testing::assert_parses_with_error};
 
     #[test]
     fn test_ssym() {
-        assert_parses!(parse_symbol, b":foo", "s(:sym, \"foo\")")
+        assert_parses!(parse_ssym, b":foo", "s(:sym, \"foo\")")
     }
 
     #[test]
     fn test_ssym_ivar() {
-        assert_parses!(parse_symbol, b":@ivar", "s(:sym, \"@ivar\")")
+        assert_parses!(parse_ssym, b":@ivar", "s(:sym, \"@ivar\")")
     }
 
     #[test]
     fn test_ssym_keyword() {
-        assert_parses!(parse_symbol, b":super", "s(:sym, \"super\")")
+        assert_parses!(parse_ssym, b":super", "s(:sym, \"super\")")
     }
 
     #[test]
     fn test_ssym_only_colon() {
-        let parser = assert_parses_with_error!(parse_symbol, b":");
+        let parser = assert_parses_with_error!(parse_ssym, b":");
         // `:` is consumed
         assert_eq!(parser.lexer.buffer().pos(), 1);
     }
@@ -91,17 +92,14 @@ mod tests {
     #[test]
     fn test_ssym_no_colon() {
         let parser = assert_parses_with_error!(
-            parse_symbol,
+            parse_ssym,
             b"",
             "
-ONEOF (0) symbol
-    ONEOF (0) static symbol
-        SEQUENCE (0) :sym (got [])
-            TOKEN (0) expected tCOLON, got tEOF (at 0)
-        SEQUENCE (0) dynamic symbol value (got [])
-            TOKEN (0) expected tSYMBEG, got tEOF (at 0)
-    SEQUENCE (0) dynamic symbol (got [])
-        TOKEN (0) expected tDSYMBEG, got tEOF (at 0)
+ONEOF (0) static symbol
+    SEQUENCE (0) :sym (got [])
+        TOKEN (0) expected tCOLON, got tEOF (at 0)
+    SEQUENCE (0) dynamic symbol value (got [])
+        TOKEN (0) expected tSYMBEG, got tEOF (at 0)
 "
         );
         assert_eq!(parser.lexer.buffer().pos(), 0);
@@ -109,18 +107,18 @@ ONEOF (0) symbol
 
     #[test]
     fn test_ssym_quoted() {
-        assert_parses!(parse_symbol, b":'foo'", "s(:sym, \"foo\")")
+        assert_parses!(parse_ssym, b":'foo'", "s(:sym, \"foo\")")
     }
 
     #[test]
     fn test_dsym() {
-        assert_parses!(parse_symbol, b":\"foo\"", "s(:sym, \"foo\")")
+        assert_parses!(parse_dsym, b":\"foo\"", "s(:sym, \"foo\")")
     }
 
     #[test]
     fn test_dsym_interp() {
         assert_parses!(
-            parse_symbol,
+            parse_dsym,
             b":\"foo#{42}bar\"",
             r#"
 s(:dsym,
@@ -135,24 +133,11 @@ s(:dsym,
     #[test]
     fn test_dsym_only_colon() {
         let parser = assert_parses_with_error!(
-            parse_symbol,
+            parse_dsym,
             b":",
             "
-ONEOF (1) symbol
-    ONEOF (1) static symbol
-        SEQUENCE (1) :sym (got [Token(Token { kind: tCOLON, loc: 0...1, value: None })])
-            ONEOF (0) static symbol value
-                ONEOF (0) fname
-                    TOKEN (0) expected tIDENTIFIER, got tEOF (at 1)
-                    TOKEN (0) expected tCONSTANT, got tEOF (at 1)
-                    TOKEN (0) expected tFID, got tEOF (at 1)
-                    ONEOF (0) operation
-
-                    ONEOF (0) reserved word
-
-                TOKEN (0) expected tIVAR, got tEOF (at 1)
-                TOKEN (0) expected tCVAR, got tEOF (at 1)
-                TOKEN (0) expected tGVAR, got tEOF (at 1)
+SEQUENCE (0) dynamic symbol (got [])
+    TOKEN (0) expected tDSYMBEG, got tCOLON (at 0)
 "
         );
         // `:` is consumed
@@ -162,17 +147,11 @@ ONEOF (1) symbol
     #[test]
     fn test_dsym_no_colon() {
         assert_parses_with_error!(
-            parse_symbol,
+            parse_dsym,
             b"",
             "
-ONEOF (0) symbol
-    ONEOF (0) static symbol
-        SEQUENCE (0) :sym (got [])
-            TOKEN (0) expected tCOLON, got tEOF (at 0)
-        SEQUENCE (0) dynamic symbol value (got [])
-            TOKEN (0) expected tSYMBEG, got tEOF (at 0)
-    SEQUENCE (0) dynamic symbol (got [])
-        TOKEN (0) expected tDSYMBEG, got tEOF (at 0)
+SEQUENCE (0) dynamic symbol (got [])
+    TOKEN (0) expected tDSYMBEG, got tEOF (at 0)
 "
         );
     }

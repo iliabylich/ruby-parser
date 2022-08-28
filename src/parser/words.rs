@@ -46,13 +46,13 @@ mod tests {
 
     #[test]
     fn test_words_empty() {
-        assert_parses!(parse_words, b"%W[]", "s(:array)")
+        assert_parses!(Parser::parse_words, b"%W[]", "s(:array)")
     }
 
     #[test]
     fn test_words() {
         assert_parses!(
-            parse_words,
+            Parser::parse_words,
             b"%W[foo bar]",
             r#"
 s(:array,
@@ -65,7 +65,7 @@ s(:array,
     #[test]
     fn test_words_interp() {
         assert_parses!(
-            parse_words,
+            Parser::parse_words,
             b"%W[f#{1}oo bar #{42}]",
             r#"
 s(:array,

@@ -75,17 +75,6 @@ impl ParseError {
     }
 }
 
-// empty
-impl ParseError {
-    #[cfg(test)]
-    pub(crate) fn empty() -> Self {
-        Self::OneOfError {
-            name: "(empty)",
-            variants: vec![],
-        }
-    }
-}
-
 // weight
 impl ParseError {
     #[cfg(test)]

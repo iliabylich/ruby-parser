@@ -486,7 +486,7 @@ fn test_arg() {
     use crate::testing::assert_parses;
 
     assert_parses!(
-        parse_arg,
+        Parser::parse_arg,
         b"1 + 2 * 3",
         r#"
 s(:send,

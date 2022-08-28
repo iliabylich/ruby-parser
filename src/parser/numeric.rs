@@ -54,41 +54,41 @@ mod tests {
 
     #[test]
     fn test_integer() {
-        assert_parses!(parse_numeric, b"42", "s(:int, \"42\")");
+        assert_parses!(Parser::parse_numeric, b"42", "s(:int, \"42\")");
     }
 
     #[test]
     fn test_minus_integer() {
-        assert_parses!(parse_numeric, b"-42", "s(:int, \"-42\")");
+        assert_parses!(Parser::parse_numeric, b"-42", "s(:int, \"-42\")");
     }
 
     #[test]
     fn test_float() {
-        assert_parses!(parse_numeric, b"4.2", "s(:float, \"4.2\")");
+        assert_parses!(Parser::parse_numeric, b"4.2", "s(:float, \"4.2\")");
     }
 
     #[test]
     fn test_minus_float() {
-        assert_parses!(parse_numeric, b"-4.2", "s(:float, \"-4.2\")");
+        assert_parses!(Parser::parse_numeric, b"-4.2", "s(:float, \"-4.2\")");
     }
 
     #[test]
     fn test_rational() {
-        assert_parses!(parse_numeric, b"42r", "s(:rational, \"42r\")");
+        assert_parses!(Parser::parse_numeric, b"42r", "s(:rational, \"42r\")");
     }
 
     #[test]
     fn test_minus_rational() {
-        assert_parses!(parse_numeric, b"-42r", "s(:rational, \"-42r\")");
+        assert_parses!(Parser::parse_numeric, b"-42r", "s(:rational, \"-42r\")");
     }
 
     #[test]
     fn test_complex() {
-        assert_parses!(parse_numeric, b"42i", "s(:complex, \"42i\")");
+        assert_parses!(Parser::parse_numeric, b"42i", "s(:complex, \"42i\")");
     }
 
     #[test]
     fn test_minus_complex() {
-        assert_parses!(parse_numeric, b"-42i", "s(:complex, \"-42i\")");
+        assert_parses!(Parser::parse_numeric, b"-42i", "s(:complex, \"-42i\")");
     }
 }

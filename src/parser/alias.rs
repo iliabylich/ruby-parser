@@ -51,7 +51,7 @@ mod tests {
     #[test]
     fn test_alias_name_to_name() {
         assert_parses!(
-            parse_alias,
+            Parser::parse_alias,
             b"alias foo bar",
             r#"
 s(:alias,
@@ -64,7 +64,7 @@ s(:alias,
     #[test]
     fn test_alias_sym_to_sym() {
         assert_parses!(
-            parse_alias,
+            Parser::parse_alias,
             b"alias :foo :bar",
             r#"
 s(:alias,
@@ -77,7 +77,7 @@ s(:alias,
     #[test]
     fn test_alias_gvar_to_gvar() {
         assert_parses!(
-            parse_alias,
+            Parser::parse_alias,
             b"alias $foo $bar",
             r#"
 s(:alias,
@@ -90,7 +90,7 @@ s(:alias,
     #[test]
     fn test_nothing() {
         assert_parses_with_error!(
-            parse_alias,
+            Parser::parse_alias,
             b"",
             "
 SEQUENCE (0) alias (got [])
@@ -102,7 +102,7 @@ SEQUENCE (0) alias (got [])
     #[test]
     fn test_only_alias() {
         assert_parses_with_error!(
-            parse_alias,
+            Parser::parse_alias,
             b"alias $foo",
             "
 SEQUENCE (1) alias (got [Token(Token { kind: kALIAS, loc: 0...5, value: None })])

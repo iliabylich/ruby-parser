@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn test_xstring_plain() {
         assert_parses!(
-            parse_xstring,
+            Parser::parse_xstring,
             b"`foo`",
             r#"
 s(:xstr,

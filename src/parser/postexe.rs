@@ -26,7 +26,7 @@ mod tests {
     #[test]
     fn test_postexe() {
         assert_parses!(
-            parse_postexe,
+            Parser::parse_postexe,
             b"END { 42 }",
             r#"
 s(:postexe,
@@ -37,6 +37,6 @@ s(:postexe,
 
     #[test]
     fn test_postexe_empty() {
-        assert_parses!(parse_postexe, b"END {}", "s(:postexe)")
+        assert_parses!(Parser::parse_postexe, b"END {}", "s(:postexe)")
     }
 }

@@ -94,7 +94,7 @@ mod tests {
     #[test]
     fn test_cpath_global_const() {
         assert_parses!(
-            parse_cpath,
+            Parser::parse_cpath,
             b"::Foo",
             r#"
 s(:const,
@@ -106,7 +106,7 @@ s(:const,
     #[test]
     fn test_cpath_primary() {
         assert_parses!(
-            parse_cpath,
+            Parser::parse_cpath,
             b"Foo::Bar",
             r#"
 s(:const,
@@ -117,13 +117,13 @@ s(:const,
 
     #[test]
     fn test_cpath_simple() {
-        assert_parses!(parse_cpath, b"Foo", r#"s(:const, nil, "Foo")"#)
+        assert_parses!(Parser::parse_cpath, b"Foo", r#"s(:const, nil, "Foo")"#)
     }
 
     #[test]
     fn test_class() {
         assert_parses!(
-            parse_class,
+            Parser::parse_class,
             b"class Foo; 42; end",
             r#"
 s(:class,
@@ -136,7 +136,7 @@ s(:class,
     #[test]
     fn test_sclass() {
         assert_parses!(
-            parse_class,
+            Parser::parse_class,
             b"class << Foo; 42; end",
             r#"
 s(:sclass,

@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn test_defined() {
         assert_parses!(
-            parse_defined,
+            Parser::parse_defined,
             b"defined?(42)",
             r#"
 s(:defined?,

@@ -58,36 +58,36 @@ mod tests {
 
     #[test]
     fn test_gvar() {
-        assert_parses!(parse_gvar, b"$foo", "s(:gvar, \"$foo\")");
+        assert_parses!(Parser::parse_gvar, b"$foo", "s(:gvar, \"$foo\")");
     }
 
     #[test]
     fn test_back_ref() {
-        assert_parses!(parse_back_ref, b"$+", "s(:back_ref, \"$+\")");
+        assert_parses!(Parser::parse_back_ref, b"$+", "s(:back_ref, \"$+\")");
     }
 
     #[test]
     fn test_nth_ref() {
-        assert_parses!(parse_nth_ref, b"$1", "s(:nth_ref, 1)");
+        assert_parses!(Parser::parse_nth_ref, b"$1", "s(:nth_ref, 1)");
     }
 
     #[test]
     fn test_lvar() {
-        assert_parses!(parse_lvar, b"foo", "s(:lvar, \"foo\")");
+        assert_parses!(Parser::parse_lvar, b"foo", "s(:lvar, \"foo\")");
     }
 
     #[test]
     fn test_ivar() {
-        assert_parses!(parse_ivar, b"@foo", "s(:ivar, \"@foo\")");
+        assert_parses!(Parser::parse_ivar, b"@foo", "s(:ivar, \"@foo\")");
     }
 
     #[test]
     fn test_cvar() {
-        assert_parses!(parse_cvar, b"@@foo", "s(:cvar, \"@@foo\")");
+        assert_parses!(Parser::parse_cvar, b"@@foo", "s(:cvar, \"@@foo\")");
     }
 
     #[test]
     fn test_const() {
-        assert_parses!(parse_t_const, b"Foo", "s(:const, nil, \"Foo\")");
+        assert_parses!(Parser::parse_t_const, b"Foo", "s(:const, nil, \"Foo\")");
     }
 }

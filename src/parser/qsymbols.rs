@@ -44,13 +44,13 @@ mod tests {
 
     #[test]
     fn test_qsymbols_empty() {
-        assert_parses!(parse_qsymbols, b"%i[]", "s(:array)")
+        assert_parses!(Parser::parse_qsymbols, b"%i[]", "s(:array)")
     }
 
     #[test]
     fn test_qsymbols() {
         assert_parses!(
-            parse_qsymbols,
+            Parser::parse_qsymbols,
             b"%i[foo bar]",
             r#"
 s(:array,

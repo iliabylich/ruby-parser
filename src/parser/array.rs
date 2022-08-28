@@ -68,7 +68,7 @@ mod tests {
     #[test]
     fn test_array_simple() {
         assert_parses!(
-            parse_array,
+            Parser::parse_array,
             b"[1, 2, 3]",
             r#"
 s(:array,
@@ -82,7 +82,7 @@ s(:array,
     #[test]
     fn test_array_mixed() {
         assert_parses!(
-            parse_array,
+            Parser::parse_array,
             b"[1, 2, 3, 4 => 5]",
             r#"
 s(:array,

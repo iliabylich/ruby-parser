@@ -183,7 +183,7 @@ mod tests {
     #[test]
     fn test_lhs_user_variable() {
         assert_parses!(
-            parse_mlhs,
+            Parser::parse_mlhs,
             b"a, b",
             r#"
 s(:begin,
@@ -196,7 +196,7 @@ s(:begin,
     #[test]
     fn test_lhs_parenthesized() {
         assert_parses!(
-            parse_mlhs,
+            Parser::parse_mlhs,
             b"((a))",
             r#"
 s(:begin,
@@ -209,7 +209,7 @@ s(:begin,
     #[test]
     fn test_mlhs_without_parens() {
         assert_parses!(
-            parse_mlhs,
+            Parser::parse_mlhs,
             b"a, *b, c",
             r#"
 s(:begin,
@@ -224,7 +224,7 @@ s(:begin,
     #[test]
     fn test_mlhs_with_parens() {
         assert_parses!(
-            parse_mlhs,
+            Parser::parse_mlhs,
             b"((*a), @b, $c)",
             r#"
 s(:begin,
@@ -239,6 +239,6 @@ s(:begin,
 
     #[test]
     fn test_nameless_splat() {
-        assert_parses!(parse_mlhs, b"*", "s(:splat)");
+        assert_parses!(Parser::parse_mlhs, b"*", "s(:splat)");
     }
 }

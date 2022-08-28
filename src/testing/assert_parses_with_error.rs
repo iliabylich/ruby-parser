@@ -1,11 +1,11 @@
 #[cfg(test)]
 macro_rules! assert_parses_with_error {
-    ($f:ident, $src:expr, $expected:literal) => {{
+    ($f:expr, $src:expr, $expected:literal) => {{
         use crate::parser::Parser;
 
         let src: &[u8] = $src;
         let mut parser = Parser::new(src).debug();
-        let result = parser.$f();
+        let result = $f(&mut parser);
 
         match result {
             Ok(value) => panic!("expected Err(...), got Ok({:?})", value),
@@ -17,12 +17,12 @@ macro_rules! assert_parses_with_error {
 
         parser
     }};
-    ($f:ident, $src:expr) => {{
+    ($f:expr, $src:expr) => {{
         use crate::parser::Parser;
 
         let src: &[u8] = $src;
         let mut parser = Parser::new(src).debug();
-        let result = parser.$f();
+        let result = $f(&mut parser);
         assert!(
             result.is_err(),
             "expected to get an error, got\n{}",

@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn test_regexp() {
         assert_parses!(
-            parse_regexp,
+            Parser::parse_regexp,
             b"/foo/",
             r#"
 s(:regexp,
@@ -88,7 +88,7 @@ s(:regexp,
     #[test]
     fn test_regexp_with_options() {
         assert_parses!(
-            parse_regexp,
+            Parser::parse_regexp,
             b"/foo/mix",
             r#"
 s(:regexp,
@@ -101,7 +101,7 @@ s(:regexp,
     #[test]
     fn test_regexp_percent() {
         assert_parses!(
-            parse_regexp,
+            Parser::parse_regexp,
             b"%r{foo}",
             r#"
 s(:regexp,

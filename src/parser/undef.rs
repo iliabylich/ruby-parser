@@ -34,7 +34,7 @@ fn parse_names(parser: &mut Parser) -> ParseResult<Vec<Node>> {
 fn test_undef() {
     use crate::testing::assert_parses;
     assert_parses!(
-        parse_undef,
+        Parser::parse_undef,
         b"undef a, :b, c",
         r#"
 s(:undef,

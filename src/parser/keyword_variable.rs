@@ -66,39 +66,43 @@ mod tests {
 
     #[test]
     fn test_nil() {
-        assert_parses!(parse_keyword_variable, b"nil", "s(:nil)");
+        assert_parses!(Parser::parse_keyword_variable, b"nil", "s(:nil)");
     }
 
     #[test]
     fn test_self() {
-        assert_parses!(parse_keyword_variable, b"self", "s(:self)");
+        assert_parses!(Parser::parse_keyword_variable, b"self", "s(:self)");
     }
 
     #[test]
     fn test_true() {
-        assert_parses!(parse_keyword_variable, b"true", "s(:true)");
+        assert_parses!(Parser::parse_keyword_variable, b"true", "s(:true)");
     }
 
     #[test]
     fn test_false() {
-        assert_parses!(parse_keyword_variable, b"false", "s(:false)");
+        assert_parses!(Parser::parse_keyword_variable, b"false", "s(:false)");
     }
 
     #[test]
     #[allow(non_snake_case)]
     fn test__file__() {
-        assert_parses!(parse_keyword_variable, b"__FILE__", "s(:__FILE__)");
+        assert_parses!(Parser::parse_keyword_variable, b"__FILE__", "s(:__FILE__)");
     }
 
     #[test]
     #[allow(non_snake_case)]
     fn test__line__() {
-        assert_parses!(parse_keyword_variable, b"__LINE__", "s(:__LINE__)");
+        assert_parses!(Parser::parse_keyword_variable, b"__LINE__", "s(:__LINE__)");
     }
 
     #[test]
     #[allow(non_snake_case)]
     fn test__encoding__() {
-        assert_parses!(parse_keyword_variable, b"__ENCODING__", "s(:__ENCODING__)");
+        assert_parses!(
+            Parser::parse_keyword_variable,
+            b"__ENCODING__",
+            "s(:__ENCODING__)"
+        );
     }
 }

@@ -46,7 +46,7 @@ mod tests {
     #[test]
     fn test_for_lhs() {
         assert_parses!(
-            parse_for_loop,
+            Parser::parse_for_loop,
             b"for a in 1 do; 2; end",
             r#"
 s(:for,
@@ -60,7 +60,7 @@ s(:for,
     #[test]
     fn test_for_mlhs() {
         assert_parses!(
-            parse_for_loop,
+            Parser::parse_for_loop,
             b"for (a, b) in 1 do; 2; end",
             r#"
 s(:for,

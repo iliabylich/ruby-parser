@@ -103,18 +103,18 @@ mod tests {
 
     #[test]
     fn test_char() {
-        assert_parses!(parse_strings, b"?\\u0001", "s(:str, \"\\u{1}\")")
+        assert_parses!(Parser::parse_strings, b"?\\u0001", "s(:str, \"\\u{1}\")")
     }
 
     #[test]
     fn test_string1_plain() {
-        assert_parses!(parse_strings, b"'foo'", "s(:str, \"foo\")");
+        assert_parses!(Parser::parse_strings, b"'foo'", "s(:str, \"foo\")");
     }
 
     #[test]
     fn test_string1_interp() {
         assert_parses!(
-            parse_strings,
+            Parser::parse_strings,
             b"\"foo #{42} #@bar\"",
             r#"
 s(:dstr,

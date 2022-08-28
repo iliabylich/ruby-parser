@@ -359,10 +359,18 @@ impl Parser {
         Ok(args)
     }
     fn parse_mrhs_arg(&mut self) -> ParseResult<Box<Node>> {
-        todo!("parser.parse_mrhs_arg")
+        one_of!(
+            "mrhs",
+            checkpoint = self.new_checkpoint(),
+            {
+                let args = self.parse_mrhs()?;
+                Ok(Builder::array(None, args, None))
+            },
+            self.parse_arg_value(),
+        )
     }
     fn parse_mrhs(&mut self) -> ParseResult<Vec<Node>> {
-        todo!("parser.parse_mrhs")
+        self.parse_args()
     }
     fn parse_k_begin(&mut self) -> ParseResult<Token> {
         todo!("parser.parse_k_begin")
