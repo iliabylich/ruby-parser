@@ -38,7 +38,7 @@ impl Parser {
             checkpoint = self.new_checkpoint(),
             self.parse_user_variable(),
             self.parse_keyword_variable(),
-            self.try_back_ref(),
+            self.parse_back_ref(),
             {
                 let (colon2_t, name_t) = self.parse_colon2_const()?;
                 Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
@@ -48,7 +48,7 @@ impl Parser {
                     "primary call_op [const/tIDENT]",
                     self.parse_primary_value(),
                     self.parse_call_op2(),
-                    self.try_const_or_identifier(),
+                    self.parse_const_or_identifier(),
                 )?;
 
                 panic!(

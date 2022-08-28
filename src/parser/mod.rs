@@ -561,7 +561,7 @@ impl Parser {
     }
 
     fn parse_literal(&mut self) -> ParseResult<Box<Node>> {
-        one_of!("literal", self.try_numeric(), self.parse_symbol(),)
+        one_of!("literal", self.parse_numeric(), self.parse_symbol(),)
     }
     fn parse_nonlocal_var(&mut self) {
         todo!("parser.parse_nonlocal_var")
@@ -569,11 +569,11 @@ impl Parser {
     fn parse_user_variable(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "user variable",
-            self.try_lvar(),
-            self.try_ivar(),
-            self.try_gvar(),
-            self.try_t_const(),
-            self.try_cvar(),
+            self.parse_lvar(),
+            self.parse_ivar(),
+            self.parse_gvar(),
+            self.parse_t_const(),
+            self.parse_cvar(),
         )
     }
     fn parse_var_ref(&mut self) -> ParseResult<Box<Node>> {

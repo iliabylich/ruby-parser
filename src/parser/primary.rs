@@ -22,7 +22,7 @@ impl Parser {
             self.parse_symbols(),
             self.parse_qsymbols(),
             self.parse_var_ref(),
-            self.try_back_ref(),
+            self.parse_back_ref(),
             {
                 let id_t = self.try_token(TokenKind::tFID)?;
 

@@ -34,12 +34,12 @@ fn parse_fitem_fitem(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)>
 fn parse_gvar_gvar(parser: &mut Parser) -> ParseResult<(Box<Node>, Box<Node>)> {
     all_of!(
         "gvar -> [gvar | back ref | nth ref]",
-        parser.try_gvar(),
+        parser.parse_gvar(),
         one_of!(
             "gvar rhs",
-            parser.try_gvar(),
-            parser.try_back_ref(),
-            parser.try_nth_ref(),
+            parser.parse_gvar(),
+            parser.parse_back_ref(),
+            parser.parse_nth_ref(),
         ),
     )
 }

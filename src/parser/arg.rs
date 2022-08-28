@@ -205,7 +205,7 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
         {
             let (lhs, op_t, rhs) = all_of!(
                 "backref tOP_ASGN arg_rhs",
-                parser.try_back_ref(),
+                parser.parse_back_ref(),
                 parser.expect_token(TokenKind::tOP_ASGN),
                 parse_arg_rhs(parser),
             )?;
@@ -216,7 +216,7 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
             let (minus_t, lhs, op_t, rhs) = all_of!(
                 "tUMINUS_NUM simple_numeric tPOW arg",
                 parser.try_token(TokenKind::tUMINUS_NUM),
-                parser.try_simple_numeric(),
+                parser.parse_simple_numeric(),
                 parser.expect_token(TokenKind::tPOW),
                 parser.parse_arg(),
             )?;

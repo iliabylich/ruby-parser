@@ -89,10 +89,10 @@ impl Parser {
     fn parse_string_dvar(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "string_dvar",
-            self.try_gvar(),
-            self.try_ivar(),
-            self.try_cvar(),
-            self.try_back_ref(),
+            self.parse_gvar(),
+            self.parse_ivar(),
+            self.parse_cvar(),
+            self.parse_back_ref(),
         )
     }
 }

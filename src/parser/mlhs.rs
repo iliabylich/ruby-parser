@@ -124,7 +124,7 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
         checkpoint = parser.new_checkpoint(),
         parser.parse_user_variable(),
         parser.parse_keyword_variable(),
-        parser.try_back_ref(),
+        parser.parse_back_ref(),
         {
             let (colon2_t, name_t) = parser.parse_colon2_const()?;
             Ok(Builder::const_global(colon2_t, name_t, parser.buffer()))
@@ -134,7 +134,7 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 "primary call_op [const/tIDENT]",
                 parser.parse_primary_value(),
                 parser.parse_call_op(),
-                parser.try_const_or_identifier(),
+                parser.parse_const_or_identifier(),
             )?;
 
             panic!(
@@ -147,7 +147,7 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
                 "priamay :: [const/tIDENT",
                 parser.parse_primary_value(),
                 parser.expect_token(TokenKind::tCOLON2),
-                parser.try_const_or_identifier(),
+                parser.parse_const_or_identifier(),
             )?;
 
             panic!(
