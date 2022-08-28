@@ -21,3 +21,6 @@ pub(crate) use handle_line_continuation::handle_line_continuation;
 
 mod handle_escaped_start_or_end;
 pub(crate) use handle_escaped_start_or_end::handle_escaped_start_or_end;
+
+mod handle_word_separator;
+pub(crate) use handle_word_separator::handle_word_separator;

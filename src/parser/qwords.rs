@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        macros::{all_of, maybe, separated_by},
+        ParseResult, Parser,
+    },
     token::TokenKind,
     Node,
 };
@@ -19,16 +22,19 @@ impl Parser {
 
     // This rule can be `None`
     fn parse_qword_list(&mut self) -> ParseResult<Vec<Node>> {
-        let mut result = vec![];
-        loop {
-            if let Ok(string_t) = self.try_token(TokenKind::tSTRING_CONTENT) {
-                let node = Builder::string_internal(string_t, self.buffer());
-                result.push(*node);
-            } else {
-                break;
-            }
+        let qword_list = maybe!(separated_by!(
+            "qword list",
+            checkpoint = self.new_checkpoint(),
+            item = self
+                .try_token(TokenKind::tSTRING_CONTENT)
+                .map(|token| Builder::string_internal(token, self.buffer())),
+            sep = self.try_token(TokenKind::tSP)
+        ))?;
+
+        match qword_list {
+            Some((qword_list, _spaces)) => Ok(qword_list),
+            None => Ok(vec![]),
         }
-        Ok(result)
     }
 }
 
@@ -37,7 +43,20 @@ mod tests {
     use crate::testing::assert_parses;
 
     #[test]
+    fn test_qwords_empty() {
+        assert_parses!(parse_qwords, b"%w[]", "s(:array)")
+    }
+
+    #[test]
     fn test_qwords() {
-        assert_parses!(parse_qwords, b"%w[foo bar]", "TODO")
+        assert_parses!(
+            parse_qwords,
+            b"%w[foo bar]",
+            r#"
+s(:array,
+  s(:str, "foo"),
+  s(:str, "bar"))
+            "#
+        )
     }
 }

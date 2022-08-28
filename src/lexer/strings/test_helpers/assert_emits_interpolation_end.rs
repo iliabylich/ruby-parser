@@ -29,6 +29,7 @@ macro_rules! assert_ignores_interpolation_end {
                 match literal {
                     StringLiteral::StringPlain(_) => {}
                     StringLiteral::SymbolPlain(_) => {}
+                    StringLiteral::WordsPlain(_) => {}
                     _ => panic!(
                         "{:?} DOES support Interpolation, the test makes no sense",
                         literal
