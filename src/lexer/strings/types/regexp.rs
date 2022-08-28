@@ -145,6 +145,16 @@ mod tests {
 
     // interpolation VALUE handling
     assert_emits_interpolated_value!(dummy_literal());
+    // "#$ "
+    // this test is not a part of the generic interpolation testing
+    // because WordsInterp lexer treats trailing " " as a word separator
+    assert_emits_1_token_and_then_eof!(
+        test = test_interp_raw_gvar_no_id,
+        literal = dummy_literal(),
+        input = b"#$ ",
+        token = token!(tSTRING_CONTENT, loc!(0, 3)),
+        pre = |_| {}
+    );
 
     // literal end handling
     assert_emits_string_end!(literal = literal(b'{', b'}'), begin = '{', end = '}');

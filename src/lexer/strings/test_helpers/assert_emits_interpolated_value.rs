@@ -122,15 +122,6 @@ macro_rules! assert_emits_interpolated_value {
             token = token!(tSTRING_CONTENT, loc!(0, 2)),
             pre = |_| {}
         );
-
-        // "#$ "
-        assert_emits_1_token_and_then_eof!(
-            test = test_interp_raw_gvar_no_id,
-            literal = $literal,
-            input = b"#$ ",
-            token = token!(tSTRING_CONTENT, loc!(0, 3)),
-            pre = |_| {}
-        );
     };
 }
 pub(crate) use assert_emits_interpolated_value;

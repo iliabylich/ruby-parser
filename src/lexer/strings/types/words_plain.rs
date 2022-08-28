@@ -67,7 +67,7 @@ mod tests {
     }
 
     fn dummy_literal() -> StringLiteral {
-        literal(b'\'', b'\'')
+        literal(b'[', b']')
     }
 
     // EOF handling

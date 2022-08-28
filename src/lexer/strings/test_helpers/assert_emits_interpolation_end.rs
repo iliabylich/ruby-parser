@@ -9,6 +9,7 @@ macro_rules! assert_emits_interpolation_end {
                 match literal {
                     StringLiteral::StringInterp(string) => string.enable_interpolation(),
                     StringLiteral::SymbolInterp(string) => string.enable_interpolation(),
+                    StringLiteral::WordsInterp(string) => string.enable_interpolation(),
                     StringLiteral::Regexp(regexp) => regexp.enable_interpolation(),
                     _ => panic!("String literal {:?} doesn't embed Interpolation", literal),
                 };
