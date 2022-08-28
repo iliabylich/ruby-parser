@@ -194,7 +194,7 @@ fn parse_assignment(parser: &mut Parser) -> ParseResult<Box<Node>> {
                                 parser.parse_const_or_identifier(),
                             )?;
                             panic!(
-                                "primary_value call_op tIDENT {:?} {:?} {:?}",
+                                "primary_value call_op tIDENTIFIER {:?} {:?} {:?}",
                                 primary_value, op_t, id_t
                             )
                         },

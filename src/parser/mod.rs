@@ -14,6 +14,7 @@ mod macros;
 
 mod alias;
 mod arg;
+mod args;
 mod array;
 mod case;
 mod class;
@@ -307,12 +308,6 @@ impl Parser {
     fn parse_rel_expr(&mut self) {
         todo!("parser.parse_rel_expr")
     }
-    fn parse_paren_args(&mut self) -> ParseResult<Vec<Node>> {
-        todo!("parser.parse_paren_args")
-    }
-    fn parse_opt_paren_args(&mut self) -> ParseResult<Vec<Node>> {
-        todo!("parser.parse_opt_paren_args")
-    }
     fn parse_block_arg(&mut self) -> ParseResult<Box<Node>> {
         one_of!(
             "block_arg",
@@ -416,9 +411,6 @@ impl Parser {
     }
     fn parse_f_any_kwrest(&mut self) {
         todo!("parser.parse_f_any_kwrest")
-    }
-    fn parse_f_eq(&mut self) {
-        todo!("parser.parse_f_eq")
     }
     fn parse_block_args_tail(&mut self) {
         todo!("parser.parse_block_args_tail")
@@ -602,38 +594,20 @@ impl Parser {
     fn try_f_opt_paren_args(&mut self) -> ParseResult<Option<Box<Node>>> {
         todo!("parser.try_f_opt_paren_args")
     }
-    fn parse_f_paren_args(&mut self) {
-        todo!("parser.parse_f_paren_args")
-    }
     fn parse_args_tail(&mut self) {
         todo!("parser.parse_args_tail")
     }
     fn parse_opt_args_tail(&mut self) {
         todo!("parser.parse_opt_args_tail")
     }
-    fn parse_f_args(&mut self) {
-        todo!("parser.parse_f_args")
-    }
-    fn parse_args_forward(&mut self) {
-        todo!("parser.parse_args_forward")
-    }
-    fn parse_f_bad_arg(&mut self) {
-        todo!("parser.parse_f_bad_arg")
-    }
-    fn parse_f_norm_arg(&mut self) {
-        todo!("parser.parse_f_norm_arg")
-    }
-    fn parse_f_arg_asgn(&mut self) {
-        todo!("parser.parse_f_arg_asgn")
+    fn parse_args_forward(&mut self) -> ParseResult<Token> {
+        self.expect_token(TokenKind::tBDOT3)
     }
     fn parse_f_arg_item(&mut self) {
         todo!("parser.parse_f_arg_item")
     }
     fn parse_f_arg(&mut self) {
         todo!("parser.parse_f_arg")
-    }
-    fn parse_f_label(&mut self) {
-        todo!("parser.parse_f_label")
     }
     fn parse_f_kw(&mut self) {
         todo!("parser.parse_f_kw")

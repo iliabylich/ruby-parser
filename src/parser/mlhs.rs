@@ -131,20 +131,20 @@ fn parse_mlhs_node(parser: &mut Parser) -> ParseResult<Box<Node>> {
         },
         {
             let (primary_value, op_t, id_t) = all_of!(
-                "primary call_op [const/tIDENT]",
+                "primary call_op [const/tIDENTIFIER]",
                 parser.parse_primary_value(),
                 parser.parse_call_op(),
                 parser.parse_const_or_identifier(),
             )?;
 
             panic!(
-                "primary_value call_op tIDENT {:?} {:?} {:?}",
+                "primary_value call_op tIDENTIFIER {:?} {:?} {:?}",
                 primary_value, op_t, id_t
             )
         },
         {
             let (primary_value, colon2_t, const_t) = all_of!(
-                "priamay :: [const/tIDENT",
+                "priamay :: [const/tIDENTIFIER",
                 parser.parse_primary_value(),
                 parser.expect_token(TokenKind::tCOLON2),
                 parser.parse_const_or_identifier(),

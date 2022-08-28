@@ -45,14 +45,14 @@ impl Parser {
             },
             {
                 let (primary_value, op_t, id_t) = all_of!(
-                    "primary call_op [const/tIDENT]",
+                    "primary call_op [const/tIDENTIFIER]",
                     self.parse_primary_value(),
                     self.parse_call_op2(),
                     self.parse_const_or_identifier(),
                 )?;
 
                 panic!(
-                    "primary_value call_op tIDENT {:?} {:?} {:?}",
+                    "primary_value call_op tIDENTIFIER {:?} {:?} {:?}",
                     primary_value, op_t, id_t
                 )
             },

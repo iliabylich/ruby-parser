@@ -1,4 +1,5 @@
 use crate::{
+    builder::Builder,
     parser::{
         macros::{all_of, one_of},
         ParseResult, Parser,
@@ -12,37 +13,8 @@ impl Parser {
         one_of!(
             "method definition",
             checkpoint = self.new_checkpoint(),
-            {
-                let ((def_t, name_t), args, body, end_t) = all_of!(
-                    "instance method definition",
-                    self.parse_defn_head(),
-                    parse_f_arglist(self),
-                    self.try_bodystmt(),
-                    self.parse_k_end(),
-                )?;
-
-                todo!("{:?} {:?} {:?} {:?} {:?}", def_t, name_t, args, body, end_t)
-            },
-            {
-                let ((def_t, singleton, op_t, name_t), args, body, end_t) = all_of!(
-                    "singleton method definition",
-                    self.parse_defs_head(),
-                    parse_f_arglist(self),
-                    self.try_bodystmt(),
-                    self.parse_k_end(),
-                )?;
-
-                todo!(
-                    "{:?} {:?} {:?} {:?} {:?} {:?} {:?}",
-                    def_t,
-                    singleton,
-                    op_t,
-                    name_t,
-                    args,
-                    body,
-                    end_t
-                )
-            },
+            parse_instance_method_definition(self),
+            parse_singleton_method_definition(self),
         )
     }
 
@@ -65,12 +37,61 @@ impl Parser {
     }
 }
 
+fn parse_instance_method_definition(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let ((def_t, name_t), args, body, end_t) = all_of!(
+        "instance method definition",
+        parser.parse_defn_head(),
+        try_f_arglist(parser),
+        parser.try_bodystmt(),
+        parser.parse_k_end(),
+    )?;
+
+    Ok(Builder::def_method(
+        def_t,
+        name_t,
+        args,
+        body,
+        end_t,
+        parser.buffer(),
+    ))
+}
+
+fn parse_singleton_method_definition(parser: &mut Parser) -> ParseResult<Box<Node>> {
+    let ((def_t, definee, dot_t, name_t), args, body, end_t) = all_of!(
+        "singleton method definition",
+        parser.parse_defs_head(),
+        try_f_arglist(parser),
+        parser.try_bodystmt(),
+        parser.parse_k_end(),
+    )?;
+
+    Ok(Builder::def_singleton(
+        def_t,
+        definee,
+        dot_t,
+        name_t,
+        args,
+        body,
+        end_t,
+        parser.buffer(),
+    ))
+}
+
 fn parse_k_def(parser: &mut Parser) -> ParseResult<Token> {
     parser.try_token(TokenKind::kDEF)
 }
 
-fn parse_f_arglist(_parser: &mut Parser) -> ParseResult<Box<Node>> {
-    todo!("parser.parse_f_arglist")
+fn try_f_arglist(parser: &mut Parser) -> ParseResult<Option<Box<Node>>> {
+    one_of!(
+        "f_arglist",
+        checkpoint = parser.new_checkpoint(),
+        parser.parse_f_paren_args(),
+        {
+            let (f_args, _term) =
+                all_of!("f_args term", parser.parse_f_args(), parser.parse_term(),)?;
+            Ok(Builder::args(None, f_args, None))
+        },
+    )
 }
 
 fn parse_singleton(parser: &mut Parser) -> ParseResult<Box<Node>> {
@@ -88,4 +109,35 @@ fn parse_singleton(parser: &mut Parser) -> ParseResult<Box<Node>> {
             todo!("{:?} {:?} {:?}", lparen_t, expr, rparen_t)
         },
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_instance_method_definition, parse_singleton_method_definition};
+    use crate::testing::assert_parses;
+
+    #[test]
+    fn test_instance_method_def() {
+        assert_parses!(
+            parse_instance_method_definition,
+            b"def foo; 42; end",
+            r#"
+s(:def, "foo", nil,
+  s(:int, "42"))
+            "#
+        )
+    }
+
+    #[test]
+    fn test_singleton_method_def() {
+        assert_parses!(
+            parse_singleton_method_definition,
+            b"def self.foo; 42; end",
+            r#"
+s(:defs,
+  s(:self), "foo", nil,
+  s(:int, "42"))
+            "#
+        )
+    }
 }
