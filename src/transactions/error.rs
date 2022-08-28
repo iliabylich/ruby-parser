@@ -86,30 +86,9 @@ impl ParseError {
     }
 }
 
-// into_required
-impl ParseError {
-    pub(crate) fn make_required(&mut self) {
-        match self {
-            ParseError::TokenError { lookahead, .. } => {
-                *lookahead = false;
-            }
-            ParseError::OneOfError { variants, .. } => {
-                variants.iter_mut().for_each(|e| e.make_required());
-            }
-            ParseError::SeqError { error, .. } => {
-                error.make_required();
-            }
-        }
-    }
-
-    // pub(crate) fn into_required(mut self) -> Self {
-    //     self.make_required();
-    //     self
-    // }
-}
-
 // weight
 impl ParseError {
+    #[cfg(test)]
     pub(crate) fn weight(&self) -> usize {
         match self {
             Self::TokenError { .. } => 0,

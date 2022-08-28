@@ -114,6 +114,7 @@ impl Lexer {
         tokens
     }
 
+    #[allow(dead_code)]
     pub(crate) fn require_new_expr(&mut self) {
         *self.required_new_expr_mut() = true;
     }
