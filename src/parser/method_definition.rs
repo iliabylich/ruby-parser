@@ -100,13 +100,15 @@ fn parse_singleton(parser: &mut Parser) -> ParseResult<Box<Node>> {
         checkpoint = parser.new_checkpoint(),
         parser.parse_var_ref(),
         {
-            let (lparen_t, expr, rparen_t) = all_of!(
+            let (_lparen_t, expr, _rparen_t) = all_of!(
                 "(expr)",
                 parser.try_token(TokenKind::tLPAREN),
                 parser.parse_expr(),
                 parser.parse_rparen(),
             )?;
-            todo!("{:?} {:?} {:?}", lparen_t, expr, rparen_t)
+            // TODO: check value_expr
+
+            Ok(expr)
         },
     )
 }
@@ -136,6 +138,19 @@ s(:def, "foo", nil,
             r#"
 s(:defs,
   s(:self), "foo", nil,
+  s(:int, "42"))
+            "#
+        )
+    }
+
+    #[test]
+    fn test_singleton_method_def_on_expr() {
+        assert_parses!(
+            parse_singleton_method_definition,
+            b"def (foo).bar; 42; end",
+            r#"
+s(:defs,
+  s(:lvar, "foo"), "bar", nil,
   s(:int, "42"))
             "#
         )
