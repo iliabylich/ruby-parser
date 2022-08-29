@@ -366,9 +366,6 @@ impl Parser {
     fn parse_mrhs(&mut self) -> ParseResult<Vec<Node>> {
         self.parse_args()
     }
-    fn parse_k_begin(&mut self) -> ParseResult<Token> {
-        todo!("parser.parse_k_begin")
-    }
     fn parse_k_do(&mut self) -> ParseResult<Token> {
         self.try_token(TokenKind::kDO)
     }

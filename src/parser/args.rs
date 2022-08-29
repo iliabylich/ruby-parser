@@ -24,7 +24,7 @@ impl Parser {
                 Ok((lparen_t, args, rparen_t))
             },
             {
-                let (lparen_t, args, _comma_t, args_forward, rparen_t) = all_of!(
+                let (lparen_t, mut args, _comma_t, args_forward_t, rparen_t) = all_of!(
                     "tLPAREN2 args tCOMMA args_forward rparen",
                     self.try_token(TokenKind::tLPAREN),
                     self.parse_args(),
@@ -32,28 +32,29 @@ impl Parser {
                     self.parse_args_forward(),
                     self.parse_rparen(),
                 )?;
-                todo!(
-                    "{:?} {:?} {:?} {:?}",
-                    lparen_t,
-                    args,
-                    args_forward,
-                    rparen_t
-                )
+
+                let forwarded_args = Builder::forwarded_args(args_forward_t);
+                args.push(*forwarded_args);
+
+                Ok((lparen_t, args, rparen_t))
             },
             {
-                let (lparen_t, args_forward, rparen_t) = all_of!(
+                let (lparen_t, args_forward_t, rparen_t) = all_of!(
                     "tLPAREN2 args_forward rparen",
                     self.try_token(TokenKind::tLPAREN),
                     self.parse_args_forward(),
                     self.parse_rparen(),
                 )?;
-                todo!("{:?} {:?} {:?}", lparen_t, args_forward, rparen_t)
+
+                let forwarded_args = Builder::forwarded_args(args_forward_t);
+                let args = vec![*forwarded_args];
+                Ok((lparen_t, args, rparen_t))
             },
         )
     }
 
     pub(crate) fn parse_opt_paren_args(&mut self) -> ParseResult<Option<ParenArgs>> {
-        todo!("parser.parse_opt_paren_args")
+        maybe!(self.parse_paren_args())
     }
 
     pub(crate) fn parse_f_paren_args(&mut self) -> ParseResult<Option<Box<Node>>> {
