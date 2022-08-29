@@ -48,7 +48,7 @@ impl OnByte<b'*'> for Lexer {
                         self.skip_byte();
                         token!(tOP_ASGN, loc!(start, start + 3))
                     }
-                    _ => token!(tPOW, loc!(start, start + 2)),
+                    _ => token!(tDSTAR, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
@@ -70,9 +70,9 @@ fn test_tOP_ASGN_STAR() {
     assert_lex!(b"*=", token!(tOP_ASGN, loc!(0, 2)));
 }
 #[test]
-fn test_tPOW() {
+fn test_tDSTAR() {
     use crate::testing::assert_lex;
-    assert_lex!(b"**", token!(tPOW, loc!(0, 2)));
+    assert_lex!(b"**", token!(tDSTAR, loc!(0, 2)));
 }
 #[test]
 fn test_tOP_ASGN_DSTAR() {

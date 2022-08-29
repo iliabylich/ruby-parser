@@ -50,7 +50,7 @@ impl InspectVec {
 
     pub(crate) fn push_maybe_str(&mut self, string: &Option<StringContent>) {
         if let Some(string) = string.as_ref() {
-            self.strings.push(format!(", {:?}", string));
+            self.strings.push(format!(", {:?}", string.as_str()));
         }
     }
 

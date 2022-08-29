@@ -82,7 +82,7 @@ pub enum BinOp {
     tUMINUS,
 
     // %right, 19
-    tPOW,
+    tDSTAR,
 
     // %right, 20
     tBANG,
@@ -137,7 +137,7 @@ impl std::convert::TryFrom<TokenKind> for BinOp {
             TokenKind::tPERCENT => Ok(BinOp::tPERCENT),
             TokenKind::tUMINUS_NUM => Ok(BinOp::tUMINUS_NUM),
             TokenKind::tUMINUS => Ok(BinOp::tUMINUS),
-            TokenKind::tPOW => Ok(BinOp::tPOW),
+            TokenKind::tDSTAR => Ok(BinOp::tDSTAR),
             TokenKind::tBANG => Ok(BinOp::tBANG),
             TokenKind::tTILDE => Ok(BinOp::tTILDE),
             TokenKind::tUPLUS => Ok(BinOp::tUPLUS),
@@ -187,7 +187,7 @@ impl TokenKind {
             tPLUS | tMINUS => left_assoc!(16),
             tSTAR | tDIVIDE | tPERCENT => left_assoc!(17),
             tUMINUS_NUM | tUMINUS => right_assoc!(18),
-            tPOW => right_assoc!(19),
+            tDSTAR => right_assoc!(19),
             tBANG | tTILDE | tUPLUS => right_assoc!(20),
             _ => None,
         }

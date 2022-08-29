@@ -72,7 +72,7 @@ impl Parser {
             "f_args",
             checkpoint = self.new_checkpoint(),
             item = parse_arg(self),
-            sep = self.expect_token(TokenKind::tCOMMA)
+            sep = self.try_token(TokenKind::tCOMMA)
         ))?;
 
         match args {
@@ -157,6 +157,7 @@ fn blokarg(parser: &mut Parser) -> ParseResult<Box<Node>> {
 fn parse_f_bad_arg(parser: &mut Parser) -> ParseResult<Token> {
     one_of!(
         "f_bad_arg",
+        checkpoint = parser.new_checkpoint(),
         parser.try_token(TokenKind::tCONSTANT),
         parser.try_token(TokenKind::tIVAR),
         parser.try_token(TokenKind::tGVAR),
@@ -166,11 +167,16 @@ fn parse_f_bad_arg(parser: &mut Parser) -> ParseResult<Token> {
     // TODO: report diagnostic
 }
 fn parse_f_norm_arg(parser: &mut Parser) -> ParseResult<Token> {
-    one_of!("f_norm_arg", parse_f_bad_arg(parser), {
-        let ident_t = parser.try_token(TokenKind::tIDENTIFIER)?;
-        // TODO: declare var
-        Ok(ident_t)
-    },)
+    one_of!(
+        "f_norm_arg",
+        checkpoint = parser.new_checkpoint(),
+        parse_f_bad_arg(parser),
+        {
+            let ident_t = parser.try_token(TokenKind::tIDENTIFIER)?;
+            // TODO: declare var
+            Ok(ident_t)
+        },
+    )
 }
 fn parse_f_arg_asgn(parser: &mut Parser) -> ParseResult<Token> {
     let name_t = parse_f_norm_arg(parser)?;
@@ -187,4 +193,82 @@ fn parse_f_label(parser: &mut Parser) -> ParseResult<Token> {
     let label_t = parser.try_token(TokenKind::tLABEL)?;
     // TODO: declare var
     Ok(label_t)
+}
+
+#[cfg(test)]
+mod tests {
+    macro_rules! assert_parses_f_paren_args {
+        ($src:expr, $expected:expr) => {{
+            use crate::{
+                parser::{ParseResult, Parser},
+                Node,
+            };
+
+            let src: &[u8] = $src;
+            let mut parser = Parser::new(src).debug();
+            let parsed: ParseResult<Option<Box<Node>>> = parser.parse_f_paren_args();
+
+            let ast;
+            match parsed {
+                Ok(node) => ast = node,
+                Err(err) => {
+                    eprintln!("{}", err.render());
+                    panic!("expected Ok(node), got Err()")
+                }
+            }
+
+            let ast = match ast {
+                Some(ast) => ast,
+                None => {
+                    panic!("expected some AST to ber returned, got None")
+                }
+            };
+
+            let expected: &str = $expected;
+            dbg!(&ast);
+            assert_eq!(ast.inspect(0), expected.trim_start().trim_end());
+            assert!(parser.state.inner.buffer.is_eof())
+        }};
+    }
+
+    #[test]
+    fn test_paren_args_empty() {
+        assert_parses_f_paren_args!(b"()", "s(:args)")
+    }
+
+    #[test]
+    fn test_paren_args_full() {
+        assert_parses_f_paren_args!(
+            concat!(
+                "(",
+                "req1, req2,",
+                "opt1 = 1, opt2 = 2,",
+                "*rest,",
+                "kw1:, kw2:,",
+                "kwopt1: 3, kwopt2: 4,",
+                "**kwrest,",
+                "&blk",
+                ")"
+            )
+            .as_bytes(),
+            r#"
+s(:args,
+  s(:arg, "req1"),
+  s(:arg, "req2"),
+  s(:optarg, "opt1",
+    s(:int, "1")),
+  s(:optarg, "opt2",
+    s(:int, "2")),
+  s(:restarg, "rest"),
+  s(:kwarg, "kw1:"),
+  s(:kwarg, "kw2:"),
+  s(:kwoptarg, "kwopt1:",
+    s(:int, "3")),
+  s(:kwoptarg, "kwopt2:",
+    s(:int, "4")),
+  s(:kwrestarg, "kwrest"),
+  s(:blockarg, "blk"))
+            "#
+        )
+    }
 }

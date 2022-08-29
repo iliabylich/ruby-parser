@@ -245,7 +245,6 @@ impl Parser {
             self.try_token(TokenKind::tSTAR),
             self.try_token(TokenKind::tDIVIDE),
             self.try_token(TokenKind::tPERCENT),
-            self.try_token(TokenKind::tPOW),
             self.try_token(TokenKind::tDSTAR),
             self.try_token(TokenKind::tBANG),
             self.try_token(TokenKind::tTILDE),
@@ -602,60 +601,6 @@ impl Parser {
     }
     fn parse_args_forward(&mut self) -> ParseResult<Token> {
         self.expect_token(TokenKind::tBDOT3)
-    }
-    fn parse_f_arg_item(&mut self) {
-        todo!("parser.parse_f_arg_item")
-    }
-    fn parse_f_arg(&mut self) {
-        todo!("parser.parse_f_arg")
-    }
-    fn parse_f_kw(&mut self) {
-        todo!("parser.parse_f_kw")
-    }
-    fn parse_f_block_kw(&mut self) {
-        todo!("parser.parse_f_block_kw")
-    }
-    fn parse_f_block_kwarg(&mut self) {
-        todo!("parser.parse_f_block_kwarg")
-    }
-    fn parse_f_kwarg(&mut self) {
-        todo!("parser.parse_f_kwarg")
-    }
-    fn parse_kwrest_mark(&mut self) {
-        todo!("parser.parse_kwrest_mark")
-    }
-    fn parse_f_no_kwarg(&mut self) {
-        todo!("parser.parse_f_no_kwarg")
-    }
-    fn parse_f_kwrest(&mut self) {
-        todo!("parser.parse_f_kwrest")
-    }
-    fn parse_f_opt(&mut self) {
-        todo!("parser.parse_f_opt")
-    }
-    fn parse_f_block_opt(&mut self) {
-        todo!("parser.parse_f_block_opt")
-    }
-    fn parse_f_block_optarg(&mut self) {
-        todo!("parser.parse_f_block_optarg")
-    }
-    fn parse_f_optarg(&mut self) {
-        todo!("parser.parse_f_optarg")
-    }
-    fn parse_restarg_mark(&mut self) {
-        todo!("parser.parse_restarg_mark")
-    }
-    fn parse_f_rest_arg(&mut self) {
-        todo!("parser.parse_f_rest_arg")
-    }
-    fn parse_blkarg_mark(&mut self) {
-        todo!("parser.parse_blkarg_mark")
-    }
-    fn parse_f_block_arg(&mut self) {
-        todo!("parser.parse_f_block_arg")
-    }
-    fn parse_opt_f_block_arg(&mut self) {
-        todo!("parser.parse_opt_f_block_arg")
     }
     fn parse_operation(&mut self) -> ParseResult<Token> {
         one_of!(

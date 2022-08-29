@@ -214,10 +214,10 @@ fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
         },
         {
             let (minus_t, lhs, op_t, rhs) = all_of!(
-                "tUMINUS_NUM simple_numeric tPOW arg",
+                "tUMINUS_NUM simple_numeric tDSTAR arg",
                 parser.try_token(TokenKind::tUMINUS_NUM),
                 parser.parse_simple_numeric(),
-                parser.expect_token(TokenKind::tPOW),
+                parser.expect_token(TokenKind::tDSTAR),
                 parser.parse_arg(),
             )?;
 
@@ -412,7 +412,7 @@ fn parse_binary_or_postfix_operator(parser: &mut Parser) -> ParseResult<Token> {
         parser.expect_token(TokenKind::tSTAR),
         parser.expect_token(TokenKind::tDIVIDE),
         parser.expect_token(TokenKind::tPERCENT),
-        parser.expect_token(TokenKind::tPOW),
+        parser.expect_token(TokenKind::tDSTAR),
         parser.expect_token(TokenKind::tPIPE),
         parser.expect_token(TokenKind::tCARET),
         parser.expect_token(TokenKind::tAMPER),
@@ -457,7 +457,7 @@ fn build_binary_call(lhs: Box<Node>, op_t: Token, rhs: Box<Node>, buffer: &Buffe
         | TokenKind::tSTAR
         | TokenKind::tDIVIDE
         | TokenKind::tPERCENT
-        | TokenKind::tPOW
+        | TokenKind::tDSTAR
         | TokenKind::tPIPE
         | TokenKind::tCARET
         | TokenKind::tAMPER
