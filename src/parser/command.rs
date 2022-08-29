@@ -142,7 +142,7 @@ impl Parser {
     pub(crate) fn parse_brace_body(&mut self) -> ParseResult<(ArgsType, Option<Box<Node>>)> {
         let (args, body) = all_of!(
             "brace block body",
-            self.try_opt_block_param(),
+            self.parse_opt_block_param(),
             self.try_compstmt(),
         )?;
 

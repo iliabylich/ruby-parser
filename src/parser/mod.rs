@@ -5,7 +5,7 @@ use crate::nodes::Node;
 use crate::parser::macros::{all_of, maybe, one_of};
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
-use crate::transactions::{ParseError, ParseResult};
+pub(crate) use crate::transactions::{ParseError, ParseResult};
 
 use self::macros::separated_by;
 
@@ -416,24 +416,6 @@ impl Parser {
     }
     fn parse_excessed_comma(&mut self) {
         todo!("parser.parse_excessed_comma")
-    }
-    fn parse_block_param(&mut self) {
-        todo!("parser.parse_block_param")
-    }
-    fn try_opt_block_param(&mut self) -> ParseResult<Option<Box<Node>>> {
-        todo!("parser.parse_opt_block_param")
-    }
-    fn parse_block_param_def(&mut self) {
-        todo!("parser.parse_block_param_def")
-    }
-    fn parse_opt_bv_decl(&mut self) {
-        todo!("parser.parse_opt_bv_decl")
-    }
-    fn parse_bv_decls(&mut self) {
-        todo!("parser.parse_bv_decls")
-    }
-    fn parse_bvar(&mut self) {
-        todo!("parser.parse_bvar")
     }
     fn parse_lambda(&mut self) -> ParseResult<Box<Node>> {
         let (lambda_t, arglist, body) = all_of!(
