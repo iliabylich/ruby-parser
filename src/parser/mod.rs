@@ -317,11 +317,11 @@ impl Parser {
                     self.try_token(TokenKind::tAMPER),
                     self.parse_arg_value(),
                 )?;
-                todo!("{:?} {:?}", amper_t, arg_value)
+                Ok(Builder::block_pass(amper_t, Some(arg_value)))
             },
             {
                 let amper_t = self.try_token(TokenKind::tAMPER)?;
-                todo!("{:?}", amper_t)
+                Ok(Builder::block_pass(amper_t, None))
             },
         )
     }
@@ -338,7 +338,7 @@ impl Parser {
                         parser.try_token(TokenKind::tSTAR),
                         parser.parse_arg_value(),
                     )?;
-                    todo!("{:?} {:?}", star_t, arg_value)
+                    Ok(Builder::splat(star_t, arg_value))
                 },
                 parser.parse_arg_value(),
             )
@@ -470,9 +470,18 @@ impl Parser {
             "method call",
             checkpoint = self.new_checkpoint(),
             {
-                let (fcall, paren_args) =
+                let (fcall_t, (begin_t, args, end_t)) =
                     all_of!("fcall (args)", self.parse_fcall(), self.parse_paren_args(),)?;
-                todo!("{:?} {:?}", fcall, paren_args)
+
+                Ok(Builder::call_method(
+                    None,
+                    None,
+                    Some(fcall_t),
+                    Some(begin_t),
+                    args,
+                    Some(end_t),
+                    self.buffer(),
+                ))
             },
             {
                 let (primary_value, lbrack_t, opt_call_args, rbrack_t) = all_of!(
@@ -482,46 +491,58 @@ impl Parser {
                     self.parse_opt_call_args(),
                     self.parse_rbracket(),
                 )?;
-                todo!(
-                    "{:?} {:?} {:?} {:?}",
+
+                Ok(Builder::index(
                     primary_value,
                     lbrack_t,
                     opt_call_args,
-                    rbrack_t
-                )
+                    rbrack_t,
+                ))
             },
             {
-                let (primary_value, call_t, paren_args) = all_of!(
+                let (primary_value, call_t, (begin_t, args, end_t)) = all_of!(
                     "primary call_op2 paren_args",
                     self.parse_primary_value(),
                     self.parse_call_op2(),
                     self.parse_paren_args(),
                 )?;
-                todo!("{:?} {:?} {:?}", primary_value, call_t, paren_args)
+
+                Ok(Builder::call_method(
+                    Some(primary_value),
+                    Some(call_t),
+                    None,
+                    Some(begin_t),
+                    args,
+                    Some(end_t),
+                    self.buffer(),
+                ))
             },
             {
-                let (primary_value, call_t, op_t, opt_paren_args) = all_of!(
+                let (primary_value, call_t, op_t, (begin_t, args, end_t)) = all_of!(
                     "primary call_op2 operation2 opt_paren_args",
                     self.parse_primary_value(),
                     self.parse_call_op2(),
                     self.parse_operation2(),
                     self.parse_opt_paren_args(),
                 )?;
-                todo!(
-                    "{:?} {:?} {:?} {:?}",
-                    primary_value,
-                    call_t,
-                    op_t,
-                    opt_paren_args
-                )
+
+                Ok(Builder::call_method(
+                    Some(primary_value),
+                    Some(call_t),
+                    Some(op_t),
+                    begin_t,
+                    args,
+                    end_t,
+                    self.buffer(),
+                ))
             },
             {
-                let (super_t, paren_args) = all_of!(
+                let (super_t, (begin_t, args, end_t)) = all_of!(
                     "super(args)",
                     self.try_token(TokenKind::kSUPER),
                     self.parse_paren_args(),
                 )?;
-                todo!("{:?} {:?}", super_t, paren_args)
+                todo!("{:?} {:?} {:?} {:?}", super_t, begin_t, args, end_t)
             },
             {
                 let super_t = self.try_token(TokenKind::kSUPER)?;

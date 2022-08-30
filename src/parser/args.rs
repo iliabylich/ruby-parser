@@ -10,6 +10,7 @@ use crate::{
 };
 
 type ParenArgs = (Token, Vec<Node>, Token);
+type OptParenArgs = (Option<Token>, Vec<Node>, Option<Token>);
 
 impl Parser {
     pub(crate) fn parse_paren_args(&mut self) -> ParseResult<ParenArgs> {
@@ -55,8 +56,13 @@ impl Parser {
         )
     }
 
-    pub(crate) fn parse_opt_paren_args(&mut self) -> ParseResult<Option<ParenArgs>> {
-        maybe!(self.parse_paren_args())
+    pub(crate) fn parse_opt_paren_args(&mut self) -> ParseResult<OptParenArgs> {
+        let maybe_paren_args = maybe!(self.parse_paren_args())?;
+
+        match maybe_paren_args {
+            Some((begin_t, args, end_t)) => Ok((Some(begin_t), args, Some(end_t))),
+            None => Ok((None, vec![], None)),
+        }
     }
 
     pub(crate) fn parse_f_paren_args(&mut self) -> ParseResult<Option<Box<Node>>> {
@@ -209,7 +215,8 @@ fn parse_f_label(parser: &mut Parser) -> ParseResult<Token> {
 
 fn parse_block_param(parser: &mut Parser) -> ParseResult<Vec<Node>> {
     let args = parser.parse_f_args()?;
-    if args.len() == 1 && matches!(&args[0], Node::Arg(_)) {
+    let excessed_comma_t = parser.try_token(TokenKind::tCOMMA).ok();
+    if args.len() == 1 && matches!(&args[0], Node::Arg(_)) && excessed_comma_t.is_none() {
         // TODO: rewrite arg -> procarg0
     }
     Ok(args)
