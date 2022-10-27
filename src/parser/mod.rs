@@ -43,6 +43,7 @@ mod stmt;
 mod string;
 mod symbol;
 mod symbols;
+mod trivial;
 mod undef;
 mod variables;
 mod while_until;

@@ -44,9 +44,6 @@ pub enum TokenKind {
     kRETRY,        // `retry'
     kIN,           // `in'
     kDO,           // `do'
-    kDO_COND,      // `do' for condition
-    kDO_BLOCK,     // `do' for block
-    kDO_LAMBDA,    // `do' for lambda
     kRETURN,       // `return'
     kYIELD,        // `yield'
     kSUPER,        // `super'
