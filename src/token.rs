@@ -12,9 +12,9 @@ impl Token {
         self.kind == other
     }
 
-    pub fn is_one_of<const N: usize>(&self, others: [TokenKind; N]) -> bool {
+    pub fn is_one_of(&self, others: &'static [TokenKind]) -> bool {
         for other in others {
-            if self.is(other) {
+            if self.is(*other) {
                 return true;
             }
         }

@@ -1,12 +1,12 @@
 use crate::{Node, Token};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub(crate) enum CapturedItem {
     Node(Node),
     Token(Token),
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, PartialEq, Eq)]
 pub(crate) struct Captured {
     items: Vec<CapturedItem>,
 }
