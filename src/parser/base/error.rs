@@ -1,5 +1,6 @@
 use crate::parser::base::Captured;
 
+#[derive(Debug)]
 pub(crate) struct ParseError {
     pub(crate) error: (),
     pub(crate) captured: Captured,

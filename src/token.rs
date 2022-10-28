@@ -11,6 +11,16 @@ impl Token {
     pub fn is(&self, other: TokenKind) -> bool {
         self.kind == other
     }
+
+    pub fn is_one_of<const N: usize>(&self, others: [TokenKind; N]) -> bool {
+        for other in others {
+            if self.is(other) {
+                return true;
+            }
+        }
+
+        false
+    }
 }
 
 #[allow(non_camel_case_types)]

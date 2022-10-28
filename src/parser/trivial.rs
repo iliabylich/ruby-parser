@@ -1,193 +1,276 @@
+use crate::parser::base::{Captured, ParseError, ParseResult, Rule};
 use crate::{Parser, Token, TokenKind};
 
-impl Parser {
-    pub(crate) fn try_token2(&mut self, kind: TokenKind) -> Option<Token> {
-        if self.current_token().is(kind) {
-            let token = self.current_token();
-            self.skip_token();
-            Some(token)
+trait TokenBasedRule {
+    fn _starts_now(parser: &mut Parser) -> bool;
+}
+
+impl<T> Rule for T
+where
+    T: TokenBasedRule,
+{
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        Self::_starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.current_token())
         } else {
-            None
+            Err(ParseError {
+                error: (),
+                captured: Captured::default(),
+            })
         }
     }
+}
 
-    pub(crate) fn try_operation_t(&mut self) -> Option<Token> {
-        None.or_else(|| try_id_or_const_t(self))
-            .or_else(|| self.try_token2(TokenKind::tFID))
-    }
-
-    pub(crate) fn try_operation2_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_operation_t())
-            .or_else(|| try_op_t(self))
-    }
-
-    pub(crate) fn try_operation3_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token2(TokenKind::tIDENTIFIER))
-            .or_else(|| self.try_token2(TokenKind::tFID))
-            .or_else(|| try_op_t(self))
-    }
-
-    pub(crate) fn try_fname_t(&mut self) -> Option<Token> {
-        None.or_else(|| try_id_or_const_t(self))
-            .or_else(|| self.try_token2(TokenKind::tFID))
-            .or_else(|| try_op_t(self))
-            .or_else(|| try_reswods_t(self))
-    }
-
-    pub(crate) fn try_simple_numeric_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token2(TokenKind::tINTEGER))
-            .or_else(|| self.try_token2(TokenKind::tFLOAT))
-            .or_else(|| self.try_token2(TokenKind::tRATIONAL))
-            .or_else(|| self.try_token2(TokenKind::tIMAGINARY))
-    }
-
-    pub(crate) fn try_user_variable_t(&mut self) -> Option<Token> {
-        None.or_else(|| try_id_or_const_t(self))
-            .or_else(|| try_nonlocal_var_t(self))
-    }
-
-    pub(crate) fn try_keyword_variable_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token2(TokenKind::kNIL))
-            .or_else(|| self.try_token2(TokenKind::kSELF))
-            .or_else(|| self.try_token2(TokenKind::kTRUE))
-            .or_else(|| self.try_token2(TokenKind::kFALSE))
-            .or_else(|| self.try_token2(TokenKind::k__FILE__))
-            .or_else(|| self.try_token2(TokenKind::k__LINE__))
-            .or_else(|| self.try_token2(TokenKind::k__ENCODING__))
-    }
-
-    pub(crate) fn try_var_ref_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_user_variable_t())
-            .or_else(|| self.try_keyword_variable_t())
-    }
-
-    pub(crate) fn try_backref_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token2(TokenKind::tNTH_REF))
-            .or_else(|| self.try_token2(TokenKind::tBACK_REF))
-    }
-
-    pub(crate) fn try_cname_t(&mut self) -> Option<Token> {
-        try_id_or_const_t(self)
-    }
-
-    pub(crate) fn try_string_dvar_t(&mut self) -> Option<Token> {
-        None.or_else(|| try_nonlocal_var_t(self))
-            .or_else(|| self.try_fname_t())
-    }
-
-    pub(crate) fn try_sym_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_fname_t())
-            .or_else(|| try_nonlocal_var_t(self))
-    }
-
-    pub(crate) fn try_call_op_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token2(TokenKind::tDOT))
-            .or_else(|| self.try_token2(TokenKind::tANDDOT))
-    }
-
-    pub(crate) fn try_call_opt2_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_call_op_t())
-            .or_else(|| self.try_token2(TokenKind::tCOLON2))
-    }
-
-    pub(crate) fn try_method_name_t(&mut self) -> Option<Token> {
-        try_id_or_const_t(self)
-    }
-
-    pub(crate) fn try_do_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_term_t())
-            .or_else(|| self.try_token2(TokenKind::kDO))
-    }
-
-    pub(crate) fn try_term_t(&mut self) -> Option<Token> {
-        None.or_else(|| self.try_token2(TokenKind::tSEMI))
-            .or_else(|| self.try_token2(TokenKind::tNL))
+pub(crate) struct OperationT;
+impl TokenBasedRule for OperationT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tFID) || IdOrConstT::starts_now(parser)
     }
 }
 
-fn try_op_t(parser: &mut Parser) -> Option<Token> {
-    None.or_else(|| parser.try_token2(TokenKind::tPIPE))
-        .or_else(|| parser.try_token2(TokenKind::tCARET))
-        .or_else(|| parser.try_token2(TokenKind::tAMPER))
-        .or_else(|| parser.try_token2(TokenKind::tCMP))
-        .or_else(|| parser.try_token2(TokenKind::tEQ))
-        .or_else(|| parser.try_token2(TokenKind::tEQQ))
-        .or_else(|| parser.try_token2(TokenKind::tMATCH))
-        .or_else(|| parser.try_token2(TokenKind::tNMATCH))
-        .or_else(|| parser.try_token2(TokenKind::tGT))
-        .or_else(|| parser.try_token2(TokenKind::tGEQ))
-        .or_else(|| parser.try_token2(TokenKind::tLT))
-        .or_else(|| parser.try_token2(TokenKind::tLEQ))
-        .or_else(|| parser.try_token2(TokenKind::tNEQ))
-        .or_else(|| parser.try_token2(TokenKind::tLSHFT))
-        .or_else(|| parser.try_token2(TokenKind::tRSHFT))
-        .or_else(|| parser.try_token2(TokenKind::tPLUS))
-        .or_else(|| parser.try_token2(TokenKind::tMINUS))
-        .or_else(|| parser.try_token2(TokenKind::tSTAR))
-        .or_else(|| parser.try_token2(TokenKind::tSTAR))
-        .or_else(|| parser.try_token2(TokenKind::tDIVIDE))
-        .or_else(|| parser.try_token2(TokenKind::tPERCENT))
-        .or_else(|| parser.try_token2(TokenKind::tDSTAR))
-        .or_else(|| parser.try_token2(TokenKind::tBANG))
-        .or_else(|| parser.try_token2(TokenKind::tTILDE))
-        .or_else(|| parser.try_token2(TokenKind::tUPLUS))
-        .or_else(|| parser.try_token2(TokenKind::tUMINUS))
-        .or_else(|| parser.try_token2(TokenKind::tAREF))
-        .or_else(|| parser.try_token2(TokenKind::tASET))
-        .or_else(|| parser.try_token2(TokenKind::tBACK_REF))
+pub(crate) struct Operation2T;
+impl TokenBasedRule for Operation2T {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        OperationT::starts_now(parser) || OpT::starts_now(parser)
+    }
 }
 
-fn try_reswods_t(parser: &mut Parser) -> Option<Token> {
-    None.or_else(|| parser.try_token2(TokenKind::k__LINE__))
-        .or_else(|| parser.try_token2(TokenKind::k__FILE__))
-        .or_else(|| parser.try_token2(TokenKind::k__ENCODING__))
-        .or_else(|| parser.try_token2(TokenKind::klBEGIN))
-        .or_else(|| parser.try_token2(TokenKind::klEND))
-        .or_else(|| parser.try_token2(TokenKind::kALIAS))
-        .or_else(|| parser.try_token2(TokenKind::kAND))
-        .or_else(|| parser.try_token2(TokenKind::kBEGIN))
-        .or_else(|| parser.try_token2(TokenKind::kBREAK))
-        .or_else(|| parser.try_token2(TokenKind::kCASE))
-        .or_else(|| parser.try_token2(TokenKind::kCLASS))
-        .or_else(|| parser.try_token2(TokenKind::kDEF))
-        .or_else(|| parser.try_token2(TokenKind::kDEFINED))
-        .or_else(|| parser.try_token2(TokenKind::kDO))
-        .or_else(|| parser.try_token2(TokenKind::kELSE))
-        .or_else(|| parser.try_token2(TokenKind::kELSIF))
-        .or_else(|| parser.try_token2(TokenKind::kEND))
-        .or_else(|| parser.try_token2(TokenKind::kENSURE))
-        .or_else(|| parser.try_token2(TokenKind::kFALSE))
-        .or_else(|| parser.try_token2(TokenKind::kFOR))
-        .or_else(|| parser.try_token2(TokenKind::kIN))
-        .or_else(|| parser.try_token2(TokenKind::kMODULE))
-        .or_else(|| parser.try_token2(TokenKind::kNEXT))
-        .or_else(|| parser.try_token2(TokenKind::kNIL))
-        .or_else(|| parser.try_token2(TokenKind::kNOT))
-        .or_else(|| parser.try_token2(TokenKind::kOR))
-        .or_else(|| parser.try_token2(TokenKind::kREDO))
-        .or_else(|| parser.try_token2(TokenKind::kRESCUE))
-        .or_else(|| parser.try_token2(TokenKind::kRETRY))
-        .or_else(|| parser.try_token2(TokenKind::kRETURN))
-        .or_else(|| parser.try_token2(TokenKind::kSELF))
-        .or_else(|| parser.try_token2(TokenKind::kSUPER))
-        .or_else(|| parser.try_token2(TokenKind::kTHEN))
-        .or_else(|| parser.try_token2(TokenKind::kTRUE))
-        .or_else(|| parser.try_token2(TokenKind::kUNDEF))
-        .or_else(|| parser.try_token2(TokenKind::kWHEN))
-        .or_else(|| parser.try_token2(TokenKind::kYIELD))
-        .or_else(|| parser.try_token2(TokenKind::kIF))
-        .or_else(|| parser.try_token2(TokenKind::kUNLESS))
-        .or_else(|| parser.try_token2(TokenKind::kWHILE))
-        .or_else(|| parser.try_token2(TokenKind::kUNTIL))
+pub(crate) struct Operation3T;
+impl TokenBasedRule for Operation3T {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tIDENTIFIER, TokenKind::tFID])
+            || OpT::starts_now(parser)
+    }
 }
 
-fn try_nonlocal_var_t(parser: &mut Parser) -> Option<Token> {
-    None.or_else(|| parser.try_token2(TokenKind::tIVAR))
-        .or_else(|| parser.try_token2(TokenKind::tGVAR))
-        .or_else(|| parser.try_token2(TokenKind::tCVAR))
+pub(crate) struct FnameT;
+impl TokenBasedRule for FnameT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tFID)
+            || IdOrConstT::starts_now(parser)
+            || OpT::starts_now(parser)
+            || ReswordsT::starts_now(parser)
+    }
 }
 
-fn try_id_or_const_t(parser: &mut Parser) -> Option<Token> {
-    None.or_else(|| parser.try_token2(TokenKind::tIDENTIFIER))
-        .or_else(|| parser.try_token2(TokenKind::tCONSTANT))
+pub(crate) struct SimpleNumericT;
+impl TokenBasedRule for SimpleNumericT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::tINTEGER,
+            TokenKind::tFLOAT,
+            TokenKind::tRATIONAL,
+            TokenKind::tIMAGINARY,
+        ])
+    }
+}
+
+pub(crate) struct UserVariableT;
+impl TokenBasedRule for UserVariableT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        IdOrConstT::starts_now(parser) || NonLocalVarT::starts_now(parser)
+    }
+}
+
+pub(crate) struct KeywordVariableT;
+impl TokenBasedRule for KeywordVariableT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::kNIL,
+            TokenKind::kSELF,
+            TokenKind::kTRUE,
+            TokenKind::kFALSE,
+            TokenKind::k__FILE__,
+            TokenKind::k__LINE__,
+            TokenKind::k__ENCODING__,
+        ])
+    }
+}
+
+pub(crate) struct VarRefT;
+impl TokenBasedRule for VarRefT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        UserVariableT::starts_now(parser) || KeywordVariableT::starts_now(parser)
+    }
+}
+
+pub(crate) struct BackRefT;
+impl TokenBasedRule for BackRefT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tNTH_REF, TokenKind::tBACK_REF])
+    }
+}
+
+pub(crate) struct CnameT;
+impl TokenBasedRule for CnameT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        IdOrConstT::starts_now(parser)
+    }
+}
+
+pub(crate) struct StringDvarT;
+impl TokenBasedRule for StringDvarT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        FnameT::starts_now(parser) || NonLocalVarT::starts_now(parser)
+    }
+}
+
+pub(crate) struct SymT;
+impl TokenBasedRule for SymT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        FnameT::starts_now(parser) || NonLocalVarT::starts_now(parser)
+    }
+}
+
+pub(crate) struct CallOpT;
+impl TokenBasedRule for CallOpT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tDOT, TokenKind::tANDDOT])
+    }
+}
+
+pub(crate) struct CallOp2T;
+impl TokenBasedRule for CallOp2T {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        CallOpT::starts_now(parser) || parser.current_token().is(TokenKind::tCOLON2)
+    }
+}
+
+pub(crate) struct MethodNameT;
+impl TokenBasedRule for MethodNameT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        IdOrConstT::starts_now(parser)
+    }
+}
+
+pub(crate) struct DoT;
+impl TokenBasedRule for DoT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        TermT::starts_now(parser) || parser.current_token().is(TokenKind::kDO)
+    }
+}
+
+pub(crate) struct TermT;
+impl TokenBasedRule for TermT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tSEMI, TokenKind::tNL])
+    }
+}
+
+struct OpT;
+impl TokenBasedRule for OpT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::tPIPE,
+            TokenKind::tCARET,
+            TokenKind::tAMPER,
+            TokenKind::tCMP,
+            TokenKind::tEQ,
+            TokenKind::tEQQ,
+            TokenKind::tMATCH,
+            TokenKind::tNMATCH,
+            TokenKind::tGT,
+            TokenKind::tGEQ,
+            TokenKind::tLT,
+            TokenKind::tLEQ,
+            TokenKind::tNEQ,
+            TokenKind::tLSHFT,
+            TokenKind::tRSHFT,
+            TokenKind::tPLUS,
+            TokenKind::tMINUS,
+            TokenKind::tSTAR,
+            TokenKind::tSTAR,
+            TokenKind::tDIVIDE,
+            TokenKind::tPERCENT,
+            TokenKind::tDSTAR,
+            TokenKind::tBANG,
+            TokenKind::tTILDE,
+            TokenKind::tUPLUS,
+            TokenKind::tUMINUS,
+            TokenKind::tAREF,
+            TokenKind::tASET,
+            TokenKind::tBACK_REF,
+        ])
+    }
+}
+
+struct ReswordsT;
+impl TokenBasedRule for ReswordsT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::k__LINE__,
+            TokenKind::k__FILE__,
+            TokenKind::k__ENCODING__,
+            TokenKind::klBEGIN,
+            TokenKind::klEND,
+            TokenKind::kALIAS,
+            TokenKind::kAND,
+            TokenKind::kBEGIN,
+            TokenKind::kBREAK,
+            TokenKind::kCASE,
+            TokenKind::kCLASS,
+            TokenKind::kDEF,
+            TokenKind::kDEFINED,
+            TokenKind::kDO,
+            TokenKind::kELSE,
+            TokenKind::kELSIF,
+            TokenKind::kEND,
+            TokenKind::kENSURE,
+            TokenKind::kFALSE,
+            TokenKind::kFOR,
+            TokenKind::kIN,
+            TokenKind::kMODULE,
+            TokenKind::kNEXT,
+            TokenKind::kNIL,
+            TokenKind::kNOT,
+            TokenKind::kOR,
+            TokenKind::kREDO,
+            TokenKind::kRESCUE,
+            TokenKind::kRETRY,
+            TokenKind::kRETURN,
+            TokenKind::kSELF,
+            TokenKind::kSUPER,
+            TokenKind::kTHEN,
+            TokenKind::kTRUE,
+            TokenKind::kUNDEF,
+            TokenKind::kWHEN,
+            TokenKind::kYIELD,
+            TokenKind::kIF,
+            TokenKind::kUNLESS,
+            TokenKind::kWHILE,
+            TokenKind::kUNTIL,
+        ])
+    }
+}
+
+struct NonLocalVarT;
+impl TokenBasedRule for NonLocalVarT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tIVAR, TokenKind::tGVAR, TokenKind::tCVAR])
+    }
+}
+
+struct IdOrConstT;
+impl TokenBasedRule for IdOrConstT {
+    fn _starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tIDENTIFIER, TokenKind::tCONSTANT])
+    }
 }
