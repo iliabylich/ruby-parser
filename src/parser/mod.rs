@@ -12,6 +12,8 @@ use self::macros::separated_by;
 mod checkpoint;
 mod macros;
 
+mod base;
+
 mod alias;
 mod arg;
 mod args;

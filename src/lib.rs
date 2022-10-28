@@ -1,5 +1,3 @@
-#![feature(backtrace)]
-
 mod buffer;
 
 #[cfg_attr(test, allow(non_snake_case))]
