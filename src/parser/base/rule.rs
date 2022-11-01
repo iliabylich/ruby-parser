@@ -1,6 +1,6 @@
 use crate::{parser::base::ParseResult, Parser};
 
-pub(crate) trait Rule {
+pub(crate) trait Rule<const N: usize = 0> {
     type Output;
 
     fn starts_now(parser: &mut Parser) -> bool;
