@@ -2,10 +2,9 @@ use crate::{
     builder::Builder,
     parser::{
         base::{ParseResult, Rule},
-        macros::{all_of, one_of},
         undef::Fitem,
         variables::{BackRef, Gvar, NthRef},
-        ParseResult as ParseResult2, Parser,
+        Parser,
     },
     token::TokenKind,
     Node,
