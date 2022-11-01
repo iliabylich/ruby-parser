@@ -132,8 +132,8 @@ fn parse_stmts(parser: &mut Parser) -> ParseResult<Vec<Node>> {
 fn parse_stmt_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
     one_of!(
         "stmt head",
-        parser.parse_alias(),
-        parser.parse_undef(),
+        /* Alias */
+        /* Undef */
         parser.parse_postexe(),
         all_of!("endless def", parser.try_token(TokenKind::kDEF),)
             .map(|_| todo!("handle endless def")),

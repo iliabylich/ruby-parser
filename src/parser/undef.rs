@@ -1,40 +1,62 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::{
+        base::{ExactToken, ParseResult, Rule, SeparatedBy},
+        literal::Symbol,
+        trivial::FnameT,
+        Parser,
+    },
     token::TokenKind,
     Node,
 };
 
-use super::macros::separated_by::separated_by;
+pub(crate) struct Undef;
+impl Rule for Undef {
+    type Output = Box<Node>;
 
-impl Parser {
-    pub(crate) fn parse_undef(&mut self) -> ParseResult<Box<Node>> {
-        let (undef_t, names) = all_of!(
-            "undef ...",
-            self.try_token(TokenKind::kUNDEF),
-            parse_names(self),
-        )?;
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::kUNDEF)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let undef_t = parser.current_token();
+        parser.skip_token();
+
+        type CommaTokenRule = ExactToken<{ TokenKind::tCOMMA as u8 }>;
+
+        let names = match SeparatedBy::<Fitem, CommaTokenRule>::parse(parser) {
+            Ok((names, _commas)) => names,
+            Err(err) => panic!("{:?}", err),
+        };
 
         Ok(Builder::undef(undef_t, names))
     }
 }
 
-fn parse_names(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let (names, _commas) = separated_by!(
-        "undef named",
-        checkpoint = parser.new_checkpoint(),
-        item = parser.parse_fitem(),
-        sep = parser.try_token(TokenKind::tCOMMA)
-    )?;
+pub(crate) struct Fitem;
 
-    Ok(names)
+impl Rule for Fitem {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        FnameT::starts_now(parser) || Symbol::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if FnameT::starts_now(parser) {
+            let fname_t = FnameT::parse(parser).unwrap();
+            Ok(Builder::symbol_internal(fname_t, parser.buffer()))
+        } else {
+            Symbol::parse(parser)
+        }
+    }
 }
 
 #[test]
 fn test_undef() {
-    use crate::testing::assert_parses;
-    assert_parses!(
-        Parser::parse_undef,
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Undef,
         b"undef a, :b, c",
         r#"
 s(:undef,

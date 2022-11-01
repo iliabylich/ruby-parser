@@ -1,14 +1,16 @@
 use crate::{
-    parser::base::{Captured, ParseError, ParseResult, Rule},
+    parser::base::{Captured, ParseError, ParseResult, Rule, Unbox},
     Parser,
 };
 
 pub(crate) struct SeparatedBy<Item, Sep>
 where
     Item: Rule,
+    Item::Output: Unbox,
     Sep: Rule,
-    Captured: From<Item::Output>,
-    Captured: From<Sep::Output>,
+    Sep::Output: Unbox,
+    Captured: From<<Item::Output as Unbox>::Output>,
+    Captured: From<<Sep::Output as Unbox>::Output>,
 {
     _item: std::marker::PhantomData<Item>,
     _sep: std::marker::PhantomData<Sep>,
@@ -17,11 +19,16 @@ where
 impl<Item, Sep> Rule for SeparatedBy<Item, Sep>
 where
     Item: Rule,
+    Item::Output: Unbox,
     Sep: Rule,
-    Captured: From<Item::Output>,
-    Captured: From<Sep::Output>,
+    Sep::Output: Unbox,
+    Captured: From<<Item::Output as Unbox>::Output>,
+    Captured: From<<Sep::Output as Unbox>::Output>,
 {
-    type Output = (Vec<Item::Output>, Vec<Sep::Output>);
+    type Output = (
+        Vec<<Item::Output as Unbox>::Output>,
+        Vec<<Sep::Output as Unbox>::Output>,
+    );
 
     fn starts_now(_parser: &mut Parser) -> bool {
         true
@@ -60,14 +67,16 @@ where
         };
 
         let append_all_captures =
-            |error: &mut ParseError, items: &mut Vec<Item::Output>, seps: &mut Vec<Sep::Output>| {
+            |error: &mut ParseError,
+             items: &mut Vec<<Item::Output as Unbox>::Output>,
+             seps: &mut Vec<<Sep::Output as Unbox>::Output>| {
                 error.captured = Captured::from(std::mem::take(items))
                     + Captured::from(std::mem::take(seps))
                     + std::mem::take(&mut error.captured);
             };
 
         match read_item(parser) {
-            ReadResult::Ok(item) => items.push(item),
+            ReadResult::Ok(item) => items.push(item.unbox()),
             ReadResult::Err(mut err) => {
                 append_all_captures(&mut err, &mut items, &mut seps);
                 return Err(err);
@@ -76,7 +85,7 @@ where
         }
 
         match read_sep(parser) {
-            ReadResult::Ok(sep) => seps.push(sep),
+            ReadResult::Ok(sep) => seps.push(sep.unbox()),
             ReadResult::Err(mut err) => {
                 append_all_captures(&mut err, &mut items, &mut seps);
                 return Err(err);
@@ -86,7 +95,7 @@ where
 
         loop {
             match read_item(parser) {
-                ReadResult::Ok(item) => items.push(item),
+                ReadResult::Ok(item) => items.push(item.unbox()),
                 ReadResult::Err(mut err) => {
                     append_all_captures(&mut err, &mut items, &mut seps);
                     return Err(err);
@@ -95,7 +104,7 @@ where
             }
 
             match read_sep(parser) {
-                ReadResult::Ok(sep) => seps.push(sep),
+                ReadResult::Ok(sep) => seps.push(sep.unbox()),
                 ReadResult::Err(mut err) => {
                     append_all_captures(&mut err, &mut items, &mut seps);
                     return Err(err);

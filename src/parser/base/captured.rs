@@ -39,6 +39,15 @@ where
     }
 }
 
+impl<T> From<Box<T>> for Captured
+where
+    Captured: From<T>,
+{
+    fn from(boxed: Box<T>) -> Self {
+        Captured::from(*boxed)
+    }
+}
+
 impl std::ops::Add for Captured {
     type Output = Self;
 

@@ -1,6 +1,4 @@
-use crate::loc::loc;
 use crate::parser::base::{Captured, ParseError, ParseResult, Rule};
-use crate::token::token;
 use crate::{Parser, Token, TokenKind};
 
 trait TokenBasedRule<const N: usize = 0> {
@@ -61,7 +59,9 @@ where
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         if Self::starts_now(parser) {
-            Ok(parser.current_token())
+            let token = parser.current_token();
+            parser.skip_token();
+            Ok(token)
         } else {
             Err(ParseError {
                 error: (),
@@ -268,6 +268,9 @@ impl TokenBasedRule<2> for IdOrConstT {
 
 #[test]
 fn test_id_or_const_t() {
+    use crate::loc::loc;
+    use crate::token::token;
+
     let mut parser = Parser::new(b"foo");
     assert!(IdOrConstT::starts_now(&mut parser));
     assert_eq!(

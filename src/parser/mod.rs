@@ -27,6 +27,7 @@ mod for_loop;
 mod hash;
 mod if_unless;
 mod keyword_variable;
+mod literal;
 mod method_definition;
 mod mlhs;
 mod module;
@@ -116,6 +117,12 @@ impl Parser {
                 loc: self.current_token().loc,
             })
         }
+    }
+
+    pub(crate) fn take_token(&mut self) -> Token {
+        let token = self.current_token();
+        self.skip_token();
+        token
     }
 
     pub fn parse(&mut self) -> Option<Box<Node>> {

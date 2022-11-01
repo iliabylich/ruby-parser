@@ -36,6 +36,37 @@ macro_rules! assert_parses {
 }
 pub(crate) use assert_parses;
 
+macro_rules! assert_parses_rule {
+    ($rule:ty, $src:expr, $expected:expr) => {{
+        use crate::{
+            parser::{
+                base::{ParseResult, Rule},
+                Parser,
+            },
+            Node,
+        };
+
+        let mut parser = Parser::new($src).debug();
+        type TestRule = $rule;
+        let parsed: ParseResult<Box<Node>> = TestRule::parse(&mut parser);
+
+        let ast;
+        match parsed {
+            Ok(node) => ast = node,
+            Err(err) => {
+                eprintln!("{:?}", err);
+                panic!("expected Ok(node), got Err()")
+            }
+        }
+
+        let expected: &str = $expected;
+        dbg!(&ast);
+        assert_eq!(ast.inspect(0), expected.trim_start().trim_end());
+        assert!(parser.state.inner.buffer.is_eof())
+    }};
+}
+pub(crate) use assert_parses_rule;
+
 macro_rules! assert_parses_some {
     ($f:expr, $src:expr, $expected:expr) => {{
         use crate::{
