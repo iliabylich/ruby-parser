@@ -1,12 +1,13 @@
 use crate::{
-    parser::base::{Captured, ParseResult, Rule},
+    parser::base::{Captured, ParseResult, Rule, Unbox},
     Parser,
 };
 
 pub(crate) struct Repeat1<R>
 where
     R: Rule,
-    Captured: From<R::Output>,
+    <R as Rule>::Output: Unbox,
+    Captured: From<<R::Output as Unbox>::Output>,
 {
     _r: std::marker::PhantomData<R>,
 }
@@ -14,9 +15,10 @@ where
 impl<R> Rule for Repeat1<R>
 where
     R: Rule,
-    Captured: From<R::Output>,
+    <R as Rule>::Output: Unbox,
+    Captured: From<<R::Output as Unbox>::Output>,
 {
-    type Output = Vec<R::Output>;
+    type Output = Vec<<R::Output as Unbox>::Output>;
 
     fn starts_now(parser: &mut Parser) -> bool {
         R::starts_now(parser)
@@ -30,7 +32,7 @@ where
             }
 
             match R::parse(parser) {
-                Ok(value) => values.push(value),
+                Ok(value) => values.push(value.unbox()),
                 Err(mut err) => {
                     let values: Captured = values.into();
                     err.captured = values + err.captured;

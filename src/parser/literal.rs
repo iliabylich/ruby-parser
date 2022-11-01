@@ -3,10 +3,13 @@ use crate::{
     parser::{
         base::{ExactToken, ParseResult, Rule},
         trivial::{FnameT, SimpleNumericT},
+        variables::{BackRef, Cvar, Gvar, Ivar},
         Parser,
     },
     Node, TokenKind,
 };
+
+use super::base::Repeat1;
 
 pub(crate) struct Literal;
 impl Rule for Literal {
@@ -169,6 +172,14 @@ impl Rule for QuotedSymbol {
     }
 }
 
+#[test]
+fn test_quoted_symbol() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(QuotedSymbol, b":'foo'", r#"s(:sym, "foo")"#);
+    assert_parses_rule!(QuotedSymbol, b":\"foo\"", r#"s(:sym, "foo")"#);
+    // assert_parses_rule!(QuotedSymbol, b":\"foo#{42}bar\"", r#"TODO"#);
+}
+
 struct Strings;
 
 struct String1;
@@ -192,12 +203,103 @@ impl Rule for StringContents {
     type Output = Vec<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        true
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        Repeat1::<StringContent>::parse(parser)
     }
 }
 
 struct StringContent;
+impl Rule for StringContent {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        PlainStringContent::starts_now(parser)
+            || StringDvarContent::starts_now(parser)
+            || InterpolatedStringContent::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if PlainStringContent::starts_now(parser) {
+            PlainStringContent::parse(parser)
+        } else if StringDvarContent::starts_now(parser) {
+            StringDvarContent::parse(parser)
+        } else if InterpolatedStringContent::starts_now(parser) {
+            InterpolatedStringContent::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+struct PlainStringContent;
+impl Rule for PlainStringContent {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSTRING_CONTENT)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let string_t = parser.take_token();
+        Ok(Builder::string_internal(string_t, parser.buffer()))
+    }
+}
+
+struct StringDvarContent;
+impl Rule for StringDvarContent {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSTRING_DVAR)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let _ = parser.take_token();
+
+        if Gvar::starts_now(parser) {
+            Gvar::parse(parser)
+        } else if Ivar::starts_now(parser) {
+            Ivar::parse(parser)
+        } else if Cvar::starts_now(parser) {
+            Cvar::parse(parser)
+        } else if BackRef::starts_now(parser) {
+            BackRef::parse(parser)
+        } else {
+            panic!("wrong token type")
+        }
+    }
+}
+
+struct InterpolatedStringContent;
+impl Rule for InterpolatedStringContent {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSTRING_DBEG)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+        let compstmt = parse_compstmt(); // Compstmt::parse(parser)
+        let end_t = if parser.current_token().is(TokenKind::tSTRING_DEND) {
+            parser.take_token()
+        } else {
+            panic!("wrong token type")
+        };
+
+        let stmts = if let Some(compstmt) = compstmt {
+            vec![*compstmt]
+        } else {
+            vec![]
+        };
+
+        Ok(Builder::begin(begin_t, stmts, end_t))
+    }
+}
+
+fn parse_compstmt() -> Option<Box<Node>> {
+    todo!()
+}

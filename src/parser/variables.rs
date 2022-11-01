@@ -24,6 +24,34 @@ impl Rule for Gvar {
     }
 }
 
+pub(crate) struct Ivar;
+impl Rule for Ivar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tIVAR)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let ivar_t = parser.take_token();
+        Ok(Builder::ivar(ivar_t, parser.buffer()))
+    }
+}
+
+pub(crate) struct Cvar;
+impl Rule for Cvar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tCVAR)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let cvar_t = parser.take_token();
+        Ok(Builder::cvar(cvar_t, parser.buffer()))
+    }
+}
+
 pub(crate) struct BackRef;
 impl Rule for BackRef {
     type Output = Box<Node>;
