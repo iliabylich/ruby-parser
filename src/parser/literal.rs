@@ -402,7 +402,7 @@ fn test_words() {
     use crate::testing::assert_parses_rule;
     assert_parses_rule!(
         Words,
-        b"%w[foo bar]",
+        b"%W[foo bar]",
         r#"
 s(:array,
   s(:str, "foo"),
@@ -427,9 +427,85 @@ impl Rule for Word {
 
 struct Symbols;
 
-struct Qwords;
+struct QWords;
+impl Rule for QWords {
+    type Output = Box<Node>;
 
-struct Qsymbols;
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tQWORDS_BEG)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+
+        type StringToken = ExactToken<{ TokenKind::tSTRING_CONTENT as u8 }>;
+        type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
+        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser)?;
+        let elements = elements
+            .into_iter()
+            .map(|token| *Builder::string_internal(token, parser.buffer()))
+            .collect::<Vec<_>>();
+
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+
+        Ok(Builder::words_compose(begin_t, elements, end_t))
+    }
+}
+#[test]
+fn test_qwords() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        QWords,
+        b"%w[foo bar]",
+        r#"
+s(:array,
+  s(:str, "foo"),
+  s(:str, "bar"))
+        "#
+    );
+}
+
+struct QSymbols;
+impl Rule for QSymbols {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tQSYMBOLS_BEG)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+
+        type StringToken = ExactToken<{ TokenKind::tSTRING_CONTENT as u8 }>;
+        type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
+        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser)?;
+        let elements = elements
+            .into_iter()
+            .map(|token| *Builder::symbol_internal(token, parser.buffer()))
+            .collect::<Vec<_>>();
+
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+
+        Ok(Builder::symbols_compose(begin_t, elements, end_t))
+    }
+}
+#[test]
+fn test_qsymbols() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        QSymbols,
+        b"%i[foo bar]",
+        r#"
+s(:array,
+  s(:sym, "foo"),
+  s(:sym, "bar"))
+        "#
+    );
+}
 
 pub(crate) struct StringContents;
 impl Rule for StringContents {

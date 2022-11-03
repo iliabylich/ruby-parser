@@ -48,6 +48,7 @@ macro_rules! assert_parses_rule {
 
         let mut parser = Parser::new($src).debug();
         type TestRule = $rule;
+        assert!(TestRule::starts_now(&mut parser));
         let parsed: ParseResult<Box<Node>> = TestRule::parse(&mut parser);
 
         let ast;
