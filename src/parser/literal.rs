@@ -404,6 +404,14 @@ s(:regexp,
   s(:regopt))
         "#
     );
+    assert_parses_rule!(
+        Regexp,
+        b"//",
+        r#"
+s(:regexp,
+  s(:regopt))
+        "#
+    );
 }
 
 struct Words;
@@ -437,6 +445,7 @@ s(:array,
   s(:str, "bar"))
         "#
     );
+    assert_parses_rule!(Words, b"%W[]", r#"s(:array)"#);
 }
 
 struct Word;
@@ -492,6 +501,7 @@ s(:array,
   s(:sym, "bar"))
         "#
     );
+    assert_parses_rule!(Symbols, b"%I[]", r#"s(:array)"#);
 }
 
 struct QWords;
@@ -532,6 +542,7 @@ s(:array,
   s(:str, "bar"))
         "#
     );
+    assert_parses_rule!(QWords, b"%w[]", r#"s(:array)"#);
 }
 
 struct QSymbols;
@@ -572,13 +583,14 @@ s(:array,
   s(:sym, "bar"))
         "#
     );
+    assert_parses_rule!(QSymbols, b"%i[]", r#"s(:array)"#);
 }
 
 pub(crate) struct StringContents;
 impl Rule for StringContents {
     type Output = Vec<Node>;
 
-    fn starts_now(parser: &mut Parser) -> bool {
+    fn starts_now(_parser: &mut Parser) -> bool {
         true
     }
 
