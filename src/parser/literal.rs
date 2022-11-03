@@ -2,14 +2,16 @@ use crate::{
     builder::Builder,
     lexer::strings::{
         literal::StringLiteral,
-        types::{Interpolation, StringInterp},
+        types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
+    loc::loc,
     parser::{
         base::{AtLeastOnce, ParseResult, Rule},
         trivial::{FnameT, SimpleNumericT},
         variables::{BackRef, Cvar, Gvar, Ivar},
         Parser,
     },
+    token::token,
     Node, TokenKind,
 };
 
@@ -261,17 +263,24 @@ impl Rule for XString {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let begin_t = parser.take_token();
+        let begin_t = parser.current_token();
 
-        // manually push XString literal in lexer (yes, only parser know it)
-        parser
-            .lexer
-            .string_literals()
-            .push(StringLiteral::StringInterp(StringInterp::new(
-                Interpolation::new(parser.lexer.curly_nest()),
-                b'`',
-                b'`',
-            )));
+        if begin_t.is(TokenKind::tIDENTIFIER) {
+            // manually push XString literal in lexer (yes, only parser know it)
+            parser
+                .lexer
+                .string_literals()
+                .push(StringLiteral::StringInterp(StringInterp::new(
+                    Interpolation::new(parser.lexer.curly_nest()),
+                    b'`',
+                    b'`',
+                )));
+
+            // override token
+            let token = token!(TokenKind::tXSTRING_BEG, begin_t.loc);
+            parser.lexer.tokens_mut()[parser.lexer.token_idx()] = token;
+        }
+        parser.skip_token();
 
         let parts = StringContents::parse(parser)?;
         let end_t = parser
@@ -291,9 +300,86 @@ s(:xstr,
   s(:str, "foo"))
         "#
     );
+    assert_parses_rule!(
+        XString,
+        b"%x{foo}",
+        r#"
+s(:xstr,
+  s(:str, "foo"))
+        "#
+    );
 }
 
 struct Regexp;
+impl Rule for Regexp {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tREGEXP_BEG, TokenKind::tDIVIDE])
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.current_token();
+
+        if begin_t.is(TokenKind::tDIVIDE) {
+            // manually push XString literal in lexer (yes, only parser know it)
+            parser
+                .lexer
+                .string_literals()
+                .push(StringLiteral::Regexp(RegexpLiteral::new(
+                    b'/',
+                    b'/',
+                    parser.lexer.curly_nest(),
+                )));
+
+            // override token
+            let token = token!(TokenKind::tREGEXP_BEG, begin_t.loc);
+            parser.lexer.tokens_mut()[parser.lexer.token_idx()] = token;
+        }
+        parser.skip_token();
+
+        let parts = StringContents::parse(parser)?;
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+
+        let options = Builder::regexp_options(&end_t, parser.buffer());
+        Ok(Builder::regexp_compose(begin_t, parts, end_t, options))
+    }
+}
+#[test]
+fn test_regexp() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Regexp,
+        b"/foo/",
+        r#"
+s(:regexp,
+  s(:str, "foo"),
+  s(:regopt))
+        "#
+    );
+    assert_parses_rule!(
+        Regexp,
+        b"/foo/xmi",
+        r#"
+s(:regexp,
+  s(:str, "foo"),
+  s(:regopt, "i", "m", "x"))
+        "#
+    );
+    assert_parses_rule!(
+        Regexp,
+        b"%r{foo}",
+        r#"
+s(:regexp,
+  s(:str, "foo"),
+  s(:regopt))
+        "#
+    );
+}
 
 struct Words;
 

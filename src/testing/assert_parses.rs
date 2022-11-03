@@ -62,7 +62,8 @@ macro_rules! assert_parses_rule {
         let expected: &str = $expected;
         dbg!(&ast);
         assert_eq!(ast.inspect(0), expected.trim_start().trim_end());
-        assert!(parser.state.inner.buffer.is_eof())
+        assert!(parser.state.inner.buffer.is_eof());
+        assert_eq!(parser.lexer.string_literals().size(), 0);
     }};
 }
 pub(crate) use assert_parses_rule;
