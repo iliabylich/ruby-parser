@@ -100,6 +100,10 @@ impl Lexer {
         token
     }
 
+    pub(crate) fn lookahead_is_identifier(&self) -> bool {
+        Ident::lookahead(self.buffer().for_lookahead(), self.buffer().pos()).is_some()
+    }
+
     #[cfg(test)]
     pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token> {
         let mut tokens = vec![];

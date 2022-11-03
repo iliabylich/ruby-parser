@@ -1,5 +1,9 @@
 use crate::{
     builder::Builder,
+    lexer::strings::{
+        literal::StringLiteral,
+        types::{Interpolation, StringInterp},
+    },
     parser::{
         base::{AtLeastOnce, ParseResult, Rule},
         trivial::{FnameT, SimpleNumericT},
@@ -233,7 +237,61 @@ fn test_string1() {
     assert_parses_rule!(String1, b"'foo'", r#"s(:str, "foo")"#);
 }
 
-struct Xstring;
+struct XString;
+impl Rule for XString {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        let current_token = parser.current_token();
+
+        if current_token.is(TokenKind::tXSTRING_BEG) {
+            return true;
+        }
+        if current_token.is(TokenKind::tIDENTIFIER)
+            && parser
+                .buffer()
+                .slice(current_token.loc.start, current_token.loc.end)
+                == Some(b"`")
+        {
+            // starts with `, if next token is tIDENTIFIER we are good to go
+            parser.lexer.lookahead_is_identifier()
+        } else {
+            false
+        }
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+
+        // manually push XString literal in lexer (yes, only parser know it)
+        parser
+            .lexer
+            .string_literals()
+            .push(StringLiteral::StringInterp(StringInterp::new(
+                Interpolation::new(parser.lexer.curly_nest()),
+                b'`',
+                b'`',
+            )));
+
+        let parts = StringContents::parse(parser)?;
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+        Ok(Builder::xstring_compose(begin_t, parts, end_t))
+    }
+}
+#[test]
+fn test_xstring() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        XString,
+        b"`foo`",
+        r#"
+s(:xstr,
+  s(:str, "foo"))
+        "#
+    );
+}
 
 struct Regexp;
 
