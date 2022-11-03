@@ -19,11 +19,39 @@ impl Rule for Literal {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        Numeric::starts_now(parser)
+            || Symbol::starts_now(parser)
+            || Strings::starts_now(parser)
+            || XString::starts_now(parser)
+            || Regexp::starts_now(parser)
+            || Words::starts_now(parser)
+            || QWords::starts_now(parser)
+            || Symbols::starts_now(parser)
+            || QSymbols::starts_now(parser)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        if Numeric::starts_now(parser) {
+            Numeric::parse(parser)
+        } else if Symbol::starts_now(parser) {
+            Symbol::parse(parser)
+        } else if Strings::starts_now(parser) {
+            Strings::parse(parser)
+        } else if XString::starts_now(parser) {
+            XString::parse(parser)
+        } else if Regexp::starts_now(parser) {
+            Regexp::parse(parser)
+        } else if Words::starts_now(parser) {
+            Words::parse(parser)
+        } else if QWords::starts_now(parser) {
+            QWords::parse(parser)
+        } else if Symbols::starts_now(parser) {
+            Symbols::parse(parser)
+        } else if QSymbols::starts_now(parser) {
+            QSymbols::parse(parser)
+        } else {
+            unreachable!()
+        }
     }
 }
 
@@ -426,6 +454,45 @@ impl Rule for Word {
 }
 
 struct Symbols;
+impl Rule for Symbols {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSYMBOLS_BEG)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+
+        type StringToken = ExactToken<{ TokenKind::tSTRING_CONTENT as u8 }>;
+        type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
+        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser)?;
+        let elements = elements
+            .into_iter()
+            .map(|token| *Builder::string_internal(token, parser.buffer()))
+            .collect::<Vec<_>>();
+
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+
+        Ok(Builder::symbols_compose(begin_t, elements, end_t))
+    }
+}
+
+#[test]
+fn test_symbols() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Symbols,
+        b"%I[foo bar]",
+        r#"
+s(:array,
+  s(:sym, "foo"),
+  s(:sym, "bar"))
+        "#
+    );
+}
 
 struct QWords;
 impl Rule for QWords {
