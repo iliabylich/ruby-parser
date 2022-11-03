@@ -4,9 +4,8 @@ use crate::{
         literal::StringLiteral,
         types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
-    loc::loc,
     parser::{
-        base::{AtLeastOnce, ParseResult, Rule},
+        base::{AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy},
         trivial::{FnameT, SimpleNumericT},
         variables::{BackRef, Cvar, Gvar, Ivar},
         Parser,
@@ -14,8 +13,6 @@ use crate::{
     token::token,
     Node, TokenKind,
 };
-
-use super::base::Repeat1;
 
 pub(crate) struct Literal;
 impl Rule for Literal {
@@ -382,8 +379,51 @@ s(:regexp,
 }
 
 struct Words;
+impl Rule for Words {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tWORDS_BEG)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+        type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
+        let (elements, _spaces) = SeparatedBy::<Word, SpToken>::parse(parser)?;
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+
+        Ok(Builder::words_compose(begin_t, elements, end_t))
+    }
+}
+#[test]
+fn test_words() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Words,
+        b"%w[foo bar]",
+        r#"
+s(:array,
+  s(:str, "foo"),
+  s(:str, "bar"))
+        "#
+    );
+}
 
 struct Word;
+impl Rule for Word {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        StringContent::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let parts = AtLeastOnce::<StringContent>::parse(parser)?;
+        Ok(Builder::word(parts))
+    }
+}
 
 struct Symbols;
 
