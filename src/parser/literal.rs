@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{ExactToken, ParseResult, Rule},
+        base::{AtLeastOnce, ParseResult, Rule},
         trivial::{FnameT, SimpleNumericT},
         variables::{BackRef, Cvar, Gvar, Ivar},
         Parser,
@@ -39,21 +39,18 @@ impl Rule for Numeric {
             None
         };
 
-        type Integer = ExactToken<{ TokenKind::tINTEGER as u8 }>;
-        type Float = ExactToken<{ TokenKind::tFLOAT as u8 }>;
-        type Rational = ExactToken<{ TokenKind::tRATIONAL as u8 }>;
-        type Complex = ExactToken<{ TokenKind::tIMAGINARY as u8 }>;
+        let mut number = if SimpleNumericT::starts_now(parser) {
+            let numeric_t = SimpleNumericT::parse(parser).unwrap();
 
-        let mut number = if parser.current_token().is(TokenKind::tINTEGER) {
-            Builder::integer(parser.take_token(), parser.buffer())
-        } else if parser.current_token().is(TokenKind::tFLOAT) {
-            Builder::float(parser.take_token(), parser.buffer())
-        } else if parser.current_token().is(TokenKind::tRATIONAL) {
-            Builder::rational(parser.take_token(), parser.buffer())
-        } else if parser.current_token().is(TokenKind::tIMAGINARY) {
-            Builder::complex(parser.take_token(), parser.buffer())
+            match numeric_t.kind {
+                TokenKind::tINTEGER => Builder::integer(numeric_t, parser.buffer()),
+                TokenKind::tFLOAT => Builder::float(numeric_t, parser.buffer()),
+                TokenKind::tRATIONAL => Builder::rational(numeric_t, parser.buffer()),
+                TokenKind::tIMAGINARY => Builder::complex(numeric_t, parser.buffer()),
+                _ => panic!("wrong token type"),
+            }
         } else {
-            panic!("wrong token type")
+            panic!("expected numeric literal")
         };
 
         if let Some(unary_t) = unary_t {
@@ -181,8 +178,60 @@ fn test_quoted_symbol() {
 }
 
 struct Strings;
+impl Rule for Strings {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tCHAR) || String1::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if parser.current_token().is(TokenKind::tCHAR) {
+            let char_t = parser.take_token();
+            Ok(Builder::character(char_t))
+        } else {
+            let parts = AtLeastOnce::<String1>::parse(parser)?;
+            Ok(Builder::string_compose(None, parts, None))
+        }
+    }
+}
+#[test]
+fn test_strings() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Strings,
+        b"'foo' 'bar'",
+        r#"
+s(:dstr,
+  s(:str, "foo"),
+  s(:str, "bar"))
+        "#
+    );
+}
 
 struct String1;
+impl Rule for String1 {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSTRING_BEG)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let begin_t = parser.take_token();
+        let parts = StringContents::parse(parser)?;
+        let end_t = parser
+            .expect_token(TokenKind::tSTRING_END)
+            .expect("wrong token type");
+        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
+    }
+}
+
+#[test]
+fn test_string1() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(String1, b"'foo'", r#"s(:str, "foo")"#);
+}
 
 struct Xstring;
 
