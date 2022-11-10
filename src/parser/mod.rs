@@ -42,6 +42,7 @@ mod primary;
 mod qsymbols;
 mod qwords;
 mod regexp;
+mod rescue;
 mod stmt;
 mod string;
 mod symbol;
