@@ -24,7 +24,30 @@ const fn concat<const A: usize, const B: usize, const C: usize>(
         i += 1;
     }
 
+    let result = sort_arr(result);
+
     result
+}
+
+const fn sort_arr<const N: usize>(mut arr: [TokenKind; N]) -> [TokenKind; N] {
+    loop {
+        let mut swapped = false;
+        let mut i = 1;
+        while i < arr.len() {
+            if arr[i - 1] as u8 > arr[i] as u8 {
+                let left = arr[i - 1];
+                let right = arr[i];
+                arr[i - 1] = right;
+                arr[i] = left;
+                swapped = true;
+            }
+            i += 1;
+        }
+        if !swapped {
+            break;
+        }
+    }
+    arr
 }
 
 macro_rules! concat_array_const {
@@ -54,7 +77,7 @@ where
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is_one_of(Self::TOKENS)
+        parser.current_token().is_one_of_sorted(Self::TOKENS)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

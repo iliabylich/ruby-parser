@@ -21,10 +21,14 @@ impl Token {
 
         false
     }
+
+    pub(crate) fn is_one_of_sorted<const N: usize>(&self, others: [TokenKind; N]) -> bool {
+        others.binary_search(&self.kind).is_ok()
+    }
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum TokenKind {
     // Keyword tokens.
