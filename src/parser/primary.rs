@@ -52,7 +52,7 @@ impl Parser {
                 let (colon2_t, name_t) = self.parse_colon2_const()?;
                 Ok(Builder::const_global(colon2_t, name_t, self.buffer()))
             },
-            self.parse_array(),
+            // self.parse_array(),
             self.parse_hash(),
             parse_keyword_cmd(self, TokenKind::kRETURN),
             self.parse_yield(),

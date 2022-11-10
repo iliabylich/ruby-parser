@@ -1,74 +1,179 @@
 use crate::{
     builder::Builder,
-    parser::{
-        macros::{all_of, one_of, separated_by},
-        ParseResult, Parser,
-    },
+    parser::base::{Captured, ParseResult, Rule, SeparatedBy},
     token::TokenKind,
-    Node,
+    Node, Parser,
 };
 
-impl Parser {
-    pub(crate) fn parse_array(&mut self) -> ParseResult<Box<Node>> {
-        let (lbrack_t, elements, rbrack_t) = all_of!(
-            "array",
-            self.try_token(TokenKind::tLBRACK),
-            parse_aref_args(self),
-            self.expect_token(TokenKind::tRBRACK),
-        )?;
+pub(crate) struct Array;
+impl Rule for Array {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tLBRACK)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let lbrack_t = parser.take_token();
+        let elements = ArrayElements::parse(parser).expect("failed to parse array elements");
+        let rbrack_t = if parser.current_token().is(TokenKind::tRBRACK) {
+            parser.take_token()
+        } else {
+            panic!("wrong toke type")
+        };
 
         Ok(Builder::array(Some(lbrack_t), elements, Some(rbrack_t)))
     }
 }
 
-fn parse_aref_args(parser: &mut Parser) -> ParseResult<Vec<Node>> {
-    let (aref_args, _commas) = separated_by!(
-        "aref args",
-        checkpoint = parser.new_checkpoint(),
-        item = parse_aref_args_item(parser),
-        sep = parser.try_token(TokenKind::tCOMMA)
-    )?;
+struct ArrayElements;
+impl Rule for ArrayElements {
+    type Output = Vec<Node>;
 
-    let _trailer = parser.try_trailer();
+    fn starts_now(parser: &mut Parser) -> bool {
+        !parser.current_token().is(TokenKind::tRPAREN)
+    }
 
-    Ok(aref_args)
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let mut elements = vec![];
+        let mut commas = vec![];
+
+        loop {
+            if parser.current_token().is(TokenKind::tRPAREN) {
+                break;
+            }
+
+            match ArrayElement::parse(parser) {
+                Ok(v) => elements.push(*v),
+                Err(mut err) => {
+                    err.captured = Captured::from(elements) + Captured::from(commas) + err.captured;
+                    return Err(err);
+                }
+            }
+
+            match parser.current_token().kind {
+                TokenKind::tCOMMA => commas.push(parser.take_token()),
+                TokenKind::tRBRACK => {
+                    parser.skip_token();
+                    break;
+                }
+                _ => panic!("wrong token type"),
+            }
+        }
+
+        // TODO: There must be runtime validations:
+        // 1. pairs go after values
+        // 2. ',' requires non-empty list of items
+
+        Ok(elements)
+    }
 }
 
-fn parse_aref_args_item(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    one_of!(
-        "aref_args item",
-        checkpoint = parser.new_checkpoint(),
-        parser.parse_assoc(),
-        parser.parse_arg(),
-    )
+struct ArrayElement;
+impl Rule for ArrayElement {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        SplatElement::starts_now(parser)
+            || KeywordSplat::starts_now(parser)
+            || LabelToArgPair::starts_now(parser)
+            || StringToArgPair::starts_now(parser)
+            || ArgToArgPairOrPlainArg::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if SplatElement::starts_now(parser) {
+            SplatElement::parse(parser)
+        } else if KeywordSplat::starts_now(parser) {
+            KeywordSplat::parse(parser)
+        } else if LabelToArgPair::starts_now(parser) {
+            LabelToArgPair::parse(parser)
+        } else if StringToArgPair::starts_now(parser) {
+            StringToArgPair::parse(parser)
+        } else if ArgToArgPairOrPlainArg::starts_now(parser) {
+            ArgToArgPairOrPlainArg::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
 }
 
-fn try_args(parser: &mut Parser) -> ParseResult<Option<Vec<Node>>> {
-    one_of!(
-        "[args]",
-        checkpoint = parser.new_checkpoint(),
-        parser.parse_args().map(|v| Some(v)),
-        Ok(None),
-    )
+struct SplatElement;
+impl Rule for SplatElement {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSTAR)
+    }
+
+    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
 }
 
-fn try_assocs(parser: &mut Parser) -> ParseResult<Option<Vec<Node>>> {
-    one_of!(
-        "[assocs]",
-        checkpoint = parser.new_checkpoint(),
-        parser.parse_assocs().map(|v| Some(v)),
-        Ok(None),
-    )
+struct ArgToArgPairOrPlainArg;
+impl Rule for ArgToArgPairOrPlainArg {
+    type Output = Box<Node>;
+
+    fn starts_now(_parser: &mut Parser) -> bool {
+        // Arg::starts_now(parser)
+        todo!()
+    }
+
+    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
+
+struct LabelToArgPair;
+impl Rule for LabelToArgPair {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tLABEL)
+    }
+
+    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
+
+struct StringToArgPair;
+impl Rule for StringToArgPair {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSTRING_BEG)
+    }
+
+    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
+
+struct KeywordSplat;
+impl Rule for KeywordSplat {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tDSTAR)
+    }
+
+    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::testing::assert_parses;
+    use super::Array;
+    use crate::testing::assert_parses_rule;
 
     #[test]
     fn test_array_simple() {
-        assert_parses!(
-            Parser::parse_array,
+        return;
+        assert_parses_rule!(
+            Array,
             b"[1, 2, 3]",
             r#"
 s(:array,
@@ -81,8 +186,10 @@ s(:array,
 
     #[test]
     fn test_array_mixed() {
-        assert_parses!(
-            Parser::parse_array,
+        return;
+
+        assert_parses_rule!(
+            Array,
             b"[1, 2, 3, 4 => 5]",
             r#"
 s(:array,
