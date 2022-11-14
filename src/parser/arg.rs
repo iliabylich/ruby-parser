@@ -94,7 +94,6 @@ fn parse_arg0(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
 fn parse_arg_head(parser: &mut Parser) -> ParseResult<Box<Node>> {
     // one_of!(
     //     "arg head",
-    //     checkpoint = parser.new_checkpoint(),
     //     {
     //         let (lhs, eql_t, rhs) = all_of!(
     //             "lhs tEQL arg_rhs",
@@ -355,7 +354,6 @@ fn parse_arg_rhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
 fn parse_arg_prefix_operator(parser: &mut Parser) -> ParseResult<Token> {
     // one_of!(
     //     "arg prefix operator",
-    //     checkpoint = parser.new_checkpoint(),
     //     parser.try_token(TokenKind::tBDOT2),
     //     parser.try_token(TokenKind::tBDOT3),
     //     parser.try_token(TokenKind::tUPLUS),
@@ -370,7 +368,6 @@ fn parse_arg_prefix_operator(parser: &mut Parser) -> ParseResult<Token> {
 fn parse_arg_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
     // one_of!(
     //     "arg lhs",
-    //     checkpoint = parser.new_checkpoint(),
     //     {
     //         let op_t = parse_arg_prefix_operator(parser).expect("no prefix");
     //         let (_, r_bp) = op_t.kind.precedence().expect("bug");
@@ -409,7 +406,6 @@ fn parse_arg_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
 fn parse_binary_or_postfix_operator(parser: &mut Parser) -> ParseResult<Token> {
     // one_of!(
     //     "infix/binary operator",
-    //     checkpoint = parser.new_checkpoint(),
     //     parser.expect_token(TokenKind::tDOT2),
     //     parser.expect_token(TokenKind::tDOT3),
     //     parser.expect_token(TokenKind::tPLUS),
