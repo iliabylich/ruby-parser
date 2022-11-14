@@ -38,7 +38,7 @@ mod tests {
 
     #[test]
     fn test_if() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             IfStmt,
@@ -54,7 +54,7 @@ s(:if,
 
     #[test]
     fn test_unless() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             UnlessStmt,

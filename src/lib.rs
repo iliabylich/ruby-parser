@@ -9,7 +9,6 @@ mod precedence;
 pub mod nodes;
 pub use nodes::Node;
 
-#[allow(dead_code)]
 pub(crate) mod parser;
 pub use parser::Parser;
 
@@ -21,7 +20,6 @@ pub use loc::Loc;
 pub(crate) mod token;
 pub use token::{Token, TokenKind};
 
-#[allow(dead_code)]
 pub(crate) mod builder;
 
 pub(crate) mod state;

@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_array_simple() {
-        return;
+        debug_assert!(false, "implement me");
         assert_parses_rule!(
             Array,
             b"[1, 2, 3]",
@@ -186,7 +186,7 @@ s(:array,
 
     #[test]
     fn test_array_mixed() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             Array,

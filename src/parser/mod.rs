@@ -3,7 +3,6 @@ use crate::lexer::Lexer;
 use crate::nodes::Node;
 use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
-pub(crate) use crate::transactions::{ParseError, ParseResult};
 
 mod base;
 use base::Rule;
@@ -66,34 +65,14 @@ impl Parser {
         self.lexer.skip_token()
     }
 
-    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> ParseResult<Token> {
+    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Option<Token> {
         let token = self.current_token();
         self.skip_token();
 
         if token.is(expected) {
-            Ok(token)
+            Some(token)
         } else {
-            Err(ParseError::TokenError {
-                lookahead: false,
-                expected,
-                got: token.kind,
-                loc: token.loc,
-            })
-        }
-    }
-
-    pub(crate) fn try_token(&mut self, expected: TokenKind) -> ParseResult<Token> {
-        if self.current_token().is(expected) {
-            let token = self.current_token();
-            self.skip_token();
-            Ok(token)
-        } else {
-            Err(ParseError::TokenError {
-                lookahead: true,
-                expected,
-                got: self.current_token().kind,
-                loc: self.current_token().loc,
-            })
+            None
         }
     }
 

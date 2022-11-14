@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn test_lhs_user_variable() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             MLHS,
@@ -41,7 +41,7 @@ s(:begin,
 
     #[test]
     fn test_lhs_parenthesized() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             MLHS,
@@ -56,7 +56,7 @@ s(:begin,
 
     #[test]
     fn test_mlhs_without_parens() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             MLHS,
@@ -73,7 +73,7 @@ s(:begin,
 
     #[test]
     fn test_mlhs_with_parens() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             MLHS,
@@ -91,7 +91,7 @@ s(:begin,
 
     #[test]
     fn test_nameless_splat() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(MLHS, b"*", "s(:splat)");
     }

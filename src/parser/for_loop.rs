@@ -25,7 +25,7 @@ mod tests {
 
     #[test]
     fn test_for_lhs() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             ForLoop,
@@ -41,7 +41,7 @@ s(:for,
 
     #[test]
     fn test_for_mlhs() {
-        return;
+        debug_assert!(false, "implement me");
 
         assert_parses_rule!(
             ForLoop,
