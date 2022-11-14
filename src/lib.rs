@@ -24,7 +24,5 @@ pub(crate) mod builder;
 
 pub(crate) mod state;
 
-mod transactions;
-
 #[cfg(test)]
 mod testing;
