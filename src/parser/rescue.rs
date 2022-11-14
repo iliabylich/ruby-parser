@@ -1,5 +1,7 @@
-use crate::parser::base::{ExactToken, Maybe1, ParseResult, Rule};
-use crate::{Node, Parser, Token, TokenKind};
+use crate::{
+    parser::{ExactToken, Maybe1, ParseResult, Rule},
+    Node, Parser, Token, TokenKind,
+};
 
 pub(crate) struct OptRescue;
 impl Rule for OptRescue {

@@ -1,11 +1,8 @@
 macro_rules! assert_parses_rule {
     ($rule:ty, $src:expr, $expected:expr) => {{
         use crate::{
-            parser::{
-                base::{ParseResult, Rule},
-                Parser,
-            },
-            Node,
+            parser::{ParseResult, Rule},
+            Node, Parser,
         };
 
         let mut parser = Parser::new($src).debug();

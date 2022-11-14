@@ -1,13 +1,10 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{ExactToken, ParseResult, Rule, SeparatedBy},
-        literal::Symbol,
-        trivial::FnameT,
-        Parser,
+        FnameT, Symbol, {ExactToken, ParseResult, Rule, SeparatedBy},
     },
     token::TokenKind,
-    Node,
+    Node, Parser,
 };
 
 pub(crate) struct Undef;

@@ -16,7 +16,10 @@ mod array;
 pub(crate) use array::Array;
 
 mod base;
-pub(crate) use base::{AtLeastOnce, Maybe1, Maybe2, Maybe3, Repeat1, Repeat2, Rule, SeparatedBy};
+pub(crate) use base::{
+    AtLeastOnce, Captured, CapturedItem, ExactToken, Maybe1, Maybe2, Maybe3, ParseError,
+    ParseResult, Repeat1, Repeat2, Rule, SeparatedBy,
+};
 
 // mod block;
 // pub(crate) use block::{DoBlock, BraceBlock, Block};
@@ -46,7 +49,7 @@ pub(crate) use if_unless::{IfStmt, UnlessStmt};
 // pub(crate) use lambda::Lambda;
 
 mod literal;
-pub(crate) use literal::{Literal, StringContents};
+pub(crate) use literal::{Literal, StringContents, Symbol};
 
 mod mlhs;
 pub(crate) use mlhs::MLHS;
@@ -77,7 +80,8 @@ pub(crate) use stmt::{Bodystmt, Compstmt, TopCompstmt, TopStmts};
 
 mod trivial;
 pub(crate) use trivial::{
-    FnameT, KeywordVariableT, Operation2T, Operation3T, OperationT, SimpleNumericT, UserVariableT,
+    BackRefT, CallOp2T, CallOpT, CnameT, DoT, FnameT, KeywordVariableT, MethodNameT, Operation2T,
+    Operation3T, OperationT, SimpleNumericT, StringDvarT, SymT, TermT, UserVariableT, VarRefT,
 };
 
 mod undef;

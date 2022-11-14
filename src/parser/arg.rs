@@ -1,12 +1,9 @@
 use crate::{
     buffer::Buffer,
     builder::Builder,
-    parser::{
-        base::{ParseResult, Rule},
-        Parser,
-    },
+    parser::{ParseResult, Rule},
     token::{Token, TokenKind},
-    Node,
+    Node, Parser,
 };
 
 pub(crate) struct Arg;

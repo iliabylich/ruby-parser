@@ -1,13 +1,11 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{ParseResult, Rule},
-        undef::Fitem,
         variables::{BackRef, Gvar, NthRef},
-        Parser,
+        Fitem, ParseResult, Rule,
     },
     token::TokenKind,
-    Node,
+    Node, Parser,
 };
 
 pub(crate) struct Alias;

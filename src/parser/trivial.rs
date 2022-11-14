@@ -1,5 +1,7 @@
-use crate::parser::base::{Captured, ParseError, ParseResult, Rule};
-use crate::{Parser, Token, TokenKind};
+use crate::{
+    parser::{Captured, ParseError, ParseResult, Rule},
+    Parser, Token, TokenKind,
+};
 
 trait TokenBasedRule<const N: usize = 0> {
     const TOKENS: [TokenKind; N];

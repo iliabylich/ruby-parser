@@ -5,13 +5,11 @@ use crate::{
         types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
     parser::{
-        base::{AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy},
-        trivial::{FnameT, SimpleNumericT},
         variables::{BackRef, Cvar, Gvar, Ivar},
-        Parser,
+        AtLeastOnce, ExactToken, FnameT, ParseResult, Repeat1, Rule, SeparatedBy, SimpleNumericT,
     },
     token::token,
-    Node, TokenKind,
+    Node, Parser, TokenKind,
 };
 
 pub(crate) struct Literal;
