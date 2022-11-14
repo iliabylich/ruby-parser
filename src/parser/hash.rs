@@ -18,6 +18,19 @@ impl Rule for Hash {
     }
 }
 
+pub(crate) struct Assoc;
+impl Rule for Assoc {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
+
 #[test]
 fn test_hash() {
     use crate::testing::assert_parses_rule;

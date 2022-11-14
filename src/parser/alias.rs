@@ -10,8 +10,7 @@ use crate::{
     Node,
 };
 
-struct Alias;
-
+pub(crate) struct Alias;
 impl Rule for Alias {
     type Output = Box<Node>;
 

@@ -16,3 +16,16 @@ impl Rule for ParenArgs {
         todo!()
     }
 }
+
+pub(crate) struct OptParenArgs;
+impl Rule for OptParenArgs {
+    type Output = Option<Box<Node>>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
