@@ -22,7 +22,5 @@ pub use token::{Token, TokenKind};
 
 pub(crate) mod builder;
 
-pub(crate) mod state;
-
 #[cfg(test)]
 mod testing;

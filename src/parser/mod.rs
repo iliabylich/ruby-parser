@@ -1,7 +1,6 @@
 use crate::buffer::Buffer;
 use crate::lexer::Lexer;
 use crate::nodes::Node;
-use crate::state::OwnedState;
 use crate::token::{Token, TokenKind};
 
 mod base;
@@ -35,8 +34,6 @@ pub struct Parser {
     lexer: Lexer,
     debug: bool,
 }
-
-static mut COUNTER: usize = 0;
 
 impl Parser {
     pub fn new(input: &[u8]) -> Self {

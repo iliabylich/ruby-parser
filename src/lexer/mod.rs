@@ -10,13 +10,6 @@ pub(crate) mod qmark;
 pub(crate) mod skip_ws;
 pub(crate) mod strings;
 
-#[cfg(test)]
-use crate::state::OwnedState;
-use crate::{
-    loc::loc,
-    state::{generate_state_ref_delegation, HasStateRef, StateRef},
-    token::{token, Token},
-};
 use atmark::AtMark;
 use gvar::Gvar;
 use ident::Ident;
@@ -24,7 +17,10 @@ use numbers::parse_number;
 use percent::parse_percent;
 use strings::parse_string;
 
-use crate::{buffer::BufferWithCursor, lexer::strings::stack::StringLiteralStack};
+use crate::{
+    buffer::BufferWithCursor, lexer::strings::stack::StringLiteralStack, loc::loc, token::token,
+    Token,
+};
 use strings::{action::StringExtendAction, literal::StringLiteral};
 
 #[derive(Debug)]
