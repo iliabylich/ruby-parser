@@ -10,7 +10,7 @@ mod arg;
 pub(crate) use arg::Arg;
 
 mod args;
-pub(crate) use args::{OptParenArgs, ParenArgs};
+pub(crate) use args::{Args, OptParenArgs, ParenArgs};
 
 mod array;
 pub(crate) use array::Array;
@@ -45,8 +45,8 @@ pub(crate) use hash::{Assoc, Hash};
 mod if_unless;
 pub(crate) use if_unless::{IfStmt, UnlessStmt};
 
-// mod lambda;
-// pub(crate) use lambda::Lambda;
+mod lambda;
+pub(crate) use lambda::Lambda;
 
 mod literal;
 pub(crate) use literal::{Literal, StringContents, Symbol};

@@ -29,3 +29,16 @@ impl Rule for OptParenArgs {
         todo!()
     }
 }
+
+pub(crate) struct Args;
+impl Rule for Args {
+    type Output = Vec<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
