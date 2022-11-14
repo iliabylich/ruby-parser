@@ -1,36 +1,32 @@
 use crate::{
     builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
+    parser::base::{ParseResult, Rule},
     token::{Token, TokenKind},
-    Node,
+    Node, Parser,
 };
 
-impl Parser {
-    pub(crate) fn parse_module(&mut self) -> ParseResult<Box<Node>> {
-        let (module_t, name, body, end_t) = all_of!(
-            "module definition",
-            parse_k_module(self),
-            self.parse_cpath(),
-            self.try_bodystmt(),
-            self.parse_k_end(),
-        )?;
+pub(crate) struct Module;
+impl Rule for Module {
+    type Output = Box<Node>;
 
-        Ok(Builder::def_module(module_t, name, body, end_t))
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
     }
-}
 
-fn parse_k_module(parser: &mut Parser) -> ParseResult<Token> {
-    parser.try_token(TokenKind::kMODULE)
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::testing::assert_parses;
+    use super::Module;
+    use crate::testing::assert_parses_rule;
 
     #[test]
     fn test_module() {
-        assert_parses!(
-            Parser::parse_module,
+        assert_parses_rule!(
+            Module,
             b"module Foo::Bar; 1; end",
             r#"
 s(:module,

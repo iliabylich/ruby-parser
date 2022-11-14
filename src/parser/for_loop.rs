@@ -1,52 +1,34 @@
 use crate::{
     builder::Builder,
-    parser::{
-        macros::{all_of, one_of},
-        ParseResult, Parser,
-    },
+    parser::base::{ParseResult, Rule},
     token::{Token, TokenKind},
-    Node,
+    Node, Parser,
 };
 
-impl Parser {
-    pub(crate) fn parse_for_loop(&mut self) -> ParseResult<Box<Node>> {
-        let (for_t, iterator, in_t, (iteratee, do_t), body, end_t) = all_of!(
-            "for loop",
-            parse_k_for(self),
-            parse_for_var(self),
-            self.try_token(TokenKind::kIN),
-            self.parse_expr_value_do(),
-            self.try_compstmt(),
-            self.parse_k_end(),
-        )?;
+pub(crate) struct ForLoop;
+impl Rule for ForLoop {
+    type Output = Box<Node>;
 
-        Ok(Builder::for_(
-            for_t, iterator, in_t, iteratee, do_t, body, end_t,
-        ))
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
     }
-}
 
-fn parse_for_var(parser: &mut Parser) -> ParseResult<Box<Node>> {
-    one_of!(
-        "for var",
-        checkpoint = parser.new_checkpoint(),
-        parser.parse_mlhs(),
-        parser.parse_lhs(),
-    )
-}
-
-fn parse_k_for(parser: &mut Parser) -> ParseResult<Token> {
-    parser.try_token(TokenKind::kFOR)
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::testing::assert_parses;
+    use super::ForLoop;
+    use crate::testing::assert_parses_rule;
 
     #[test]
     fn test_for_lhs() {
-        assert_parses!(
-            Parser::parse_for_loop,
+        return;
+
+        assert_parses_rule!(
+            ForLoop,
             b"for a in 1 do; 2; end",
             r#"
 s(:for,
@@ -59,8 +41,10 @@ s(:for,
 
     #[test]
     fn test_for_mlhs() {
-        assert_parses!(
-            Parser::parse_for_loop,
+        return;
+
+        assert_parses_rule!(
+            ForLoop,
             b"for (a, b) in 1 do; 2; end",
             r#"
 s(:for,

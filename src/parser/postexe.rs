@@ -1,32 +1,30 @@
 use crate::{
-    builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
-    token::TokenKind,
-    Node,
+    parser::base::{ParseResult, Rule},
+    Node, Parser,
 };
 
-impl Parser {
-    pub(crate) fn parse_postexe(&mut self) -> ParseResult<Box<Node>> {
-        let (postexe_t, lcurly_t, compstmt, rcurly_t) = all_of!(
-            "postexe",
-            self.try_token(TokenKind::klEND),
-            self.expect_token(TokenKind::tLCURLY),
-            self.try_compstmt(),
-            self.expect_token(TokenKind::tRCURLY),
-        )?;
+pub(crate) struct Postexe;
+impl Rule for Postexe {
+    type Output = Box<Node>;
 
-        Ok(Builder::postexe(postexe_t, lcurly_t, compstmt, rcurly_t))
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::testing::assert_parses;
+    use super::Postexe;
+    use crate::testing::assert_parses_rule;
 
     #[test]
     fn test_postexe() {
-        assert_parses!(
-            Parser::parse_postexe,
+        assert_parses_rule!(
+            Postexe,
             b"END { 42 }",
             r#"
 s(:postexe,
@@ -37,6 +35,6 @@ s(:postexe,
 
     #[test]
     fn test_postexe_empty() {
-        assert_parses!(Parser::parse_postexe, b"END {}", "s(:postexe)")
+        assert_parses_rule!(Postexe, b"END {}", "s(:postexe)")
     }
 }

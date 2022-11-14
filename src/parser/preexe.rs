@@ -1,32 +1,30 @@
 use crate::{
-    builder::Builder,
-    parser::{macros::all_of, ParseResult, Parser},
-    token::TokenKind,
-    Node,
+    parser::base::{ParseResult, Rule},
+    Node, Parser,
 };
 
-impl Parser {
-    pub(crate) fn parse_preexe(&mut self) -> ParseResult<Box<Node>> {
-        let (preexe_t, lcurly_t, body, rcurly_t) = all_of!(
-            "preexe",
-            self.try_token(TokenKind::klBEGIN),
-            self.expect_token(TokenKind::tLCURLY),
-            self.try_top_compstmt(),
-            self.expect_token(TokenKind::tRCURLY),
-        )?;
+pub(crate) struct Preexe;
+impl Rule for Preexe {
+    type Output = Box<Node>;
 
-        Ok(Builder::preexe(preexe_t, lcurly_t, body, rcurly_t))
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::testing::{assert_parses, assert_parses_with_error};
+    use super::Preexe;
+    use crate::testing::assert_parses_rule;
 
     #[test]
     fn test_preexe() {
-        assert_parses!(
-            Parser::parse_preexe,
+        assert_parses_rule!(
+            Preexe,
             b"BEGIN { 42 }",
             r#"
 s(:preexe,
@@ -37,18 +35,6 @@ s(:preexe,
 
     #[test]
     fn test_preexe_empty() {
-        assert_parses!(Parser::parse_preexe, b"BEGIN {}", "s(:preexe)");
-    }
-
-    #[test]
-    fn test_nothing() {
-        assert_parses_with_error!(
-            Parser::parse_postexe,
-            b"",
-            "
-SEQUENCE (0) postexe (got [])
-    TOKEN (0) expected klEND, got tEOF (at 0)
-    "
-        );
+        assert_parses_rule!(Preexe, b"BEGIN {}", "s(:preexe)");
     }
 }

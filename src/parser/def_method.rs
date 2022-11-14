@@ -5,8 +5,8 @@ use crate::{
     Node, Parser,
 };
 
-pub(crate) struct IfStmt;
-impl Rule for IfStmt {
+pub(crate) struct MethodDef;
+impl Rule for MethodDef {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
@@ -18,8 +18,11 @@ impl Rule for IfStmt {
     }
 }
 
-pub(crate) struct UnlessStmt;
-impl Rule for UnlessStmt {
+pub(crate) struct EndlessMethodDef<T> {
+    _t: std::marker::PhantomData<T>,
+}
+
+impl<T> Rule for EndlessMethodDef<T> {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
@@ -33,37 +36,43 @@ impl Rule for UnlessStmt {
 
 #[cfg(test)]
 mod tests {
-    use super::{IfStmt, UnlessStmt};
+    use super::{EndlessMethodDef, MethodDef};
     use crate::testing::assert_parses_rule;
 
     #[test]
-    fn test_if() {
-        return;
-
+    fn test_instance_method_def() {
         assert_parses_rule!(
-            IfStmt,
-            b"if 1; 2; else; 3; end",
+            MethodDef,
+            b"def foo; 42; end",
             r#"
-s(:if,
-  s(:int, "1"),
-  s(:int, "2"),
-  s(:int, "3"))
+s(:def, "foo", nil,
+  s(:int, "42"))
             "#
         )
     }
 
     #[test]
-    fn test_unless() {
-        return;
-
+    fn test_singleton_method_def() {
         assert_parses_rule!(
-            UnlessStmt,
-            b"unless 1; 2; else; 3; end",
+            MethodDef,
+            b"def self.foo; 42; end",
             r#"
-s(:if,
-  s(:int, "1"),
-  s(:int, "3"),
-  s(:int, "2"))
+s(:defs,
+  s(:self), "foo", nil,
+  s(:int, "42"))
+            "#
+        )
+    }
+
+    #[test]
+    fn test_singleton_method_def_on_expr() {
+        assert_parses_rule!(
+            MethodDef,
+            b"def (foo).bar; 42; end",
+            r#"
+s(:defs,
+  s(:lvar, "foo"), "bar", nil,
+  s(:int, "42"))
             "#
         )
     }
