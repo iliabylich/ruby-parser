@@ -80,14 +80,13 @@ pub(crate) use stmt::{Bodystmt, Compstmt, TopCompstmt, TopStmts};
 
 mod trivial;
 pub(crate) use trivial::{
-    BackRefT, CallOp2T, CallOpT, CnameT, DoT, FnameT, KeywordVariableT, MethodNameT, Operation2T,
-    Operation3T, OperationT, SimpleNumericT, StringDvarT, SymT, TermT, UserVariableT, VarRefT,
+    BackRef, CallOp2T, CallOpT, CnameT, Cvar, DoT, FnameT, Gvar, Ivar, KeywordVariable,
+    MethodNameT, Operation2T, Operation3T, OperationT, SimpleNumeric, StringDvar, SymT, TermT,
+    UserVariable, VarRef,
 };
 
 mod undef;
 pub(crate) use undef::{Fitem, Undef};
-
-mod variables;
 
 pub struct Parser {
     lexer: Lexer,

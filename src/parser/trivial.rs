@@ -1,6 +1,7 @@
 use crate::{
+    builder::Builder,
     parser::{Captured, ParseError, ParseResult, Rule},
-    Parser, Token, TokenKind,
+    Node, Parser, Token, TokenKind,
 };
 
 trait TokenBasedRule<const N: usize = 0> {
@@ -84,9 +85,7 @@ where
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         if Self::starts_now(parser) {
-            let token = parser.current_token();
-            parser.skip_token();
-            Ok(token)
+            Ok(parser.take_token())
         } else {
             Err(ParseError {
                 error: (),
@@ -121,42 +120,122 @@ impl TokenBasedRule<73> for FnameT {
     );
 }
 
-pub(crate) struct SimpleNumericT;
-impl TokenBasedRule<4> for SimpleNumericT {
-    const TOKENS: [TokenKind; 4] = [
-        TokenKind::tINTEGER,
-        TokenKind::tFLOAT,
-        TokenKind::tRATIONAL,
-        TokenKind::tIMAGINARY,
-    ];
+pub(crate) struct SimpleNumeric;
+impl Rule for SimpleNumeric {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::tINTEGER,
+            TokenKind::tFLOAT,
+            TokenKind::tRATIONAL,
+            TokenKind::tIMAGINARY,
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let numeric_t = parser.take_token();
+        let node = match numeric_t.kind {
+            TokenKind::tINTEGER => Builder::integer(numeric_t, parser.buffer()),
+            TokenKind::tFLOAT => Builder::float(numeric_t, parser.buffer()),
+            TokenKind::tRATIONAL => Builder::rational(numeric_t, parser.buffer()),
+            TokenKind::tIMAGINARY => Builder::complex(numeric_t, parser.buffer()),
+            _ => unreachable!(),
+        };
+        Ok(node)
+    }
 }
 
-pub(crate) struct UserVariableT;
-impl TokenBasedRule<5> for UserVariableT {
-    const TOKENS: [TokenKind; 5] = concat(IdOrConstT::TOKENS, NonLocalVarT::TOKENS);
+pub(crate) struct UserVariable;
+impl Rule for UserVariable {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        IdOrConstT::starts_now(parser) || NonLocalVar::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if IdOrConstT::starts_now(parser) {
+            let token = IdOrConstT::parse(parser).unwrap();
+            Ok(Builder::lvar(token, parser.buffer()))
+        } else if NonLocalVar::starts_now(parser) {
+            NonLocalVar::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
 }
 
-pub(crate) struct KeywordVariableT;
-impl TokenBasedRule<7> for KeywordVariableT {
-    const TOKENS: [TokenKind; 7] = [
-        TokenKind::kNIL,
-        TokenKind::kSELF,
-        TokenKind::kTRUE,
-        TokenKind::kFALSE,
-        TokenKind::k__FILE__,
-        TokenKind::k__LINE__,
-        TokenKind::k__ENCODING__,
-    ];
+pub(crate) struct KeywordVariable;
+impl Rule for KeywordVariable {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::kNIL,
+            TokenKind::kSELF,
+            TokenKind::kTRUE,
+            TokenKind::kFALSE,
+            TokenKind::k__FILE__,
+            TokenKind::k__LINE__,
+            TokenKind::k__ENCODING__,
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let token = parser.take_token();
+        let node = match token.kind {
+            TokenKind::kNIL => Builder::nil(token),
+            TokenKind::kSELF => Builder::self_(token),
+            TokenKind::kTRUE => Builder::true_(token),
+            TokenKind::kFALSE => Builder::false_(token),
+            TokenKind::k__FILE__ => Builder::__file__(token),
+            TokenKind::k__LINE__ => Builder::__line__(token),
+            TokenKind::k__ENCODING__ => Builder::__encoding__(token),
+            _ => unreachable!(),
+        };
+        Ok(node)
+    }
 }
 
-pub(crate) struct VarRefT;
-impl TokenBasedRule<1> for VarRefT {
-    const TOKENS: [TokenKind; 1] = concat(UserVariableT::TOKENS, KeywordVariableT::TOKENS);
+pub(crate) struct VarRef;
+impl Rule for VarRef {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        UserVariable::starts_now(parser) || KeywordVariable::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if UserVariable::starts_now(parser) {
+            UserVariable::parse(parser)
+        } else if KeywordVariable::starts_now(parser) {
+            KeywordVariable::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
 }
 
-pub(crate) struct BackRefT;
-impl TokenBasedRule<2> for BackRefT {
-    const TOKENS: [TokenKind; 2] = [TokenKind::tNTH_REF, TokenKind::tBACK_REF];
+pub(crate) struct BackRef;
+impl Rule for BackRef {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tNTH_REF, TokenKind::tBACK_REF])
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let token = parser.take_token();
+        let node = match token.kind {
+            TokenKind::tNTH_REF => Builder::nth_ref(token, parser.buffer()),
+            TokenKind::tBACK_REF => Builder::back_ref(token, parser.buffer()),
+            _ => unreachable!(),
+        };
+        Ok(node)
+    }
 }
 
 pub(crate) struct CnameT;
@@ -164,14 +243,45 @@ impl TokenBasedRule<2> for CnameT {
     const TOKENS: [TokenKind; 2] = IdOrConstT::TOKENS;
 }
 
-pub(crate) struct StringDvarT;
-impl TokenBasedRule<1> for StringDvarT {
-    const TOKENS: [TokenKind; 1] = concat(FnameT::TOKENS, NonLocalVarT::TOKENS);
+pub(crate) struct StringDvar;
+impl Rule for StringDvar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        NonLocalVar::starts_now(parser) || BackRef::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if NonLocalVar::starts_now(parser) {
+            NonLocalVar::parse(parser)
+        } else if BackRef::starts_now(parser) {
+            BackRef::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct SymT;
-impl TokenBasedRule<48> for SymT {
-    const TOKENS: [TokenKind; 48] = concat(FnameT::TOKENS, NonLocalVarT::TOKENS);
+impl Rule for SymT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        FnameT::starts_now(parser)
+            || parser.current_token().is_one_of([
+                TokenKind::tIVAR,
+                TokenKind::tCVAR,
+                TokenKind::tGVAR,
+            ])
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct CallOpT;
@@ -281,9 +391,67 @@ impl TokenBasedRule<41> for ReswordsT {
     ];
 }
 
-struct NonLocalVarT;
-impl TokenBasedRule<3> for NonLocalVarT {
-    const TOKENS: [TokenKind; 3] = [TokenKind::tIVAR, TokenKind::tGVAR, TokenKind::tCVAR];
+pub(crate) struct Ivar;
+impl Rule for Ivar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tIVAR)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let ivar_t = parser.take_token();
+        Ok(Builder::ivar(ivar_t, parser.buffer()))
+    }
+}
+
+pub(crate) struct Cvar;
+impl Rule for Cvar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tCVAR)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let cvar_t = parser.take_token();
+        Ok(Builder::cvar(cvar_t, parser.buffer()))
+    }
+}
+
+pub(crate) struct Gvar;
+impl Rule for Gvar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tGVAR)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        let gvar_t = parser.take_token();
+        Ok(Builder::gvar(gvar_t, parser.buffer()))
+    }
+}
+
+struct NonLocalVar;
+impl Rule for NonLocalVar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        Ivar::starts_now(parser) || Cvar::starts_now(parser) || Gvar::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Ivar::starts_now(parser) {
+            Ivar::parse(parser)
+        } else if Cvar::starts_now(parser) {
+            Cvar::parse(parser)
+        } else if Gvar::starts_now(parser) {
+            Gvar::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 struct IdOrConstT;

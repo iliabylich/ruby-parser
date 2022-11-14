@@ -1,9 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{
-        variables::{BackRef, Gvar, NthRef},
-        Fitem, ParseResult, Rule,
-    },
+    parser::{BackRef, Fitem, Gvar, ParseResult, Rule},
     token::TokenKind,
     Node, Parser,
 };
@@ -36,8 +33,6 @@ impl Rule for Alias {
                 Gvar::parse(parser).unwrap()
             } else if BackRef::starts_now(parser) {
                 BackRef::parse(parser).unwrap()
-            } else if NthRef::starts_now(parser) {
-                NthRef::parse(parser).unwrap()
             } else {
                 panic!("wring token type")
             };

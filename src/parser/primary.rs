@@ -1,5 +1,5 @@
 use crate::{
-    parser::{Array, Hash, Literal, ParseResult, Rule, VarRefT},
+    parser::{Array, Hash, Literal, ParseResult, Rule},
     Node, Parser,
 };
 

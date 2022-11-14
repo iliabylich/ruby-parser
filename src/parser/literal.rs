@@ -5,8 +5,8 @@ use crate::{
         types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
     parser::{
-        variables::{BackRef, Cvar, Gvar, Ivar},
-        AtLeastOnce, ExactToken, FnameT, ParseResult, Repeat1, Rule, SeparatedBy, SimpleNumericT,
+        AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy, SimpleNumeric,
+        StringDvar, SymT,
     },
     token::token,
     Node, Parser, TokenKind,
@@ -58,7 +58,7 @@ impl Rule for Numeric {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::tUMINUS_NUM) || SimpleNumericT::starts_now(parser)
+        parser.current_token().is(TokenKind::tUMINUS_NUM) || SimpleNumeric::starts_now(parser)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -68,16 +68,8 @@ impl Rule for Numeric {
             None
         };
 
-        let mut number = if SimpleNumericT::starts_now(parser) {
-            let numeric_t = SimpleNumericT::parse(parser).unwrap();
-
-            match numeric_t.kind {
-                TokenKind::tINTEGER => Builder::integer(numeric_t, parser.buffer()),
-                TokenKind::tFLOAT => Builder::float(numeric_t, parser.buffer()),
-                TokenKind::tRATIONAL => Builder::rational(numeric_t, parser.buffer()),
-                TokenKind::tIMAGINARY => Builder::complex(numeric_t, parser.buffer()),
-                _ => panic!("wrong token type"),
-            }
+        let mut number = if SimpleNumeric::starts_now(parser) {
+            SimpleNumeric::parse(parser).unwrap()
         } else {
             panic!("expected numeric literal")
         };
@@ -148,14 +140,8 @@ impl Rule for SimpleSymbol {
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         let colon_t = parser.take_token();
 
-        let sym_t = if FnameT::starts_now(parser) {
-            FnameT::parse(parser).unwrap()
-        } else if parser.current_token().is_one_of([
-            TokenKind::tIVAR,
-            TokenKind::tCVAR,
-            TokenKind::tGVAR,
-        ]) {
-            parser.take_token()
+        let sym_t = if SymT::starts_now(parser) {
+            SymT::parse(parser).unwrap()
         } else {
             panic!("wrong token")
         };
@@ -643,19 +629,8 @@ impl Rule for StringDvarContent {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let _ = parser.take_token();
-
-        if Gvar::starts_now(parser) {
-            Gvar::parse(parser)
-        } else if Ivar::starts_now(parser) {
-            Ivar::parse(parser)
-        } else if Cvar::starts_now(parser) {
-            Cvar::parse(parser)
-        } else if BackRef::starts_now(parser) {
-            BackRef::parse(parser)
-        } else {
-            panic!("wrong token type")
-        }
+        let _string_dvar_t = parser.take_token();
+        StringDvar::parse(parser)
     }
 }
 
