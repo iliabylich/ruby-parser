@@ -128,16 +128,16 @@ mod tests {
         ) => {{
             let len = $input.len();
 
-            let (mut lexer, _state) = Lexer::new_managed($input);
+            let mut lexer = Lexer::new($input);
             let token = lexer.next_token();
             assert_eq!(token, token!($token, loc!(0, len)));
 
             assert_eq!(
-                lexer.string_literals().size(),
+                lexer.string_literals.size(),
                 1,
                 "expected a string literal to be pushed"
             );
-            let literal = lexer.string_literals().last().unwrap();
+            let literal = lexer.string_literals.last().unwrap();
             assert_eq!(literal, &$literal);
 
             assert_eq!(lexer.next_token(), token!(tEOF, loc!(len, len)));

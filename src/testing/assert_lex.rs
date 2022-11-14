@@ -6,7 +6,7 @@ macro_rules! assert_lex {
         assert = $assert:expr
     ) => {{
         use crate::{lexer::Lexer, loc::loc, token::Token};
-        let (mut lexer, _state) = Lexer::new_managed($input);
+        let mut lexer = Lexer::new($input);
         $pre(&mut lexer);
 
         let actual_token = lexer.current_token();
@@ -22,7 +22,7 @@ macro_rules! assert_lex {
         );
         assert_eq!(
             actual_token.loc.end,
-            lexer.buffer().pos(),
+            lexer.buffer.pos(),
             "buffer.pos() is not token.loc.end (i.e. input hasn't been consumed)"
         );
         $assert(&lexer);

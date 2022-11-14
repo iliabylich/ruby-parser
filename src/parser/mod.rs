@@ -32,8 +32,6 @@ mod undef;
 mod variables;
 
 pub struct Parser {
-    state: OwnedState,
-
     lexer: Lexer,
     debug: bool,
 }
@@ -42,12 +40,8 @@ static mut COUNTER: usize = 0;
 
 impl Parser {
     pub fn new(input: &[u8]) -> Self {
-        let mut state = OwnedState::new(input);
-        let state_ref = state.new_ref();
-
         Self {
-            state,
-            lexer: Lexer::new(state_ref),
+            lexer: Lexer::new(input),
             debug: false,
         }
     }
@@ -91,6 +85,6 @@ impl Parser {
     }
 
     pub(crate) fn buffer(&self) -> &Buffer {
-        self.lexer.buffer().for_lookahead()
+        self.lexer.buffer.for_lookahead()
     }
 }

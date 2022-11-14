@@ -294,16 +294,16 @@ impl Rule for XString {
             // manually push XString literal in lexer (yes, only parser know it)
             parser
                 .lexer
-                .string_literals()
+                .string_literals
                 .push(StringLiteral::StringInterp(StringInterp::new(
-                    Interpolation::new(parser.lexer.curly_nest()),
+                    Interpolation::new(parser.lexer.curly_nest),
                     b'`',
                     b'`',
                 )));
 
             // override token
             let token = token!(TokenKind::tXSTRING_BEG, begin_t.loc);
-            parser.lexer.tokens_mut()[parser.lexer.token_idx()] = token;
+            parser.lexer.tokens[parser.lexer.token_idx] = token;
         }
         parser.skip_token();
 
@@ -352,16 +352,16 @@ impl Rule for Regexp {
             // manually push XString literal in lexer (yes, only parser know it)
             parser
                 .lexer
-                .string_literals()
+                .string_literals
                 .push(StringLiteral::Regexp(RegexpLiteral::new(
                     b'/',
                     b'/',
-                    parser.lexer.curly_nest(),
+                    parser.lexer.curly_nest,
                 )));
 
             // override token
             let token = token!(TokenKind::tREGEXP_BEG, begin_t.loc);
-            parser.lexer.tokens_mut()[parser.lexer.token_idx()] = token;
+            parser.lexer.tokens[parser.lexer.token_idx] = token;
         }
         parser.skip_token();
 

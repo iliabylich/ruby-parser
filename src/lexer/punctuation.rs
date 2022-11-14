@@ -15,18 +15,18 @@ use crate::{
 
 impl OnByte<b'#'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
+        let start = self.buffer.pos();
 
         // simply read until EOL
         loop {
-            match self.buffer().current_byte() {
+            match self.buffer.current_byte() {
                 None | Some(b'\n') => break,
-                _ => self.buffer().skip_byte(),
+                _ => self.buffer.skip_byte(),
             }
         }
         // Multiple consecutive comments are merged on the parser level
 
-        token!(tCOMMENT, loc!(start, self.buffer().pos()))
+        token!(tCOMMENT, loc!(start, self.buffer.pos()))
     }
 }
 #[test]
@@ -37,22 +37,22 @@ fn test_tCOMMENT_INLINE() {
 
 impl OnByte<b'*'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
 
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'*') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'=') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tOP_ASGN, loc!(start, start + 3))
                     }
                     _ => token!(tDSTAR, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             _ => token!(tSTAR, loc!(start, start + 1)),
@@ -82,17 +82,17 @@ fn test_tOP_ASGN_DSTAR() {
 
 impl OnByte<b'!'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
 
         // !@ is handled on the parser level
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tNEQ, loc!(start, start + 2))
             }
             Some(b'~') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tNMATCH, loc!(start, start + 2))
             }
             _ => token!(tBANG, loc!(start, start + 1)),
@@ -117,31 +117,31 @@ fn test_tBANG() {
 
 impl OnByte<b'='> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
 
-        if self.buffer().lookahead(b"begin") {
-            self.buffer().set_pos(self.pos() + 5);
+        if self.buffer.lookahead(b"begin") {
+            self.buffer.set_pos(self.buffer.pos() + 5);
             return token!(tEMBEDDED_COMMENT_START, loc!(start, start + 6));
         }
 
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'=') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tEQQ, loc!(start, start + 3))
                     }
                     _ => token!(tEQ, loc!(start, start + 2)),
                 }
             }
             Some(b'~') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tMATCH, loc!(start, start + 2))
             }
             Some(b'>') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tASSOC, loc!(start, start + 2))
             }
             _ => token!(tEQL, loc!(start, start + 1)),
@@ -181,24 +181,24 @@ fn test_tEQL() {
 
 impl OnByte<b'<'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
+        let start = self.buffer.pos();
 
         // Check if heredoc id
-        if let Some(b'<') = self.buffer().byte_at(start + 1) {
-            if self.required_new_expr() {
+        if let Some(b'<') = self.buffer.byte_at(start + 1) {
+            if self.required_new_expr {
                 if let Some(HeredocId {
                     token,
                     id: (id_start, id_end),
                     squiggly,
                     interpolated,
-                }) = HeredocId::parse(&mut self.buffer())
+                }) = HeredocId::parse(&mut self.buffer)
                 {
                     let interpolated = if interpolated {
-                        Some(Interpolation::new(self.curly_nest()))
+                        Some(Interpolation::new(self.curly_nest))
                     } else {
                         None
                     };
-                    self.string_literals()
+                    self.string_literals
                         .push(StringLiteral::Heredoc(Heredoc::new(
                             interpolated,
                             loc!(id_start, id_end),
@@ -210,25 +210,25 @@ impl OnByte<b'<'> for Lexer {
             }
         }
 
-        self.skip_byte();
+        self.buffer.skip_byte();
 
         // Otherwise just an operator
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'>') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tCMP, loc!(start, start + 3))
                     }
                     _ => token!(tLEQ, loc!(start, start + 2)),
                 }
             }
             Some(b'<') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'=') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tOP_ASGN, loc!(start, start + 3))
                     }
                     _ => token!(tLSHFT, loc!(start, start + 2)),
@@ -245,14 +245,14 @@ fn test_tSTRING_BEG_HEREDOC() {
         input = b"<<-HERE",
         token = token!(tDSTRING_BEG, loc!(0, 7)),
         setup = |lexer: &mut Lexer| {
-            *lexer.curly_nest_mut() = 42;
+            lexer.curly_nest = 42;
             lexer.require_new_expr();
         },
         assert = |lexer: &Lexer| {
-            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(lexer.string_literals.size(), 1);
 
             assert_eq!(
-                lexer.string_literals().last(),
+                lexer.string_literals.last(),
                 Some(&StringLiteral::Heredoc(Heredoc::new(
                     Some(Interpolation::new(42)),
                     loc!(3, 7),
@@ -291,18 +291,18 @@ fn test_tLT() {
 
 impl OnByte<62 /* '>' (fix highlighting) */> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        match self.current_byte() {
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tGEQ, loc!(start, start + 2))
             }
             Some(b'>') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'=') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tOP_ASGN, loc!(start, start + 3))
                     }
                     _ => token!(tRSHFT, loc!(start, start + 2)),
@@ -335,12 +335,12 @@ fn test_tGT() {
 
 impl OnByte<b'"'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         let token = token!(tDSTRING_BEG, loc!(start, start + 1));
-        self.string_literals()
+        self.string_literals
             .push(StringLiteral::StringInterp(StringInterp::new(
-                Interpolation::new(self.curly_nest()),
+                Interpolation::new(self.curly_nest),
                 b'"',
                 b'"',
             )));
@@ -354,14 +354,14 @@ fn test_tSTRING_BEG_DQUOTE() {
         input = b"\"",
         token = token!(tDSTRING_BEG, loc!(0, 1)),
         setup = |lexer: &mut Lexer| {
-            *lexer.curly_nest_mut() = 42;
+            lexer.curly_nest = 42;
         },
         assert = |lexer: &Lexer| {
             use crate::lexer::strings::types::StringInterp;
-            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(lexer.string_literals.size(), 1);
 
             assert_eq!(
-                lexer.string_literals().last(),
+                lexer.string_literals.last(),
                 Some(&StringLiteral::StringInterp(StringInterp::new(
                     Interpolation::new(42),
                     b'"',
@@ -375,8 +375,8 @@ fn test_tSTRING_BEG_DQUOTE() {
 impl OnByte<b'`'> for Lexer {
     fn on_byte(&mut self) -> Token {
         // we rewrite '`' to tXSTRING_BEG on the parser level
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         token!(tIDENTIFIER, loc!(start, start + 1))
     }
 }
@@ -388,10 +388,10 @@ fn test_tIDENTIFIER_backtick() {
 
 impl OnByte<b'\''> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         let token = token!(tSTRING_BEG, loc!(start, start + 1));
-        self.string_literals()
+        self.string_literals
             .push(StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')));
         token
     }
@@ -403,12 +403,12 @@ fn test_tSTRING_BEG1_SQUOTE() {
         input = b"'",
         token = token!(tSTRING_BEG, loc!(0, 1)),
         setup = |lexer: &mut Lexer| {
-            *lexer.curly_nest_mut() = 42;
+            lexer.curly_nest = 42;
         },
         assert = |lexer: &Lexer| {
-            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(lexer.string_literals.size(), 1);
             assert_eq!(
-                lexer.string_literals().last(),
+                lexer.string_literals.last(),
                 Some(&StringLiteral::StringPlain(StringPlain::new(b'\'', b'\'')))
             )
         }
@@ -417,31 +417,31 @@ fn test_tSTRING_BEG1_SQUOTE() {
 
 impl OnByte<b'?'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        QMark::parse(&mut self.buffer())
+        QMark::parse(&mut self.buffer)
     }
 }
 
 impl OnByte<b'&'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        match self.current_byte() {
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        match self.buffer.current_byte() {
             Some(b'&') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'=') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tOP_ASGN, loc!(start, start + 3))
                     }
                     _ => token!(tANDOP, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'.') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tANDDOT, loc!(start, start + 2))
             }
             _ => token!(tAMPER, loc!(start, start + 1)),
@@ -476,21 +476,21 @@ fn test_tAMPER() {
 
 impl OnByte<b'|'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        match self.current_byte() {
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        match self.buffer.current_byte() {
             Some(b'|') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'=') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tOP_ASGN, loc!(start, start + 3))
                     }
                     _ => token!(tOROP, loc!(start, start + 2)),
                 }
             }
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             _ => token!(tPIPE, loc!(start, start + 1)),
@@ -520,16 +520,16 @@ fn test_tPIPE() {
 
 impl OnByte<b'+'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         // +@ is handled on the parser level
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'0'..=b'9') => {
-                let mut token = parse_number(&mut self.buffer());
+                let mut token = parse_number(&mut self.buffer);
                 token.loc.start = start;
                 token
             }
@@ -555,16 +555,16 @@ fn test_tPLUS() {
 
 impl OnByte<b'-'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         // -@ is handled on the parser level
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             Some(b'>') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tLAMBDA, loc!(start, start + 2))
             }
             // TODO: handle tUMINUS
@@ -596,14 +596,14 @@ fn test_tUMINUS_NUM() {
 
 impl OnByte<b'.'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        match self.current_byte() {
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        match self.buffer.current_byte() {
             Some(b'.') => {
-                self.skip_byte();
-                match self.current_byte() {
+                self.buffer.skip_byte();
+                match self.buffer.current_byte() {
                     Some(b'.') => {
-                        self.skip_byte();
+                        self.buffer.skip_byte();
                         token!(tDOT3, loc!(start, start + 3))
                     }
                     _ => token!(tDOT2, loc!(start, start + 2)),
@@ -611,12 +611,12 @@ impl OnByte<b'.'> for Lexer {
             }
             Some(b'0'..=b'9') => {
                 let mut end = start;
-                while matches!(self.buffer().byte_at(end), Some(b'0'..=b'9')) {
+                while matches!(self.buffer.byte_at(end), Some(b'0'..=b'9')) {
                     end += 1;
                 }
                 panic!(
                     "no .<digit> floating literal anymore; put 0 before dot ({:?})",
-                    self.buffer().slice(start, end)
+                    self.buffer.slice(start, end)
                 );
             }
             _ => token!(tDOT, loc!(start, start + 1)),
@@ -641,10 +641,10 @@ fn test_tDOT() {
 
 impl OnByte<b')'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        if self.paren_nest() > 0 {
-            *self.paren_nest_mut() -= 1;
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        if self.paren_nest > 0 {
+            self.paren_nest -= 1;
         } else {
             panic!("negative paren_nest");
         }
@@ -659,7 +659,7 @@ fn test_tRPAREN() {
         input = b")",
         token = token!(tRPAREN, loc!(0, 1)),
         setup = |lexer: &mut Lexer| {
-            *lexer.paren_nest_mut() = 1;
+            lexer.paren_nest = 1;
         },
         assert = |_lexer: &Lexer| {}
     );
@@ -667,10 +667,10 @@ fn test_tRPAREN() {
 
 impl OnByte<b']'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        if self.brack_nest() > 0 {
-            *self.brack_nest_mut() -= 1;
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        if self.brack_nest > 0 {
+            self.brack_nest -= 1;
         } else {
             panic!("negative brack_nest");
         }
@@ -684,7 +684,7 @@ fn test_tRBRACK() {
         input = b"]",
         token = token!(tRBRACK, loc!(0, 1)),
         setup = |lexer: &mut Lexer| {
-            *lexer.brack_nest_mut() = 1;
+            lexer.brack_nest = 1;
         },
         assert = |_lexer: &Lexer| {}
     );
@@ -692,10 +692,10 @@ fn test_tRBRACK() {
 
 impl OnByte<b'}'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        if self.curly_nest() > 0 {
-            *self.curly_nest_mut() -= 1;
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        if self.curly_nest > 0 {
+            self.curly_nest -= 1;
         } else {
             panic!("negative curly_nest");
         }
@@ -709,7 +709,7 @@ fn test_tRCURLY() {
         input = b"}",
         token = token!(tRCURLY, loc!(0, 1)),
         setup = |lexer: &mut Lexer| {
-            *lexer.curly_nest_mut() = 1;
+            lexer.curly_nest = 1;
         },
         assert = |_lexer: &Lexer| {}
     );
@@ -717,28 +717,28 @@ fn test_tRCURLY() {
 
 impl OnByte<b':'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        match self.current_byte() {
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        match self.buffer.current_byte() {
             Some(b':') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 return token!(tCOLON2, loc!(start, start + 2));
             }
             Some(b'"') => {
                 // :"..." symbol
-                self.skip_byte();
+                self.buffer.skip_byte();
                 let token = token!(tDSYMBEG, loc!(start, start + 2));
-                self.string_literals()
+                self.string_literals
                     .push(StringLiteral::SymbolInterp(SymbolInterp::new(
-                        self.curly_nest(),
+                        self.curly_nest,
                     )));
                 return token;
             }
             Some(b'\'') => {
                 // :'...' symbol
-                self.skip_byte();
+                self.buffer.skip_byte();
                 let token = token!(tSYMBEG, loc!(start, start + 2));
-                self.string_literals()
+                self.string_literals
                     .push(StringLiteral::SymbolPlain(SymbolPlain));
                 return token;
             }
@@ -763,14 +763,14 @@ fn test_tDSYMBEG() {
         input = b":\"",
         token = token!(tDSYMBEG, loc!(0, 2)),
         setup = |lexer: &mut Lexer| {
-            *lexer.curly_nest_mut() = 42;
+            lexer.curly_nest = 42;
         },
         assert = |lexer: &Lexer| {
             use crate::lexer::strings::types::SymbolInterp;
 
-            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(lexer.string_literals.size(), 1);
             assert_eq!(
-                lexer.string_literals().last(),
+                lexer.string_literals.last(),
                 Some(&StringLiteral::SymbolInterp(SymbolInterp::new(42)))
             )
         }
@@ -783,14 +783,14 @@ fn test_tSYMBEG() {
         input = b":'",
         token = token!(tSYMBEG, loc!(0, 2)),
         setup = |lexer: &mut Lexer| {
-            *lexer.curly_nest_mut() = 42;
+            lexer.curly_nest = 42;
         },
         assert = |lexer: &Lexer| {
             use crate::lexer::strings::types::SymbolPlain;
 
-            assert_eq!(lexer.string_literals().size(), 1);
+            assert_eq!(lexer.string_literals.size(), 1);
             assert_eq!(
-                lexer.string_literals().last(),
+                lexer.string_literals.last(),
                 Some(&StringLiteral::SymbolPlain(SymbolPlain))
             )
         }
@@ -804,13 +804,13 @@ fn test_tCOLON() {
 
 impl OnByte<b'/'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         // Regexp begin is handled on the parser level
 
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             _ => token!(tDIVIDE, loc!(start, start + 1)),
@@ -830,12 +830,12 @@ fn test_tDIVIDE() {
 
 impl OnByte<b'^'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
 
-        match self.current_byte() {
+        match self.buffer.current_byte() {
             Some(b'=') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tOP_ASGN, loc!(start, start + 2))
             }
             _ => token!(tCARET, loc!(start, start + 1)),
@@ -855,8 +855,8 @@ fn test_tCARET() {
 
 impl OnByte<b';'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         token!(tSEMI, loc!(start, start + 1))
     }
 }
@@ -868,8 +868,8 @@ fn test_tSEMI() {
 
 impl OnByte<b','> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         token!(tCOMMA, loc!(start, start + 1))
     }
 }
@@ -881,8 +881,8 @@ fn test_tCOMMA() {
 
 impl OnByte<b'~'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
         // ~@ is handled on the parser level
         token!(tTILDE, loc!(start, start + 1))
     }
@@ -895,9 +895,9 @@ fn test_tTILDE() {
 
 impl OnByte<b'('> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        *self.paren_nest_mut() += 1;
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        self.paren_nest += 1;
         token!(tLPAREN, loc!(start, start + 1))
     }
 }
@@ -909,9 +909,9 @@ fn test_tLPAREN() {
 
 impl OnByte<b'['> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        *self.brack_nest_mut() += 1;
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        self.brack_nest += 1;
         token!(tLBRACK, loc!(start, start + 1))
     }
 }
@@ -923,40 +923,40 @@ fn test_tLBRACK() {
 
 impl OnByte<b'{'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        *self.curly_nest_mut() += 1;
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        self.curly_nest += 1;
         token!(tLCURLY, loc!(start, start + 1))
     }
 }
 
 impl OnByte<b'\\'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
-        self.skip_byte();
-        match self.current_byte() {
+        let start = self.buffer.pos();
+        self.buffer.skip_byte();
+        match self.buffer.current_byte() {
             Some(b'\n') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 return self.next_token();
             }
             Some(b' ') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tSP, loc!(start, start + 2))
             }
             Some(b'\t') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tSLASH_T, loc!(start, start + 2))
             }
             Some(0x0c) => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tSLASH_F, loc!(start, start + 2))
             }
             Some(b'\r') => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tSLASH_R, loc!(start, start + 2))
             }
             Some(0x0b) => {
-                self.skip_byte();
+                self.buffer.skip_byte();
                 token!(tVTAB, loc!(start, start + 2))
             }
             _ => token!(tBACKSLASH, loc!(start, start + 1)),
@@ -996,25 +996,25 @@ fn test_tESCAPED_VTAB() {
 
 impl OnByte<b'_'> for Lexer {
     fn on_byte(&mut self) -> Token {
-        let start = self.pos();
+        let start = self.buffer.pos();
 
         let prev_byte = start
             .checked_sub(1)
-            .map(|idx| self.buffer().byte_at(idx))
+            .map(|idx| self.buffer.byte_at(idx))
             .flatten();
         match prev_byte {
             // prev byte is either
             //   + None (i.e. it's the first byte of the file)
             //   + Some(b'\n')
             // AND it's "__END__" sequence
-            None | Some(b'\n') if self.buffer().lookahead(b"__END__") => {
+            None | Some(b'\n') if self.buffer.lookahead(b"__END__") => {
                 return token!(tEOF, loc!(start, start));
             }
             _ => {}
         }
 
         // otherwise it's a `_foo`/`_foo?`/`_foo!` identifier
-        Ident::parse(&mut self.buffer())
+        Ident::parse(&mut self.buffer)
     }
 }
 #[test]
