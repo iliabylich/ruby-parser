@@ -8,4 +8,4 @@ version = "0.1.0"
 [dependencies]
 
 [build-dependencies]
-lib-ruby-parser-nodes = {version = "0.53.0"}
+# lib-ruby-parser-nodes = {version = "0.53.0"}
