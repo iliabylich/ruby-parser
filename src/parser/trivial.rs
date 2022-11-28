@@ -146,7 +146,7 @@ impl Rule for SimpleNumeric {
     }
 }
 
-pub(crate) struct UserVariable;
+struct UserVariable;
 impl Rule for UserVariable {
     type Output = Box<Node>;
 
@@ -292,11 +292,6 @@ impl TokenBasedRule<2> for CallOpT {
 pub(crate) struct CallOp2T;
 impl TokenBasedRule<1> for CallOp2T {
     const TOKENS: [TokenKind; 1] = concat(CallOpT::TOKENS, [TokenKind::tCOLON2]);
-}
-
-pub(crate) struct MethodNameT;
-impl TokenBasedRule<2> for MethodNameT {
-    const TOKENS: [TokenKind; 2] = IdOrConstT::TOKENS;
 }
 
 pub(crate) struct DoT;

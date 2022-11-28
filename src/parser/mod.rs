@@ -21,17 +21,20 @@ pub(crate) use base::{
     ParseResult, Repeat1, Repeat2, Rule, SeparatedBy,
 };
 
-// mod block;
-// pub(crate) use block::{DoBlock, BraceBlock, Block};
+mod block;
+pub(crate) use block::{Block, BraceBlock, DoBlock};
 
 mod case;
 pub(crate) use case::Case;
 
-mod class;
-pub(crate) use class::Class;
+mod command;
+pub(crate) use command::{Command, CommandCall, CommandRHS};
 
 mod def_method;
 pub(crate) use def_method::{EndlessMethodDef, MethodDef};
+
+mod def_module_class;
+pub(crate) use def_module_class::{Class, Module};
 
 mod expr;
 pub(crate) use expr::Expr;
@@ -54,11 +57,8 @@ pub(crate) use literal::{Literal, StringContents, Symbol};
 mod mlhs;
 pub(crate) use mlhs::MLHS;
 
-mod module;
-pub(crate) use module::Module;
-
-// mod params;
-// pub(crate) use params::Params;
+mod params;
+pub(crate) use params::Params;
 
 mod pattern_matching;
 // pub(crate) use pattern_matching::{PCaseBody, PTopExprBody};
@@ -81,8 +81,7 @@ pub(crate) use stmt::{Bodystmt, Compstmt, TopCompstmt, TopStmts};
 mod trivial;
 pub(crate) use trivial::{
     BackRef, CallOp2T, CallOpT, CnameT, Cvar, DoT, FnameT, Gvar, Ivar, KeywordVariable,
-    MethodNameT, Operation2T, Operation3T, OperationT, SimpleNumeric, StringDvar, SymT, TermT,
-    UserVariable, VarRef,
+    Operation2T, Operation3T, OperationT, SimpleNumeric, StringDvar, SymT, TermT, VarRef,
 };
 
 mod undef;

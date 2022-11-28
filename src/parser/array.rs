@@ -15,7 +15,7 @@ impl Rule for Array {
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         let lbrack_t = parser.take_token();
-        let elements = ArrayElements::parse(parser).expect("failed to parse array elements");
+        let elements = Items::parse(parser).expect("failed to parse array elements");
         let rbrack_t = if parser.current_token().is(TokenKind::tRBRACK) {
             parser.take_token()
         } else {
@@ -26,8 +26,8 @@ impl Rule for Array {
     }
 }
 
-struct ArrayElements;
-impl Rule for ArrayElements {
+struct Items;
+impl Rule for Items {
     type Output = Vec<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
@@ -43,7 +43,7 @@ impl Rule for ArrayElements {
                 break;
             }
 
-            match ArrayElement::parse(parser) {
+            match Item::parse(parser) {
                 Ok(v) => elements.push(*v),
                 Err(mut err) => {
                     err.captured = Captured::from(elements) + Captured::from(commas) + err.captured;
@@ -69,8 +69,8 @@ impl Rule for ArrayElements {
     }
 }
 
-struct ArrayElement;
-impl Rule for ArrayElement {
+struct Item;
+impl Rule for Item {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {

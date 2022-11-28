@@ -1,12 +1,10 @@
 use crate::{
-    builder::Builder,
     parser::{ParseResult, Rule},
-    token::{Token, TokenKind},
     Node, Parser,
 };
 
-pub(crate) struct Class;
-impl Rule for Class {
+pub(crate) struct Params;
+impl Rule for Params {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {

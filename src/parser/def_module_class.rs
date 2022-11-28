@@ -18,6 +18,19 @@ impl Rule for Module {
     }
 }
 
+pub(crate) struct Class;
+impl Rule for Class {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::Module;
