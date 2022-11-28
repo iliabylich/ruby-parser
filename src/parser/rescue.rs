@@ -3,20 +3,9 @@ use crate::{
     Node, Parser, Token, TokenKind,
 };
 
-pub(crate) struct OptRescue;
-impl Rule for OptRescue {
-    type Output = Option<Box<Node>>;
+pub(crate) type OptRescue = Maybe1<Rescue>;
 
-    fn starts_now(parser: &mut Parser) -> bool {
-        true
-    }
-
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        Maybe1::<Rescue>::parse(parser)
-    }
-}
-
-struct Rescue;
+pub(crate) struct Rescue;
 impl Rule for Rescue {
     type Output = Box<Node>;
 
@@ -44,10 +33,10 @@ impl Rule for ExcList {
 
 struct ExcVar;
 impl Rule for ExcVar {
-    type Output = Option<(Token, Box<Node>)>;
+    type Output = (Token, Box<Node>);
 
     fn starts_now(parser: &mut Parser) -> bool {
-        true
+        parser.current_token().is(TokenKind::tASSOC)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

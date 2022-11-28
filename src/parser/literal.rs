@@ -570,20 +570,9 @@ s(:array,
     assert_parses_rule!(QSymbols, b"%i[]", r#"s(:array)"#);
 }
 
-pub(crate) struct StringContents;
-impl Rule for StringContents {
-    type Output = Vec<Node>;
+pub(crate) type StringContents = Repeat1<StringContent>;
 
-    fn starts_now(_parser: &mut Parser) -> bool {
-        true
-    }
-
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        Repeat1::<StringContent>::parse(parser)
-    }
-}
-
-struct StringContent;
+pub(crate) struct StringContent;
 impl Rule for StringContent {
     type Output = Box<Node>;
 
