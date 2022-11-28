@@ -20,8 +20,8 @@ where
 {
     type Output = Vec<<R::Output as Unbox>::Output>;
 
-    fn starts_now(parser: &mut Parser) -> bool {
-        R::starts_now(parser)
+    fn starts_now(_parser: &mut Parser) -> bool {
+        true
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
