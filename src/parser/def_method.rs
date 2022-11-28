@@ -18,11 +18,16 @@ impl Rule for MethodDef {
     }
 }
 
-pub(crate) struct EndlessMethodDef<T> {
+pub(crate) struct EndlessMethodDef<T>
+where
+    T: Rule<Output = Box<Node>>,
+{
     _t: std::marker::PhantomData<T>,
 }
-
-impl<T> Rule for EndlessMethodDef<T> {
+impl<T> Rule for EndlessMethodDef<T>
+where
+    T: Rule<Output = Box<Node>>,
+{
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
