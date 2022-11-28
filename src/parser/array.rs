@@ -106,7 +106,7 @@ impl Rule for SplatElement {
         parser.current_token().is(TokenKind::tSTAR)
     }
 
-    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         todo!()
     }
 }
@@ -115,12 +115,12 @@ struct ArgToArgPairOrPlainArg;
 impl Rule for ArgToArgPairOrPlainArg {
     type Output = Box<Node>;
 
-    fn starts_now(_parser: &mut Parser) -> bool {
+    fn starts_now(parser: &mut Parser) -> bool {
         // Arg::starts_now(parser)
         todo!()
     }
 
-    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         todo!()
     }
 }
@@ -133,7 +133,7 @@ impl Rule for LabelToArgPair {
         parser.current_token().is(TokenKind::tLABEL)
     }
 
-    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         todo!()
     }
 }
@@ -146,7 +146,7 @@ impl Rule for StringToArgPair {
         parser.current_token().is(TokenKind::tSTRING_BEG)
     }
 
-    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         todo!()
     }
 }
@@ -159,7 +159,7 @@ impl Rule for KeywordSplat {
         parser.current_token().is(TokenKind::tDSTAR)
     }
 
-    fn parse(_parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         todo!()
     }
 }
