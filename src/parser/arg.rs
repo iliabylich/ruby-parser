@@ -75,7 +75,13 @@ impl ValueType for ArgType {
         parser: &mut Parser,
         r_bp: u8,
     ) -> ParseResult<Box<Node>> {
-        todo!()
+        match op_t.kind {
+            TokenKind::tPLUS | TokenKind::tMINUS | TokenKind::tSTAR | TokenKind::tDIVIDE => {
+                let rhs = Self::parse_bp(parser, r_bp).unwrap();
+                Ok(Builder::binary_op(lhs, op_t, rhs, parser.buffer()))
+            }
+            _ => todo!("{:?} {:?}", lhs, op_t),
+        }
     }
 
     // Postfix operators
@@ -572,7 +578,7 @@ fn build_binary_call(lhs: Box<Node>, op_t: Token, rhs: Box<Node>, buffer: &Buffe
 }
 
 #[test]
-fn test_arg() {
+fn test_arg_binary_operators() {
     use crate::testing::assert_parses_rule;
 
     assert_parses_rule!(

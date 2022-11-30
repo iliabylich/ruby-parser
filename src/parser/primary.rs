@@ -1,8 +1,8 @@
 use crate::{
     builder::{ArgsType, Builder},
     parser::{
-        Args, Array, BackRef, Case, Class, Expr, ForLoop, Hash, IfStmt, Lambda, Literal, MethodDef,
-        Module, OperationT, ParseResult, Rule, UnlessStmt, VarRef,
+        Args, Array, BackRef, CallOpT, Case, Class, Expr, ForLoop, Hash, IfStmt, Lambda, Literal,
+        MethodDef, Module, OperationT, ParseResult, Rule, UnlessStmt, VarRef,
     },
     Node, Parser, Token, TokenKind,
 };
@@ -368,7 +368,22 @@ impl Rule for PrimaryTail {
     type Output = Self;
 
     fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tCOLON2)
+            || CallOpT::starts_now(parser)
+            || ArefArgs::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
         todo!()
+    }
+}
+
+struct ArefArgs;
+impl Rule for ArefArgs {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tLBRACK)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
