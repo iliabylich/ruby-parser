@@ -23,6 +23,16 @@ impl Token {
     }
 
     pub(crate) fn is_one_of_sorted<const N: usize>(&self, others: [TokenKind; N]) -> bool {
+        if cfg!(debug_assertions) {
+            let others = others.to_vec();
+            let mut sorted = others.clone();
+            sorted.sort();
+            assert_eq!(
+                others, sorted,
+                "Input of Token::is_one_of_sorted is not sorted"
+            );
+        }
+
         others.binary_search(&self.kind).is_ok()
     }
 }
