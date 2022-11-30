@@ -60,20 +60,26 @@ pub(crate) trait ValueType {
         Self::parse_bp(parser, 0)
     }
 
-    fn parse_bp(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
-        let mut lhs = if parser.current_token().is(TokenKind::tLPAREN) {
+    fn parse_lhs(parser: &mut Parser) -> ParseResult<Box<Node>> {
+        if parser.current_token().is(TokenKind::tLPAREN) {
             let begin_t = parser.take_token();
             let lhs = Self::parse_bp(parser, 0).unwrap();
             let end_t = parser.expect_token(TokenKind::tRPAREN).unwrap();
-            Builder::begin(begin_t, vec![*lhs], end_t)
+            Ok(Builder::begin(begin_t, vec![*lhs], end_t))
         } else if let Some((_, r_bp)) = Self::prefix_operator_power(parser.current_token()) {
             let op_t = parser.take_token();
             let rhs = Self::parse_bp(parser, r_bp).unwrap();
-            Self::build_prefix_op(op_t, rhs, parser).unwrap()
+            Self::build_prefix_op(op_t, rhs, parser)
         } else {
-            Self::parse0(parser).unwrap()
-        };
+            Self::parse0(parser)
+        }
+    }
 
+    fn parse_with_lhs(
+        parser: &mut Parser,
+        mut lhs: Box<Node>,
+        min_bp: u8,
+    ) -> ParseResult<Box<Node>> {
         loop {
             let op_t = parser.current_token();
 
@@ -105,6 +111,12 @@ pub(crate) trait ValueType {
         }
 
         Ok(lhs)
+    }
+
+    fn parse_bp(parser: &mut Parser, min_bp: u8) -> ParseResult<Box<Node>> {
+        let lhs = Self::parse_lhs(parser).unwrap();
+
+        Self::parse_with_lhs(parser, lhs, min_bp)
     }
 }
 
