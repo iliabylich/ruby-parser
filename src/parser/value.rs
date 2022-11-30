@@ -1,8 +1,9 @@
 use crate::{
     builder::Builder,
     parser::{
+        arg::ArgType,
         base::{ParseResult, Rule},
-        EndlessMethodDef, Primary,
+        Arg, EndlessMethodDef, Primary,
     },
     Node, Parser, Token, TokenKind,
 };
@@ -117,99 +118,6 @@ pub(crate) trait ValueType {
         let lhs = Self::parse_lhs(parser).unwrap();
 
         Self::parse_with_lhs(parser, lhs, min_bp)
-    }
-}
-
-struct ArgType;
-impl ValueType for ArgType {
-    // Prefix operators
-    fn prefix_operator_power(token: Token) -> Option<(u8, u8)> {
-        match token.kind {
-            TokenKind::tDOT2
-            | TokenKind::tDOT3
-            | TokenKind::tPLUS
-            | TokenKind::tMINUS
-            | TokenKind::tBANG
-            | TokenKind::tTILDE
-            | TokenKind::kDEFINED => token.kind.precedence(),
-            _ => None,
-        }
-    }
-    fn build_prefix_op(op_t: Token, arg: Box<Node>, parser: &mut Parser) -> ParseResult<Box<Node>> {
-        todo!()
-    }
-
-    // Binary operators
-    fn binary_operator_power(token: Token) -> Option<(u8, u8)> {
-        if token.is_one_of([
-            // Assignments that are parsed as "binary operators"
-            TokenKind::tEQL,
-            TokenKind::tOP_ASGN,
-            // Standard binary operators
-            TokenKind::tDOT2,
-            TokenKind::tDOT3,
-            TokenKind::tPLUS,
-            TokenKind::tMINUS,
-            TokenKind::tSTAR,
-            TokenKind::tDIVIDE,
-            TokenKind::tPERCENT,
-            TokenKind::tDSTAR,
-            TokenKind::tPIPE,
-            TokenKind::tCARET,
-            TokenKind::tAMPER,
-            TokenKind::tCMP,
-            TokenKind::tEQ,
-            TokenKind::tEQQ,
-            TokenKind::tNEQ,
-            TokenKind::tMATCH,
-            TokenKind::tNMATCH,
-            TokenKind::tLSHFT,
-            TokenKind::tANDOP,
-            TokenKind::tOROP,
-            TokenKind::tGT,
-            TokenKind::tLT,
-            TokenKind::tGEQ,
-            TokenKind::tLEQ,
-            // Ternary operator that is also a "binary operator"
-            TokenKind::tEH,
-            // 'rescue' keyword, also a "binary"
-            TokenKind::kRESCUE,
-        ]) {
-            token.kind.precedence()
-        } else {
-            None
-        }
-    }
-    fn build_binary_op(
-        op_t: Token,
-        lhs: Box<Node>,
-        parser: &mut Parser,
-        r_bp: u8,
-    ) -> ParseResult<Box<Node>> {
-        todo!()
-    }
-
-    // Postfix operators
-    fn postfix_operator_power(token: Token) -> Option<(u8, u8)> {
-        match token.kind {
-            TokenKind::tDOT2 | TokenKind::tDOT3 => token.kind.precedence(),
-            _ => None,
-        }
-    }
-    fn build_postfix_op(
-        op_t: Token,
-        arg: Box<Node>,
-        parser: &mut Parser,
-    ) -> ParseResult<Box<Node>> {
-        todo!()
-    }
-
-    // Rules
-    fn rule_starts_now(parser: &mut Parser) -> bool {
-        Primary::starts_now(parser) || EndlessMethodDef::<Value<ArgType>>::starts_now(parser)
-    }
-    fn parse0(parser: &mut Parser) -> ParseResult<Box<Node>> {
-        todo!()
     }
 }
 
