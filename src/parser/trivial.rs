@@ -101,13 +101,13 @@ impl TokenBasedRule<3> for OperationT {
 }
 
 pub(crate) struct Operation2T;
-impl TokenBasedRule<1> for Operation2T {
-    const TOKENS: [TokenKind; 1] = concat(OperationT::TOKENS, OpT::TOKENS);
+impl TokenBasedRule<32> for Operation2T {
+    const TOKENS: [TokenKind; 32] = concat(OperationT::TOKENS, OpT::TOKENS);
 }
 
 pub(crate) struct Operation3T;
-impl TokenBasedRule<1> for Operation3T {
-    const TOKENS: [TokenKind; 1] = concat(OpT::TOKENS, [TokenKind::tIDENTIFIER, TokenKind::tFID]);
+impl TokenBasedRule<31> for Operation3T {
+    const TOKENS: [TokenKind; 31] = concat(OpT::TOKENS, [TokenKind::tIDENTIFIER, TokenKind::tFID]);
 }
 
 pub(crate) struct FnameT;

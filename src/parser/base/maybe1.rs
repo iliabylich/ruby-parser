@@ -17,7 +17,7 @@ where
     type Output = Option<R::Output>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        R::starts_now(parser)
+        true
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

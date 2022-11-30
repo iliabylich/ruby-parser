@@ -1,8 +1,9 @@
 use crate::{
     builder::{ArgsType, Builder},
     parser::{
-        Args, Array, BackRef, CallOpT, Case, Class, Expr, ForLoop, Hash, IfStmt, Lambda, Literal,
-        MethodDef, Module, OperationT, ParseResult, Rule, UnlessStmt, VarRef,
+        base::Maybe1, Args, Array, BackRef, BraceBlock, CallOpT, Case, Class, Expr, ForLoop, Hash,
+        IfStmt, Lambda, Literal, MethodDef, Module, Operation2T, Operation3T, OperationT,
+        OptParenArgs, ParenArgs, ParseResult, Rule, UnlessStmt, VarRef,
     },
     Node, Parser, Token, TokenKind,
 };
@@ -374,7 +375,61 @@ impl Rule for PrimaryTail {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        type MaybeBraceBlock = Maybe1<BraceBlock>;
+
+        if parser.current_token().is(TokenKind::tCOLON2) {
+            let colon2_t = parser.take_token();
+
+            if parser.current_token().is(TokenKind::tCONSTANT) {
+                // Scope::CONST (tCONSTANT) or self::Integer("42") (operation2_t that includes tCONSTANT)
+                let name_t = parser.take_token();
+
+                if ParenArgs::starts_now(parser) {
+                    // Definitely a method call
+                    let args = ParenArgs::parse(parser).unwrap();
+                    let maybe_block = MaybeBraceBlock::parse(parser).unwrap();
+                    todo!("{:?} {:?} {:?} {:?}", colon2_t, name_t, args, maybe_block);
+                } else {
+                    // Defintely a const lookup
+                    Ok(Self::ConstAccess { colon2_t, name_t })
+                }
+            } else if Operation2T::starts_now(parser) {
+                // foo::bar() method call
+                let name_t = Operation2T::parse(parser).unwrap();
+                let args = ParenArgs::parse(parser).unwrap();
+                let maybe_block = MaybeBraceBlock::parse(parser).unwrap();
+                todo!("{:?} {:?} {:?} {:?}", colon2_t, name_t, args, maybe_block);
+            } else if Operation3T::starts_now(parser) {
+                let name_t = Operation2T::parse(parser).unwrap();
+                let maybe_block = MaybeBraceBlock::parse(parser).unwrap();
+                todo!("{:?} {:?} {:?}", colon2_t, name_t, maybe_block)
+            } else {
+                todo!("wrong token {:?}", parser.current_token())
+            }
+        } else if CallOpT::starts_now(parser) {
+            // foo.bar of foo&.bar
+            let op_t = CallOpT::parse(parser).unwrap();
+            let name_t = if Operation2T::starts_now(parser) {
+                Some(Operation2T::parse(parser).unwrap())
+            } else {
+                None
+            };
+
+            let args = if name_t.is_some() {
+                OptParenArgs::parse(parser).unwrap()
+            } else {
+                Some(ParenArgs::parse(parser).unwrap())
+            };
+
+            let maybe_block = MaybeBraceBlock::parse(parser).unwrap();
+            todo!("{:?} {:?} {:?} {:?}", op_t, name_t, args, maybe_block)
+        } else if ArefArgs::starts_now(parser) {
+            let aref_args = ArefArgs::parse(parser).unwrap();
+            let maybe_block = BraceBlock::parse(parser).unwrap();
+            todo!("{:?} {:?}", aref_args, maybe_block)
+        } else {
+            unreachable!()
+        }
     }
 }
 

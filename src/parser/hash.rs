@@ -10,7 +10,7 @@ impl Rule for Hash {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::tLCURLY)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
