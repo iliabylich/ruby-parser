@@ -6,9 +6,6 @@ use crate::token::{Token, TokenKind};
 mod alias;
 pub(crate) use alias::Alias;
 
-mod arg;
-pub(crate) use arg::Arg;
-
 mod args;
 pub(crate) use args::{Args, OptParenArgs, ParenArgs};
 
