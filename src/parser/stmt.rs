@@ -119,3 +119,5 @@ impl Rule for StmtTail {
         todo!()
     }
 }
+
+pub(crate) struct OptTerms;

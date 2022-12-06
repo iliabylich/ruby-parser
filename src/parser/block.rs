@@ -16,8 +16,8 @@ impl Rule for DoBlock {
     }
 }
 
-pub(crate) struct BraceBlock;
-impl Rule for BraceBlock {
+pub(crate) struct MaybeBraceBlock;
+impl Rule for MaybeBraceBlock {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {

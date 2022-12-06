@@ -31,6 +31,10 @@ impl Rule for UnlessStmt {
     }
 }
 
+pub(crate) struct OptElse;
+
+pub(crate) struct Then;
+
 #[cfg(test)]
 mod tests {
     use super::{IfStmt, UnlessStmt};

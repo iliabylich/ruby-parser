@@ -2,7 +2,7 @@ use crate::{
     builder::Builder,
     parser::{
         base::{Maybe1, Rule},
-        Command, ParseResult,
+        ParseResult, Value,
     },
     Node, Parser, Token, TokenKind,
 };
@@ -12,7 +12,7 @@ impl Rule for ParenArgs {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        Command::starts_now(parser) || Arglist::starts_now(parser)
+        Value::starts_now(parser) || Arglist::starts_now(parser)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

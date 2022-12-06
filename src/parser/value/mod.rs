@@ -2,7 +2,7 @@ use crate::{
     builder::Builder,
     parser::{
         base::{ParseResult, Rule},
-        EndlessMethodDef, Primary,
+        EndlessMethodDef,
     },
     Node, Parser, Token, TokenKind,
 };
