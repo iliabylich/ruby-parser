@@ -72,6 +72,6 @@ pub(crate) fn binary_operator_power(token: Token) -> Option<(u8, u8)> {
     }
 }
 
-pub(crate) fn postfix_operator_power(token: Token) -> Option<(u8, u8)> {
-    todo!()
+pub(crate) fn postfix_operator_power(_token: Token) -> Option<(u8, u8)> {
+    None
 }
