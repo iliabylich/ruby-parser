@@ -1,7 +1,7 @@
 macro_rules! assert_parses_rule {
     ($rule:ty, $src:expr, $expected:expr) => {{
         use crate::{
-            parser::{ParseResult, Rule},
+            parser::base::{ParseResult, Rule},
             Node, Parser,
         };
 

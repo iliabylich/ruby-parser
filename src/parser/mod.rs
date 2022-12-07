@@ -13,10 +13,6 @@ mod array;
 pub(crate) use array::Array;
 
 mod base;
-pub(crate) use base::{
-    AtLeastOnce, Captured, CapturedItem, ExactToken, Maybe1, Maybe2, Maybe3, ParseError,
-    ParseResult, Repeat1, Repeat2, Rule, SeparatedBy,
-};
 
 mod block;
 pub(crate) use block::{Block, DoBlock, MaybeBraceBlock};
@@ -132,6 +128,7 @@ impl Parser {
     }
 
     fn parse_program(&mut self) -> Box<Node> {
+        use base::Rule;
         stmt::TopCompstmt::parse(self).unwrap()
     }
 

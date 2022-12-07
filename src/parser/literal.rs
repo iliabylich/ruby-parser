@@ -5,8 +5,8 @@ use crate::{
         types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
     parser::{
-        AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy, SimpleNumeric,
-        StringDvar, SymT,
+        base::{AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy},
+        SimpleNumeric, StringDvar, SymT,
     },
     token::token,
     Node, Parser, TokenKind,

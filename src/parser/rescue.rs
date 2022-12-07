@@ -1,5 +1,5 @@
 use crate::{
-    parser::{ExactToken, Maybe1, ParseResult, Rule},
+    parser::base::{ExactToken, Maybe1, ParseResult, Rule},
     Node, Parser, Token, TokenKind,
 };
 

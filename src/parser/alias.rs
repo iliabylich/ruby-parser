@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::{BackRef, Fitem, Gvar, ParseResult, Rule},
+    parser::{
+        base::{ParseResult, Rule},
+        BackRef, Fitem, Gvar,
+    },
     token::TokenKind,
     Node, Parser,
 };

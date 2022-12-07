@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{Captured, ParseResult, Rule},
+    parser::base::{Captured, ParseResult, Rule},
     token::TokenKind,
     Node, Parser,
 };

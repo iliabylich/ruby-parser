@@ -1,7 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        FnameT, Symbol, {ExactToken, ParseResult, Rule, SeparatedBy},
+        base::{ExactToken, ParseResult, Rule, SeparatedBy},
+        FnameT, Symbol,
     },
     token::TokenKind,
     Node, Parser,
