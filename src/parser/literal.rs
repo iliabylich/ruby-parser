@@ -5,7 +5,9 @@ use crate::{
         types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
     parser::{
-        base::{AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy},
+        base::{
+            at_most_one_is_true, AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy,
+        },
         SimpleNumeric, StringDvar, SymT,
     },
     token::token,
@@ -17,15 +19,17 @@ impl Rule for Literal {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        Numeric::starts_now(parser)
-            || Symbol::starts_now(parser)
-            || Strings::starts_now(parser)
-            || XString::starts_now(parser)
-            || Regexp::starts_now(parser)
-            || Words::starts_now(parser)
-            || QWords::starts_now(parser)
-            || Symbols::starts_now(parser)
-            || QSymbols::starts_now(parser)
+        at_most_one_is_true([
+            Numeric::starts_now(parser),
+            Symbol::starts_now(parser),
+            Strings::starts_now(parser),
+            XString::starts_now(parser),
+            Regexp::starts_now(parser),
+            Words::starts_now(parser),
+            QWords::starts_now(parser),
+            Symbols::starts_now(parser),
+            QSymbols::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -58,7 +62,10 @@ impl Rule for Numeric {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::tUMINUS_NUM) || SimpleNumeric::starts_now(parser)
+        at_most_one_is_true([
+            parser.current_token().is(TokenKind::tUMINUS_NUM),
+            SimpleNumeric::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -115,7 +122,10 @@ impl Rule for Symbol {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        SimpleSymbol::starts_now(parser) || QuotedSymbol::starts_now(parser)
+        at_most_one_is_true([
+            SimpleSymbol::starts_now(parser),
+            QuotedSymbol::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -197,7 +207,10 @@ impl Rule for Strings {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::tCHAR) || String1::starts_now(parser)
+        at_most_one_is_true([
+            parser.current_token().is(TokenKind::tCHAR),
+            String1::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -577,9 +590,11 @@ impl Rule for StringContent {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        PlainStringContent::starts_now(parser)
-            || StringDvarContent::starts_now(parser)
-            || InterpolatedStringContent::starts_now(parser)
+        at_most_one_is_true([
+            PlainStringContent::starts_now(parser),
+            StringDvarContent::starts_now(parser),
+            InterpolatedStringContent::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

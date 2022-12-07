@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{Maybe1, ParseResult, Rule},
+        base::{at_most_one_is_true, Maybe1, ParseResult, Rule},
         Value,
     },
     Node, Parser, Token, TokenKind,
@@ -12,7 +12,7 @@ impl Rule for ParenArgs {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        Value::starts_now(parser) || Arglist::starts_now(parser)
+        at_most_one_is_true([Value::starts_now(parser), Arglist::starts_now(parser)])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

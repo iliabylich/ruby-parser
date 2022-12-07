@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{ExactToken, ParseResult, Rule, SeparatedBy},
+        base::{at_most_one_is_true, ExactToken, ParseResult, Rule, SeparatedBy},
         FnameT, Symbol,
     },
     token::TokenKind,
@@ -37,7 +37,7 @@ impl Rule for Fitem {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        FnameT::starts_now(parser) || Symbol::starts_now(parser)
+        at_most_one_is_true([FnameT::starts_now(parser), Symbol::starts_now(parser)])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

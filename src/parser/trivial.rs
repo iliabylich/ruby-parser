@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::base::{ParseResult, Rule},
+    parser::base::{at_most_one_is_true, ParseResult, Rule},
     Node, Parser, Token, TokenKind,
 };
 
@@ -9,7 +9,10 @@ impl Rule for OperationT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        IdOrConstT::starts_now(parser) || parser.current_token().is(TokenKind::tFID)
+        at_most_one_is_true([
+            IdOrConstT::starts_now(parser),
+            parser.current_token().is(TokenKind::tFID),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -22,7 +25,7 @@ impl Rule for Operation2T {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        OperationT::starts_now(parser) || OpT::starts_now(parser)
+        at_most_one_is_true([OperationT::starts_now(parser), OpT::starts_now(parser)])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -41,9 +44,11 @@ impl Rule for Operation3T {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        OpT::starts_now(parser)
-            || parser.current_token().is(TokenKind::tIDENTIFIER)
-            || parser.current_token().is(TokenKind::tFID)
+        at_most_one_is_true([
+            OpT::starts_now(parser),
+            parser.current_token().is(TokenKind::tIDENTIFIER),
+            parser.current_token().is(TokenKind::tFID),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -62,10 +67,12 @@ impl Rule for FnameT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        ReswordsT::starts_now(parser)
-            || IdOrConstT::starts_now(parser)
-            || OpT::starts_now(parser)
-            || parser.current_token().is(TokenKind::tFID)
+        at_most_one_is_true([
+            ReswordsT::starts_now(parser),
+            IdOrConstT::starts_now(parser),
+            OpT::starts_now(parser),
+            parser.current_token().is(TokenKind::tFID),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -114,7 +121,10 @@ impl Rule for UserVariable {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        IdOrConstT::starts_now(parser) || NonLocalVar::starts_now(parser)
+        at_most_one_is_true([
+            IdOrConstT::starts_now(parser),
+            NonLocalVar::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -166,7 +176,10 @@ impl Rule for VarRef {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        UserVariable::starts_now(parser) || KeywordVariable::starts_now(parser)
+        at_most_one_is_true([
+            UserVariable::starts_now(parser),
+            KeywordVariable::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -219,7 +232,7 @@ impl Rule for StringDvar {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        NonLocalVar::starts_now(parser) || BackRef::starts_now(parser)
+        at_most_one_is_true([NonLocalVar::starts_now(parser), BackRef::starts_now(parser)])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -238,12 +251,12 @@ impl Rule for SymT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        FnameT::starts_now(parser)
-            || parser.current_token().is_one_of([
-                TokenKind::tIVAR,
-                TokenKind::tCVAR,
-                TokenKind::tGVAR,
-            ])
+        at_most_one_is_true([
+            FnameT::starts_now(parser),
+            parser.current_token().is(TokenKind::tIVAR),
+            parser.current_token().is(TokenKind::tCVAR),
+            parser.current_token().is(TokenKind::tGVAR),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -260,7 +273,10 @@ impl Rule for CallOpT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::tDOT) || parser.current_token().is(TokenKind::tANDDOT)
+        at_most_one_is_true([
+            parser.current_token().is(TokenKind::tDOT),
+            parser.current_token().is(TokenKind::tANDDOT),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -277,7 +293,10 @@ impl Rule for CallOp2T {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        CallOpT::starts_now(parser) || parser.current_token().is(TokenKind::tCOLON2)
+        at_most_one_is_true([
+            CallOpT::starts_now(parser),
+            parser.current_token().is(TokenKind::tCOLON2),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -296,7 +315,10 @@ impl Rule for DoT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        TermT::starts_now(parser) || parser.current_token().is(TokenKind::kDO)
+        at_most_one_is_true([
+            TermT::starts_now(parser),
+            parser.current_token().is(TokenKind::kDO),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -315,7 +337,10 @@ impl Rule for TermT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::tSEMI) || parser.current_token().is(TokenKind::tNL)
+        at_most_one_is_true([
+            parser.current_token().is(TokenKind::tSEMI),
+            parser.current_token().is(TokenKind::tNL),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -334,35 +359,37 @@ impl Rule for OpT {
     fn starts_now(parser: &mut Parser) -> bool {
         let token = parser.current_token();
 
-        token.is(TokenKind::tPIPE)
-            || token.is(TokenKind::tCARET)
-            || token.is(TokenKind::tAMPER)
-            || token.is(TokenKind::tCMP)
-            || token.is(TokenKind::tEQ)
-            || token.is(TokenKind::tEQQ)
-            || token.is(TokenKind::tMATCH)
-            || token.is(TokenKind::tNMATCH)
-            || token.is(TokenKind::tGT)
-            || token.is(TokenKind::tGEQ)
-            || token.is(TokenKind::tLT)
-            || token.is(TokenKind::tLEQ)
-            || token.is(TokenKind::tNEQ)
-            || token.is(TokenKind::tLSHFT)
-            || token.is(TokenKind::tRSHFT)
-            || token.is(TokenKind::tPLUS)
-            || token.is(TokenKind::tMINUS)
-            || token.is(TokenKind::tSTAR)
-            || token.is(TokenKind::tSTAR)
-            || token.is(TokenKind::tDIVIDE)
-            || token.is(TokenKind::tPERCENT)
-            || token.is(TokenKind::tDSTAR)
-            || token.is(TokenKind::tBANG)
-            || token.is(TokenKind::tTILDE)
-            || token.is(TokenKind::tUPLUS)
-            || token.is(TokenKind::tUMINUS)
-            || token.is(TokenKind::tAREF)
-            || token.is(TokenKind::tASET)
-            || token.is(TokenKind::tBACK_REF)
+        at_most_one_is_true([
+            token.is(TokenKind::tPIPE),
+            token.is(TokenKind::tCARET),
+            token.is(TokenKind::tAMPER),
+            token.is(TokenKind::tCMP),
+            token.is(TokenKind::tEQ),
+            token.is(TokenKind::tEQQ),
+            token.is(TokenKind::tMATCH),
+            token.is(TokenKind::tNMATCH),
+            token.is(TokenKind::tGT),
+            token.is(TokenKind::tGEQ),
+            token.is(TokenKind::tLT),
+            token.is(TokenKind::tLEQ),
+            token.is(TokenKind::tNEQ),
+            token.is(TokenKind::tLSHFT),
+            token.is(TokenKind::tRSHFT),
+            token.is(TokenKind::tPLUS),
+            token.is(TokenKind::tMINUS),
+            token.is(TokenKind::tSTAR),
+            token.is(TokenKind::tSTAR),
+            token.is(TokenKind::tDIVIDE),
+            token.is(TokenKind::tPERCENT),
+            token.is(TokenKind::tDSTAR),
+            token.is(TokenKind::tBANG),
+            token.is(TokenKind::tTILDE),
+            token.is(TokenKind::tUPLUS),
+            token.is(TokenKind::tUMINUS),
+            token.is(TokenKind::tAREF),
+            token.is(TokenKind::tASET),
+            token.is(TokenKind::tBACK_REF),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -381,47 +408,49 @@ impl Rule for ReswordsT {
     fn starts_now(parser: &mut Parser) -> bool {
         let token = parser.current_token();
 
-        token.is(TokenKind::k__LINE__)
-            || token.is(TokenKind::k__FILE__)
-            || token.is(TokenKind::k__ENCODING__)
-            || token.is(TokenKind::klBEGIN)
-            || token.is(TokenKind::klEND)
-            || token.is(TokenKind::kALIAS)
-            || token.is(TokenKind::kAND)
-            || token.is(TokenKind::kBEGIN)
-            || token.is(TokenKind::kBREAK)
-            || token.is(TokenKind::kCASE)
-            || token.is(TokenKind::kCLASS)
-            || token.is(TokenKind::kDEF)
-            || token.is(TokenKind::kDEFINED)
-            || token.is(TokenKind::kDO)
-            || token.is(TokenKind::kELSE)
-            || token.is(TokenKind::kELSIF)
-            || token.is(TokenKind::kEND)
-            || token.is(TokenKind::kENSURE)
-            || token.is(TokenKind::kFALSE)
-            || token.is(TokenKind::kFOR)
-            || token.is(TokenKind::kIN)
-            || token.is(TokenKind::kMODULE)
-            || token.is(TokenKind::kNEXT)
-            || token.is(TokenKind::kNIL)
-            || token.is(TokenKind::kNOT)
-            || token.is(TokenKind::kOR)
-            || token.is(TokenKind::kREDO)
-            || token.is(TokenKind::kRESCUE)
-            || token.is(TokenKind::kRETRY)
-            || token.is(TokenKind::kRETURN)
-            || token.is(TokenKind::kSELF)
-            || token.is(TokenKind::kSUPER)
-            || token.is(TokenKind::kTHEN)
-            || token.is(TokenKind::kTRUE)
-            || token.is(TokenKind::kUNDEF)
-            || token.is(TokenKind::kWHEN)
-            || token.is(TokenKind::kYIELD)
-            || token.is(TokenKind::kIF)
-            || token.is(TokenKind::kUNLESS)
-            || token.is(TokenKind::kWHILE)
-            || token.is(TokenKind::kUNTIL)
+        at_most_one_is_true([
+            token.is(TokenKind::k__LINE__),
+            token.is(TokenKind::k__FILE__),
+            token.is(TokenKind::k__ENCODING__),
+            token.is(TokenKind::klBEGIN),
+            token.is(TokenKind::klEND),
+            token.is(TokenKind::kALIAS),
+            token.is(TokenKind::kAND),
+            token.is(TokenKind::kBEGIN),
+            token.is(TokenKind::kBREAK),
+            token.is(TokenKind::kCASE),
+            token.is(TokenKind::kCLASS),
+            token.is(TokenKind::kDEF),
+            token.is(TokenKind::kDEFINED),
+            token.is(TokenKind::kDO),
+            token.is(TokenKind::kELSE),
+            token.is(TokenKind::kELSIF),
+            token.is(TokenKind::kEND),
+            token.is(TokenKind::kENSURE),
+            token.is(TokenKind::kFALSE),
+            token.is(TokenKind::kFOR),
+            token.is(TokenKind::kIN),
+            token.is(TokenKind::kMODULE),
+            token.is(TokenKind::kNEXT),
+            token.is(TokenKind::kNIL),
+            token.is(TokenKind::kNOT),
+            token.is(TokenKind::kOR),
+            token.is(TokenKind::kREDO),
+            token.is(TokenKind::kRESCUE),
+            token.is(TokenKind::kRETRY),
+            token.is(TokenKind::kRETURN),
+            token.is(TokenKind::kSELF),
+            token.is(TokenKind::kSUPER),
+            token.is(TokenKind::kTHEN),
+            token.is(TokenKind::kTRUE),
+            token.is(TokenKind::kUNDEF),
+            token.is(TokenKind::kWHEN),
+            token.is(TokenKind::kYIELD),
+            token.is(TokenKind::kIF),
+            token.is(TokenKind::kUNLESS),
+            token.is(TokenKind::kWHILE),
+            token.is(TokenKind::kUNTIL),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -480,7 +509,11 @@ impl Rule for NonLocalVar {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        Ivar::starts_now(parser) || Cvar::starts_now(parser) || Gvar::starts_now(parser)
+        at_most_one_is_true([
+            Ivar::starts_now(parser),
+            Cvar::starts_now(parser),
+            Gvar::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -502,7 +535,10 @@ impl Rule for IdOrConstT {
 
     fn starts_now(parser: &mut Parser) -> bool {
         let token = parser.current_token();
-        token.is(TokenKind::tIDENTIFIER) || token.is(TokenKind::tCONSTANT)
+        at_most_one_is_true([
+            token.is(TokenKind::tIDENTIFIER),
+            token.is(TokenKind::tCONSTANT),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

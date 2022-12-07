@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::base::{Captured, ParseResult, Rule},
+    parser::base::{at_most_one_is_true, Captured, ParseResult, Rule},
     token::TokenKind,
     Node, Parser,
 };
@@ -74,11 +74,13 @@ impl Rule for Item {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        SplatElement::starts_now(parser)
-            || KeywordSplat::starts_now(parser)
-            || LabelToArgPair::starts_now(parser)
-            || StringToArgPair::starts_now(parser)
-            || ArgToArgPairOrPlainArg::starts_now(parser)
+        at_most_one_is_true([
+            SplatElement::starts_now(parser),
+            KeywordSplat::starts_now(parser),
+            LabelToArgPair::starts_now(parser),
+            StringToArgPair::starts_now(parser),
+            ArgToArgPairOrPlainArg::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

@@ -1,6 +1,6 @@
 use crate::{
     parser::{
-        base::{ParseResult, Rule},
+        base::{at_most_one_is_true, ParseResult, Rule},
         Alias, Array, BackRef, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt, KeywordCmd,
         Lambda, Literal, MethodDef, Module, OperationT, Postexe, Undef, UnlessStmt, Value, VarRef,
     },
@@ -12,32 +12,34 @@ impl Rule for Value0 {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        MethodCall::starts_now(parser)
-            || Literal::starts_now(parser)
-            || Array::starts_now(parser)
-            || Hash::starts_now(parser)
-            || VarRef::starts_now(parser)
-            || BackRef::starts_now(parser)
-            || Parenthesized::starts_now(parser)
-            || Not::starts_now(parser)
-            || Lambda::starts_now(parser)
-            || IfStmt::starts_now(parser)
-            || UnlessStmt::starts_now(parser)
-            || Case::starts_now(parser)
-            || ForLoop::starts_now(parser)
-            || Class::starts_now(parser)
-            || Module::starts_now(parser)
-            || MethodDef::starts_now(parser)
-            || KeywordCmd::starts_now(parser)
-            || EndlessMethodDef::<Value>::starts_now(parser)
-            || Alias::starts_now(parser)
-            || Undef::starts_now(parser)
-            || Postexe::starts_now(parser)
-            || parser.current_token().is(TokenKind::tFID)
-            || parser.current_token().is(TokenKind::kBEGIN)
-            || parser.current_token().is(TokenKind::tCOLON2)
-            || parser.current_token().is(TokenKind::kWHILE)
-            || parser.current_token().is(TokenKind::kUNTIL)
+        at_most_one_is_true([
+            MethodCall::starts_now(parser),
+            Literal::starts_now(parser),
+            Array::starts_now(parser),
+            Hash::starts_now(parser),
+            VarRef::starts_now(parser),
+            BackRef::starts_now(parser),
+            Parenthesized::starts_now(parser),
+            Not::starts_now(parser),
+            Lambda::starts_now(parser),
+            IfStmt::starts_now(parser),
+            UnlessStmt::starts_now(parser),
+            Case::starts_now(parser),
+            ForLoop::starts_now(parser),
+            Class::starts_now(parser),
+            Module::starts_now(parser),
+            MethodDef::starts_now(parser),
+            KeywordCmd::starts_now(parser),
+            EndlessMethodDef::<Value>::starts_now(parser),
+            Alias::starts_now(parser),
+            Undef::starts_now(parser),
+            Postexe::starts_now(parser),
+            parser.current_token().is(TokenKind::tFID),
+            parser.current_token().is(TokenKind::kBEGIN),
+            parser.current_token().is(TokenKind::tCOLON2),
+            parser.current_token().is(TokenKind::kWHILE),
+            parser.current_token().is(TokenKind::kUNTIL),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
