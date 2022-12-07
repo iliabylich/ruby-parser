@@ -1,123 +1,86 @@
 use crate::{
     builder::Builder,
-    parser::{Captured, ParseError, ParseResult, Rule},
+    parser::{ParseResult, Rule},
     Node, Parser, Token, TokenKind,
 };
 
-trait TokenBasedRule<const N: usize = 0> {
-    const TOKENS: [TokenKind; N];
-}
-
-const fn concat<const A: usize, const B: usize, const C: usize>(
-    lhs: [TokenKind; A],
-    rhs: [TokenKind; B],
-) -> [TokenKind; C] {
-    assert!(A + B == C);
-
-    let mut result = [TokenKind::tEOF; C];
-
-    let mut i = 0;
-    while i < A {
-        result[i] = lhs[i];
-        i += 1;
-    }
-
-    while i < A + B {
-        result[i] = rhs[i - A];
-        i += 1;
-    }
-
-    let result = sort_arr(result);
-
-    result
-}
-
-const fn sort_arr<const N: usize>(mut arr: [TokenKind; N]) -> [TokenKind; N] {
-    loop {
-        let mut swapped = false;
-        let mut i = 1;
-        while i < arr.len() {
-            if arr[i - 1] as u8 > arr[i] as u8 {
-                let left = arr[i - 1];
-                let right = arr[i];
-                arr[i - 1] = right;
-                arr[i] = left;
-                swapped = true;
-            }
-            i += 1;
-        }
-        if !swapped {
-            break;
-        }
-    }
-    arr
-}
-
-macro_rules! concat_array_const {
-    ($($arr:expr),*) => {
-        concat_array_const!(@concat
-            $( [$arr ; $arr.len()] )*
-        )
-    };
-
-    (@concat [$a:expr; $a_len:expr]) => {
-        $a
-    };
-
-    (@concat [$a:expr; $a_len:expr] [$b:expr; $b_len:expr] $($tail:tt)*) => {
-        concat_array_const!(
-            @concat
-            [concat::<{ $a_len }, { $b_len }, { $a_len + $b_len }>($a, $b); $a_len + $b_len]
-            $($tail)*
-        )
-    };
-}
-
-impl<const N: usize, T> Rule<N> for T
-where
-    T: TokenBasedRule<N>,
-{
+pub(crate) struct OperationT;
+impl Rule for OperationT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is_one_of_sorted(Self::TOKENS)
+        IdOrConstT::starts_now(parser) || parser.current_token().is(TokenKind::tFID)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        if Self::starts_now(parser) {
-            Ok(parser.take_token())
+        Ok(parser.take_token())
+    }
+}
+
+pub(crate) struct Operation2T;
+impl Rule for Operation2T {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        OperationT::starts_now(parser) || OpT::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if OperationT::starts_now(parser) {
+            OperationT::parse(parser)
+        } else if OpT::starts_now(parser) {
+            OpT::parse(parser)
         } else {
-            Err(ParseError {
-                error: (),
-                captured: Captured::default(),
-            })
+            unreachable!()
         }
     }
 }
 
-pub(crate) struct OperationT;
-impl TokenBasedRule<3> for OperationT {
-    const TOKENS: [TokenKind; 3] = concat(IdOrConstT::TOKENS, [TokenKind::tFID]);
-}
-
-pub(crate) struct Operation2T;
-impl TokenBasedRule<32> for Operation2T {
-    const TOKENS: [TokenKind; 32] = concat(OperationT::TOKENS, OpT::TOKENS);
-}
-
 pub(crate) struct Operation3T;
-impl TokenBasedRule<31> for Operation3T {
-    const TOKENS: [TokenKind; 31] = concat(OpT::TOKENS, [TokenKind::tIDENTIFIER, TokenKind::tFID]);
+impl Rule for Operation3T {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        OpT::starts_now(parser)
+            || parser.current_token().is(TokenKind::tIDENTIFIER)
+            || parser.current_token().is(TokenKind::tFID)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if OpT::starts_now(parser) {
+            OpT::parse(parser)
+        } else if parser.current_token().is(TokenKind::tFID) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct FnameT;
-impl TokenBasedRule<73> for FnameT {
-    const TOKENS: [TokenKind; 73] = concat_array_const!(
-        ReswordsT::TOKENS,
-        IdOrConstT::TOKENS,
-        OpT::TOKENS,
-        [TokenKind::tFID]
-    );
+impl Rule for FnameT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        ReswordsT::starts_now(parser)
+            || IdOrConstT::starts_now(parser)
+            || OpT::starts_now(parser)
+            || parser.current_token().is(TokenKind::tFID)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if ReswordsT::starts_now(parser) {
+            ReswordsT::parse(parser)
+        } else if IdOrConstT::starts_now(parser) {
+            IdOrConstT::parse(parser)
+        } else if OpT::starts_now(parser) {
+            OpT::parse(parser)
+        } else if parser.current_token().is(TokenKind::tFID) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct SimpleNumeric;
@@ -239,8 +202,16 @@ impl Rule for BackRef {
 }
 
 pub(crate) struct CnameT;
-impl TokenBasedRule<2> for CnameT {
-    const TOKENS: [TokenKind; 2] = IdOrConstT::TOKENS;
+impl Rule for CnameT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        IdOrConstT::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        IdOrConstT::parse(parser)
+    }
 }
 
 pub(crate) struct StringDvar;
@@ -285,105 +256,181 @@ impl Rule for SymT {
 }
 
 pub(crate) struct CallOpT;
-impl TokenBasedRule<2> for CallOpT {
-    const TOKENS: [TokenKind; 2] = [TokenKind::tDOT, TokenKind::tANDDOT];
+impl Rule for CallOpT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tDOT) || parser.current_token().is(TokenKind::tANDDOT)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct CallOp2T;
-impl TokenBasedRule<1> for CallOp2T {
-    const TOKENS: [TokenKind; 1] = concat(CallOpT::TOKENS, [TokenKind::tCOLON2]);
+impl Rule for CallOp2T {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        CallOpT::starts_now(parser) || parser.current_token().is(TokenKind::tCOLON2)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if CallOpT::starts_now(parser) {
+            CallOpT::parse(parser)
+        } else if parser.current_token().is(TokenKind::tCOLON2) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct DoT;
-impl TokenBasedRule<3> for DoT {
-    const TOKENS: [TokenKind; 3] = concat(TermT::TOKENS, [TokenKind::kDO]);
+impl Rule for DoT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        TermT::starts_now(parser) || parser.current_token().is(TokenKind::kDO)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if TermT::starts_now(parser) {
+            TermT::parse(parser)
+        } else if parser.current_token().is(TokenKind::kDO) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct TermT;
-impl TokenBasedRule<2> for TermT {
-    const TOKENS: [TokenKind; 2] = [TokenKind::tSEMI, TokenKind::tNL];
+impl Rule for TermT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is(TokenKind::tSEMI) || parser.current_token().is(TokenKind::tNL)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 struct OpT;
-impl TokenBasedRule<29> for OpT {
-    const TOKENS: [TokenKind; 29] = [
-        TokenKind::tPIPE,
-        TokenKind::tCARET,
-        TokenKind::tAMPER,
-        TokenKind::tCMP,
-        TokenKind::tEQ,
-        TokenKind::tEQQ,
-        TokenKind::tMATCH,
-        TokenKind::tNMATCH,
-        TokenKind::tGT,
-        TokenKind::tGEQ,
-        TokenKind::tLT,
-        TokenKind::tLEQ,
-        TokenKind::tNEQ,
-        TokenKind::tLSHFT,
-        TokenKind::tRSHFT,
-        TokenKind::tPLUS,
-        TokenKind::tMINUS,
-        TokenKind::tSTAR,
-        TokenKind::tSTAR,
-        TokenKind::tDIVIDE,
-        TokenKind::tPERCENT,
-        TokenKind::tDSTAR,
-        TokenKind::tBANG,
-        TokenKind::tTILDE,
-        TokenKind::tUPLUS,
-        TokenKind::tUMINUS,
-        TokenKind::tAREF,
-        TokenKind::tASET,
-        TokenKind::tBACK_REF,
-    ];
+impl Rule for OpT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        let token = parser.current_token();
+
+        token.is(TokenKind::tPIPE)
+            || token.is(TokenKind::tCARET)
+            || token.is(TokenKind::tAMPER)
+            || token.is(TokenKind::tCMP)
+            || token.is(TokenKind::tEQ)
+            || token.is(TokenKind::tEQQ)
+            || token.is(TokenKind::tMATCH)
+            || token.is(TokenKind::tNMATCH)
+            || token.is(TokenKind::tGT)
+            || token.is(TokenKind::tGEQ)
+            || token.is(TokenKind::tLT)
+            || token.is(TokenKind::tLEQ)
+            || token.is(TokenKind::tNEQ)
+            || token.is(TokenKind::tLSHFT)
+            || token.is(TokenKind::tRSHFT)
+            || token.is(TokenKind::tPLUS)
+            || token.is(TokenKind::tMINUS)
+            || token.is(TokenKind::tSTAR)
+            || token.is(TokenKind::tSTAR)
+            || token.is(TokenKind::tDIVIDE)
+            || token.is(TokenKind::tPERCENT)
+            || token.is(TokenKind::tDSTAR)
+            || token.is(TokenKind::tBANG)
+            || token.is(TokenKind::tTILDE)
+            || token.is(TokenKind::tUPLUS)
+            || token.is(TokenKind::tUMINUS)
+            || token.is(TokenKind::tAREF)
+            || token.is(TokenKind::tASET)
+            || token.is(TokenKind::tBACK_REF)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 struct ReswordsT;
-impl TokenBasedRule<41> for ReswordsT {
-    const TOKENS: [TokenKind; 41] = [
-        TokenKind::k__LINE__,
-        TokenKind::k__FILE__,
-        TokenKind::k__ENCODING__,
-        TokenKind::klBEGIN,
-        TokenKind::klEND,
-        TokenKind::kALIAS,
-        TokenKind::kAND,
-        TokenKind::kBEGIN,
-        TokenKind::kBREAK,
-        TokenKind::kCASE,
-        TokenKind::kCLASS,
-        TokenKind::kDEF,
-        TokenKind::kDEFINED,
-        TokenKind::kDO,
-        TokenKind::kELSE,
-        TokenKind::kELSIF,
-        TokenKind::kEND,
-        TokenKind::kENSURE,
-        TokenKind::kFALSE,
-        TokenKind::kFOR,
-        TokenKind::kIN,
-        TokenKind::kMODULE,
-        TokenKind::kNEXT,
-        TokenKind::kNIL,
-        TokenKind::kNOT,
-        TokenKind::kOR,
-        TokenKind::kREDO,
-        TokenKind::kRESCUE,
-        TokenKind::kRETRY,
-        TokenKind::kRETURN,
-        TokenKind::kSELF,
-        TokenKind::kSUPER,
-        TokenKind::kTHEN,
-        TokenKind::kTRUE,
-        TokenKind::kUNDEF,
-        TokenKind::kWHEN,
-        TokenKind::kYIELD,
-        TokenKind::kIF,
-        TokenKind::kUNLESS,
-        TokenKind::kWHILE,
-        TokenKind::kUNTIL,
-    ];
+impl Rule for ReswordsT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        let token = parser.current_token();
+
+        token.is(TokenKind::k__LINE__)
+            || token.is(TokenKind::k__FILE__)
+            || token.is(TokenKind::k__ENCODING__)
+            || token.is(TokenKind::klBEGIN)
+            || token.is(TokenKind::klEND)
+            || token.is(TokenKind::kALIAS)
+            || token.is(TokenKind::kAND)
+            || token.is(TokenKind::kBEGIN)
+            || token.is(TokenKind::kBREAK)
+            || token.is(TokenKind::kCASE)
+            || token.is(TokenKind::kCLASS)
+            || token.is(TokenKind::kDEF)
+            || token.is(TokenKind::kDEFINED)
+            || token.is(TokenKind::kDO)
+            || token.is(TokenKind::kELSE)
+            || token.is(TokenKind::kELSIF)
+            || token.is(TokenKind::kEND)
+            || token.is(TokenKind::kENSURE)
+            || token.is(TokenKind::kFALSE)
+            || token.is(TokenKind::kFOR)
+            || token.is(TokenKind::kIN)
+            || token.is(TokenKind::kMODULE)
+            || token.is(TokenKind::kNEXT)
+            || token.is(TokenKind::kNIL)
+            || token.is(TokenKind::kNOT)
+            || token.is(TokenKind::kOR)
+            || token.is(TokenKind::kREDO)
+            || token.is(TokenKind::kRESCUE)
+            || token.is(TokenKind::kRETRY)
+            || token.is(TokenKind::kRETURN)
+            || token.is(TokenKind::kSELF)
+            || token.is(TokenKind::kSUPER)
+            || token.is(TokenKind::kTHEN)
+            || token.is(TokenKind::kTRUE)
+            || token.is(TokenKind::kUNDEF)
+            || token.is(TokenKind::kWHEN)
+            || token.is(TokenKind::kYIELD)
+            || token.is(TokenKind::kIF)
+            || token.is(TokenKind::kUNLESS)
+            || token.is(TokenKind::kWHILE)
+            || token.is(TokenKind::kUNTIL)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 pub(crate) struct Ivar;
@@ -450,8 +497,21 @@ impl Rule for NonLocalVar {
 }
 
 struct IdOrConstT;
-impl TokenBasedRule<2> for IdOrConstT {
-    const TOKENS: [TokenKind; 2] = [TokenKind::tIDENTIFIER, TokenKind::tCONSTANT];
+impl Rule for IdOrConstT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        let token = parser.current_token();
+        token.is(TokenKind::tIDENTIFIER) || token.is(TokenKind::tCONSTANT)
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        if Self::starts_now(parser) {
+            Ok(parser.take_token())
+        } else {
+            unreachable!()
+        }
+    }
 }
 
 #[test]
