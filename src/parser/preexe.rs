@@ -1,6 +1,6 @@
 use crate::{
     parser::base::{ParseResult, Rule},
-    Node, Parser,
+    Node, Parser, TokenKind,
 };
 
 pub(crate) struct Preexe;
@@ -8,7 +8,7 @@ impl Rule for Preexe {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::klEND)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

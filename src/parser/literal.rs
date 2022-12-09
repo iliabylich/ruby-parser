@@ -243,6 +243,7 @@ impl Rule for String1 {
 
     fn starts_now(parser: &mut Parser) -> bool {
         parser.current_token().is(TokenKind::tSTRING_BEG)
+            || parser.current_token().is(TokenKind::tDSTRING_BEG)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -254,11 +255,15 @@ impl Rule for String1 {
         Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
     }
 }
-
 #[test]
-fn test_string1() {
+fn test_string1_plain() {
     use crate::testing::assert_parses_rule;
     assert_parses_rule!(String1, b"'foo'", r#"s(:str, "foo")"#);
+}
+#[test]
+fn test_string1_interp() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(String1, b"\"foo\"", r#"s(:str, "foo")"#);
 }
 
 struct XString;

@@ -10,7 +10,7 @@ impl Rule for IfStmt {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kIF)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -23,7 +23,7 @@ impl Rule for UnlessStmt {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kUNLESS)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

@@ -10,7 +10,7 @@ impl Rule for Module {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kMODULE)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -23,7 +23,7 @@ impl Rule for Class {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kCLASS)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

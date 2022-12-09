@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::base::{at_most_one_is_true, Captured, ParseResult, Rule},
+    parser::{
+        base::{at_most_one_is_true, ExactToken, Maybe1, ParseResult, Rule, SeparatedBy},
+        Value,
+    },
     token::TokenKind,
     Node, Parser,
 };
@@ -25,6 +28,19 @@ impl Rule for Array {
         Ok(Builder::array(Some(lbrack_t), elements, Some(rbrack_t)))
     }
 }
+#[test]
+fn test_array_simple() {
+    crate::testing::assert_parses_rule!(
+        Array,
+        b"[1, 2, 3]",
+        r#"
+s(:array,
+  s(:int, "1"),
+  s(:int, "2"),
+  s(:int, "3"))
+        "#
+    )
+}
 
 struct Items;
 impl Rule for Items {
@@ -35,37 +51,16 @@ impl Rule for Items {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let mut elements = vec![];
-        let mut commas = vec![];
+        type CommaT = ExactToken<{ TokenKind::tCOMMA as u8 }>;
 
-        loop {
-            if parser.current_token().is(TokenKind::tRPAREN) {
-                break;
-            }
-
-            match Item::parse(parser) {
-                Ok(v) => elements.push(*v),
-                Err(mut err) => {
-                    err.captured = Captured::from(elements) + Captured::from(commas) + err.captured;
-                    return Err(err);
-                }
-            }
-
-            match parser.current_token().kind {
-                TokenKind::tCOMMA => commas.push(parser.take_token()),
-                TokenKind::tRBRACK => {
-                    parser.skip_token();
-                    break;
-                }
-                _ => panic!("wrong token type"),
-            }
-        }
+        let (items, _commas) = SeparatedBy::<Item, CommaT>::parse(parser).unwrap();
+        let _trailing_comma = Maybe1::<CommaT>::parse(parser).unwrap();
 
         // TODO: There must be runtime validations:
         // 1. pairs go after values
         // 2. ',' requires non-empty list of items
 
-        Ok(elements)
+        Ok(items)
     }
 }
 
@@ -77,9 +72,9 @@ impl Rule for Item {
         at_most_one_is_true([
             SplatElement::starts_now(parser),
             KeywordSplat::starts_now(parser),
-            LabelToArgPair::starts_now(parser),
-            StringToArgPair::starts_now(parser),
-            ArgToArgPairOrPlainArg::starts_now(parser),
+            LabelToValuePair::starts_now(parser),
+            Value::starts_now(parser), // StringToValuePair::starts_now(parser),
+                                       // ValueToValuePairOrPlainValue::starts_now(parser),
         ])
     }
 
@@ -88,16 +83,58 @@ impl Rule for Item {
             SplatElement::parse(parser)
         } else if KeywordSplat::starts_now(parser) {
             KeywordSplat::parse(parser)
-        } else if LabelToArgPair::starts_now(parser) {
-            LabelToArgPair::parse(parser)
-        } else if StringToArgPair::starts_now(parser) {
-            StringToArgPair::parse(parser)
-        } else if ArgToArgPairOrPlainArg::starts_now(parser) {
-            ArgToArgPairOrPlainArg::parse(parser)
+        } else if LabelToValuePair::starts_now(parser) {
+            LabelToValuePair::parse(parser)
+        } else if Value::starts_now(parser) {
+            let value = Value::parse(parser).unwrap();
+            if matches!(&*value, Node::Str(_)) && parser.current_token().is(TokenKind::tCOLON) {
+                // "foo": value
+                let key = value;
+                let colon_t = parser.take_token();
+                let value = Value::parse(parser).unwrap();
+                Ok(Builder::pair_quoted(key, colon_t, value))
+            } else if parser.current_token().is(TokenKind::tASSOC) {
+                // pair `value => value`
+                let key = value;
+                let assoc_t = parser.take_token();
+                let value = Value::parse(parser).unwrap();
+                Ok(Builder::pair(key, assoc_t, value))
+            } else {
+                // just value
+                Ok(value)
+            }
         } else {
             unreachable!()
         }
     }
+}
+#[test]
+fn test_value_to_value() {
+    crate::testing::assert_parses_rule!(
+        Item,
+        b"42 => 42",
+        r#"
+s(:pair,
+  s(:int, "42"),
+  s(:int, "42"))
+        "#
+    )
+}
+#[test]
+fn test_quoted_label_pair() {
+    crate::testing::assert_parses_rule!(
+        Item,
+        b"\"foo\": 42",
+        r#"
+s(:pair,
+  s(:sym, "foo"),
+  s(:int, "42"))
+        "#
+    )
+}
+#[test]
+fn test_element() {
+    crate::testing::assert_parses_rule!(Item, b"42", r#"s(:int, "42")"#)
 }
 
 struct SplatElement;
@@ -109,26 +146,25 @@ impl Rule for SplatElement {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        let star_t = parser.take_token();
+        let value = Value::parse(parser).unwrap();
+        Ok(Builder::splat(star_t, value))
     }
 }
-
-struct ArgToArgPairOrPlainArg;
-impl Rule for ArgToArgPairOrPlainArg {
-    type Output = Box<Node>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        // Arg::starts_now(parser)
-        todo!()
-    }
-
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
-    }
+#[test]
+fn test_splat_element() {
+    crate::testing::assert_parses_rule!(
+        Item,
+        b"*42",
+        r#"
+s(:splat,
+  s(:int, "42"))
+        "#
+    )
 }
 
-struct LabelToArgPair;
-impl Rule for LabelToArgPair {
+struct LabelToValuePair;
+impl Rule for LabelToValuePair {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
@@ -136,21 +172,38 @@ impl Rule for LabelToArgPair {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        let key_t = parser.take_token();
+        let value = Maybe1::<Value>::parse(parser).unwrap();
+        if let Some(value) = value {
+            Ok(Builder::pair_keyword(key_t, value, parser.buffer()))
+        } else {
+            Ok(Builder::pair_label(key_t, parser.buffer()))
+        }
     }
 }
-
-struct StringToArgPair;
-impl Rule for StringToArgPair {
-    type Output = Box<Node>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::tSTRING_BEG)
-    }
-
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
-    }
+#[test]
+fn test_label_pair() {
+    crate::testing::assert_parses_rule!(
+        Item,
+        b"foo: 42",
+        r#"
+s(:pair,
+  s(:sym, "foo"),
+  s(:int, "42"))
+        "#
+    )
+}
+#[test]
+fn test_label_without_value() {
+    crate::testing::assert_parses_rule!(
+        Item,
+        b"foo:",
+        r#"
+s(:pair,
+  s(:sym, "foo"),
+  s(:lvar, "foo"))
+        "#
+    )
 }
 
 struct KeywordSplat;
@@ -162,46 +215,19 @@ impl Rule for KeywordSplat {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        let dstar_t = parser.take_token();
+        let value = Value::parse(parser).unwrap();
+        Ok(Builder::kwsplat(dstar_t, value))
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::Array;
-    use crate::testing::assert_parses_rule;
-
-    #[test]
-    fn test_array_simple() {
-        debug_assert!(false, "implement me");
-        assert_parses_rule!(
-            Array,
-            b"[1, 2, 3]",
-            r#"
-s(:array,
-  s(:int, "1"),
-  s(:int, "2"),
-  s(:int, "3"))
-            "#
-        )
-    }
-
-    #[test]
-    fn test_array_mixed() {
-        debug_assert!(false, "implement me");
-
-        assert_parses_rule!(
-            Array,
-            b"[1, 2, 3, 4 => 5]",
-            r#"
-s(:array,
-  s(:int, "1"),
-  s(:int, "2"),
-  s(:int, "3"),
-  s(:pair,
-    s(:int, "4"),
-    s(:int, "5")))
-            "#
-        )
-    }
+#[test]
+fn test_kwsplat_element() {
+    crate::testing::assert_parses_rule!(
+        Item,
+        b"**42",
+        r#"
+s(:kwsplat,
+  s(:int, "42"))
+        "#
+    )
 }

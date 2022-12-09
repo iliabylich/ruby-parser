@@ -4,8 +4,10 @@ use crate::{
         helpers::{collection_map, string_value},
         Builder,
     },
-    loc::loc,
-    nodes::{Complex, Const, Float, Hash, Int, Kwsplat, Lvar, Pair, Rational, Regexp, Str, Sym},
+    nodes::{
+        Complex, Const, Dstr, Dsym, Float, Hash, Int, Kwsplat, Lvar, Pair, Rational, Regexp, Str,
+        Sym,
+    },
     Node, Token,
 };
 
@@ -28,7 +30,7 @@ impl Builder {
         let colon_l = key_loc.with_start(key_loc.end - 1);
         let expression_l = key_loc.join(value.expression());
 
-        let key = string_value(key_loc, buffer);
+        let key = string_value(key_l, buffer);
         // self.validate_sym_value(&key, &key_l);
 
         Box::new(Node::Pair(Pair {
@@ -44,28 +46,42 @@ impl Builder {
         }))
     }
 
-    pub(crate) fn pair_quoted(
-        begin_t: Token,
-        parts: Vec<Node>,
-        end_t: Token,
-        value: Box<Node>,
-    ) -> Box<Node> {
-        let end_l = end_t.loc;
+    pub(crate) fn pair_quoted(mut key: Box<Node>, colon_t: Token, value: Box<Node>) -> Box<Node> {
+        let colon_l = colon_t.loc;
+        let expression_l = key.expression().join(value.expression());
 
-        let quote_loc = loc!(end_l.end - 2, end_l.end - 1);
-
-        let colon_l = end_l.with_start(end_l.end - 1);
-
-        let end_t = end_t;
-        let end_t = Token {
-            kind: end_t.kind,
-            loc: quote_loc,
-            value: None,
-        };
-        let expression_l = begin_t.loc.join(value.expression());
+        match *key {
+            Node::Str(Str {
+                value,
+                begin_l,
+                end_l,
+                expression_l,
+            }) => {
+                key = Box::new(Node::Sym(Sym {
+                    name: value,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }))
+            }
+            Node::Dstr(Dstr {
+                parts,
+                begin_l,
+                end_l,
+                expression_l,
+            }) => {
+                key = Box::new(Node::Dsym(Dsym {
+                    parts,
+                    begin_l,
+                    end_l,
+                    expression_l,
+                }))
+            }
+            _ => unreachable!(),
+        }
 
         Box::new(Node::Pair(Pair {
-            key: Self::symbol_compose(begin_t, parts, end_t),
+            key,
             value,
             operator_l: colon_l,
             expression_l,
@@ -76,7 +92,7 @@ impl Builder {
         let key_l = key_t.loc;
         let value_l = key_l.adjust_end(-1);
 
-        let label = string_value(key_l, buffer);
+        let label = string_value(value_l, buffer);
         let value = if label
             .as_str()
             .chars()

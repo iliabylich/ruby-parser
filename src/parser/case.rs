@@ -10,7 +10,7 @@ impl Rule for Case {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kCASE)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

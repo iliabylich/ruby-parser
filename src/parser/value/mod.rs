@@ -21,7 +21,7 @@ impl Rule for Value {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        Value0::starts_now(parser) || prefix_operator_power(parser.current_token()).is_some()
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

@@ -10,7 +10,7 @@ impl Rule for MethodDef {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kDEF)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -31,7 +31,7 @@ where
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
+        parser.current_token().is(TokenKind::kDEF)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
