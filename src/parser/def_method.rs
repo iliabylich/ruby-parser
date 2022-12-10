@@ -166,7 +166,7 @@ struct MethodDefArgs;
 impl Rule for MethodDefArgs {
     type Output = Option<Box<Node>>;
 
-    fn starts_now(parser: &mut Parser) -> bool {
+    fn starts_now(_parser: &mut Parser) -> bool {
         true
     }
 

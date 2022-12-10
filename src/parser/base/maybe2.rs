@@ -23,8 +23,8 @@ where
 {
     type Output = Option<(R1::Output, R2::Output)>;
 
-    fn starts_now(parser: &mut Parser) -> bool {
-        R1::starts_now(parser)
+    fn starts_now(_parser: &mut Parser) -> bool {
+        true
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
@@ -32,22 +32,8 @@ where
             return Ok(None);
         }
 
-        let v1 = match R1::parse(parser) {
-            Ok(v1) => v1,
-            Err(error) => return Err(error),
-        };
-
-        if !R2::starts_now(parser) {
-            return Ok(None);
-        }
-
-        let v2 = match R2::parse(parser) {
-            Ok(v2) => v2,
-            Err(mut err) => {
-                err.captured = Captured::from(v1) + err.captured;
-                return Err(err);
-            }
-        };
+        let v1 = R1::parse(parser).unwrap();
+        let v2 = R2::parse(parser).unwrap();
 
         Ok(Some((v1, v2)))
     }

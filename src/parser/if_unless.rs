@@ -1,8 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{ExactToken, Maybe1, ParseResult, Rule},
-        TermT,
+        base::{ExactToken, Maybe1, Maybe2, ParseResult, Rule},
+        Compstmt, TermT,
     },
     token::{Token, TokenKind},
     Node, Parser,
@@ -34,18 +34,8 @@ impl Rule for UnlessStmt {
     }
 }
 
-pub(crate) struct OptElse;
-impl Rule for OptElse {
-    type Output = Option<(Token, Option<Box<Node>>)>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        todo!()
-    }
-
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
-    }
-}
+type ElseT = ExactToken<{ TokenKind::kELSE as u8 }>;
+pub(crate) type OptElse = Maybe2<ElseT, Compstmt>;
 
 pub(crate) struct Then;
 impl Rule for Then {
