@@ -48,6 +48,18 @@ where
     }
 }
 
+impl<T> From<Option<T>> for Captured
+where
+    Captured: From<T>,
+{
+    fn from(maybe_boxed: Option<T>) -> Self {
+        match maybe_boxed {
+            Some(t) => Captured::from(t),
+            None => Captured::default(),
+        }
+    }
+}
+
 impl std::ops::Add for Captured {
     type Output = Self;
 

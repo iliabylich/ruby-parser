@@ -102,7 +102,7 @@ impl Builder {
     }
 
     pub(crate) fn kwarg(name_t: Token, buffer: &Buffer) -> Box<Node> {
-        let name_l = name_t.loc;
+        let name_l = name_t.loc.adjust_end(-1);
         let name = string_value(name_l, buffer);
         // self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
@@ -117,7 +117,7 @@ impl Builder {
     }
 
     pub(crate) fn kwoptarg(name_t: Token, default: Box<Node>, buffer: &Buffer) -> Box<Node> {
-        let name_l = name_t.loc;
+        let name_l = name_t.loc.adjust_end(-1);
         let name = string_value(name_l, buffer);
         // self.check_reserved_for_numparam(name.as_str(), &name_l)?;
 
