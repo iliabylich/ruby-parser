@@ -19,7 +19,7 @@ pub(crate) fn at_most_one_is_true<const N: usize>(values: [bool; N]) -> bool {
                 .iter()
                 .map(ToString::to_string)
                 .collect::<Vec<_>>()
-                .join("");
+                .join("/");
             panic!("Multiple rules match, indexes: {}", formatted_idxs)
         }
     }

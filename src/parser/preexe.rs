@@ -8,7 +8,7 @@ impl Rule for Preexe {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::klEND)
+        parser.current_token().is(TokenKind::klBEGIN)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {

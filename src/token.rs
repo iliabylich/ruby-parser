@@ -79,10 +79,6 @@ pub enum TokenKind {
     kAND,          // `and'
     kOR,           // `or'
     kNOT,          // `not'
-    kUNLESS_MOD,   // `unless' modifier
-    kWHILE_MOD,    // `while' modifier
-    kUNTIL_MOD,    // `until' modifier
-    kRESCUE_MOD,   // `rescue' modifier
     kALIAS,        // `alias'
     kDEFINED,      // `defined?'
     klBEGIN,       // `BEGIN'
@@ -108,7 +104,6 @@ pub enum TokenKind {
     tNTH_REF,        // "numbered reference"
     tBACK_REF,       // "back reference"
     tSTRING_CONTENT, // "literal content"
-    tREGEXP_END,
 
     // Punctuation/operators
     tDOT, // "."
@@ -132,8 +127,6 @@ pub enum TokenKind {
     tNMATCH,       // "!~"
     tDOT2,         // ".."
     tDOT3,         // "..."
-    tBDOT2,        // "(.."
-    tBDOT3,        // "(..."
     tAREF,         // "[]"
     tASET,         // "[]="
     tLSHFT,        // "<<"
@@ -167,29 +160,27 @@ pub enum TokenKind {
     tSTRING_DEND,  // "tRCURLY"
     tSTRING_DVAR,  // "#" (in case of #@var / #@@var / #$var)
     tLAMBEG,       //
-    tLABEL_END,    //
-
-    tCOMMA,   // ","
-    tLCURLY,  // "{"
-    tRCURLY,  // "}"
-    tEQL,     // "="
-    tPIPE,    // "|"
-    tGT,      // ">"
-    tLT,      // "<"
-    tCARET,   // "^"
-    tSEMI,    // ";"
-    tSPACE,   // " "
-    tNL,      // "\n"
-    tPERCENT, // "%"
-    tTILDE,   // "~"
-    tBANG,    // "!"
-    tPLUS,    // "+"
-    tMINUS,   // "-"
-    tSTAR,    // "*"
-    tDIVIDE,  // "/"
-    tEQ,      // "=="
-    tEQQ,     // "==="
-    tEH,      // "?"
+    tCOMMA,        // ","
+    tLCURLY,       // "{"
+    tRCURLY,       // "}"
+    tEQL,          // "="
+    tPIPE,         // "|"
+    tGT,           // ">"
+    tLT,           // "<"
+    tCARET,        // "^"
+    tSEMI,         // ";"
+    tSPACE,        // " "
+    tNL,           // "\n"
+    tPERCENT,      // "%"
+    tTILDE,        // "~"
+    tBANG,         // "!"
+    tPLUS,         // "+"
+    tMINUS,        // "-"
+    tSTAR,         // "*"
+    tDIVIDE,       // "/"
+    tEQ,           // "=="
+    tEQQ,          // "==="
+    tEH,           // "?"
 
     tEMBEDDED_COMMENT_START, // "=begin"
     tCOMMENT,                // comment content

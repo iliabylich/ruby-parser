@@ -23,14 +23,13 @@ impl TokenKind {
         use TokenKind::*;
 
         match self {
-            kIF_MOD | kUNLESS_MOD | kWHILE_MOD | kUNTIL_MOD | kIN => non_assoc!(1),
+            kIF | kUNLESS | kWHILE | kUNTIL | kIN => non_assoc!(1),
             kOR | kAND => left_assoc!(2),
             kNOT => right_assoc!(3),
             kDEFINED => non_assoc!(4),
             tEQL | tOP_ASGN => right_assoc!(5),
-            kRESCUE_MOD => left_assoc!(6),
             tEH | tCOLON => right_assoc!(7),
-            tDOT2 | tDOT3 | tBDOT2 | tBDOT3 => non_assoc!(8),
+            tDOT2 | tDOT3 => non_assoc!(8),
             tOROP => left_assoc!(9),
             tANDOP => left_assoc!(10),
             tCMP | tEQ | tEQQ | tNEQ | tMATCH | tNMATCH => non_assoc!(11),
