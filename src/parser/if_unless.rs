@@ -1,6 +1,9 @@
 use crate::{
     builder::Builder,
-    parser::base::{ParseResult, Rule},
+    parser::{
+        base::{ExactToken, Maybe1, ParseResult, Rule},
+        TermT,
+    },
     token::{Token, TokenKind},
     Node, Parser,
 };
@@ -32,8 +35,36 @@ impl Rule for UnlessStmt {
 }
 
 pub(crate) struct OptElse;
+impl Rule for OptElse {
+    type Output = Option<(Token, Option<Box<Node>>)>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        todo!()
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        todo!()
+    }
+}
 
 pub(crate) struct Then;
+impl Rule for Then {
+    type Output = Option<Token>;
+
+    fn starts_now(_parser: &mut Parser) -> bool {
+        true
+    }
+
+    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+        type MaybeTermT = Maybe1<TermT>;
+        type ThenT = ExactToken<{ TokenKind::kTHEN as u8 }>;
+        type MaybeThenT = Maybe1<ThenT>;
+
+        let _term = MaybeTermT::parse(parser).unwrap();
+        let then_t = MaybeThenT::parse(parser).unwrap();
+        Ok(then_t)
+    }
+}
 
 #[cfg(test)]
 mod tests {

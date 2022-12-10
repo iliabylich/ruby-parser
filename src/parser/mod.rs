@@ -7,7 +7,7 @@ mod alias;
 pub(crate) use alias::Alias;
 
 mod args;
-pub(crate) use args::{Args, OptParenArgs, ParenArgs};
+pub(crate) use args::{Args, Mrhs, OptParenArgs, ParenArgs};
 
 mod array;
 pub(crate) use array::Array;

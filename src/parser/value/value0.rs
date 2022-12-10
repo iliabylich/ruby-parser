@@ -1,8 +1,10 @@
 use crate::{
+    builder::Builder,
     parser::{
         base::{at_most_one_is_true, ParseResult, Rule},
-        Alias, Array, BackRef, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt, KeywordCmd,
-        Lambda, Literal, MethodDef, Module, OperationT, Postexe, Undef, UnlessStmt, Value, VarRef,
+        Alias, Args, Array, BackRef, Block, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt,
+        KeywordCmd, Lambda, Literal, MethodDef, Module, OperationT, ParenArgs, Postexe, Undef,
+        UnlessStmt, Value, VarRef,
     },
     Node, Parser, TokenKind,
 };
@@ -13,11 +15,10 @@ impl Rule for Value0 {
 
     fn starts_now(parser: &mut Parser) -> bool {
         at_most_one_is_true([
-            MethodCall::starts_now(parser),
             Literal::starts_now(parser),
+            VarRefOrMethodCall::starts_now(parser),
             Array::starts_now(parser),
             Hash::starts_now(parser),
-            VarRef::starts_now(parser),
             BackRef::starts_now(parser),
             Parenthesized::starts_now(parser),
             Not::starts_now(parser),
@@ -43,16 +44,14 @@ impl Rule for Value0 {
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        if MethodCall::starts_now(parser) {
-            MethodCall::parse(parser)
-        } else if Literal::starts_now(parser) {
+        if Literal::starts_now(parser) {
             Literal::parse(parser)
+        } else if VarRefOrMethodCall::starts_now(parser) {
+            VarRefOrMethodCall::parse(parser)
         } else if Array::starts_now(parser) {
             Array::parse(parser)
         } else if Hash::starts_now(parser) {
             Hash::parse(parser)
-        } else if VarRef::starts_now(parser) {
-            VarRef::parse(parser)
         } else if BackRef::starts_now(parser) {
             BackRef::parse(parser)
         } else if Parenthesized::starts_now(parser) {
@@ -126,16 +125,44 @@ fn test_value0_until_loop() {
     assert_parses_rule!(Value0, b"unless true; 42; end", "TODO")
 }
 
-struct MethodCall;
-impl Rule for MethodCall {
+struct VarRefOrMethodCall;
+// This rule encapsulates variables, constants, methods calls
+impl Rule for VarRefOrMethodCall {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        OperationT::starts_now(parser)
+        VarRef::starts_now(parser) || OperationT::starts_now(parser)
     }
 
     fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        todo!()
+        if VarRef::starts_now(parser) && OperationT::starts_now(parser) {
+            // ambiguity `foo` vs `foo(42)`, depends on the presence of args/curly block
+            let name_t = parser.take_token();
+            if ParenArgs::starts_now(parser) {
+                // `foo(...` method call
+                todo!()
+            } else if Args::starts_now(parser) {
+                // `foo bar ...` command
+                todo!()
+            } else if Block::starts_now(parser) {
+                // `foo { ...` command
+                todo!()
+            } else {
+                // `foo`/`Foo` variable/const
+                match name_t.kind {
+                    TokenKind::tIDENTIFIER => Ok(Builder::lvar(name_t, parser.buffer())),
+                    TokenKind::tCONSTANT => Ok(Builder::const_(name_t, parser.buffer())),
+                    _ => todo!("{:?}", name_t),
+                }
+            }
+        } else if VarRef::starts_now(parser) {
+            VarRef::parse(parser)
+        } else if OperationT::starts_now(parser) {
+            // method call
+            todo!()
+        } else {
+            unreachable!()
+        }
     }
 }
 #[test]

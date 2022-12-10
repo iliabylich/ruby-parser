@@ -60,6 +60,12 @@ where
     }
 }
 
+impl From<()> for Captured {
+    fn from(_: ()) -> Self {
+        Captured::default()
+    }
+}
+
 impl std::ops::Add for Captured {
     type Output = Self;
 
