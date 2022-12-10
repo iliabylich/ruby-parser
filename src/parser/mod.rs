@@ -62,6 +62,9 @@ pub(crate) use postexe::Postexe;
 mod preexe;
 pub(crate) use preexe::Preexe;
 
+mod program;
+pub(crate) use program::Program;
+
 mod rescue;
 pub(crate) use rescue::OptRescue;
 
@@ -124,12 +127,8 @@ impl Parser {
     }
 
     pub fn parse(&mut self) -> Option<Box<Node>> {
-        Some(self.parse_program())
-    }
-
-    fn parse_program(&mut self) -> Box<Node> {
         use base::Rule;
-        stmt::TopCompstmt::parse(self).unwrap()
+        Program::parse(self).unwrap()
     }
 
     pub(crate) fn buffer(&self) -> &Buffer {

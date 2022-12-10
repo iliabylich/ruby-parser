@@ -57,7 +57,7 @@ impl Rule for Compstmt {
 
 pub(crate) struct Bodystmt;
 impl Rule for Bodystmt {
-    type Output = Box<Node>;
+    type Output = Option<Box<Node>>;
 
     fn starts_now(parser: &mut Parser) -> bool {
         todo!()
