@@ -1024,8 +1024,9 @@ fn test_tEOF_at__END__() {
 }
 #[test]
 fn test_tEOF_at_NL___END__() {
-    use crate::testing::assert_lex;
-    assert_lex!(b"\n__END__", token!(tEOF, loc!(1, 1)));
+    let mut lexer = Lexer::new(b"\n__END__");
+    assert_eq!(lexer.next_token(), token!(tNL, loc!(0, 1)));
+    assert_eq!(lexer.next_token(), token!(tEOF, loc!(1, 1)));
 }
 #[test]
 fn test_underscore_ident() {

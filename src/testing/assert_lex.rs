@@ -9,7 +9,7 @@ macro_rules! assert_lex {
         let mut lexer = Lexer::new($input);
         $pre(&mut lexer);
 
-        let actual_token = lexer.current_token();
+        let actual_token = lexer.next_token();
         let expected_token: Token = $token;
         assert_eq!(
             actual_token.kind, expected_token.kind,

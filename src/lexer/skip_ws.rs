@@ -1,7 +1,9 @@
-use crate::lexer::Lexer;
+use crate::{lexer::Lexer, loc::loc, token::token, Token};
 
 impl Lexer {
-    pub(crate) fn skip_ws(&mut self) {
+    pub(crate) fn skip_ws(&mut self) -> Option<Token> {
+        let start = self.buffer.pos();
+
         loop {
             match self.buffer.current_byte() {
                 // whitespaces
@@ -19,6 +21,14 @@ impl Lexer {
 
                 _ => break,
             }
+        }
+
+        let end = self.buffer.pos();
+
+        if start == end {
+            None
+        } else {
+            Some(token!(tWHITESPACE, loc!(start, end)))
         }
     }
 }

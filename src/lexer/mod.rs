@@ -19,7 +19,7 @@ use strings::parse_string;
 
 use crate::{
     buffer::BufferWithCursor, lexer::strings::stack::StringLiteralStack, loc::loc, token::token,
-    Token,
+    Token, TokenKind,
 };
 use strings::{action::StringExtendAction, literal::StringLiteral};
 
@@ -38,6 +38,9 @@ pub struct Lexer {
 
     pub(crate) tokens: Vec<Token>,
     pub(crate) token_idx: usize,
+
+    pub(crate) seen_whitespace: bool,
+    pub(crate) seen_nl: bool,
 }
 
 impl Lexer {
@@ -56,6 +59,9 @@ impl Lexer {
 
             tokens: vec![],
             token_idx: 0,
+
+            seen_whitespace: false,
+            seen_nl: false,
         }
     }
 
@@ -68,10 +74,28 @@ impl Lexer {
         if let Some(current_token) = self.tokens.get(self.token_idx) {
             *current_token
         } else {
-            // get new token
-            let token = self.next_token();
-            self.tokens.push(token);
-            token
+            self.seen_whitespace = false;
+            self.seen_nl = false;
+
+            // get new token until we find not-whitespace token
+            loop {
+                let token = self.next_token();
+                self.tokens.push(token);
+
+                match token.kind {
+                    TokenKind::tWHITESPACE => {
+                        self.seen_whitespace = true;
+                        self.token_idx += 1;
+                    }
+                    TokenKind::tNL => {
+                        self.seen_nl = true;
+                        self.token_idx += 1;
+                    }
+                    _ => {
+                        return token;
+                    }
+                }
+            }
         }
     }
 
@@ -155,7 +179,9 @@ impl Lexer {
         if let Some(eof_t) = self.handle_eof() {
             return eof_t;
         }
-        self.skip_ws();
+        if let Some(sp_t) = self.skip_ws() {
+            return sp_t;
+        }
 
         let start = self.buffer.pos();
 
@@ -175,9 +201,9 @@ impl Lexer {
         match byte {
             b'#' => OnByte::<b'#'>::on_byte(self),
             b'\n' => {
-                // TODO: handle NL
+                let token = token!(tNL, loc!(self.buffer.pos(), self.buffer.pos() + 1));
                 self.buffer.skip_byte();
-                self.tokenize_normally()
+                token
             }
             b'*' => OnByte::<b'*'>::on_byte(self),
             b'!' => OnByte::<b'!'>::on_byte(self),

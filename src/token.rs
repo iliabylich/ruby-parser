@@ -169,7 +169,7 @@ pub enum TokenKind {
     tLT,           // "<"
     tCARET,        // "^"
     tSEMI,         // ";"
-    tSPACE,        // " "
+    tWHITESPACE,   // " "
     tNL,           // "\n"
     tPERCENT,      // "%"
     tTILDE,        // "~"
