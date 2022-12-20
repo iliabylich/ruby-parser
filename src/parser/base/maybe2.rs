@@ -1,5 +1,5 @@
 use crate::{
-    parser::base::{Captured, ParseResult, Rule},
+    parser::base::{ParseResult, Rule},
     Parser,
 };
 
@@ -7,8 +7,6 @@ pub(crate) struct Maybe2<R1, R2>
 where
     R1: Rule,
     R2: Rule,
-    Captured: From<R1::Output>,
-    Captured: From<R2::Output>,
 {
     _r1: std::marker::PhantomData<R1>,
     _r2: std::marker::PhantomData<R2>,
@@ -18,8 +16,6 @@ impl<R1, R2> Rule for Maybe2<R1, R2>
 where
     R1: Rule,
     R2: Rule,
-    Captured: From<R1::Output>,
-    Captured: From<R2::Output>,
 {
     type Output = Option<(R1::Output, R2::Output)>;
 

@@ -1,6 +1,3 @@
-mod captured;
-pub(crate) use captured::{Captured, CapturedItem};
-
 mod error;
 pub(crate) use error::{ParseError, ParseResult};
 

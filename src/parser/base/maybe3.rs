@@ -1,5 +1,5 @@
 use crate::{
-    parser::base::{Captured, ParseResult, Rule},
+    parser::base::{ParseResult, Rule},
     Parser,
 };
 
@@ -8,9 +8,6 @@ where
     R1: Rule,
     R2: Rule,
     R3: Rule,
-    Captured: From<R1::Output>,
-    Captured: From<R2::Output>,
-    Captured: From<R3::Output>,
 {
     _r1: std::marker::PhantomData<R1>,
     _r2: std::marker::PhantomData<R2>,
@@ -22,9 +19,6 @@ where
     R1: Rule,
     R2: Rule,
     R3: Rule,
-    Captured: From<R1::Output>,
-    Captured: From<R2::Output>,
-    Captured: From<R3::Output>,
 {
     type Output = Option<(R1::Output, R2::Output, R3::Output)>;
 
@@ -37,34 +31,9 @@ where
             return Ok(None);
         }
 
-        let v1 = match R1::parse(parser) {
-            Ok(v1) => v1,
-            Err(err) => return Err(err),
-        };
-
-        if !R2::starts_now(parser) {
-            return Ok(None);
-        }
-
-        let v2 = match R2::parse(parser) {
-            Ok(v2) => v2,
-            Err(mut err) => {
-                err.captured = Captured::from(v1) + err.captured;
-                return Err(err);
-            }
-        };
-
-        if !R3::starts_now(parser) {
-            return Ok(None);
-        }
-
-        let v3 = match R3::parse(parser) {
-            Ok(v3) => v3,
-            Err(mut err) => {
-                err.captured = Captured::from(v1) + Captured::from(v2) + err.captured;
-                return Err(err);
-            }
-        };
+        let v1 = R1::parse(parser).unwrap();
+        let v2 = R2::parse(parser).unwrap();
+        let v3 = R3::parse(parser).unwrap();
 
         Ok(Some((v1, v2, v3)))
     }

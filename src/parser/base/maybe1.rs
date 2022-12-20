@@ -25,9 +25,6 @@ where
             return Ok(None);
         }
 
-        match R::parse(parser) {
-            Ok(value) => Ok(Some(value)),
-            Err(err) => Err(err),
-        }
+        Ok(Some(R::parse(parser).unwrap()))
     }
 }
