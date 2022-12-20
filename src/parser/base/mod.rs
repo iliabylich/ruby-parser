@@ -1,6 +1,3 @@
-mod error;
-pub(crate) use error::{ParseError, ParseResult};
-
 mod rule;
 pub(crate) use rule::Rule;
 

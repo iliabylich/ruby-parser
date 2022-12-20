@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ParseResult, Rule},
+        base::{at_most_one_is_true, Rule},
         Alias, Args, Array, BackRef, Block, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt,
         KeywordCmd, Lambda, Literal, MethodDef, Module, OperationT, ParenArgs, Postexe, Undef,
         UnlessStmt, Value, VarRef,
@@ -43,7 +43,7 @@ impl Rule for Value0 {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Literal::starts_now(parser) {
             Literal::parse(parser)
         } else if VarRefOrMethodCall::starts_now(parser) {
@@ -134,7 +134,7 @@ impl Rule for VarRefOrMethodCall {
         VarRef::starts_now(parser) || OperationT::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if VarRef::starts_now(parser) && OperationT::starts_now(parser) {
             // ambiguity `foo` vs `foo(42)`, depends on the presence of args/curly block
             let name_t = parser.take_token();
@@ -150,8 +150,8 @@ impl Rule for VarRefOrMethodCall {
             } else {
                 // `foo`/`Foo` variable/const
                 match name_t.kind {
-                    TokenKind::tIDENTIFIER => Ok(Builder::lvar(name_t, parser.buffer())),
-                    TokenKind::tCONSTANT => Ok(Builder::const_(name_t, parser.buffer())),
+                    TokenKind::tIDENTIFIER => Builder::lvar(name_t, parser.buffer()),
+                    TokenKind::tCONSTANT => Builder::const_(name_t, parser.buffer()),
                     _ => todo!("{:?}", name_t),
                 }
             }
@@ -186,7 +186,7 @@ impl Rule for Parenthesized {
         parser.current_token().is(TokenKind::tLPAREN)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -214,7 +214,7 @@ impl Rule for Not {
         parser.current_token().is(TokenKind::kNOT)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

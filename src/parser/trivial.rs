@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::base::{at_most_one_is_true, ParseResult, Rule},
+    parser::base::{at_most_one_is_true, Rule},
     Node, Parser, Token, TokenKind,
 };
 
@@ -15,8 +15,8 @@ impl Rule for OperationT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        Ok(parser.take_token())
+    fn parse(parser: &mut Parser) -> Self::Output {
+        parser.take_token()
     }
 }
 
@@ -28,7 +28,7 @@ impl Rule for Operation2T {
         at_most_one_is_true([OperationT::starts_now(parser), OpT::starts_now(parser)])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if OperationT::starts_now(parser) {
             OperationT::parse(parser)
         } else if OpT::starts_now(parser) {
@@ -51,11 +51,11 @@ impl Rule for Operation3T {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if OpT::starts_now(parser) {
             OpT::parse(parser)
         } else if parser.current_token().is(TokenKind::tFID) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -75,7 +75,7 @@ impl Rule for FnameT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if ReswordsT::starts_now(parser) {
             ReswordsT::parse(parser)
         } else if IdOrConstT::starts_now(parser) {
@@ -83,7 +83,7 @@ impl Rule for FnameT {
         } else if OpT::starts_now(parser) {
             OpT::parse(parser)
         } else if parser.current_token().is(TokenKind::tFID) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -103,16 +103,15 @@ impl Rule for SimpleNumeric {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let numeric_t = parser.take_token();
-        let node = match numeric_t.kind {
+        match numeric_t.kind {
             TokenKind::tINTEGER => Builder::integer(numeric_t, parser.buffer()),
             TokenKind::tFLOAT => Builder::float(numeric_t, parser.buffer()),
             TokenKind::tRATIONAL => Builder::rational(numeric_t, parser.buffer()),
             TokenKind::tIMAGINARY => Builder::complex(numeric_t, parser.buffer()),
             _ => unreachable!(),
-        };
-        Ok(node)
+        }
     }
 }
 
@@ -127,10 +126,10 @@ impl Rule for UserVariable {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if IdOrConstT::starts_now(parser) {
-            let token = IdOrConstT::parse(parser).unwrap();
-            Ok(Builder::lvar(token, parser.buffer()))
+            let token = IdOrConstT::parse(parser);
+            Builder::lvar(token, parser.buffer())
         } else if NonLocalVar::starts_now(parser) {
             NonLocalVar::parse(parser)
         } else {
@@ -155,9 +154,9 @@ impl Rule for KeywordVariable {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let token = parser.take_token();
-        let node = match token.kind {
+        match token.kind {
             TokenKind::kNIL => Builder::nil(token),
             TokenKind::kSELF => Builder::self_(token),
             TokenKind::kTRUE => Builder::true_(token),
@@ -166,8 +165,7 @@ impl Rule for KeywordVariable {
             TokenKind::k__LINE__ => Builder::__line__(token),
             TokenKind::k__ENCODING__ => Builder::__encoding__(token),
             _ => unreachable!(),
-        };
-        Ok(node)
+        }
     }
 }
 
@@ -182,7 +180,7 @@ impl Rule for VarRef {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if UserVariable::starts_now(parser) {
             UserVariable::parse(parser)
         } else if KeywordVariable::starts_now(parser) {
@@ -203,14 +201,13 @@ impl Rule for BackRef {
             .is_one_of([TokenKind::tNTH_REF, TokenKind::tBACK_REF])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let token = parser.take_token();
-        let node = match token.kind {
+        match token.kind {
             TokenKind::tNTH_REF => Builder::nth_ref(token, parser.buffer()),
             TokenKind::tBACK_REF => Builder::back_ref(token, parser.buffer()),
             _ => unreachable!(),
-        };
-        Ok(node)
+        }
     }
 }
 
@@ -222,7 +219,7 @@ impl Rule for CnameT {
         IdOrConstT::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         IdOrConstT::parse(parser)
     }
 }
@@ -235,7 +232,7 @@ impl Rule for StringDvar {
         at_most_one_is_true([NonLocalVar::starts_now(parser), BackRef::starts_now(parser)])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if NonLocalVar::starts_now(parser) {
             NonLocalVar::parse(parser)
         } else if BackRef::starts_now(parser) {
@@ -259,9 +256,9 @@ impl Rule for SymT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -279,9 +276,9 @@ impl Rule for CallOpT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -299,11 +296,11 @@ impl Rule for CallOp2T {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if CallOpT::starts_now(parser) {
             CallOpT::parse(parser)
         } else if parser.current_token().is(TokenKind::tCOLON2) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -321,11 +318,11 @@ impl Rule for DoT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if TermT::starts_now(parser) {
             TermT::parse(parser)
         } else if parser.current_token().is(TokenKind::kDO) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -343,9 +340,9 @@ impl Rule for TermT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -392,9 +389,9 @@ impl Rule for OpT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -453,9 +450,9 @@ impl Rule for ReswordsT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -470,9 +467,9 @@ impl Rule for Ivar {
         parser.current_token().is(TokenKind::tIVAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let ivar_t = parser.take_token();
-        Ok(Builder::ivar(ivar_t, parser.buffer()))
+        Builder::ivar(ivar_t, parser.buffer())
     }
 }
 
@@ -484,9 +481,9 @@ impl Rule for Cvar {
         parser.current_token().is(TokenKind::tCVAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let cvar_t = parser.take_token();
-        Ok(Builder::cvar(cvar_t, parser.buffer()))
+        Builder::cvar(cvar_t, parser.buffer())
     }
 }
 
@@ -498,9 +495,9 @@ impl Rule for Gvar {
         parser.current_token().is(TokenKind::tGVAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let gvar_t = parser.take_token();
-        Ok(Builder::gvar(gvar_t, parser.buffer()))
+        Builder::gvar(gvar_t, parser.buffer())
     }
 }
 
@@ -516,7 +513,7 @@ impl Rule for NonLocalVar {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Ivar::starts_now(parser) {
             Ivar::parse(parser)
         } else if Cvar::starts_now(parser) {
@@ -541,9 +538,9 @@ impl Rule for IdOrConstT {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }
@@ -559,7 +556,7 @@ fn test_id_or_const_t() {
     assert!(IdOrConstT::starts_now(&mut parser));
     assert_eq!(
         IdOrConstT::parse(&mut parser),
-        Ok(token!(tIDENTIFIER, loc!(0, 3)))
+        token!(tIDENTIFIER, loc!(0, 3))
     );
 
     let mut parser = Parser::new(b"42");

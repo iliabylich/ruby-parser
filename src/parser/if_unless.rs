@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{ExactToken, Maybe1, Maybe2, ParseResult, Rule},
+        base::{ExactToken, Maybe1, Maybe2, Rule},
         Compstmt, TermT,
     },
     token::{Token, TokenKind},
@@ -16,7 +16,7 @@ impl Rule for IfStmt {
         parser.current_token().is(TokenKind::kIF)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -29,7 +29,7 @@ impl Rule for UnlessStmt {
         parser.current_token().is(TokenKind::kUNLESS)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -45,14 +45,14 @@ impl Rule for Then {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type MaybeTermT = Maybe1<TermT>;
         type ThenT = ExactToken<{ TokenKind::kTHEN as u8 }>;
         type MaybeThenT = Maybe1<ThenT>;
 
-        let _term = MaybeTermT::parse(parser).unwrap();
-        let then_t = MaybeThenT::parse(parser).unwrap();
-        Ok(then_t)
+        let _term = MaybeTermT::parse(parser);
+        let then_t = MaybeThenT::parse(parser);
+        then_t
     }
 }
 

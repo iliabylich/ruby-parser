@@ -1,7 +1,4 @@
-use crate::{
-    parser::base::{ParseResult, Rule},
-    Node, Parser,
-};
+use crate::{parser::base::Rule, Node, Parser};
 
 pub(crate) struct Program;
 impl Rule for Program {
@@ -11,7 +8,7 @@ impl Rule for Program {
         todo!()
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

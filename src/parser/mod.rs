@@ -128,7 +128,7 @@ impl Parser {
 
     pub fn parse(&mut self) -> Option<Box<Node>> {
         use base::Rule;
-        Program::parse(self).unwrap()
+        Program::parse(self)
     }
 
     pub(crate) fn buffer(&self) -> &Buffer {

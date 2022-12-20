@@ -1,10 +1,10 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ExactToken, Maybe1, Maybe2, ParseResult, Rule, SeparatedBy},
+        base::{at_most_one_is_true, ExactToken, Maybe2, Rule, SeparatedBy},
         OptElse, OptRescue, Preexe, TermT, Value,
     },
-    Node, Parser, Token, TokenKind,
+    Node, Parser, TokenKind,
 };
 
 pub(crate) struct TopStmts;
@@ -15,12 +15,12 @@ impl Rule for TopStmts {
         Stmts::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let stmts = Stmts::parse(parser).unwrap();
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let stmts = Stmts::parse(parser);
         if stmts.is_empty() {
-            Ok(None)
+            None
         } else {
-            Ok(Some(Builder::group(stmts)))
+            Some(Builder::group(stmts))
         }
     }
 }
@@ -33,13 +33,13 @@ impl Rule for Compstmt {
         Stmts::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let stmts = Stmts::parse(parser).unwrap();
-        let _opt_terms = OptTerms::parse(parser).unwrap();
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let stmts = Stmts::parse(parser);
+        let _opt_terms = OptTerms::parse(parser);
         if stmts.is_empty() {
-            Ok(None)
+            None
         } else {
-            Ok(Some(Builder::group(stmts)))
+            Some(Builder::group(stmts))
         }
     }
 }
@@ -52,18 +52,18 @@ impl Rule for Bodystmt {
         Compstmt::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let compound_stmt = Compstmt::parse(parser).unwrap();
-        let rescue_bodies = OptRescue::parse(parser).unwrap();
-        let opt_else = OptElse::parse(parser).unwrap();
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let compound_stmt = Compstmt::parse(parser);
+        let rescue_bodies = OptRescue::parse(parser);
+        let opt_else = OptElse::parse(parser);
         type OptEnsure = Maybe2<ExactToken<{ TokenKind::kENSURE as u8 }>, Compstmt>;
-        let opt_ensure = OptEnsure::parse(parser).unwrap();
-        Ok(Some(Builder::begin_body(
+        let opt_ensure = OptEnsure::parse(parser);
+        Some(Builder::begin_body(
             compound_stmt,
             rescue_bodies,
             opt_else,
             opt_ensure,
-        )))
+        ))
     }
 }
 #[test]
@@ -76,8 +76,8 @@ fn test_bodystmt() {
             true // irrelevant
         }
 
-        fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-            Bodystmt::parse(parser).map(|maybe_node| maybe_node.unwrap())
+        fn parse(parser: &mut Parser) -> Self::Output {
+            Bodystmt::parse(parser).unwrap()
         }
     }
     crate::testing::assert_parses_rule!(
@@ -103,9 +103,8 @@ impl Rule for OptTerms {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        Terms::parse(parser).unwrap();
-        Ok(())
+    fn parse(parser: &mut Parser) -> Self::Output {
+        Terms::parse(parser);
     }
 }
 
@@ -117,16 +116,16 @@ impl Rule for Stmts {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let mut stmts = vec![];
         loop {
-            match ValueOrPreexe::parse(parser).unwrap() {
+            match ValueOrPreexe::parse(parser) {
                 ValueOrPreexe::Value(stmt) => stmts.push(*stmt),
                 ValueOrPreexe::Term => continue,
                 ValueOrPreexe::None => break,
             }
         }
-        Ok(stmts)
+        stmts
     }
 }
 
@@ -146,16 +145,16 @@ impl Rule for ValueOrPreexe {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Value::starts_now(parser) {
-            Ok(Self::Value(Value::parse(parser).unwrap()))
+            Self::Value(Value::parse(parser))
         } else if Preexe::starts_now(parser) {
-            Ok(Self::Value(Preexe::parse(parser).unwrap()))
+            Self::Value(Preexe::parse(parser))
         } else if Terms::starts_now(parser) {
             parser.skip_token();
-            Ok(Self::Term)
+            Self::Term
         } else {
-            Ok(Self::None)
+            Self::None
         }
     }
 }
@@ -168,9 +167,8 @@ impl Rule for Terms {
         TermT::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type SemiT = ExactToken<{ TokenKind::tSEMI as u8 }>;
-        let _ = SeparatedBy::<TermT, SemiT>::parse(parser).unwrap();
-        Ok(())
+        let _ = SeparatedBy::<TermT, SemiT>::parse(parser);
     }
 }

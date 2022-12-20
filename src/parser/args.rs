@@ -1,10 +1,10 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ExactToken, Maybe1, ParseResult, Rule, SeparatedBy},
-        Assoc, Value,
+        base::{at_most_one_is_true, ExactToken, Maybe1, Rule, SeparatedBy},
+        Value,
     },
-    Node, Parser, Token, TokenKind,
+    Node, Parser, TokenKind,
 };
 
 pub(crate) struct ParenArgs;
@@ -15,7 +15,7 @@ impl Rule for ParenArgs {
         parser.current_token().is(TokenKind::tLPAREN)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -30,7 +30,7 @@ impl Rule for Args {
         at_most_one_is_true([Value::starts_now(parser), Arglist::starts_now(parser)])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -43,11 +43,11 @@ impl Rule for Mrhs {
         Mrhs1::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type CommaT = ExactToken<{ TokenKind::tCOMMA as u8 }>;
         type R = SeparatedBy<Mrhs1, CommaT>;
-        let (items, _commas) = R::parse(parser).unwrap();
-        Ok(items)
+        let (items, _commas) = R::parse(parser);
+        items
     }
 }
 
@@ -62,11 +62,11 @@ impl Rule for Mrhs1 {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if parser.current_token().is(TokenKind::tSTAR) {
             let star_t = parser.take_token();
-            let value = Value::parse(parser).unwrap();
-            Ok(Builder::splat(star_t, value))
+            let value = Value::parse(parser);
+            Builder::splat(star_t, value)
         } else if Value::starts_now(parser) {
             Value::parse(parser)
         } else {
@@ -83,7 +83,7 @@ impl Rule for Arglist {
         Arg::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -103,23 +103,23 @@ impl Rule for Arg {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Value::starts_now(parser) {
-            let value = Value::parse(parser).unwrap();
+            let value = Value::parse(parser);
             if parser.current_token().is(TokenKind::tASSOC) {
                 let key = value;
                 let assoc_t = parser.take_token();
-                let value = Value::parse(parser).unwrap();
-                Ok(Builder::pair(key, assoc_t, value))
+                let value = Value::parse(parser);
+                Builder::pair(key, assoc_t, value)
             } else if parser.current_token().is(TokenKind::tCOLON)
             /* TODO: && key is a string */
             {
                 let key = value;
                 let colon_t = parser.take_token();
-                let value = Value::parse(parser).unwrap();
-                Ok(Builder::pair_quoted(key, colon_t, value))
+                let value = Value::parse(parser);
+                Builder::pair_quoted(key, colon_t, value)
             } else {
-                Ok(value)
+                value
             }
         } else if parser.current_token().is(TokenKind::tLABEL) {
             todo!()

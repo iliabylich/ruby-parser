@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ExactToken, ParseResult, Rule, SeparatedBy},
+        base::{at_most_one_is_true, ExactToken, Rule, SeparatedBy},
         Value,
     },
     Node, Parser, TokenKind,
@@ -15,16 +15,16 @@ impl Rule for Params {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type CommaT = ExactToken<{ TokenKind::tCOMMA as u8 }>;
         type R = SeparatedBy<Param, CommaT>;
 
-        let (args, _commas) = R::parse(parser).unwrap();
+        let (args, _commas) = R::parse(parser);
         // TODO: There must be runtime validations:
         // 1. params are ordered
         //    req -> opt -> (single) rest -> post -> kw[req/opt/rest] -> block
 
-        Ok(args)
+        args
     }
 }
 
@@ -45,7 +45,7 @@ impl Rule for Param {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Restarg::starts_now(parser) {
             Restarg::parse(parser)
         } else if Kwrestarg::starts_now(parser) {
@@ -59,21 +59,21 @@ impl Rule for Param {
             if parser.current_token().is(TokenKind::tEQL) {
                 // (a = 1)
                 let eql_t = parser.take_token();
-                let default = Value::parse(parser).unwrap();
-                Ok(Builder::optarg(name_t, eql_t, default, parser.buffer()))
+                let default = Value::parse(parser);
+                Builder::optarg(name_t, eql_t, default, parser.buffer())
             } else {
                 // just (a)
-                Ok(Builder::arg(name_t, parser.buffer()))
+                Builder::arg(name_t, parser.buffer())
             }
         } else if parser.current_token().is(TokenKind::tLABEL) {
             let name_t = parser.take_token();
             if Value::starts_now(parser) {
                 // (a: 1)
-                let default = Value::parse(parser).unwrap();
-                Ok(Builder::kwoptarg(name_t, default, parser.buffer()))
+                let default = Value::parse(parser);
+                Builder::kwoptarg(name_t, default, parser.buffer())
             } else {
                 // just (a:)
-                Ok(Builder::kwarg(name_t, parser.buffer()))
+                Builder::kwarg(name_t, parser.buffer())
             }
         } else {
             unreachable!()
@@ -146,14 +146,14 @@ impl Rule for Restarg {
         parser.current_token().is(TokenKind::tSTAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let star_t = parser.take_token();
         let name_t = if parser.current_token().is(TokenKind::tIDENTIFIER) {
             Some(parser.take_token())
         } else {
             None
         };
-        Ok(Builder::restarg(star_t, name_t, parser.buffer()))
+        Builder::restarg(star_t, name_t, parser.buffer())
     }
 }
 
@@ -165,14 +165,14 @@ impl Rule for Kwrestarg {
         parser.current_token().is(TokenKind::tDSTAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let dstar_t = parser.take_token();
         let name_t = if parser.current_token().is(TokenKind::tIDENTIFIER) {
             Some(parser.take_token())
         } else {
             None
         };
-        Ok(Builder::kwrestarg(dstar_t, name_t, parser.buffer()))
+        Builder::kwrestarg(dstar_t, name_t, parser.buffer())
     }
 }
 
@@ -184,10 +184,10 @@ impl Rule for Blockarg {
         parser.current_token().is(TokenKind::tAMPER)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let amper_t = parser.take_token();
         let name_t = parser.expect_token(TokenKind::tIDENTIFIER).unwrap();
-        Ok(Builder::blockarg(amper_t, Some(name_t), parser.buffer()))
+        Builder::blockarg(amper_t, Some(name_t), parser.buffer())
     }
 }
 
@@ -199,21 +199,21 @@ impl Rule for ParenthesizedMultiArg {
         parser.current_token().is(TokenKind::tLPAREN)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
-        let items = MultiArgs::parse(parser).unwrap();
+        let items = MultiArgs::parse(parser);
         let end_t = parser.expect_token(TokenKind::tRPAREN).unwrap();
 
         // TODO: move to builder
         use crate::nodes::Mlhs;
         let begin_l = begin_t.loc;
         let end_l = end_t.loc;
-        Ok(Box::new(Node::Mlhs(Mlhs {
+        Box::new(Node::Mlhs(Mlhs {
             items,
             begin_l: Some(begin_l),
             end_l: Some(end_l),
             expression_l: begin_l.join(&end_l),
-        })))
+        }))
     }
 }
 
@@ -225,12 +225,12 @@ impl Rule for MultiArgs {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type CommaT = ExactToken<{ TokenKind::tCOMMA as u8 }>;
         type R = SeparatedBy<MultiArg, CommaT>;
 
-        let (args, _commas) = R::parse(parser).unwrap();
-        Ok(args)
+        let (args, _commas) = R::parse(parser);
+        args
     }
 }
 
@@ -246,10 +246,10 @@ impl Rule for MultiArg {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if parser.current_token().is(TokenKind::tIDENTIFIER) {
             let name_t = parser.take_token();
-            Ok(Builder::arg(name_t, parser.buffer()))
+            Builder::arg(name_t, parser.buffer())
         } else if Restarg::starts_now(parser) {
             Restarg::parse(parser)
         } else if ParenthesizedMultiArg::starts_now(parser) {

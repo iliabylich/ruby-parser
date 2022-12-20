@@ -1,7 +1,4 @@
-use crate::{
-    parser::base::{ParseResult, Rule},
-    Node, Parser, TokenKind,
-};
+use crate::{parser::base::Rule, Node, Parser, TokenKind};
 
 pub(crate) struct Lambda;
 impl Rule for Lambda {
@@ -11,7 +8,7 @@ impl Rule for Lambda {
         parser.current_token().is(TokenKind::tLAMBDA)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

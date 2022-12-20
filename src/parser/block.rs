@@ -1,5 +1,5 @@
 use crate::{
-    parser::base::{ExactToken, Maybe1, Maybe2, ParseResult, Rule, SeparatedBy},
+    parser::base::{ExactToken, Maybe1, Maybe2, Rule, SeparatedBy},
     Node, Parser, TokenKind,
 };
 
@@ -11,7 +11,7 @@ impl Rule for DoBlock {
         parser.current_token().is(TokenKind::kDO)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -26,7 +26,7 @@ impl Rule for Block {
         BraceBlock::starts_now(parser) || DoBlock::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -39,7 +39,7 @@ impl Rule for BraceBlock {
         parser.current_token().is(TokenKind::tLCURLY)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

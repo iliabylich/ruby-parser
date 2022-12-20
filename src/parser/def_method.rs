@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ExactToken, Maybe1, Maybe3, ParseResult, Rule},
+        base::{at_most_one_is_true, ExactToken, Maybe1, Maybe3, Rule},
         Bodystmt, FnameT, Params, TermT, Value, VarRef,
     },
     token::{Token, TokenKind},
@@ -16,26 +16,21 @@ impl Rule for MethodDef {
         DefHead::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let def_head = DefHead::parse(parser).unwrap();
-        let args = MethodDefArgs::parse(parser).unwrap();
-        let body = Bodystmt::parse(parser).unwrap();
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let def_head = DefHead::parse(parser);
+        let args = MethodDefArgs::parse(parser);
+        let body = Bodystmt::parse(parser);
         let end_t = parser.expect_token(TokenKind::kEND).unwrap();
         match def_head {
-            DefHead::DefnHead { def_t, name_t } => Ok(Builder::def_method(
-                def_t,
-                name_t,
-                args,
-                body,
-                end_t,
-                parser.buffer(),
-            )),
+            DefHead::DefnHead { def_t, name_t } => {
+                Builder::def_method(def_t, name_t, args, body, end_t, parser.buffer())
+            }
             DefHead::DefsHead {
                 def_t,
                 definee,
                 dot_t,
                 name_t,
-            } => Ok(Builder::def_singleton(
+            } => Builder::def_singleton(
                 def_t,
                 definee,
                 dot_t,
@@ -44,7 +39,7 @@ impl Rule for MethodDef {
                 body,
                 end_t,
                 parser.buffer(),
-            )),
+            ),
         }
     }
 }
@@ -88,7 +83,7 @@ where
         parser.current_token().is(TokenKind::kDEF)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -113,7 +108,7 @@ impl Rule for DefHead {
         parser.current_token().is(TokenKind::kDEF)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let def_t = parser.take_token();
 
         if FnameT::starts_now(parser) || Singleton::starts_now(parser) {
@@ -121,41 +116,41 @@ impl Rule for DefHead {
             // because 'def self; end' is a valid construction
 
             let as_token = parser.current_token();
-            let as_node = Singleton::parse(parser).unwrap();
+            let as_node = Singleton::parse(parser);
 
             if DotOrColonT::starts_now(parser) {
                 // singleton method
                 let definee = as_node;
-                let dot_t = DotOrColonT::parse(parser).unwrap();
-                let name_t = FnameT::parse(parser).unwrap();
-                Ok(Self::DefsHead {
+                let dot_t = DotOrColonT::parse(parser);
+                let name_t = FnameT::parse(parser);
+                Self::DefsHead {
                     def_t,
                     definee,
                     dot_t,
                     name_t,
-                })
+                }
             } else {
                 // instance method
                 let name_t = as_token;
-                Ok(Self::DefnHead { def_t, name_t })
+                Self::DefnHead { def_t, name_t }
             }
         } else if FnameT::starts_now(parser) {
             // obvious instance method
             // like `def +(other)`
-            let name_t = FnameT::parse(parser).unwrap();
-            Ok(Self::DefnHead { def_t, name_t })
+            let name_t = FnameT::parse(parser);
+            Self::DefnHead { def_t, name_t }
         } else if Singleton::starts_now(parser) {
             // obvious singleton method
             // like `def self.foo`
-            let definee = Singleton::parse(parser).unwrap();
-            let dot_t = DotOrColonT::parse(parser).unwrap();
-            let name_t = FnameT::parse(parser).unwrap();
-            Ok(Self::DefsHead {
+            let definee = Singleton::parse(parser);
+            let dot_t = DotOrColonT::parse(parser);
+            let name_t = FnameT::parse(parser);
+            Self::DefsHead {
                 def_t,
                 definee,
                 dot_t,
                 name_t,
-            })
+            }
         } else {
             unreachable!()
         }
@@ -170,7 +165,7 @@ impl Rule for MethodDefArgs {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type MaybeParams = Maybe1<Params>;
 
         let begin_t;
@@ -179,18 +174,18 @@ impl Rule for MethodDefArgs {
 
         if parser.current_token().is(TokenKind::tLPAREN) {
             begin_t = Some(parser.take_token());
-            args = MaybeParams::parse(parser).unwrap().unwrap_or_default();
+            args = MaybeParams::parse(parser).unwrap_or_default();
             end_t = Some(parser.expect_token(TokenKind::tRPAREN).unwrap());
         } else {
             begin_t = None;
-            args = MaybeParams::parse(parser).unwrap().unwrap_or_default();
+            args = MaybeParams::parse(parser).unwrap_or_default();
             end_t = None;
             if !args.is_empty() {
-                TermT::parse(parser).unwrap();
+                TermT::parse(parser);
             }
         }
 
-        Ok(Builder::args(begin_t, args, end_t))
+        Builder::args(begin_t, args, end_t)
     }
 }
 
@@ -202,7 +197,7 @@ impl Rule for EndlessMethodArgs {
         todo!()
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -218,14 +213,14 @@ impl Rule for Singleton {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if VarRef::starts_now(parser) {
             VarRef::parse(parser)
         } else if parser.current_token().is(TokenKind::tLPAREN) {
             let lparen_t = parser.take_token();
-            let value = Value::parse(parser).unwrap();
+            let value = Value::parse(parser);
             let rparen_t = parser.take_token();
-            Ok(Builder::begin(lparen_t, vec![*value], rparen_t))
+            Builder::begin(lparen_t, vec![*value], rparen_t)
         } else {
             unreachable!()
         }
@@ -241,9 +236,9 @@ impl Rule for DotOrColonT {
         at_most_one_is_true([token.is(TokenKind::tDOT), token.is(TokenKind::tCOLON2)])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
-            Ok(parser.take_token())
+            parser.take_token()
         } else {
             unreachable!()
         }

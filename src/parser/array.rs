@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ExactToken, Maybe1, ParseResult, Rule, SeparatedBy},
+        base::{at_most_one_is_true, ExactToken, Maybe1, Rule, SeparatedBy},
         Value,
     },
     token::TokenKind,
@@ -16,16 +16,16 @@ impl Rule for Array {
         parser.current_token().is(TokenKind::tLBRACK)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let lbrack_t = parser.take_token();
-        let elements = Items::parse(parser).expect("failed to parse array elements");
+        let elements = Items::parse(parser);
         let rbrack_t = if parser.current_token().is(TokenKind::tRBRACK) {
             parser.take_token()
         } else {
             panic!("wrong toke type")
         };
 
-        Ok(Builder::array(Some(lbrack_t), elements, Some(rbrack_t)))
+        Builder::array(Some(lbrack_t), elements, Some(rbrack_t))
     }
 }
 #[test]
@@ -50,17 +50,17 @@ impl Rule for Items {
         !parser.current_token().is(TokenKind::tRPAREN)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         type CommaT = ExactToken<{ TokenKind::tCOMMA as u8 }>;
 
-        let (items, _commas) = SeparatedBy::<Item, CommaT>::parse(parser).unwrap();
-        let _trailing_comma = Maybe1::<CommaT>::parse(parser).unwrap();
+        let (items, _commas) = SeparatedBy::<Item, CommaT>::parse(parser);
+        let _trailing_comma = Maybe1::<CommaT>::parse(parser);
 
         // TODO: There must be runtime validations:
         // 1. pairs go after values
         // 2. ',' requires non-empty list of items
 
-        Ok(items)
+        items
     }
 }
 
@@ -78,7 +78,7 @@ impl Rule for Item {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if SplatElement::starts_now(parser) {
             SplatElement::parse(parser)
         } else if KeywordSplat::starts_now(parser) {
@@ -86,22 +86,22 @@ impl Rule for Item {
         } else if LabelToValuePair::starts_now(parser) {
             LabelToValuePair::parse(parser)
         } else if Value::starts_now(parser) {
-            let value = Value::parse(parser).unwrap();
+            let value = Value::parse(parser);
             if matches!(&*value, Node::Str(_)) && parser.current_token().is(TokenKind::tCOLON) {
                 // "foo": value
                 let key = value;
                 let colon_t = parser.take_token();
-                let value = Value::parse(parser).unwrap();
-                Ok(Builder::pair_quoted(key, colon_t, value))
+                let value = Value::parse(parser);
+                Builder::pair_quoted(key, colon_t, value)
             } else if parser.current_token().is(TokenKind::tASSOC) {
                 // pair `value => value`
                 let key = value;
                 let assoc_t = parser.take_token();
-                let value = Value::parse(parser).unwrap();
-                Ok(Builder::pair(key, assoc_t, value))
+                let value = Value::parse(parser);
+                Builder::pair(key, assoc_t, value)
             } else {
                 // just value
-                Ok(value)
+                value
             }
         } else {
             unreachable!()
@@ -145,10 +145,10 @@ impl Rule for SplatElement {
         parser.current_token().is(TokenKind::tSTAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let star_t = parser.take_token();
-        let value = Value::parse(parser).unwrap();
-        Ok(Builder::splat(star_t, value))
+        let value = Value::parse(parser);
+        Builder::splat(star_t, value)
     }
 }
 #[test]
@@ -171,13 +171,13 @@ impl Rule for LabelToValuePair {
         parser.current_token().is(TokenKind::tLABEL)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let key_t = parser.take_token();
-        let value = Maybe1::<Value>::parse(parser).unwrap();
+        let value = Maybe1::<Value>::parse(parser);
         if let Some(value) = value {
-            Ok(Builder::pair_keyword(key_t, value, parser.buffer()))
+            Builder::pair_keyword(key_t, value, parser.buffer())
         } else {
-            Ok(Builder::pair_label(key_t, parser.buffer()))
+            Builder::pair_label(key_t, parser.buffer())
         }
     }
 }
@@ -214,10 +214,10 @@ impl Rule for KeywordSplat {
         parser.current_token().is(TokenKind::tDSTAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let dstar_t = parser.take_token();
-        let value = Value::parse(parser).unwrap();
-        Ok(Builder::kwsplat(dstar_t, value))
+        let value = Value::parse(parser);
+        Builder::kwsplat(dstar_t, value)
     }
 }
 #[test]

@@ -1,9 +1,4 @@
-use crate::{
-    builder::Builder,
-    parser::base::{ParseResult, Rule},
-    token::TokenKind,
-    Node, Parser,
-};
+use crate::{builder::Builder, parser::base::Rule, token::TokenKind, Node, Parser};
 
 pub(crate) struct MLHS;
 impl Rule for MLHS {
@@ -13,7 +8,7 @@ impl Rule for MLHS {
         todo!()
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

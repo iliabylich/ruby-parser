@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{Maybe1, ParseResult, Repeat1, Rule},
+        base::{Maybe1, Repeat1, Rule},
         Compstmt, Mrhs, Then, Value,
     },
     Node, Parser, Token, TokenKind,
@@ -17,19 +17,13 @@ impl Rule for Rescue {
         parser.current_token().is(TokenKind::kRESCUE)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let rescue_t = parser.take_token();
-        let exc_list = ExcList::parse(parser).unwrap();
-        let assoc_t_and_exc_var = Maybe1::<ExcVar>::parse(parser).unwrap();
-        let then_t = Then::parse(parser).unwrap();
-        let body = Compstmt::parse(parser).unwrap();
-        Ok(Builder::rescue_body(
-            rescue_t,
-            exc_list,
-            assoc_t_and_exc_var,
-            then_t,
-            body,
-        ))
+        let exc_list = ExcList::parse(parser);
+        let assoc_t_and_exc_var = Maybe1::<ExcVar>::parse(parser);
+        let then_t = Then::parse(parser);
+        let body = Compstmt::parse(parser);
+        Builder::rescue_body(rescue_t, exc_list, assoc_t_and_exc_var, then_t, body)
     }
 }
 #[test]
@@ -55,11 +49,11 @@ impl Rule for ExcList {
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Mrhs::starts_now(parser) {
             Mrhs::parse(parser)
         } else {
-            Ok(vec![])
+            vec![]
         }
     }
 }
@@ -72,9 +66,9 @@ impl Rule for ExcVar {
         parser.current_token().is(TokenKind::tASSOC)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let assoc_t = parser.take_token();
-        let value = Value::parse(parser).unwrap();
-        Ok((assoc_t, value))
+        let value = Value::parse(parser);
+        (assoc_t, value)
     }
 }

@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::base::{ParseResult, Rule},
+    parser::base::Rule,
     token::{Token, TokenKind},
     Node, Parser,
 };
@@ -13,7 +13,7 @@ impl Rule for Module {
         parser.current_token().is(TokenKind::kMODULE)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }
@@ -26,7 +26,7 @@ impl Rule for Class {
         parser.current_token().is(TokenKind::kCLASS)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

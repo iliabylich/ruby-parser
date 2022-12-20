@@ -1,5 +1,5 @@
 use crate::{
-    parser::base::{Maybe1, ParseResult, Rule, Unbox},
+    parser::base::{Maybe1, Rule, Unbox},
     Parser,
 };
 
@@ -30,27 +30,27 @@ where
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let mut items = vec![];
         let mut seps = vec![];
 
-        match Maybe1::<Item>::parse(parser).unwrap() {
+        match Maybe1::<Item>::parse(parser) {
             Some(item) => items.push(item.unbox()),
-            None => return Ok((items, seps)),
+            None => return (items, seps),
         }
 
         loop {
-            match Maybe1::<Sep>::parse(parser).unwrap() {
+            match Maybe1::<Sep>::parse(parser) {
                 Some(sep) => seps.push(sep.unbox()),
                 None => break,
             }
 
-            match Maybe1::<Item>::parse(parser).unwrap() {
+            match Maybe1::<Item>::parse(parser) {
                 Some(item) => items.push(item.unbox()),
                 None => break,
             }
         }
 
-        Ok((items, seps))
+        (items, seps)
     }
 }

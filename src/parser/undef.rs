@@ -1,7 +1,7 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, ExactToken, ParseResult, Rule, SeparatedBy},
+        base::{at_most_one_is_true, ExactToken, Rule, SeparatedBy},
         FnameT, Symbol,
     },
     token::TokenKind,
@@ -16,18 +16,15 @@ impl Rule for Undef {
         parser.current_token().is(TokenKind::kUNDEF)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let undef_t = parser.current_token();
         parser.skip_token();
 
         type CommaTokenRule = ExactToken<{ TokenKind::tCOMMA as u8 }>;
 
-        let names = match SeparatedBy::<Fitem, CommaTokenRule>::parse(parser) {
-            Ok((names, _commas)) => names,
-            Err(err) => panic!("{:?}", err),
-        };
+        let (names, _commas) = SeparatedBy::<Fitem, CommaTokenRule>::parse(parser);
 
-        Ok(Builder::undef(undef_t, names))
+        Builder::undef(undef_t, names)
     }
 }
 
@@ -40,10 +37,10 @@ impl Rule for Fitem {
         at_most_one_is_true([FnameT::starts_now(parser), Symbol::starts_now(parser)])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if FnameT::starts_now(parser) {
-            let fname_t = FnameT::parse(parser).unwrap();
-            Ok(Builder::symbol_internal(fname_t, parser.buffer()))
+            let fname_t = FnameT::parse(parser);
+            Builder::symbol_internal(fname_t, parser.buffer())
         } else {
             Symbol::parse(parser)
         }

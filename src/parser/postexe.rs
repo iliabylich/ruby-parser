@@ -1,7 +1,4 @@
-use crate::{
-    parser::base::{ParseResult, Rule},
-    Node, Parser, TokenKind,
-};
+use crate::{parser::base::Rule, Node, Parser, TokenKind};
 
 pub(crate) struct Postexe;
 impl Rule for Postexe {
@@ -11,7 +8,7 @@ impl Rule for Postexe {
         parser.current_token().is(TokenKind::klEND)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

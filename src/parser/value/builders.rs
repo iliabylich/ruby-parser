@@ -1,10 +1,6 @@
-use crate::{parser::base::ParseResult, Node, Parser, Token};
+use crate::{Node, Parser, Token};
 
-pub(crate) fn build_prefix_op(
-    op_t: Token,
-    arg: Box<Node>,
-    parser: &mut Parser,
-) -> ParseResult<Box<Node>> {
+pub(crate) fn build_prefix_op(op_t: Token, arg: Box<Node>, parser: &mut Parser) -> Box<Node> {
     todo!()
 }
 
@@ -13,14 +9,10 @@ pub(crate) fn build_binary_op(
     lhs: Box<Node>,
     parser: &mut Parser,
     r_bp: u8,
-) -> ParseResult<Box<Node>> {
+) -> Box<Node> {
     todo!()
 }
 
-pub(crate) fn build_postfix_op(
-    op_t: Token,
-    arg: Box<Node>,
-    parser: &mut Parser,
-) -> ParseResult<Box<Node>> {
+pub(crate) fn build_postfix_op(op_t: Token, arg: Box<Node>, parser: &mut Parser) -> Box<Node> {
     todo!()
 }

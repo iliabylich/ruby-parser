@@ -1,7 +1,4 @@
-use crate::{
-    parser::base::{ParseResult, Rule},
-    Parser,
-};
+use crate::{parser::base::Rule, Parser};
 
 pub(crate) struct Maybe3<R1, R2, R3>
 where
@@ -26,15 +23,15 @@ where
         R1::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if !R1::starts_now(parser) {
-            return Ok(None);
+            return None;
         }
 
-        let v1 = R1::parse(parser).unwrap();
-        let v2 = R2::parse(parser).unwrap();
-        let v3 = R3::parse(parser).unwrap();
+        let v1 = R1::parse(parser);
+        let v2 = R2::parse(parser);
+        let v3 = R3::parse(parser);
 
-        Ok(Some((v1, v2, v3)))
+        Some((v1, v2, v3))
     }
 }

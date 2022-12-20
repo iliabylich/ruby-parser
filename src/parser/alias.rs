@@ -1,9 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{
-        base::{ParseResult, Rule},
-        BackRef, Fitem, Gvar,
-    },
+    parser::{base::Rule, BackRef, Fitem, Gvar},
     token::TokenKind,
     Node, Parser,
 };
@@ -16,26 +13,20 @@ impl Rule for Alias {
         parser.current_token().is(TokenKind::kALIAS)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let alias_t = parser.take_token();
 
         let (lhs, rhs) = if Fitem::starts_now(parser) {
-            let lhs = match Fitem::parse(parser) {
-                Ok(value) => value,
-                Err(err) => panic!("{:?}", err),
-            };
-            let rhs = match Fitem::parse(parser) {
-                Ok(value) => value,
-                Err(err) => panic!("{:?}", err),
-            };
+            let lhs = Fitem::parse(parser);
+            let rhs = Fitem::parse(parser);
             (lhs, rhs)
         } else if parser.current_token().is(TokenKind::tGVAR) {
-            let lhs = Gvar::parse(parser).unwrap();
+            let lhs = Gvar::parse(parser);
 
             let rhs = if Gvar::starts_now(parser) {
-                Gvar::parse(parser).unwrap()
+                Gvar::parse(parser)
             } else if BackRef::starts_now(parser) {
-                BackRef::parse(parser).unwrap()
+                BackRef::parse(parser)
             } else {
                 panic!("wring token type")
             };
@@ -45,7 +36,7 @@ impl Rule for Alias {
             panic!("wrong token type")
         };
 
-        Ok(Builder::alias(alias_t, lhs, rhs))
+        Builder::alias(alias_t, lhs, rhs)
     }
 }
 

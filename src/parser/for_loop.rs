@@ -1,6 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::base::{ParseResult, Rule},
+    parser::base::Rule,
     token::{Token, TokenKind},
     Node, Parser,
 };
@@ -13,7 +13,7 @@ impl Rule for ForLoop {
         parser.current_token().is(TokenKind::kFOR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

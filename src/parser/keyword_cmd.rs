@@ -1,9 +1,6 @@
 use crate::{
     builder::Builder,
-    parser::{
-        base::{ParseResult, Rule},
-        Args, Value,
-    },
+    parser::{base::Rule, Args, Value},
     Node, Parser, TokenKind,
 };
 
@@ -24,7 +21,7 @@ impl Rule for KeywordCmd {
     }
 
     // TODO: double-check it after merging primary/expr/stmt
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let keyword_t = parser.take_token();
 
         let node = match keyword_t.kind {
@@ -41,7 +38,7 @@ impl Rule for KeywordCmd {
                 };
 
                 let args = if Args::starts_now(parser) {
-                    Args::parse(parser).expect("parse error")
+                    Args::parse(parser)
                 } else {
                     vec![]
                 };
@@ -61,7 +58,7 @@ impl Rule for KeywordCmd {
             TokenKind::kDEFINED => {
                 dbg!(parser.current_token());
                 let lparen_t = parser.expect_token(TokenKind::tLPAREN).unwrap();
-                let value = Value::parse(parser).unwrap();
+                let value = Value::parse(parser);
                 let rparen_t = parser.expect_token(TokenKind::tRPAREN).unwrap();
 
                 Builder::defined(keyword_t, Some(lparen_t), value, Some(rparen_t))
@@ -69,7 +66,7 @@ impl Rule for KeywordCmd {
             _ => unreachable!(),
         };
 
-        Ok(node)
+        node
     }
 }
 #[test]

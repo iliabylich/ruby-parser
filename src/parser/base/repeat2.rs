@@ -1,7 +1,4 @@
-use crate::{
-    parser::base::{ParseResult, Rule},
-    Parser,
-};
+use crate::{parser::base::Rule, Parser};
 
 pub(crate) struct Repeat2<R1, R2>
 where
@@ -23,7 +20,7 @@ where
         R1::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let mut v1s = vec![];
         let mut v2s = vec![];
 
@@ -32,17 +29,17 @@ where
                 break;
             }
 
-            let v1 = R1::parse(parser).unwrap();
+            let v1 = R1::parse(parser);
             v1s.push(v1);
 
             if !R2::starts_now(parser) {
                 break;
             }
 
-            let v2 = R2::parse(parser).unwrap();
+            let v2 = R2::parse(parser);
             v2s.push(v2);
         }
 
-        Ok((v1s, v2s))
+        (v1s, v2s)
     }
 }

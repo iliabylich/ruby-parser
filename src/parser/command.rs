@@ -1,7 +1,4 @@
-pub(crate) use crate::{
-    parser::base::{ParseResult, Rule},
-    Node, Parser,
-};
+pub(crate) use crate::{parser::base::Rule, Node, Parser};
 
 pub(crate) struct MaybeCommandBlock;
 impl Rule for MaybeCommandBlock {
@@ -11,7 +8,7 @@ impl Rule for MaybeCommandBlock {
         todo!()
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         todo!()
     }
 }

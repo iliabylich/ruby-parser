@@ -1,23 +1,11 @@
 macro_rules! assert_parses_rule {
     ($rule:ty, $src:expr, $expected:expr) => {{
-        use crate::{
-            parser::base::{ParseResult, Rule},
-            Node, Parser,
-        };
+        use crate::{parser::base::Rule, Node, Parser};
 
         let mut parser = Parser::new($src).debug();
         type TestRule = $rule;
         assert!(TestRule::starts_now(&mut parser));
-        let parsed: ParseResult<Box<Node>> = TestRule::parse(&mut parser);
-
-        let ast;
-        match parsed {
-            Ok(node) => ast = node,
-            Err(err) => {
-                eprintln!("{:?}", err);
-                panic!("expected Ok(node), got Err()")
-            }
-        }
+        let ast: Box<Node> = TestRule::parse(&mut parser);
 
         let expected: &str = $expected;
         dbg!(&ast);

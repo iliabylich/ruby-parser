@@ -1,7 +1,4 @@
-use crate::{
-    parser::base::{ParseResult, Rule},
-    Parser,
-};
+use crate::{parser::base::Rule, Parser};
 
 pub(crate) struct Maybe1<R>
 where
@@ -20,11 +17,11 @@ where
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if !R::starts_now(parser) {
-            return Ok(None);
+            return None;
         }
 
-        Ok(Some(R::parse(parser).unwrap()))
+        Some(R::parse(parser))
     }
 }

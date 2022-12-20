@@ -1,5 +1,5 @@
 use crate::{
-    parser::base::{ParseResult, Rule, Unbox},
+    parser::base::{Rule, Unbox},
     Parser,
 };
 
@@ -22,7 +22,7 @@ where
         true
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let mut values = vec![];
 
         loop {
@@ -30,9 +30,9 @@ where
                 break;
             }
 
-            let value = R::parse(parser).unwrap().unbox();
+            let value = R::parse(parser).unbox();
             values.push(value);
         }
-        Ok(values)
+        values
     }
 }

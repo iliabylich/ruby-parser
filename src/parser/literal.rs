@@ -5,9 +5,7 @@ use crate::{
         types::{Interpolation, Regexp as RegexpLiteral, StringInterp},
     },
     parser::{
-        base::{
-            at_most_one_is_true, AtLeastOnce, ExactToken, ParseResult, Repeat1, Rule, SeparatedBy,
-        },
+        base::{at_most_one_is_true, AtLeastOnce, ExactToken, Repeat1, Rule, SeparatedBy},
         SimpleNumeric, StringDvar, SymT,
     },
     token::token,
@@ -32,7 +30,7 @@ impl Rule for Literal {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if Numeric::starts_now(parser) {
             Numeric::parse(parser)
         } else if Symbol::starts_now(parser) {
@@ -68,7 +66,7 @@ impl Rule for Numeric {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let unary_t = if parser.current_token().is(TokenKind::tUMINUS_NUM) {
             Some(parser.take_token())
         } else {
@@ -76,7 +74,7 @@ impl Rule for Numeric {
         };
 
         let mut number = if SimpleNumeric::starts_now(parser) {
-            SimpleNumeric::parse(parser).unwrap()
+            SimpleNumeric::parse(parser)
         } else {
             panic!("expected numeric literal")
         };
@@ -85,7 +83,7 @@ impl Rule for Numeric {
             number = Builder::unary_num(unary_t, number, parser.buffer());
         }
 
-        Ok(number)
+        number
     }
 }
 
@@ -128,7 +126,7 @@ impl Rule for Symbol {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if SimpleSymbol::starts_now(parser) {
             SimpleSymbol::parse(parser)
         } else if QuotedSymbol::starts_now(parser) {
@@ -147,16 +145,16 @@ impl Rule for SimpleSymbol {
         parser.current_token().is(TokenKind::tCOLON)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let colon_t = parser.take_token();
 
         let sym_t = if SymT::starts_now(parser) {
-            SymT::parse(parser).unwrap()
+            SymT::parse(parser)
         } else {
             panic!("wrong token")
         };
 
-        Ok(Builder::symbol(colon_t, sym_t, parser.buffer()))
+        Builder::symbol(colon_t, sym_t, parser.buffer())
     }
 }
 
@@ -179,10 +177,10 @@ impl Rule for QuotedSymbol {
             .is_one_of([TokenKind::tSYMBEG, TokenKind::tDSYMBEG])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
 
-        let parts = StringContents::parse(parser).unwrap();
+        let parts = StringContents::parse(parser);
 
         let end_t = if parser.current_token().is(TokenKind::tSTRING_END) {
             parser.take_token()
@@ -190,7 +188,7 @@ impl Rule for QuotedSymbol {
             panic!("wrong token type")
         };
 
-        Ok(Builder::symbol_compose(begin_t, parts, end_t))
+        Builder::symbol_compose(begin_t, parts, end_t)
     }
 }
 
@@ -213,13 +211,13 @@ impl Rule for Strings {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if parser.current_token().is(TokenKind::tCHAR) {
             let char_t = parser.take_token();
-            Ok(Builder::character(char_t))
+            Builder::character(char_t)
         } else {
-            let parts = AtLeastOnce::<String1>::parse(parser)?;
-            Ok(Builder::string_compose(None, parts, None))
+            let parts = AtLeastOnce::<String1>::parse(parser);
+            Builder::string_compose(None, parts, None)
         }
     }
 }
@@ -246,13 +244,13 @@ impl Rule for String1 {
             || parser.current_token().is(TokenKind::tDSTRING_BEG)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
-        let parts = StringContents::parse(parser)?;
+        let parts = StringContents::parse(parser);
         let end_t = parser
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
-        Ok(Builder::string_compose(Some(begin_t), parts, Some(end_t)))
+        Builder::string_compose(Some(begin_t), parts, Some(end_t))
     }
 }
 #[test]
@@ -289,7 +287,7 @@ impl Rule for XString {
         }
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.current_token();
 
         if begin_t.is(TokenKind::tIDENTIFIER) {
@@ -309,11 +307,11 @@ impl Rule for XString {
         }
         parser.skip_token();
 
-        let parts = StringContents::parse(parser)?;
+        let parts = StringContents::parse(parser);
         let end_t = parser
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
-        Ok(Builder::xstring_compose(begin_t, parts, end_t))
+        Builder::xstring_compose(begin_t, parts, end_t)
     }
 }
 #[test]
@@ -347,7 +345,7 @@ impl Rule for Regexp {
             .is_one_of([TokenKind::tREGEXP_BEG, TokenKind::tDIVIDE])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.current_token();
 
         if begin_t.is(TokenKind::tDIVIDE) {
@@ -367,13 +365,13 @@ impl Rule for Regexp {
         }
         parser.skip_token();
 
-        let parts = StringContents::parse(parser)?;
+        let parts = StringContents::parse(parser);
         let end_t = parser
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
 
         let options = Builder::regexp_options(&end_t, parser.buffer());
-        Ok(Builder::regexp_compose(begin_t, parts, end_t, options))
+        Builder::regexp_compose(begin_t, parts, end_t, options)
     }
 }
 #[test]
@@ -424,15 +422,15 @@ impl Rule for Words {
         parser.current_token().is(TokenKind::tWORDS_BEG)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
         type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
-        let (elements, _spaces) = SeparatedBy::<Word, SpToken>::parse(parser)?;
+        let (elements, _spaces) = SeparatedBy::<Word, SpToken>::parse(parser);
         let end_t = parser
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
 
-        Ok(Builder::words_compose(begin_t, elements, end_t))
+        Builder::words_compose(begin_t, elements, end_t)
     }
 }
 #[test]
@@ -458,9 +456,9 @@ impl Rule for Word {
         StringContent::starts_now(parser)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
-        let parts = AtLeastOnce::<StringContent>::parse(parser)?;
-        Ok(Builder::word(parts))
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let parts = AtLeastOnce::<StringContent>::parse(parser);
+        Builder::word(parts)
     }
 }
 
@@ -472,12 +470,12 @@ impl Rule for Symbols {
         parser.current_token().is(TokenKind::tSYMBOLS_BEG)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
 
         type StringToken = ExactToken<{ TokenKind::tSTRING_CONTENT as u8 }>;
         type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
-        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser)?;
+        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser);
         let elements = elements
             .into_iter()
             .map(|token| *Builder::string_internal(token, parser.buffer()))
@@ -487,7 +485,7 @@ impl Rule for Symbols {
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
 
-        Ok(Builder::symbols_compose(begin_t, elements, end_t))
+        Builder::symbols_compose(begin_t, elements, end_t)
     }
 }
 
@@ -514,12 +512,12 @@ impl Rule for QWords {
         parser.current_token().is(TokenKind::tQWORDS_BEG)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
 
         type StringToken = ExactToken<{ TokenKind::tSTRING_CONTENT as u8 }>;
         type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
-        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser)?;
+        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser);
         let elements = elements
             .into_iter()
             .map(|token| *Builder::string_internal(token, parser.buffer()))
@@ -529,7 +527,7 @@ impl Rule for QWords {
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
 
-        Ok(Builder::words_compose(begin_t, elements, end_t))
+        Builder::words_compose(begin_t, elements, end_t)
     }
 }
 #[test]
@@ -555,12 +553,12 @@ impl Rule for QSymbols {
         parser.current_token().is(TokenKind::tQSYMBOLS_BEG)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
 
         type StringToken = ExactToken<{ TokenKind::tSTRING_CONTENT as u8 }>;
         type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
-        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser)?;
+        let (elements, _spaces) = SeparatedBy::<StringToken, SpToken>::parse(parser);
         let elements = elements
             .into_iter()
             .map(|token| *Builder::symbol_internal(token, parser.buffer()))
@@ -570,7 +568,7 @@ impl Rule for QSymbols {
             .expect_token(TokenKind::tSTRING_END)
             .expect("wrong token type");
 
-        Ok(Builder::symbols_compose(begin_t, elements, end_t))
+        Builder::symbols_compose(begin_t, elements, end_t)
     }
 }
 #[test]
@@ -602,7 +600,7 @@ impl Rule for StringContent {
         ])
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         if PlainStringContent::starts_now(parser) {
             PlainStringContent::parse(parser)
         } else if StringDvarContent::starts_now(parser) {
@@ -623,9 +621,9 @@ impl Rule for PlainStringContent {
         parser.current_token().is(TokenKind::tSTRING_CONTENT)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let string_t = parser.take_token();
-        Ok(Builder::string_internal(string_t, parser.buffer()))
+        Builder::string_internal(string_t, parser.buffer())
     }
 }
 
@@ -637,7 +635,7 @@ impl Rule for StringDvarContent {
         parser.current_token().is(TokenKind::tSTRING_DVAR)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let _string_dvar_t = parser.take_token();
         StringDvar::parse(parser)
     }
@@ -651,7 +649,7 @@ impl Rule for InterpolatedStringContent {
         parser.current_token().is(TokenKind::tSTRING_DBEG)
     }
 
-    fn parse(parser: &mut Parser) -> ParseResult<Self::Output> {
+    fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
         let compstmt = parse_compstmt(); // Compstmt::parse(parser)
         let end_t = if parser.current_token().is(TokenKind::tSTRING_DEND) {
@@ -666,7 +664,7 @@ impl Rule for InterpolatedStringContent {
             vec![]
         };
 
-        Ok(Builder::begin(begin_t, stmts, end_t))
+        Builder::begin(begin_t, stmts, end_t)
     }
 }
 
