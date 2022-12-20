@@ -109,14 +109,14 @@ impl Parser {
         self.lexer.skip_token()
     }
 
-    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Option<Token> {
+    pub(crate) fn expect_token(&mut self, expected: TokenKind) -> Token {
         let token = self.current_token();
         self.skip_token();
 
         if token.is(expected) {
-            Some(token)
+            token
         } else {
-            None
+            panic!("Expected token {:?}, got {:?}", expected, token)
         }
     }
 

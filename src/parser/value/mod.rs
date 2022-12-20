@@ -31,7 +31,7 @@ impl Value {
         if parser.current_token().is(TokenKind::tLPAREN) {
             let begin_t = parser.take_token();
             let lhs = Self::parse_bp(parser, 0);
-            let end_t = parser.expect_token(TokenKind::tRPAREN).unwrap();
+            let end_t = parser.expect_token(TokenKind::tRPAREN);
             Builder::begin(begin_t, vec![*lhs], end_t)
         } else if let Some((_, r_bp)) = prefix_operator_power(parser.current_token()) {
             let op_t = parser.take_token();

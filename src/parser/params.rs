@@ -186,7 +186,7 @@ impl Rule for Blockarg {
 
     fn parse(parser: &mut Parser) -> Self::Output {
         let amper_t = parser.take_token();
-        let name_t = parser.expect_token(TokenKind::tIDENTIFIER).unwrap();
+        let name_t = parser.expect_token(TokenKind::tIDENTIFIER);
         Builder::blockarg(amper_t, Some(name_t), parser.buffer())
     }
 }
@@ -202,7 +202,7 @@ impl Rule for ParenthesizedMultiArg {
     fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
         let items = MultiArgs::parse(parser);
-        let end_t = parser.expect_token(TokenKind::tRPAREN).unwrap();
+        let end_t = parser.expect_token(TokenKind::tRPAREN);
 
         // TODO: move to builder
         use crate::nodes::Mlhs;

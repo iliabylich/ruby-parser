@@ -20,7 +20,7 @@ impl Rule for MethodDef {
         let def_head = DefHead::parse(parser);
         let args = MethodDefArgs::parse(parser);
         let body = Bodystmt::parse(parser);
-        let end_t = parser.expect_token(TokenKind::kEND).unwrap();
+        let end_t = parser.expect_token(TokenKind::kEND);
         match def_head {
             DefHead::DefnHead { def_t, name_t } => {
                 Builder::def_method(def_t, name_t, args, body, end_t, parser.buffer())
@@ -175,7 +175,7 @@ impl Rule for MethodDefArgs {
         if parser.current_token().is(TokenKind::tLPAREN) {
             begin_t = Some(parser.take_token());
             args = MaybeParams::parse(parser).unwrap_or_default();
-            end_t = Some(parser.expect_token(TokenKind::tRPAREN).unwrap());
+            end_t = Some(parser.expect_token(TokenKind::tRPAREN));
         } else {
             begin_t = None;
             args = MaybeParams::parse(parser).unwrap_or_default();

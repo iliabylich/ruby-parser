@@ -247,9 +247,7 @@ impl Rule for String1 {
     fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
         let parts = StringContents::parse(parser);
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
         Builder::string_compose(Some(begin_t), parts, Some(end_t))
     }
 }
@@ -308,9 +306,7 @@ impl Rule for XString {
         parser.skip_token();
 
         let parts = StringContents::parse(parser);
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
         Builder::xstring_compose(begin_t, parts, end_t)
     }
 }
@@ -366,9 +362,7 @@ impl Rule for Regexp {
         parser.skip_token();
 
         let parts = StringContents::parse(parser);
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
 
         let options = Builder::regexp_options(&end_t, parser.buffer());
         Builder::regexp_compose(begin_t, parts, end_t, options)
@@ -426,9 +420,7 @@ impl Rule for Words {
         let begin_t = parser.take_token();
         type SpToken = ExactToken<{ TokenKind::tSP as u8 }>;
         let (elements, _spaces) = SeparatedBy::<Word, SpToken>::parse(parser);
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
 
         Builder::words_compose(begin_t, elements, end_t)
     }
@@ -481,9 +473,7 @@ impl Rule for Symbols {
             .map(|token| *Builder::string_internal(token, parser.buffer()))
             .collect::<Vec<_>>();
 
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
 
         Builder::symbols_compose(begin_t, elements, end_t)
     }
@@ -523,9 +513,7 @@ impl Rule for QWords {
             .map(|token| *Builder::string_internal(token, parser.buffer()))
             .collect::<Vec<_>>();
 
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
 
         Builder::words_compose(begin_t, elements, end_t)
     }
@@ -564,9 +552,7 @@ impl Rule for QSymbols {
             .map(|token| *Builder::symbol_internal(token, parser.buffer()))
             .collect::<Vec<_>>();
 
-        let end_t = parser
-            .expect_token(TokenKind::tSTRING_END)
-            .expect("wrong token type");
+        let end_t = parser.expect_token(TokenKind::tSTRING_END);
 
         Builder::symbols_compose(begin_t, elements, end_t)
     }

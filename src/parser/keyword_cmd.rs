@@ -44,11 +44,7 @@ impl Rule for KeywordCmd {
                 };
 
                 let rparen_t = if lparen_t.is_some() {
-                    Some(
-                        parser
-                            .expect_token(TokenKind::tRPAREN)
-                            .expect("parse error"),
-                    )
+                    Some(parser.expect_token(TokenKind::tRPAREN))
                 } else {
                     None
                 };
@@ -57,9 +53,9 @@ impl Rule for KeywordCmd {
             }
             TokenKind::kDEFINED => {
                 dbg!(parser.current_token());
-                let lparen_t = parser.expect_token(TokenKind::tLPAREN).unwrap();
+                let lparen_t = parser.expect_token(TokenKind::tLPAREN);
                 let value = Value::parse(parser);
-                let rparen_t = parser.expect_token(TokenKind::tRPAREN).unwrap();
+                let rparen_t = parser.expect_token(TokenKind::tRPAREN);
 
                 Builder::defined(keyword_t, Some(lparen_t), value, Some(rparen_t))
             }
