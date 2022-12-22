@@ -1,7 +1,8 @@
 use crate::{
     builder::Builder,
     parser::{
-        base::{at_most_one_is_true, Rule},
+        base::{at_most_one_is_true, Repeat1, Rule},
+        value::call_tail::CallTail,
         Alias, Args, Array, BackRef, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt,
         KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module, OperationT, ParenArgs, Postexe,
         Undef, UnlessStmt, Value, VarRef,
@@ -44,7 +45,7 @@ impl Rule for Value0 {
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        if Literal::starts_now(parser) {
+        let mut head = if Literal::starts_now(parser) {
             Literal::parse(parser)
         } else if VarRefOrMethodCall::starts_now(parser) {
             VarRefOrMethodCall::parse(parser)
@@ -96,7 +97,31 @@ impl Rule for Value0 {
             todo!()
         } else {
             unreachable!()
+        };
+
+        for tail in Repeat1::<CallTail>::parse(parser).into_iter() {
+            match tail {
+                CallTail::ConstAccess { colon2_t, name_t } => {
+                    head = Builder::const_fetch(head, colon2_t, name_t, parser.buffer());
+                }
+                CallTail::MethodCall {
+                    dot_t,
+                    name_t,
+                    lparen_t,
+                    args,
+                    rparen_t,
+                    block,
+                } => todo!(),
+                CallTail::ArefArgs {
+                    lbrack_t,
+                    args,
+                    rbrack_t,
+                    block,
+                } => todo!(),
+            }
         }
+
+        head
     }
 }
 #[test]
@@ -141,10 +166,10 @@ impl Rule for VarRefOrMethodCall {
             if ParenArgs::starts_now(parser) {
                 // `foo(...` method call
                 todo!()
-            } else if Args::starts_now(parser) {
+            } else if Args::starts_now(parser) && parser.lexer.seen_whitespace {
                 // `foo bar ...` command
                 todo!()
-            } else if MaybeBlock::starts_now(parser) {
+            } else if let Some(block) = MaybeBlock::parse(parser) {
                 // `foo { ...` command
                 todo!()
             } else {

@@ -1,13 +1,13 @@
 use crate::{
     parser::base::{ExactToken, Maybe1, Maybe2, Rule, SeparatedBy},
-    Node, Parser, TokenKind,
+    Node, Parser, Token, TokenKind,
 };
 
 pub(crate) type MaybeBlock = Maybe1<Block>;
 
 pub(crate) struct Block;
 impl Rule for Block {
-    type Output = Box<Node>;
+    type Output = (Token, Box<Node>, Token);
 
     fn starts_now(parser: &mut Parser) -> bool {
         BraceBlock::starts_now(parser) || DoBlock::starts_now(parser)
@@ -20,7 +20,7 @@ impl Rule for Block {
 
 struct DoBlock;
 impl Rule for DoBlock {
-    type Output = Box<Node>;
+    type Output = (Token, Box<Node>, Token);
 
     fn starts_now(parser: &mut Parser) -> bool {
         parser.current_token().is(TokenKind::kDO)

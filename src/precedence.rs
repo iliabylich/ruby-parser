@@ -28,6 +28,7 @@ impl TokenKind {
             kNOT => right_assoc!(3),
             kDEFINED => non_assoc!(4),
             tEQL | tOP_ASGN => right_assoc!(5),
+            kRESCUE => left_assoc!(6),
             tEH | tCOLON => right_assoc!(7),
             tDOT2 | tDOT3 => non_assoc!(8),
             tOROP => left_assoc!(9),

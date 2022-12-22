@@ -46,7 +46,7 @@ impl Rule for DotOrColon2T {
     }
 }
 
-struct DotT;
+pub(crate) struct DotT;
 impl Rule for DotT {
     type Output = Token;
 
@@ -156,27 +156,6 @@ impl Rule for KeywordVariable {
             TokenKind::k__LINE__ => Builder::__line__(token),
             TokenKind::k__ENCODING__ => Builder::__encoding__(token),
             _ => unreachable!(),
-        }
-    }
-}
-
-pub(crate) struct Operation2T;
-impl Rule for Operation2T {
-    type Output = Token;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([
-            IdOrConstT::starts_now(parser),
-            parser.current_token().is(TokenKind::tFID),
-            OpT::starts_now(parser),
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if Self::starts_now(parser) {
-            parser.take_token()
-        } else {
-            unreachable!()
         }
     }
 }
@@ -305,7 +284,7 @@ impl Rule for VarRef {
     }
 }
 
-struct OpT;
+pub(crate) struct OpT;
 impl Rule for OpT {
     type Output = Token;
 
@@ -518,11 +497,7 @@ impl Rule for IdOrConstT {
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        if Self::starts_now(parser) {
-            parser.take_token()
-        } else {
-            unreachable!()
-        }
+        parser.take_token()
     }
 }
 

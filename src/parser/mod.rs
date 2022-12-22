@@ -70,7 +70,7 @@ pub(crate) use stmt::{Bodystmt, Compstmt, OptTerms, TopStmts};
 
 mod trivial;
 pub(crate) use trivial::{
-    BackRef, CnameT, Cvar, DoT, DotOrColon2T, FnameT, Gvar, Ivar, KeywordVariable, Operation2T,
+    BackRef, CnameT, Cvar, DoT, DotOrColon2T, DotT, FnameT, Gvar, Ivar, KeywordVariable, OpT,
     OperationT, SimpleNumeric, StringDvar, SymT, TermT, VarRef,
 };
 

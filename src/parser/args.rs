@@ -9,7 +9,7 @@ use crate::{
 
 pub(crate) struct ParenArgs;
 impl Rule for ParenArgs {
-    type Output = Box<Node>;
+    type Output = (Token, Vec<Node>, Token);
 
     fn starts_now(parser: &mut Parser) -> bool {
         parser.current_token().is(TokenKind::tLPAREN)
@@ -27,11 +27,13 @@ impl Rule for Args {
     type Output = Vec<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([Value::starts_now(parser), Arglist::starts_now(parser)])
+        Arglist::starts_now(parser)
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        let arglist = Arglist::parse(parser);
+        // TODO: validate that it has exactly 1 element if it's a command
+        arglist
     }
 }
 
@@ -39,12 +41,23 @@ pub(crate) struct CallArgs;
 impl Rule for CallArgs {
     type Output = (Option<Token>, Vec<Node>, Option<Token>);
 
-    fn starts_now(_parser: &mut Parser) -> bool {
-        true
+    fn starts_now(parser: &mut Parser) -> bool {
+        at_most_one_is_true([Args::starts_now(parser), OptParenArgs::starts_now(parser)])
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        if Args::starts_now(parser) {
+            let args = Args::parse(parser);
+            (None, args, None)
+        } else if OptParenArgs::starts_now(parser) {
+            if let Some((lparen_t, args, rparen_t)) = OptParenArgs::parse(parser) {
+                (Some(lparen_t), args, Some(rparen_t))
+            } else {
+                (None, vec![], None)
+            }
+        } else {
+            unreachable!()
+        }
     }
 }
 
