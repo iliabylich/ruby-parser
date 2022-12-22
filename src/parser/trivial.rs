@@ -4,57 +4,96 @@ use crate::{
     Node, Parser, Token, TokenKind,
 };
 
-pub(crate) struct OperationT;
-impl Rule for OperationT {
+pub(crate) struct BackRef;
+impl Rule for BackRef {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser
+            .current_token()
+            .is_one_of([TokenKind::tNTH_REF, TokenKind::tBACK_REF])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let token = parser.take_token();
+        match token.kind {
+            TokenKind::tNTH_REF => Builder::nth_ref(token, parser.buffer()),
+            TokenKind::tBACK_REF => Builder::back_ref(token, parser.buffer()),
+            _ => unreachable!(),
+        }
+    }
+}
+
+pub(crate) struct DotOrColon2T;
+impl Rule for DotOrColon2T {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
         at_most_one_is_true([
-            IdOrConstT::starts_now(parser),
-            parser.current_token().is(TokenKind::tFID),
+            DotT::starts_now(parser),
+            parser.current_token().is(TokenKind::tCOLON2),
         ])
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        parser.take_token()
-    }
-}
-
-pub(crate) struct Operation2T;
-impl Rule for Operation2T {
-    type Output = Token;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([OperationT::starts_now(parser), OpT::starts_now(parser)])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if OperationT::starts_now(parser) {
-            OperationT::parse(parser)
-        } else if OpT::starts_now(parser) {
-            OpT::parse(parser)
+        if DotT::starts_now(parser) {
+            DotT::parse(parser)
+        } else if parser.current_token().is(TokenKind::tCOLON2) {
+            parser.take_token()
         } else {
             unreachable!()
         }
     }
 }
 
-pub(crate) struct Operation3T;
-impl Rule for Operation3T {
+struct DotT;
+impl Rule for DotT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
         at_most_one_is_true([
-            OpT::starts_now(parser),
-            parser.current_token().is(TokenKind::tIDENTIFIER),
-            parser.current_token().is(TokenKind::tFID),
+            parser.current_token().is(TokenKind::tDOT),
+            parser.current_token().is(TokenKind::tANDDOT),
         ])
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        if OpT::starts_now(parser) {
-            OpT::parse(parser)
-        } else if parser.current_token().is(TokenKind::tFID) {
+        if Self::starts_now(parser) {
+            parser.take_token()
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+pub(crate) struct CnameT;
+impl Rule for CnameT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        IdOrConstT::starts_now(parser)
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        IdOrConstT::parse(parser)
+    }
+}
+
+pub(crate) struct DoT;
+impl Rule for DoT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        at_most_one_is_true([
+            TermT::starts_now(parser),
+            parser.current_token().is(TokenKind::kDO),
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        if TermT::starts_now(parser) {
+            TermT::parse(parser)
+        } else if parser.current_token().is(TokenKind::kDO) {
             parser.take_token()
         } else {
             unreachable!()
@@ -84,54 +123,6 @@ impl Rule for FnameT {
             OpT::parse(parser)
         } else if parser.current_token().is(TokenKind::tFID) {
             parser.take_token()
-        } else {
-            unreachable!()
-        }
-    }
-}
-
-pub(crate) struct SimpleNumeric;
-impl Rule for SimpleNumeric {
-    type Output = Box<Node>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is_one_of([
-            TokenKind::tINTEGER,
-            TokenKind::tFLOAT,
-            TokenKind::tRATIONAL,
-            TokenKind::tIMAGINARY,
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        let numeric_t = parser.take_token();
-        match numeric_t.kind {
-            TokenKind::tINTEGER => Builder::integer(numeric_t, parser.buffer()),
-            TokenKind::tFLOAT => Builder::float(numeric_t, parser.buffer()),
-            TokenKind::tRATIONAL => Builder::rational(numeric_t, parser.buffer()),
-            TokenKind::tIMAGINARY => Builder::complex(numeric_t, parser.buffer()),
-            _ => unreachable!(),
-        }
-    }
-}
-
-struct UserVariable;
-impl Rule for UserVariable {
-    type Output = Box<Node>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([
-            IdOrConstT::starts_now(parser),
-            NonLocalVar::starts_now(parser),
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if IdOrConstT::starts_now(parser) {
-            let token = IdOrConstT::parse(parser);
-            Builder::lvar(token, parser.buffer())
-        } else if NonLocalVar::starts_now(parser) {
-            NonLocalVar::parse(parser)
         } else {
             unreachable!()
         }
@@ -169,58 +160,65 @@ impl Rule for KeywordVariable {
     }
 }
 
-pub(crate) struct VarRef;
-impl Rule for VarRef {
-    type Output = Box<Node>;
+pub(crate) struct Operation2T;
+impl Rule for Operation2T {
+    type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
         at_most_one_is_true([
-            UserVariable::starts_now(parser),
-            KeywordVariable::starts_now(parser),
+            IdOrConstT::starts_now(parser),
+            parser.current_token().is(TokenKind::tFID),
+            OpT::starts_now(parser),
         ])
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        if UserVariable::starts_now(parser) {
-            UserVariable::parse(parser)
-        } else if KeywordVariable::starts_now(parser) {
-            KeywordVariable::parse(parser)
+        if Self::starts_now(parser) {
+            parser.take_token()
         } else {
             unreachable!()
         }
     }
 }
 
-pub(crate) struct BackRef;
-impl Rule for BackRef {
-    type Output = Box<Node>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        parser
-            .current_token()
-            .is_one_of([TokenKind::tNTH_REF, TokenKind::tBACK_REF])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        let token = parser.take_token();
-        match token.kind {
-            TokenKind::tNTH_REF => Builder::nth_ref(token, parser.buffer()),
-            TokenKind::tBACK_REF => Builder::back_ref(token, parser.buffer()),
-            _ => unreachable!(),
-        }
-    }
-}
-
-pub(crate) struct CnameT;
-impl Rule for CnameT {
+pub(crate) struct OperationT;
+impl Rule for OperationT {
     type Output = Token;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        IdOrConstT::starts_now(parser)
+        at_most_one_is_true([
+            IdOrConstT::starts_now(parser),
+            parser.current_token().is(TokenKind::tFID),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        IdOrConstT::parse(parser)
+        parser.take_token()
+    }
+}
+
+pub(crate) struct SimpleNumeric;
+impl Rule for SimpleNumeric {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        parser.current_token().is_one_of([
+            TokenKind::tINTEGER,
+            TokenKind::tFLOAT,
+            TokenKind::tRATIONAL,
+            TokenKind::tIMAGINARY,
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        let numeric_t = parser.take_token();
+        match numeric_t.kind {
+            TokenKind::tINTEGER => Builder::integer(numeric_t, parser.buffer()),
+            TokenKind::tFLOAT => Builder::float(numeric_t, parser.buffer()),
+            TokenKind::tRATIONAL => Builder::rational(numeric_t, parser.buffer()),
+            TokenKind::tIMAGINARY => Builder::complex(numeric_t, parser.buffer()),
+            _ => unreachable!(),
+        }
     }
 }
 
@@ -265,70 +263,6 @@ impl Rule for SymT {
     }
 }
 
-pub(crate) struct CallOpT;
-impl Rule for CallOpT {
-    type Output = Token;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([
-            parser.current_token().is(TokenKind::tDOT),
-            parser.current_token().is(TokenKind::tANDDOT),
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if Self::starts_now(parser) {
-            parser.take_token()
-        } else {
-            unreachable!()
-        }
-    }
-}
-
-pub(crate) struct CallOp2T;
-impl Rule for CallOp2T {
-    type Output = Token;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([
-            CallOpT::starts_now(parser),
-            parser.current_token().is(TokenKind::tCOLON2),
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if CallOpT::starts_now(parser) {
-            CallOpT::parse(parser)
-        } else if parser.current_token().is(TokenKind::tCOLON2) {
-            parser.take_token()
-        } else {
-            unreachable!()
-        }
-    }
-}
-
-pub(crate) struct DoT;
-impl Rule for DoT {
-    type Output = Token;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([
-            TermT::starts_now(parser),
-            parser.current_token().is(TokenKind::kDO),
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if TermT::starts_now(parser) {
-            TermT::parse(parser)
-        } else if parser.current_token().is(TokenKind::kDO) {
-            parser.take_token()
-        } else {
-            unreachable!()
-        }
-    }
-}
-
 pub(crate) struct TermT;
 impl Rule for TermT {
     type Output = Token;
@@ -343,6 +277,28 @@ impl Rule for TermT {
     fn parse(parser: &mut Parser) -> Self::Output {
         if Self::starts_now(parser) {
             parser.take_token()
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+pub(crate) struct VarRef;
+impl Rule for VarRef {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        at_most_one_is_true([
+            UserVariable::starts_now(parser),
+            KeywordVariable::starts_now(parser),
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        if UserVariable::starts_now(parser) {
+            UserVariable::parse(parser)
+        } else if KeywordVariable::starts_now(parser) {
+            KeywordVariable::parse(parser)
         } else {
             unreachable!()
         }
@@ -498,6 +454,29 @@ impl Rule for Gvar {
     fn parse(parser: &mut Parser) -> Self::Output {
         let gvar_t = parser.take_token();
         Builder::gvar(gvar_t, parser.buffer())
+    }
+}
+
+struct UserVariable;
+impl Rule for UserVariable {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        at_most_one_is_true([
+            IdOrConstT::starts_now(parser),
+            NonLocalVar::starts_now(parser),
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        if IdOrConstT::starts_now(parser) {
+            let token = IdOrConstT::parse(parser);
+            Builder::lvar(token, parser.buffer())
+        } else if NonLocalVar::starts_now(parser) {
+            NonLocalVar::parse(parser)
+        } else {
+            unreachable!()
+        }
     }
 }
 

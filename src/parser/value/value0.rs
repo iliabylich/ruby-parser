@@ -2,9 +2,9 @@ use crate::{
     builder::Builder,
     parser::{
         base::{at_most_one_is_true, Rule},
-        Alias, Args, Array, BackRef, Block, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt,
-        KeywordCmd, Lambda, Literal, MethodDef, Module, OperationT, ParenArgs, Postexe, Undef,
-        UnlessStmt, Value, VarRef,
+        Alias, Args, Array, BackRef, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt,
+        KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module, OperationT, ParenArgs, Postexe,
+        Undef, UnlessStmt, Value, VarRef,
     },
     Node, Parser, TokenKind,
 };
@@ -144,7 +144,7 @@ impl Rule for VarRefOrMethodCall {
             } else if Args::starts_now(parser) {
                 // `foo bar ...` command
                 todo!()
-            } else if Block::starts_now(parser) {
+            } else if MaybeBlock::starts_now(parser) {
                 // `foo { ...` command
                 todo!()
             } else {

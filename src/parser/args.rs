@@ -4,7 +4,7 @@ use crate::{
         base::{at_most_one_is_true, ExactToken, Maybe1, Rule, SeparatedBy},
         Value,
     },
-    Node, Parser, TokenKind,
+    Node, Parser, Token, TokenKind,
 };
 
 pub(crate) struct ParenArgs;
@@ -28,6 +28,19 @@ impl Rule for Args {
 
     fn starts_now(parser: &mut Parser) -> bool {
         at_most_one_is_true([Value::starts_now(parser), Arglist::starts_now(parser)])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        todo!()
+    }
+}
+
+pub(crate) struct CallArgs;
+impl Rule for CallArgs {
+    type Output = (Option<Token>, Vec<Node>, Option<Token>);
+
+    fn starts_now(_parser: &mut Parser) -> bool {
+        true
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {

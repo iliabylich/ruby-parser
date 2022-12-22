@@ -1,8 +1,4 @@
-use crate::{
-    builder::Builder,
-    parser::{base::Rule, EndlessMethodDef},
-    Node, Parser, Token, TokenKind,
-};
+use crate::{builder::Builder, parser::base::Rule, Node, Parser, TokenKind};
 
 mod operators;
 use operators::{binary_operator_power, postfix_operator_power, prefix_operator_power};

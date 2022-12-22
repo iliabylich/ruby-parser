@@ -7,7 +7,7 @@ mod alias;
 pub(crate) use alias::Alias;
 
 mod args;
-pub(crate) use args::{Args, Mrhs, OptParenArgs, ParenArgs};
+pub(crate) use args::{Args, CallArgs, Mrhs, OptParenArgs, ParenArgs};
 
 mod array;
 pub(crate) use array::Array;
@@ -15,13 +15,10 @@ pub(crate) use array::Array;
 mod base;
 
 mod block;
-pub(crate) use block::{Block, DoBlock, MaybeBraceBlock};
+pub(crate) use block::MaybeBlock;
 
 mod case;
 pub(crate) use case::Case;
-
-mod command;
-pub(crate) use command::MaybeCommandBlock;
 
 mod def_method;
 pub(crate) use def_method::{EndlessMethodDef, MethodDef};
@@ -73,8 +70,8 @@ pub(crate) use stmt::{Bodystmt, Compstmt, OptTerms, TopStmts};
 
 mod trivial;
 pub(crate) use trivial::{
-    BackRef, CallOp2T, CallOpT, CnameT, Cvar, DoT, FnameT, Gvar, Ivar, KeywordVariable,
-    Operation2T, Operation3T, OperationT, SimpleNumeric, StringDvar, SymT, TermT, VarRef,
+    BackRef, CnameT, Cvar, DoT, DotOrColon2T, FnameT, Gvar, Ivar, KeywordVariable, Operation2T,
+    OperationT, SimpleNumeric, StringDvar, SymT, TermT, VarRef,
 };
 
 mod undef;
