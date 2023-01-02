@@ -3,9 +3,9 @@ use crate::{
     parser::{
         base::{at_most_one_is_true, Repeat1, Rule},
         value::call_tail::CallTail,
-        Alias, Args, Array, BackRef, Case, Class, Compstmt, DoT, EndlessMethodDef, ForLoop, Hash,
-        IfStmt, KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module, OperationT, ParenArgs,
-        Postexe, Undef, UnlessStmt, Value, VarRef,
+        Alias, Args, Array, BackRef, Bodystmt, Case, Class, Compstmt, DoT, EndlessMethodDef,
+        ForLoop, Hash, IfStmt, KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module,
+        OperationT, ParenArgs, Postexe, Undef, UnlessStmt, Value, VarRef,
     },
     Node, Parser, TokenKind,
 };
@@ -88,9 +88,19 @@ impl Rule for Value0 {
         } else if parser.current_token().is(TokenKind::tFID) {
             todo!()
         } else if parser.current_token().is(TokenKind::kBEGIN) {
-            todo!()
+            let begin_t = parser.take_token();
+            let body = Bodystmt::parse(parser);
+            let statements = if let Some(body) = body {
+                vec![*body]
+            } else {
+                vec![]
+            };
+            let end_t = parser.expect_token(TokenKind::kEND);
+            Builder::begin(begin_t, statements, end_t)
         } else if parser.current_token().is(TokenKind::tCOLON2) {
-            todo!()
+            let colon2_t = parser.take_token();
+            let name_t = parser.expect_token(TokenKind::tCONSTANT);
+            Builder::const_global(colon2_t, name_t, parser.buffer())
         } else if parser.current_token().is(TokenKind::kWHILE) {
             let keyword_t = parser.take_token();
             let cond = Value::parse(parser);
@@ -142,12 +152,19 @@ fn test_value0_tfid() {
 #[test]
 fn test_value0_begin_bodystmt_end() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value0, b"begin; 42; end", "TODO")
+    assert_parses_rule!(Value0, b"begin; 42; end", "s(:begin,\n  s(:int, \"42\"))")
 }
 #[test]
 fn test_value0_global_const() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value0, b"::FOO", "TODO")
+    assert_parses_rule!(
+        Value0,
+        b"::FOO",
+        r#"
+s(:const,
+  s(:cbase), "FOO")
+        "#
+    )
 }
 #[test]
 fn test_value0_while_loop() {
