@@ -1,7 +1,7 @@
 use crate::{
     builder::{Builder, LoopType},
     parser::{
-        base::{at_most_one_is_true, Repeat1, Rule},
+        base::{at_most_one_is_true, Maybe1, Repeat1, Rule},
         value::call_tail::CallTail,
         Alias, Args, Array, BackRef, Bodystmt, Case, Class, Compstmt, DoT, EndlessMethodDef,
         ForLoop, Hash, IfStmt, KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module,
@@ -255,23 +255,48 @@ impl Rule for Parenthesized {
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        let begin_t = parser.take_token();
+        let body = Compstmt::parse(parser);
+        let statements = if let Some(body) = body {
+            vec![*body]
+        } else {
+            vec![]
+        };
+        let end_t = parser.expect_token(TokenKind::tRPAREN);
+        Builder::begin(begin_t, statements, end_t)
     }
 }
 #[test]
 fn test_parenthesized_empty_parens() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Parenthesized, b"()", "TODO")
+    assert_parses_rule!(Parenthesized, b"()", "s(:begin)")
 }
 #[test]
 fn test_parenthesized_value() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Parenthesized, b"(42)", "TODO")
+    assert_parses_rule!(
+        Parenthesized,
+        b"(42)",
+        r#"
+s(:begin,
+  s(:int, "42"))
+    "#
+    )
 }
 #[test]
 fn test_parenthesized_compstmt() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Parenthesized, b"(1; 2; 3)", "TODO")
+    assert_parses_rule!(
+        Parenthesized,
+        b"(1; 2; 3)",
+        r#"
+s(:begin,
+  s(:begin,
+    s(:int, "1"),
+    s(:int, "2"),
+    s(:int, "3")))
+    "#
+    )
 }
 
 struct Not;
