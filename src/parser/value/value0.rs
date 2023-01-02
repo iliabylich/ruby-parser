@@ -1,11 +1,11 @@
 use crate::{
-    builder::Builder,
+    builder::{Builder, LoopType},
     parser::{
         base::{at_most_one_is_true, Repeat1, Rule},
         value::call_tail::CallTail,
-        Alias, Args, Array, BackRef, Case, Class, EndlessMethodDef, ForLoop, Hash, IfStmt,
-        KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module, OperationT, ParenArgs, Postexe,
-        Undef, UnlessStmt, Value, VarRef,
+        Alias, Args, Array, BackRef, Case, Class, Compstmt, DoT, EndlessMethodDef, ForLoop, Hash,
+        IfStmt, KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module, OperationT, ParenArgs,
+        Postexe, Undef, UnlessStmt, Value, VarRef,
     },
     Node, Parser, TokenKind,
 };
@@ -92,9 +92,19 @@ impl Rule for Value0 {
         } else if parser.current_token().is(TokenKind::tCOLON2) {
             todo!()
         } else if parser.current_token().is(TokenKind::kWHILE) {
-            todo!()
+            let keyword_t = parser.take_token();
+            let cond = Value::parse(parser);
+            let do_t = DoT::parse(parser);
+            let body = Compstmt::parse(parser);
+            let end_t = parser.expect_token(TokenKind::kEND);
+            Builder::loop_(LoopType::While, keyword_t, cond, do_t, body, end_t)
         } else if parser.current_token().is(TokenKind::kUNTIL) {
-            todo!()
+            let keyword_t = parser.take_token();
+            let cond = Value::parse(parser);
+            let do_t = DoT::parse(parser);
+            let body = Compstmt::parse(parser);
+            let end_t = parser.expect_token(TokenKind::kEND);
+            Builder::loop_(LoopType::Until, keyword_t, cond, do_t, body, end_t)
         } else {
             unreachable!()
         };
@@ -142,12 +152,28 @@ fn test_value0_global_const() {
 #[test]
 fn test_value0_while_loop() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value0, b"while true; 42; end", "TODO")
+    assert_parses_rule!(
+        Value0,
+        b"while true; 42; end",
+        r#"
+s(:while,
+  s(:true),
+  s(:int, "42"))
+        "#
+    )
 }
 #[test]
 fn test_value0_until_loop() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value0, b"unless true; 42; end", "TODO")
+    assert_parses_rule!(
+        Value0,
+        b"until true; 42; end",
+        r#"
+s(:until,
+  s(:true),
+  s(:int, "42"))
+        "#
+    )
 }
 
 struct VarRefOrMethodCall;

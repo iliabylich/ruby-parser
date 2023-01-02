@@ -11,7 +11,6 @@ pub(crate) enum LoopType {
 
 impl Builder {
     pub(crate) fn loop_(
-        &self,
         loop_type: LoopType,
         keyword_t: Token,
         cond: Box<Node>,
