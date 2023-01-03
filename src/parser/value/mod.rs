@@ -10,7 +10,6 @@ mod value0;
 use value0::Value0;
 
 mod call_tail;
-use call_tail::CallTail;
 
 pub(crate) struct Value;
 impl Rule for Value {
