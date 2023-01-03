@@ -2,8 +2,7 @@ use crate::{
     builder::Builder,
     parser::{
         base::{at_most_one_is_true, Maybe1, Rule, Unbox},
-        Args, CallArgs, DotOrColon2T, DotT, MaybeBlock, OpT, OperationT, OptParenArgs, ParenArgs,
-        VarRef,
+        Args, CallArgs, DotOrColon2T, DotT, MaybeBlock, OpT, OperationT, ParenArgs, VarRef,
     },
     Node, Parser, Token, TokenKind,
 };
@@ -22,7 +21,7 @@ pub(crate) enum CallTail {
         args: Vec<Node>,
         rparen_t: Option<Token>,
 
-        block: Option<(Token, Box<Node>, Token)>,
+        block: Option<(Token, Option<Box<Node>>, Box<Node>, Token)>,
     },
 
     ArefArgs {
@@ -30,7 +29,7 @@ pub(crate) enum CallTail {
         args: Vec<Node>,
         rbrack_t: Token,
 
-        block: Option<(Token, Box<Node>, Token)>,
+        block: Option<(Token, Option<Box<Node>>, Box<Node>, Token)>,
     },
 }
 

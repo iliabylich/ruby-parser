@@ -20,8 +20,6 @@ impl Rule for ParenArgs {
     }
 }
 
-pub(crate) type OptParenArgs = Maybe1<ParenArgs>;
-
 pub(crate) struct Args;
 impl Rule for Args {
     type Output = Vec<Node>;
@@ -42,21 +40,18 @@ impl Rule for CallArgs {
     type Output = (Option<Token>, Vec<Node>, Option<Token>);
 
     fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([Args::starts_now(parser), OptParenArgs::starts_now(parser)])
+        true
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
         if Args::starts_now(parser) {
             let args = Args::parse(parser);
             (None, args, None)
-        } else if OptParenArgs::starts_now(parser) {
-            if let Some((lparen_t, args, rparen_t)) = OptParenArgs::parse(parser) {
-                (Some(lparen_t), args, Some(rparen_t))
-            } else {
-                (None, vec![], None)
-            }
+        } else if ParenArgs::starts_now(parser) {
+            let (lparen_t, args, rparen_t) = ParenArgs::parse(parser);
+            (Some(lparen_t), args, Some(rparen_t))
         } else {
-            unreachable!()
+            (None, vec![], None)
         }
     }
 }
@@ -110,7 +105,9 @@ impl Rule for Arglist {
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        let (args, _commas) =
+            SeparatedBy::<Arg, ExactToken<{ TokenKind::tCOMMA as u8 }>>::parse(parser);
+        args
     }
 }
 

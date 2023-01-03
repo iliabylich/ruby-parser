@@ -7,7 +7,7 @@ pub(crate) type MaybeBlock = Maybe1<Block>;
 
 pub(crate) struct Block;
 impl Rule for Block {
-    type Output = (Token, Box<Node>, Token);
+    type Output = (Token, Option<Box<Node>>, Box<Node>, Token);
 
     fn starts_now(parser: &mut Parser) -> bool {
         BraceBlock::starts_now(parser) || DoBlock::starts_now(parser)

@@ -1,11 +1,12 @@
 use crate::{
-    builder::{Builder, LoopType},
+    builder::{ArgsType, Builder, LoopType},
     parser::{
         base::{at_most_one_is_true, Maybe1, Repeat1, Rule},
         value::call_tail::CallTail,
-        Alias, Args, Array, BackRef, Bodystmt, Case, Class, Compstmt, DoT, EndlessMethodDef,
-        ForLoop, Hash, IfStmt, KeywordCmd, Lambda, Literal, MaybeBlock, MethodDef, Module,
-        OperationT, ParenArgs, Postexe, Undef, UnlessStmt, Value, VarRef,
+        Alias, Args, Array, BackRef, Bodystmt, CallArgs, Case, Class, Compstmt, Cvar, DoT,
+        EndlessMethodDef, ForLoop, Gvar, Hash, IfStmt, Ivar, KeywordCmd, KeywordVariable, Lambda,
+        Literal, MaybeBlock, MethodDef, Module, OperationT, ParenArgs, Postexe, Undef, UnlessStmt,
+        Value, VarRef,
     },
     Node, Parser, TokenKind,
 };
@@ -36,7 +37,6 @@ impl Rule for Value0 {
             Alias::starts_now(parser),
             Undef::starts_now(parser),
             Postexe::starts_now(parser),
-            parser.current_token().is(TokenKind::tFID),
             parser.current_token().is(TokenKind::kBEGIN),
             parser.current_token().is(TokenKind::tCOLON2),
             parser.current_token().is(TokenKind::kWHILE),
@@ -85,8 +85,6 @@ impl Rule for Value0 {
             Undef::parse(parser)
         } else if Postexe::starts_now(parser) {
             Postexe::parse(parser)
-        } else if parser.current_token().is(TokenKind::tFID) {
-            todo!()
         } else if parser.current_token().is(TokenKind::kBEGIN) {
             let begin_t = parser.take_token();
             let body = Bodystmt::parse(parser);
@@ -131,23 +129,40 @@ impl Rule for Value0 {
                     args,
                     rparen_t,
                     block,
-                } => todo!(),
+                } => {
+                    head = Builder::call_method(
+                        Some(head),
+                        Some(dot_t),
+                        name_t,
+                        lparen_t,
+                        args,
+                        rparen_t,
+                        parser.buffer(),
+                    );
+
+                    if let Some((begin_t, args, body, end_t)) = block {
+                        head =
+                            Builder::block(head, begin_t, ArgsType::Args(args), Some(body), end_t);
+                    }
+                }
                 CallTail::ArefArgs {
                     lbrack_t,
                     args,
                     rbrack_t,
                     block,
-                } => todo!(),
+                } => {
+                    head = Builder::index(head, lbrack_t, args, rbrack_t);
+
+                    if let Some((begin_t, args, body, end_t)) = block {
+                        head =
+                            Builder::block(head, begin_t, ArgsType::Args(args), Some(body), end_t);
+                    }
+                }
             }
         }
 
         head
     }
-}
-#[test]
-fn test_value0_tfid() {
-    use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value0, b"foo?", "TODO")
 }
 #[test]
 fn test_value0_begin_bodystmt_end() {
@@ -199,51 +214,105 @@ impl Rule for VarRefOrMethodCall {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        VarRef::starts_now(parser) || OperationT::starts_now(parser)
+        let token = parser.current_token();
+
+        at_most_one_is_true([
+            token.is(TokenKind::tIDENTIFIER),
+            token.is(TokenKind::tCONSTANT),
+            token.is(TokenKind::tFID),
+            Ivar::starts_now(parser),
+            Gvar::starts_now(parser),
+            Cvar::starts_now(parser),
+            KeywordVariable::starts_now(parser),
+        ])
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        if VarRef::starts_now(parser) && OperationT::starts_now(parser) {
-            // ambiguity `foo` vs `foo(42)`, depends on the presence of args/curly block
-            let name_t = parser.take_token();
-            if ParenArgs::starts_now(parser) {
-                // `foo(...` method call
-                todo!()
-            } else if Args::starts_now(parser) && parser.lexer.seen_whitespace {
-                // `foo bar ...` command
-                todo!()
-            } else if let Some(block) = MaybeBlock::parse(parser) {
-                // `foo { ...` command
-                todo!()
-            } else {
-                // `foo`/`Foo` variable/const
-                match name_t.kind {
-                    TokenKind::tIDENTIFIER => Builder::lvar(name_t, parser.buffer()),
-                    TokenKind::tCONSTANT => Builder::const_(name_t, parser.buffer()),
-                    _ => todo!("{:?}", name_t),
-                }
-            }
-        } else if VarRef::starts_now(parser) {
-            VarRef::parse(parser)
-        } else if OperationT::starts_now(parser) {
-            // method call
-            todo!()
+        if Ivar::starts_now(parser) {
+            Ivar::parse(parser)
+        } else if Gvar::starts_now(parser) {
+            Gvar::parse(parser)
+        } else if Cvar::starts_now(parser) {
+            Cvar::parse(parser)
+        } else if KeywordVariable::starts_now(parser) {
+            KeywordVariable::parse(parser)
         } else {
-            unreachable!()
+            // tIDENTIFIER/tCONSTANT/tFID
+            let name_t = parser.take_token();
+            let (lparen_t, args, rparen_t) = CallArgs::parse(parser);
+            let block = MaybeBlock::parse(parser);
+            if lparen_t.is_some() || !args.is_empty() || rparen_t.is_some() || block.is_some() {
+                // method call with args/block/both
+                let mut node = Builder::call_method(
+                    None,
+                    None,
+                    Some(name_t),
+                    lparen_t,
+                    args,
+                    rparen_t,
+                    parser.buffer(),
+                );
+                if let Some((begin_t, args, body, end_t)) = block {
+                    node = Builder::block(node, begin_t, ArgsType::Args(args), Some(body), end_t)
+                }
+                return node;
+            }
+
+            match name_t.kind {
+                TokenKind::tIDENTIFIER | TokenKind::tFID => {
+                    // TODO: check for local variable
+                    Builder::call_method(
+                        None,
+                        None,
+                        Some(name_t),
+                        None,
+                        vec![],
+                        None,
+                        parser.buffer(),
+                    )
+                }
+
+                TokenKind::tCONSTANT => Builder::const_(name_t, parser.buffer()),
+
+                _ => unreachable!(),
+            }
         }
     }
 }
 #[test]
 fn test_method_call_with_open_args() {
-    todo!()
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Value0,
+        b"foo 42",
+        r#"
+s(:send, nil, "foo",
+  s(:int, "42"))
+        "#
+    )
 }
 #[test]
 fn test_method_call_with_paren_args() {
-    todo!()
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(
+        Value0,
+        b"foo(42)",
+        r#"
+s(:send, nil, "foo",
+  s(:begin,
+    s(:int, "42")))
+        "#
+    )
 }
 #[test]
 fn test_method_call_with_no_args() {
-    todo!()
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(Value0, b"foo", "s(:send, nil, \"foo\")")
+}
+#[test]
+fn test_value0_tfid() {
+    use crate::testing::assert_parses_rule;
+    assert_parses_rule!(Value0, b"foo?", "s(:send, nil, \"foo?\")")
 }
 
 struct Parenthesized;

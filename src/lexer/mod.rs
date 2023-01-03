@@ -106,7 +106,7 @@ impl Lexer {
             self.tokenize_normally()
         };
         if self.debug {
-            println!("Returning token {:?}", token);
+            eprintln!("Returning token {:?}", token);
         }
 
         // Reset one-time flag
