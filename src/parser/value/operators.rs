@@ -8,6 +8,7 @@ pub(crate) fn prefix_operator_power(token: Token) -> Option<(u8, u8)> {
         | TokenKind::tMINUS
         | TokenKind::tBANG
         | TokenKind::tTILDE
+        | TokenKind::kNOT
         | TokenKind::kDEFINED => token.kind.precedence(),
         _ => None,
     }
@@ -52,6 +53,12 @@ pub(crate) fn binary_operator_power(token: Token) -> Option<(u8, u8)> {
     match token.kind {
         // Ternary operator that is also a "binary operator"
         TokenKind::tEH => return token.kind.precedence(),
+        _ => {}
+    }
+
+    match token.kind {
+        // Logical 'and'/'or'
+        TokenKind::kOR | TokenKind::kAND => return token.kind.precedence(),
         _ => {}
     }
 
