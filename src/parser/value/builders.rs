@@ -1,4 +1,8 @@
-use crate::{builder::Builder, parser::Value, Node, Parser, Token, TokenKind};
+use crate::{
+    builder::{Builder, LoopType},
+    parser::Value,
+    Node, Parser, Token, TokenKind,
+};
 
 pub(crate) fn build_prefix_op(op_t: Token, arg: Box<Node>, parser: &mut Parser) -> Box<Node> {
     match op_t.kind {
@@ -143,6 +147,18 @@ pub(crate) fn build_binary_op(
         | TokenKind::tGEQ
         | TokenKind::tLEQ
         | TokenKind::tDSTAR => Builder::binary_op(lhs, op_t, rhs, parser.buffer()),
+
+        TokenKind::kIF => Builder::condition_mod(Some(lhs), None, op_t, rhs),
+        TokenKind::kUNLESS => Builder::condition_mod(None, Some(lhs), op_t, rhs),
+
+        TokenKind::kWHILE => Builder::loop_mod(LoopType::While, lhs, op_t, rhs),
+        TokenKind::kUNTIL => Builder::loop_mod(LoopType::Until, lhs, op_t, rhs),
+
+        TokenKind::kRESCUE => {
+            let rescue_body = Builder::rescue_body(op_t, vec![], None, None, Some(rhs));
+            Builder::begin_body(Some(lhs), vec![*rescue_body], None, None)
+        }
+
         _ => todo!("{:?} {:?} {:?}", lhs, op_t, rhs),
     }
 }
@@ -478,27 +494,68 @@ fn test_binary_match_pattern_p() {
 #[test]
 fn test_binary_if_mod() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true if false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true if false",
+        r#"
+s(:if,
+  s(:false),
+  s(:true), nil)
+        "#
+    );
 }
 #[test]
 fn test_binary_unless_mod() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true unless false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true unless false",
+        r#"
+s(:if,
+  s(:false), nil,
+  s(:true))
+        "#
+    );
 }
 #[test]
 fn test_binary_while_mod() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true while false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true while false",
+        r#"
+s(:while,
+  s(:false),
+  s(:true))
+        "#
+    );
 }
 #[test]
 fn test_binary_until_mod() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true until false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true until false",
+        r#"
+s(:until,
+  s(:false),
+  s(:true))
+        "#
+    );
 }
 #[test]
 fn test_binary_rescue_mod() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true rescue false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true rescue false",
+        r#"
+s(:rescue,
+  s(:true),
+  s(:resbody, nil, nil,
+    s(:false)), nil)
+        "#
+    );
 }
 
 pub(crate) fn build_postfix_op(op_t: Token, arg: Box<Node>, parser: &mut Parser) -> Box<Node> {
