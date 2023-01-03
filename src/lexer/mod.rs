@@ -119,6 +119,10 @@ impl Lexer {
         Ident::lookahead(self.buffer.for_lookahead(), self.buffer.pos()).is_some()
     }
 
+    pub(crate) fn lookahead_is_lparen(&self) -> bool {
+        self.buffer.current_byte() == Some(b'(')
+    }
+
     #[cfg(test)]
     pub(crate) fn tokenize_until_eof(&mut self) -> Vec<Token> {
         let mut tokens = vec![];

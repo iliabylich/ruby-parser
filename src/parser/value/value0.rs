@@ -304,20 +304,38 @@ impl Rule for Not {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
-        parser.current_token().is(TokenKind::kNOT)
+        parser.current_token().is(TokenKind::kNOT) && parser.lexer.lookahead_is_lparen()
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        let not_t = parser.take_token();
+        let begin_t = parser.expect_token(TokenKind::tLPAREN);
+        let receiver = Maybe1::<Value>::parse(parser);
+        let end_t = parser.expect_token(TokenKind::tRPAREN);
+        Builder::not_op(not_t, Some(begin_t), receiver, Some(end_t))
     }
 }
 #[test]
 fn test_not_parenthesized_value() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Not, b"not(42)", "TODO")
+    assert_parses_rule!(
+        Not,
+        b"not(42)",
+        r#"
+s(:send,
+  s(:int, "42"), "!")
+        "#
+    )
 }
 #[test]
 fn test_not_empty_parens() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Not, b"not()", "TODO")
+    assert_parses_rule!(
+        Not,
+        b"not()",
+        r#"
+s(:send,
+  s(:begin), "!")
+        "#
+    )
 }
