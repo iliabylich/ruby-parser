@@ -1,8 +1,7 @@
 use crate::{
-    builder::Builder,
     parser::{
         base::{at_most_one_is_true, Maybe1, Rule, Unbox},
-        Args, CallArgs, DotOrColon2T, DotT, MaybeBlock, OpT, OperationT, ParenArgs, VarRef,
+        Args, CallArgs, DotOrColon2T, DotT, MaybeBlock, OpT, ParenArgs,
     },
     Node, Parser, Token, TokenKind,
 };
@@ -110,19 +109,6 @@ impl Rule for CallTail {
     }
 }
 
-struct VarRefOrMethodCall;
-impl Rule for VarRefOrMethodCall {
-    type Output = ();
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([OperationT::starts_now(parser), VarRef::starts_now(parser)])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
-    }
-}
-
 struct ArefArgs;
 impl Rule for ArefArgs {
     type Output = (Token, Vec<Node>, Token);
@@ -132,7 +118,13 @@ impl Rule for ArefArgs {
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        let lbrack_t = parser.take_token();
+        let args = Maybe1::<Args>::parse(parser).unwrap_or_default();
+        if parser.current_token().is(TokenKind::tCOMMA) {
+            parser.skip_token()
+        }
+        let rbrack_t = parser.expect_token(TokenKind::tRBRACK);
+        (lbrack_t, args, rbrack_t)
     }
 }
 
@@ -146,7 +138,7 @@ impl Rule for AssignmentT {
     }
 
     fn parse(parser: &mut Parser) -> Self::Output {
-        todo!()
+        parser.take_token()
     }
 }
 
@@ -172,4 +164,46 @@ impl Rule for MethodNameT {
             unreachable!()
         }
     }
+}
+
+#[test]
+fn test_call_tail_method() {
+    use crate::{parser::Value, testing::assert_parses_rule};
+    assert_parses_rule!(
+        Value,
+        b"42::foo(bar)",
+        r#"
+s(:send,
+  s(:int, "42"), "foo",
+  s(:begin,
+    s(:send, nil, "bar")))
+        "#
+    )
+}
+
+#[test]
+fn test_call_tail_const() {
+    use crate::{parser::Value, testing::assert_parses_rule};
+    assert_parses_rule!(
+        Value,
+        b"42::Foo",
+        r#"
+s(:const,
+  s(:int, "42"), "Foo")
+        "#
+    )
+}
+
+#[test]
+fn test_call_tail_aref() {
+    use crate::{parser::Value, testing::assert_parses_rule};
+    assert_parses_rule!(
+        Value,
+        b"42[true]",
+        r#"
+s(:index,
+  s(:int, "42"),
+  s(:true))
+        "#
+    )
 }
