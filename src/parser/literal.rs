@@ -6,10 +6,10 @@ use crate::{
     },
     parser::{
         base::{at_most_one_is_true, AtLeastOnce, ExactToken, Repeat1, Rule, SeparatedBy},
-        SimpleNumeric, StringDvar, SymT,
+        BackRef, Compstmt, Cvar, FnameT, Gvar, Ivar, SimpleNumeric,
     },
     token::token,
-    Node, Parser, TokenKind,
+    Node, Parser, Token, TokenKind,
 };
 
 pub(crate) struct Literal;
@@ -637,7 +637,7 @@ impl Rule for InterpolatedStringContent {
 
     fn parse(parser: &mut Parser) -> Self::Output {
         let begin_t = parser.take_token();
-        let compstmt = parse_compstmt(); // Compstmt::parse(parser)
+        let compstmt = Compstmt::parse(parser);
         let end_t = if parser.current_token().is(TokenKind::tSTRING_DEND) {
             parser.take_token()
         } else {
@@ -654,6 +654,52 @@ impl Rule for InterpolatedStringContent {
     }
 }
 
-fn parse_compstmt() -> Option<Box<Node>> {
-    todo!()
+struct StringDvar;
+impl Rule for StringDvar {
+    type Output = Box<Node>;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        at_most_one_is_true([
+            Ivar::starts_now(parser),
+            Gvar::starts_now(parser),
+            Cvar::starts_now(parser),
+            BackRef::starts_now(parser),
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        if Ivar::starts_now(parser) {
+            Ivar::parse(parser)
+        } else if Gvar::starts_now(parser) {
+            Gvar::parse(parser)
+        } else if Cvar::starts_now(parser) {
+            Cvar::parse(parser)
+        } else if BackRef::starts_now(parser) {
+            BackRef::parse(parser)
+        } else {
+            unreachable!()
+        }
+    }
+}
+
+struct SymT;
+impl Rule for SymT {
+    type Output = Token;
+
+    fn starts_now(parser: &mut Parser) -> bool {
+        at_most_one_is_true([
+            FnameT::starts_now(parser),
+            parser.current_token().is(TokenKind::tIVAR),
+            parser.current_token().is(TokenKind::tCVAR),
+            parser.current_token().is(TokenKind::tGVAR),
+        ])
+    }
+
+    fn parse(parser: &mut Parser) -> Self::Output {
+        if Self::starts_now(parser) {
+            parser.take_token()
+        } else {
+            unreachable!()
+        }
+    }
 }

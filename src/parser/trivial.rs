@@ -201,47 +201,6 @@ impl Rule for SimpleNumeric {
     }
 }
 
-pub(crate) struct StringDvar;
-impl Rule for StringDvar {
-    type Output = Box<Node>;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([NonLocalVar::starts_now(parser), BackRef::starts_now(parser)])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if NonLocalVar::starts_now(parser) {
-            NonLocalVar::parse(parser)
-        } else if BackRef::starts_now(parser) {
-            BackRef::parse(parser)
-        } else {
-            unreachable!()
-        }
-    }
-}
-
-pub(crate) struct SymT;
-impl Rule for SymT {
-    type Output = Token;
-
-    fn starts_now(parser: &mut Parser) -> bool {
-        at_most_one_is_true([
-            FnameT::starts_now(parser),
-            parser.current_token().is(TokenKind::tIVAR),
-            parser.current_token().is(TokenKind::tCVAR),
-            parser.current_token().is(TokenKind::tGVAR),
-        ])
-    }
-
-    fn parse(parser: &mut Parser) -> Self::Output {
-        if Self::starts_now(parser) {
-            parser.take_token()
-        } else {
-            unreachable!()
-        }
-    }
-}
-
 pub(crate) struct TermT;
 impl Rule for TermT {
     type Output = Token;
