@@ -159,6 +159,11 @@ pub(crate) fn build_binary_op(
             Builder::begin_body(Some(lhs), vec![*rescue_body], None, None)
         }
 
+        TokenKind::tDOT2 => Builder::range_inclusive(Some(lhs), op_t, Some(rhs)),
+        TokenKind::tDOT3 => Builder::range_exclusive(Some(lhs), op_t, Some(rhs)),
+
+        TokenKind::kAND | TokenKind::kOR => Builder::logical_op(lhs, op_t, rhs),
+
         _ => todo!("{:?} {:?} {:?}", lhs, op_t, rhs),
     }
 }
@@ -185,12 +190,28 @@ fn test_binary_mlhs_eql_rhs() {
 #[test]
 fn test_binary_irange() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true..false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true..false",
+        r#"
+s(:irange,
+  s(:true),
+  s(:false))
+        "#
+    );
 }
 #[test]
 fn test_binary_erange() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true...false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true...false",
+        r#"
+s(:erange,
+  s(:true),
+  s(:false))
+        "#
+    );
 }
 #[test]
 fn test_binary_plus() {
@@ -469,12 +490,28 @@ s(:send,
 #[test]
 fn test_binary_control_flow_and() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true and false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true and false",
+        r#"
+s(:and,
+  s(:true),
+  s(:false))
+        "#
+    );
 }
 #[test]
 fn test_binary_control_flow_or() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true or false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true or false",
+        r#"
+s(:or,
+  s(:true),
+  s(:false))
+      "#
+    );
 }
 #[test]
 fn test_binary_ternary_operator() {
