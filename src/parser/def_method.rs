@@ -67,16 +67,8 @@ s(:defs,
     )
 }
 
-pub(crate) struct EndlessMethodDef<T>
-where
-    T: Rule<Output = Box<Node>>,
-{
-    _t: std::marker::PhantomData<T>,
-}
-impl<T> Rule for EndlessMethodDef<T>
-where
-    T: Rule<Output = Box<Node>>,
-{
+pub(crate) struct EndlessMethodDef;
+impl Rule for EndlessMethodDef {
     type Output = Box<Node>;
 
     fn starts_now(parser: &mut Parser) -> bool {
@@ -219,7 +211,7 @@ impl Rule for Singleton {
         } else if parser.current_token().is(TokenKind::tLPAREN) {
             let lparen_t = parser.take_token();
             let value = Value::parse(parser);
-            let rparen_t = parser.take_token();
+            let rparen_t = parser.expect_token(TokenKind::tRPAREN);
             Builder::begin(lparen_t, vec![*value], rparen_t)
         } else {
             unreachable!()

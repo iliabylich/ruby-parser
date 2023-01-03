@@ -32,7 +32,7 @@ impl Rule for Value0 {
             Module::starts_now(parser),
             MethodDef::starts_now(parser),
             KeywordCmd::starts_now(parser),
-            EndlessMethodDef::<Value>::starts_now(parser),
+            EndlessMethodDef::starts_now(parser),
             Alias::starts_now(parser),
             Undef::starts_now(parser),
             Postexe::starts_now(parser),
@@ -77,8 +77,8 @@ impl Rule for Value0 {
             MethodDef::parse(parser)
         } else if KeywordCmd::starts_now(parser) {
             KeywordCmd::parse(parser)
-        } else if EndlessMethodDef::<Value>::starts_now(parser) {
-            EndlessMethodDef::<Value>::parse(parser)
+        } else if EndlessMethodDef::starts_now(parser) {
+            EndlessMethodDef::parse(parser)
         } else if Alias::starts_now(parser) {
             Alias::parse(parser)
         } else if Undef::starts_now(parser) {
