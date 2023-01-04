@@ -2,7 +2,7 @@ use crate::{
     builder::Builder,
     nodes::{And, Or},
     token::Token,
-    Node,
+    Node, TokenKind,
 };
 
 impl Builder {
@@ -12,26 +12,20 @@ impl Builder {
         let operator_l = op_t.loc;
         let expression_l = lhs.expression().join(rhs.expression());
 
-        match operator_l.size() {
-            2 => {
-                // kOR
-                Box::new(Node::Or(Or {
-                    lhs,
-                    rhs,
-                    operator_l,
-                    expression_l,
-                }))
-            }
-            3 => {
-                // kAND
-                Box::new(Node::And(And {
-                    lhs,
-                    rhs,
-                    operator_l,
-                    expression_l,
-                }))
-            }
-            _ => unreachable!("only kOR (size = 2) or kAND(size = 3) is supported"),
+        match op_t.kind {
+            TokenKind::kOR | TokenKind::tOROP => Box::new(Node::Or(Or {
+                lhs,
+                rhs,
+                operator_l,
+                expression_l,
+            })),
+            TokenKind::kAND | TokenKind::tANDOP => Box::new(Node::And(And {
+                lhs,
+                rhs,
+                operator_l,
+                expression_l,
+            })),
+            _ => unreachable!(),
         }
     }
 }

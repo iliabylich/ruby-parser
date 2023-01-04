@@ -162,7 +162,9 @@ pub(crate) fn build_binary_op(
         TokenKind::tDOT2 => Builder::range_inclusive(Some(lhs), op_t, Some(rhs)),
         TokenKind::tDOT3 => Builder::range_exclusive(Some(lhs), op_t, Some(rhs)),
 
-        TokenKind::kAND | TokenKind::kOR => Builder::logical_op(lhs, op_t, rhs),
+        TokenKind::kAND | TokenKind::kOR | TokenKind::tANDOP | TokenKind::tOROP => {
+            Builder::logical_op(lhs, op_t, rhs)
+        }
 
         _ => todo!("{:?} {:?} {:?}", lhs, op_t, rhs),
     }
@@ -428,12 +430,28 @@ s(:send,
 #[test]
 fn test_binary_logical_and() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true && false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true && false",
+        r#"
+s(:and,
+  s(:true),
+  s(:false))
+        "#
+    );
 }
 #[test]
 fn test_binary_logical_or() {
     use crate::testing::assert_parses_rule;
-    assert_parses_rule!(Value, b"true || false", r#""#);
+    assert_parses_rule!(
+        Value,
+        b"true || false",
+        r#"
+s(:or,
+  s(:true),
+  s(:false))
+        "#
+    );
 }
 #[test]
 fn test_binary_gt() {
